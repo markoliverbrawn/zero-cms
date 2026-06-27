@@ -2,6 +2,7 @@
 
 namespace Zero\Modules\Security\Controllers;
 
+use Zero\Services\AiService;
 use Zero\Core\App;
 use Zero\Core\Env;
 use Zero\Database\DB;
@@ -325,11 +326,6 @@ Zero CMS demonstrates a state-of-the-art security posture through its minimalist
 
     private function runAudit(array $telemetry): string
     {
-        $apiKey = Env::get('GEMINI_API_KEY');
-        if (empty($apiKey)) {
-            return $this->getFallbackReport($telemetry);
-        }
-
         $score = $telemetry['calculated_score'] ?? $this->calculateScore($telemetry);
 
         $prompt = "You are an elite cybersecurity auditor specializing in PHP, multi-tenant architectures, and zero-dependency security. Perform a security analysis of the Zero CMS installation based on the following local telemetry metrics collected in real-time:
@@ -353,55 +349,16 @@ Include the following sections using beautiful Markdown:
 
 Write the report in a direct, highly analytical, and authoritative tone. Use high-contrast Markdown formatting (bullet points, bold highlights, clean dividers, code snippets where appropriate). Avoid conversational filler or introductory phrases. Start directly with the Executive Summary.";
 
-        $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" . urlencode($apiKey);
-        $payload = [
-            'contents' => [
-                [
-                    'parts' => [
-                        ['text' => $prompt]
-                    ]
-                ]
-            ]
-        ];
-
-        $ch = curl_init($url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
-        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
-        
-        // Extended timeout to 60 seconds to allow the generative AI model ample time to complete the analysis and stream the response
-        curl_setopt($ch, CURLOPT_TIMEOUT, 60);
-        
-        // Hardened CA workarounds for local Docker environments where SSL certificates are not pre-bundled on disk
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
-        
-        $response = curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $curlError = curl_error($ch);
-        curl_close($ch);
-
-        if ($httpCode === 200 && !empty($response)) {
-            $resData = json_decode($response, true);
-            $generatedText = $resData['candidates'][0]['content']['parts'][0]['text'] ?? '';
+        try {
+            $generatedText = AiService::generate($prompt);
             if (!empty($generatedText)) {
                 return "## GEMINI AI SECURE AUDIT REPORT\n\n" . $generatedText;
             }
+        } catch (\Exception $e) {
+            $diagnostics = $e->getMessage();
+            return "## GEMINI API HANDSHAKE TIMEOUT / CONFIGURATION ERROR\n\n*Failed to connect to Google Gemini API. Falling back to the local secure compiler report below:*\n\n**Connection Diagnostics:** `{$diagnostics}`\n\n" . $this->getFallbackReport($telemetry);
         }
 
-        // Advanced local connection error diagnostics compile
-        $diagnostics = "";
-        if (!empty($curlError)) {
-            $diagnostics = "cURL Network Issue: " . htmlspecialchars($curlError, ENT_QUOTES, 'UTF-8');
-        } elseif ($httpCode !== 200) {
-            $resData = json_decode($response, true);
-            $errorMsg = $resData['error']['message'] ?? 'Unknown Google API Error';
-            $diagnostics = "Google Gemini API Error (HTTP {$httpCode}): " . htmlspecialchars($errorMsg, ENT_QUOTES, 'UTF-8');
-        } else {
-            $diagnostics = "Empty or malformed JSON structure returned from generateContent.";
-        }
-
-        return "## GEMINI API HANDSHAKE TIMEOUT / CONFIGURATION ERROR\n\n*Failed to connect to Google Gemini API. Falling back to the local secure compiler report below:*\n\n**Connection Diagnostics:** `{$diagnostics}`\n\n" . $this->getFallbackReport($telemetry);
+        return "## GEMINI API HANDSHAKE TIMEOUT / CONFIGURATION ERROR\n\n*Failed to connect to Google Gemini API. Falling back to the local secure compiler report below:*\n\n**Connection Diagnostics:** `Empty or malformed response returned from the AI Provider.`\n\n" . $this->getFallbackReport($telemetry);
     }
 }

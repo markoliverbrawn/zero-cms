@@ -203,4 +203,90 @@ document.addEventListener('DOMContentLoaded', () => {
             toast.classList.remove('show');
         }, 4000);
     }
+
+    // 5. AI Summary Generation Logic
+    const btnAiGenerate = document.getElementById('btn-ai-generate-summary');
+    if (btnAiGenerate) {
+        btnAiGenerate.addEventListener('click', () => {
+            const summaryTextarea = document.querySelector('textarea[name="summary"]');
+            if (!summaryTextarea) return;
+
+            // Gather the content to summarize
+            const content = getPageContentText();
+            if (!content || content.trim() === '') {
+                showAdminToast('Please add some content or blocks first to generate a summary from.', 'error');
+                return;
+            }
+
+            // Set loading state on the button
+            btnAiGenerate.classList.add('loading');
+            btnAiGenerate.disabled = true;
+
+            const csrfEl = document.querySelector('input[name="csrf"]');
+            const csrfToken = csrfEl ? csrfEl.value : '';
+
+            fetch('/api/v1/admin/ai/generate-summary', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                body: JSON.stringify({ content: content })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => { throw new Error(err.error || 'Server error'); });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success && data.summary) {
+                    summaryTextarea.value = data.summary;
+                    showAdminToast('Summary generated successfully using AI!', 'success');
+                } else {
+                    showAdminToast(data.error || 'Failed to generate summary.', 'error');
+                }
+            })
+            .catch(error => {
+                showAdminToast(error.message || 'Error communicating with AI Service.', 'error');
+            })
+            .finally(() => {
+                btnAiGenerate.classList.remove('loading');
+                btnAiGenerate.disabled = false;
+            });
+        });
+    }
+
+    function getPageContentText() {
+        var blockBuilderContainer = document.getElementById('blocks-container');
+        if (blockBuilderContainer) {
+            var blocks = [];
+            var blockItems = blockBuilderContainer.querySelectorAll('.block-item');
+            blockItems.forEach(function(item) {
+                var titleInput = item.querySelector('.block-title-input');
+                if (titleInput && typeof titleInput.value === 'string' && titleInput.value.trim() !== '') {
+                    blocks.push(titleInput.value.trim());
+                }
+                item.querySelectorAll('.editor-area').forEach(function(ed) {
+                    var txt = ed.innerText || ed.textContent || '';
+                    if (txt.trim() !== '') {
+                        blocks.push(txt.trim());
+                    }
+                });
+                item.querySelectorAll('input:not([type="hidden"]):not(.block-title-input), textarea').forEach(function(inp) {
+                    if (inp && typeof inp.value === 'string' && inp.value.trim() !== '') {
+                        blocks.push(inp.value.trim());
+                    }
+                });
+            });
+            return blocks.join("\n\n");
+        }
+
+        var contentTextarea = document.querySelector('textarea[name="content"], textarea[name="description"]');
+        if (contentTextarea && typeof contentTextarea.value === 'string') {
+            return contentTextarea.value;
+        }
+
+        return '';
+    }
 });

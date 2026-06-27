@@ -10,6 +10,7 @@ use Zero\Http\Controllers\ApiController;
 use Zero\Models\Media;
 use Zero\Models\Traits\IsOrderable;
 use Zero\Models\User;
+use Zero\Services\AiService;
 use Zero\Support\I18n;
 use Zero\Support\Logger;
 use Zero\Support\Security;
@@ -148,7 +149,43 @@ class AdminApiController extends ApiController
             }
         }
 
+        // Route: /api/v1/admin/ai/generate-summary
+        if (preg_match('#^/api/v1/admin/ai/generate-summary/?$#', $uri)) {
+            if ($method === 'POST') {
+                $this->handleAiGenerateSummary($body);
+            }
+        }
+
         $this->respond(['success' => false, 'error' => 'Endpoint not found or method not allowed'], 404);
+    }
+
+    protected function handleAiGenerateSummary($body)
+    {
+        $content = $body['content'] ?? '';
+        if (empty($content)) {
+            $this->respond([
+                'success' => false,
+                'error' => 'No block content provided to generate summary from.'
+            ], 400);
+        }
+
+        $prompt = "You are an expert copywriter. Generate a concise, engaging, single-paragraph summary (under 250 characters) summarizing the following content of a web page/blog post. Do not include any HTML tags, emojis, markdown, introductory phrases, or conversational filler. Output ONLY the raw paragraph text:\n\n" . $content;
+
+        try {
+            if (!AiService::isAvailable()) {
+                throw new \Exception("AI Provider is not configured or available.");
+            }
+            $summary = AiService::generate($prompt);
+            $this->respond([
+                'success' => true,
+                'summary' => trim($summary)
+            ]);
+        } catch (\Exception $e) {
+            $this->respond([
+                'success' => false,
+                'error' => 'AI Generation Failed: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     protected function handleBlockPreview($body)

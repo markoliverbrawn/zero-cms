@@ -3,41 +3,11 @@
 
 use Zero\Models\Media;
 
-$colsDesktop = $block['cols_desktop'] ?? '4';
-$colsTablet = $block['cols_tablet'] ?? '2';
-$colsMobile = $block['cols_mobile'] ?? '1';
 $items = $block['items'] ?? [];
 ?>
 <div class="field-group">
     <label>Block Section Title</label>
     <input type="text" class="block-title-input" value="<?php echo htmlspecialchars($blockTitle, ENT_QUOTES, 'UTF-8'); ?>" placeholder="Enter grid section title...">
-</div>
-
-<div class="block-flex-row">
-    <div class="field-group block-flex-col-1">
-        <label>Desktop Columns</label>
-        <select class="block-cols_desktop-select">
-            <option value="4" <?php echo $colsDesktop === '4' ? 'selected' : ''; ?>>4 Columns</option>
-            <option value="3" <?php echo $colsDesktop === '3' ? 'selected' : ''; ?>>3 Columns</option>
-            <option value="2" <?php echo $colsDesktop === '2' ? 'selected' : ''; ?>>2 Columns</option>
-            <option value="1" <?php echo $colsDesktop === '1' ? 'selected' : ''; ?>>1 Column</option>
-        </select>
-    </div>
-    <div class="field-group block-flex-col-1">
-        <label>Tablet Columns</label>
-        <select class="block-cols_tablet-select">
-            <option value="3" <?php echo $colsTablet === '3' ? 'selected' : ''; ?>>3 Columns</option>
-            <option value="2" <?php echo $colsTablet === '2' ? 'selected' : ''; ?>>2 Columns</option>
-            <option value="1" <?php echo $colsTablet === '1' ? 'selected' : ''; ?>>1 Column</option>
-        </select>
-    </div>
-    <div class="field-group block-flex-col-1">
-        <label>Mobile Columns</label>
-        <select class="block-cols_mobile-select">
-            <option value="2" <?php echo $colsMobile === '2' ? 'selected' : ''; ?>>2 Columns</option>
-            <option value="1" <?php echo $colsMobile === '1' ? 'selected' : ''; ?>>1 Column</option>
-        </select>
-    </div>
 </div>
 
 <div class="field-group">

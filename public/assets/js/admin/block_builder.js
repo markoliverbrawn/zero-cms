@@ -462,7 +462,7 @@ document.addEventListener('DOMContentLoaded', function() {
             var settingsCol = blockItem.querySelector('.block-row-settings');
             var fieldsCol = blockItem.querySelector('.block-fields-col');
             if (settingsCol && fieldsCol) {
-                var isSettingsVisible = settingsCol.style.display !== 'none';
+                var isSettingsVisible = settingsCol.style.display === 'block';
                 if (isSettingsVisible) {
                     settingsCol.style.display = 'none';
                     fieldsCol.style.display = 'block';

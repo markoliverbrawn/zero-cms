@@ -59,7 +59,16 @@ foreach ($config as $field => $fieldConfig) {
 $renderField = function($field, $fieldConfig) use ($record, $modelName, $csrf, $usesBlockBuilder, $blockBuilderField) {
     ?>
     <?php if (!$usesBlockBuilder || $field !== $blockBuilderField): ?>
-        <label><?php echo htmlspecialchars($fieldConfig['label'] ?? '', ENT_QUOTES, "UTF-8"); ?></label>
+        <?php if ($field === 'summary' && \Zero\Services\AiService::isAvailable()): ?>
+            <div class="form-label-row">
+                <label><?php echo htmlspecialchars($fieldConfig['label'] ?? '', ENT_QUOTES, "UTF-8"); ?></label>
+                <button type="button" class="btn-ai-generate-icon" id="btn-ai-generate-summary" title="Auto Generate Summary with AI">
+                    <?php echo \Zero\Core\App::svg('ai'); ?>
+                </button>
+            </div>
+        <?php else: ?>
+            <label><?php echo htmlspecialchars($fieldConfig['label'] ?? '', ENT_QUOTES, "UTF-8"); ?></label>
+        <?php endif; ?>
     <?php endif; ?>
     <?php if ($fieldConfig['type'] == "text"): ?>
         <?php if ($field === 'media_ids'): ?>
