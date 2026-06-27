@@ -24,19 +24,26 @@ $items = $block['items'] ?? [];
                 $filename = $media ? $media->filename : '';
             }
             ?>
-            <div class="grid-item-row">
-                <button type="button" class="btn-delete-grid-item">Remove</button>
+            <div class="grid-item-row collapsed">
+                <button type="button" class="btn-delete-grid-item" title="Remove Grid Card">
+                    <?php echo \Zero\Core\App::svg('trash-2'); ?>
+                </button>
                 
-                <!-- Collapsible Header Panel -->
-                <div class="grid-item-row-header" style="display: flex; align-items: center; justify-content: space-between; padding-bottom: 12px; margin-bottom: 12px; border-bottom: 1px solid var(--border-color, #e2e8f0); width: 100%;">
-                    <div class="grid-item-row-title-label" style="display: flex; align-items: center; gap: 6px; font-weight: bold; font-size: 0.85rem; cursor: pointer; color: var(--text-color, #0f172a); user-select: none;">
-                        <span class="grid-item-row-collapse-icon" style="color: #64748b;">▼</span>
+                <!-- Collapsible Header Panel (Clickable to Toggle Collapse/Expand) -->
+                <div class="grid-item-row-header">
+                    <div class="grid-item-row-title-label">
+                        <span class="grid-item-row-collapse-icon">
+                            <?php echo \Zero\Core\App::svg('chevron-right'); ?>
+                        </span>
                         <span class="grid-item-row-title-text"><?php echo !empty($iTitle) ? htmlspecialchars($iTitle, ENT_QUOTES, 'UTF-8') : 'Grid Card (Untitled)'; ?></span>
                     </div>
-                    <div style="display: flex; gap: 8px; margin-right: 90px; align-items: center;">
-                        <button type="button" class="btn-sort-grid-item-up" style="padding: 4px 10px; font-size: 11px; cursor: pointer; border-radius: 4px;">▲ Up</button>
-                        <button type="button" class="btn-sort-grid-item-down" style="padding: 4px 10px; font-size: 11px; cursor: pointer; border-radius: 4px;">▼ Down</button>
-                        <button type="button" class="btn-toggle-grid-item-collapse" style="padding: 4px 10px; font-size: 11px; cursor: pointer; border-radius: 4px;">Collapse</button>
+                    <div class="grid-item-controls">
+                        <button type="button" class="btn-sort-grid-item-up" title="Move Card Up">
+                            <?php echo \Zero\Core\App::svg('arrow-up'); ?>
+                        </button>
+                        <button type="button" class="btn-sort-grid-item-down" title="Move Card Down">
+                            <?php echo \Zero\Core\App::svg('arrow-down'); ?>
+                        </button>
                     </div>
                 </div>
                 

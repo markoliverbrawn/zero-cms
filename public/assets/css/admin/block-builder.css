@@ -434,7 +434,7 @@
     }
 }
 
-.accordion-item-row, .masonry-item-row, .testimonial-item-row, .grid-item-row {
+.accordion-item-row, .masonry-item-row, .testimonial-item-row {
     display: flex;
     flex-direction: column;
     gap: 10px;
@@ -444,7 +444,7 @@
     background-color: var(--bg-color, #f8fafc);
     position: relative;
 
-    .btn-delete-accordion-item, .btn-delete-masonry-item, .btn-delete-testimonial-item, .btn-delete-grid-item {
+    .btn-delete-accordion-item, .btn-delete-masonry-item, .btn-delete-testimonial-item {
         position: absolute;
         top: 10px;
         right: 10px;
@@ -455,6 +455,138 @@
         border-radius: 4px;
         padding: 6px 12px;
         cursor: pointer;
+    }
+}
+
+.grid-item-row {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    border: 1px solid var(--border-color, #cbd5e1);
+    padding: 15px;
+    border-radius: 4px;
+    background-color: var(--bg-color, #f8fafc);
+    position: relative;
+
+    .btn-delete-grid-item {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        width: 32px;
+        height: 32px;
+        background-color: #ef4444;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        padding: 0;
+        z-index: 10;
+
+        svg {
+            width: 16px;
+            height: 16px;
+            stroke-width: 2;
+        }
+
+        &:hover {
+            background-color: #dc2626;
+        }
+    }
+
+    .grid-item-row-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding-bottom: 12px;
+        margin-bottom: 12px;
+        border-bottom: 1px solid var(--border-color, #cbd5e1);
+        width: 100%;
+        cursor: pointer;
+        user-select: none;
+        transition: background-color 0.15s ease;
+
+        &:hover {
+            background-color: var(--surface-container, rgba(0,0,0,0.02));
+            border-radius: 4px;
+        }
+
+        .grid-item-row-title-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: bold;
+            font-size: 0.85rem;
+            color: var(--text-color, #0f172a);
+
+            .grid-item-row-collapse-icon {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 14px;
+                height: 14px;
+                color: #64748b;
+                transition: transform 0.15s ease;
+                transform: rotate(90deg); /* Points down when expanded */
+
+                svg {
+                    width: 14px;
+                    height: 14px;
+                    stroke-width: 2;
+                }
+            }
+        }
+    }
+
+    .grid-item-controls {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+        margin-right: 45px;
+
+        button {
+            background: var(--surface-container, rgba(0,0,0,0.03));
+            border: 1px solid var(--border-color, #cbd5e1);
+            color: var(--text-color, #0f172a);
+            width: 28px;
+            height: 28px;
+            border-radius: 4px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            padding: 0;
+            transition: all 0.2s ease;
+
+            svg {
+                width: 14px;
+                height: 14px;
+                stroke-width: 2;
+            }
+
+            &:hover {
+                background: var(--border-color, #cbd5e1);
+                color: var(--accent-color, #10b981);
+            }
+        }
+    }
+
+    &.collapsed {
+        .grid-item-row-header {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .grid-item-row-collapse-icon {
+            transform: rotate(0deg) !important; /* Points right when collapsed */
+        }
+
+        .grid-item-fields-container {
+            display: none !important;
+        }
     }
 }
 

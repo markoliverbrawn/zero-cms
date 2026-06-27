@@ -209,7 +209,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         // If the block contains item rows like `.masonry-item-row`, `.testimonial-item-row`, `.accordion-item-row`
-        var itemRows = blockItem.querySelectorAll('[class$="-item-row"]');
+        var itemRows = blockItem.querySelectorAll('.masonry-item-row, .testimonial-item-row, .accordion-item-row, .grid-item-row, .chart-item-row, .form_field-item-row');
         if (itemRows.length > 0) {
             var items = [];
             itemRows.forEach(function(row) {
@@ -452,6 +452,15 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
+        var gridHeader = e.target.closest('.grid-item-row-header');
+        if (gridHeader && !e.target.closest('button') && !e.target.closest('input') && !e.target.closest('textarea') && !e.target.closest('.editor-area')) {
+            var gridRow = gridHeader.closest('.grid-item-row');
+            if (gridRow) {
+                gridRow.classList.toggle('collapsed');
+            }
+            return;
+        }
+
         var btn = e.target.closest('button');
         if (!btn) return;
 
@@ -595,18 +604,25 @@ document.addEventListener('DOMContentLoaded', function() {
                 var row = document.createElement('div');
                 row.className = 'grid-item-row';
                 row.innerHTML = `
-                    <button type="button" class="btn-delete-grid-item">Remove</button>
+                    <button type="button" class="btn-delete-grid-item" title="Remove Grid Card">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                    </button>
                     
-                    <!-- Collapsible Header Panel -->
-                    <div class="grid-item-row-header" style="display: flex; align-items: center; justify-content: space-between; padding-bottom: 12px; margin-bottom: 12px; border-bottom: 1px solid var(--border-color, #e2e8f0); width: 100%;">
-                        <div class="grid-item-row-title-label" style="display: flex; align-items: center; gap: 6px; font-weight: bold; font-size: 0.85rem; cursor: pointer; color: var(--text-color, #0f172a); user-select: none;">
-                            <span class="grid-item-row-collapse-icon" style="color: #64748b;">▼</span>
+                    <!-- Collapsible Header Panel (Clickable to Toggle Collapse/Expand) -->
+                    <div class="grid-item-row-header">
+                        <div class="grid-item-row-title-label">
+                            <span class="grid-item-row-collapse-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            </span>
                             <span class="grid-item-row-title-text">Grid Card (Untitled)</span>
                         </div>
-                        <div style="display: flex; gap: 8px; margin-right: 90px; align-items: center;">
-                            <button type="button" class="btn-sort-grid-item-up" style="padding: 4px 10px; font-size: 11px; cursor: pointer; border-radius: 4px;">▲ Up</button>
-                            <button type="button" class="btn-sort-grid-item-down" style="padding: 4px 10px; font-size: 11px; cursor: pointer; border-radius: 4px;">▼ Down</button>
-                            <button type="button" class="btn-toggle-grid-item-collapse" style="padding: 4px 10px; font-size: 11px; cursor: pointer; border-radius: 4px;">Collapse</button>
+                        <div class="grid-item-controls">
+                            <button type="button" class="btn-sort-grid-item-up" title="Move Card Up">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
+                            </button>
+                            <button type="button" class="btn-sort-grid-item-down" title="Move Card Down">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
+                            </button>
                         </div>
                     </div>
                     
@@ -675,20 +691,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     row.parentNode.insertBefore(next, row);
                     updateBlockExcerpts();
                     refreshLivePreview(blockItem);
-                }
-            }
-        } else if (btn.classList.contains('btn-toggle-grid-item-collapse') || btn.closest('.grid-item-row-title-label')) {
-            var targetBtn = btn.classList.contains('btn-toggle-grid-item-collapse') ? btn : btn.closest('.grid-item-row').querySelector('.btn-toggle-grid-item-collapse');
-            var row = targetBtn.closest('.grid-item-row');
-            var fieldsContainer = row.querySelector('.grid-item-fields-container');
-            var icon = row.querySelector('.grid-item-row-collapse-icon');
-            
-            if (fieldsContainer) {
-                var isCollapsed = fieldsContainer.style.display === 'none';
-                fieldsContainer.style.display = isCollapsed ? 'block' : 'none';
-                targetBtn.textContent = isCollapsed ? 'Collapse' : 'Expand';
-                if (icon) {
-                    icon.textContent = isCollapsed ? '▼' : '►';
                 }
             }
         } else if (btn.classList.contains('btn-add-testimonial-item')) {
