@@ -1,0 +1,7 @@
+_archive
+/storage
+/public/storage
+.env
+*.bak
+.vscode/
+/*.json

@@ -1,0 +1,67 @@
+#!/usr/bin/env php
+<?php
+// bin/queue-runner - CLI daemon background worker for Zero CMS Job Queue
+
+define('APPLICATION_ROOT', dirname(__DIR__));
+
+// Register global PSR-4 Autoloader for Zero namespace mapping
+spl_autoload_register(function ($class) {
+    $prefix = 'Zero\\';
+    $base_dir = APPLICATION_ROOT . '/src/';
+
+    $len = strlen($prefix);
+    if (strncmp($prefix, $class, $len) !== 0) {
+        return;
+    }
+
+    $relative_class = substr($class, $len);
+    $file = $base_dir . str_replace('\\', '/', $relative_class) . '.php';
+
+    if (file_exists($file)) {
+        require_once $file;
+    }
+});
+
+use Zero\Core\App;
+use Zero\Core\Env;
+use Zero\Modules\Queue\Support\QueueManager;
+
+// Pre-hydrate environment configuration from correct root path
+Env::load(APPLICATION_ROOT);
+
+// Bootstrap Zero CMS kernel
+App::bootstrap();
+
+echo "==================================================\n";
+echo "       ZERO CMS BACKEND QUEUE DAEMON WORKER       \n";
+echo "==================================================\n";
+echo "--> Active Database: " . Env::get('DB_NAME') . "\n";
+echo "--> Polling Interval: 100ms\n";
+echo "--> Daemon Process ID: " . getmypid() . "\n";
+echo "--> Running as user: " . posix_getpwuid(posix_getuid())['name'] . "\n";
+echo "--------------------------------------------------\n";
+echo "Daemon started. Listening for pending tasks...\n\n";
+
+$lastHeartbeat = 0;
+$heartbeatPath = APPLICATION_ROOT . '/storage/queue-worker-heartbeat.txt';
+
+while (true) {
+    try {
+        // Real-time heartbeat touching once every 10 seconds
+        if (time() - $lastHeartbeat >= 10) {
+            touch($heartbeatPath);
+            $lastHeartbeat = time();
+        }
+
+        // Run next pending or expired locked job
+        $processed = QueueManager::runNextPendingJob();
+        
+        if (!$processed) {
+            // No jobs to process, sleep 100ms to conserve CPU cycles
+            usleep(100000);
+        }
+    } catch (\Throwable $e) {
+        echo "[" . date('Y-m-d H:i:s') . "] Critical runner error: " . $e->getMessage() . "\n";
+        sleep(2); // Cool down after critical exceptions to prevent rapid spam loops
+    }
+}

@@ -1,0 +1,328 @@
+<?php
+
+namespace Zero\Core\Storage;
+
+use Zero\Core\Env;
+use Exception;
+
+class GoogleCloudStorageDriver implements StorageDriver
+{
+    protected string $bucketName;
+    protected ?string $accessToken = null;
+    protected ?int $tokenExpiresAt = null;
+
+    public function __construct()
+    {
+        $this->bucketName = Env::get('GCS_BUCKET_NAME', '');
+    }
+
+    /**
+     * Clean all contents inside a directory.
+     *
+     * @param string $path The directory path.
+     * @return bool
+     */
+    public function cleanDirectory(string $path): bool
+    {
+        $cleanPath = $this->cleanPath($path);
+        $prefix = rtrim($cleanPath, '/') . '/';
+        $token = $this->getAccessToken();
+
+        // 1. List all objects matching the prefix
+        $url = "https://storage.googleapis.com/storage/v1/b/{$this->bucketName}/o?prefix=" . urlencode($prefix);
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_CUSTOMREQUEST => 'GET',
+            CURLOPT_HTTPHEADER => ["Authorization: Bearer {$token}"]
+        ]);
+
+        $response = curl_exec($ch);
+        $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($status !== 200) {
+            return false;
+        }
+
+        $data = json_decode($response, true);
+        $items = $data['items'] ?? [];
+
+        // 2. Sequentially delete each object
+        foreach ($items as $item) {
+            $name = $item['name'];
+            $deleteUrl = "https://storage.googleapis.com/storage/v1/b/{$this->bucketName}/o/" . urlencode($name);
+            $delCh = curl_init($deleteUrl);
+            curl_setopt_array($delCh, [
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_CUSTOMREQUEST => 'DELETE',
+                CURLOPT_HTTPHEADER => ["Authorization: Bearer {$token}"]
+            ]);
+            curl_exec($delCh);
+            curl_close($delCh);
+        }
+
+        return true;
+    }
+
+    /**
+     * Strip leading local paths to keep the cloud layout clean.
+     */
+    protected function cleanPath(string $path): string
+    {
+        if (strpos($path, APPLICATION_ROOT) === 0) {
+            $path = substr($path, strlen(APPLICATION_ROOT));
+        }
+        return ltrim($path, '/');
+    }
+
+    /**
+     * Delete a file from GCS.
+     *
+     * @param string $path The file path.
+     * @return bool
+     */
+    public function delete(string $path): bool
+    {
+        $cleanPath = $this->cleanPath($path);
+        $token = $this->getAccessToken();
+
+        $url = "https://storage.googleapis.com/storage/v1/b/{$this->bucketName}/o/" . urlencode($cleanPath);
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_CUSTOMREQUEST => 'DELETE',
+            CURLOPT_HTTPHEADER => ["Authorization: Bearer {$token}"]
+        ]);
+
+        curl_exec($ch);
+        $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        return $status === 204;
+    }
+
+    /**
+     * Check if a file exists on GCS.
+     *
+     * @param string $path The file path.
+     * @return bool
+     */
+    public function exists(string $path): bool
+    {
+        $cleanPath = $this->cleanPath($path);
+        $token = $this->getAccessToken();
+
+        $url = "https://storage.googleapis.com/storage/v1/b/{$this->bucketName}/o/" . urlencode($cleanPath);
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_CUSTOMREQUEST => 'GET',
+            CURLOPT_HTTPHEADER => ["Authorization: Bearer {$token}"]
+        ]);
+
+        curl_exec($ch);
+        $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        return $status === 200;
+    }
+
+    /**
+     * Authenticates with Google API using JWT and fetches an OAuth2 Access Token.
+     */
+    protected function getAccessToken(): string
+    {
+        if ($this->accessToken && $this->tokenExpiresAt > time()) {
+            return $this->accessToken;
+        }
+
+        $keyPath = Env::get('GCS_KEY_FILE');
+        if (empty($keyPath) || !file_exists($keyPath)) {
+            throw new Exception("GCS Key File is missing or not configured inside .env.");
+        }
+
+        $keyData = json_decode(file_get_contents($keyPath), true);
+        $privateKey = $keyData['private_key'] ?? null;
+        $clientEmail = $keyData['client_email'] ?? null;
+
+        if (!$privateKey || !$clientEmail) {
+            throw new Exception("Malformed Google Service Account Key JSON.");
+        }
+
+        // 1. Construct JWT Header and Claims
+        $now = time();
+        $header = rtrim(strtr(base64_encode(json_encode(['alg' => 'RS256', 'typ' => 'JWT'])), '+/', '-_'), '=');
+        $claimSet = rtrim(strtr(base64_encode(json_encode([
+            'iss' => $clientEmail,
+            'scope' => 'https://www.googleapis.com/auth/devstorage.full_control',
+            'aud' => 'https://oauth2.googleapis.com/token',
+            'exp' => $now + 3600,
+            'iat' => $now
+        ])), '+/', '-_'), '=');
+
+        // 2. Sign JWT using native OpenSSL RSA-SHA256
+        $assertionInput = "{$header}.{$claimSet}";
+        $signature = '';
+        if (!openssl_sign($assertionInput, $signature, $privateKey, 'SHA256')) {
+            throw new Exception("OpenSSL JWT Signing failed.");
+        }
+        $encodedSignature = rtrim(strtr(base64_encode($signature), '+/', '-_'), '=');
+        $jwt = "{$assertionInput}.{$encodedSignature}";
+
+        // 3. Exchange JWT for OAuth2 Access Token via cURL
+        $ch = curl_init('https://oauth2.googleapis.com/token');
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => http_build_query([
+                'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+                'assertion' => $jwt
+            ]),
+            CURLOPT_HTTPHEADER => ['Content-Type: application/x-www-form-urlencoded']
+        ]);
+
+        $response = curl_exec($ch);
+        $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($status !== 200) {
+            throw new Exception("Google OAuth token exchange failed: " . $response);
+        }
+
+        $tokenData = json_decode($response, true);
+        $this->accessToken = $tokenData['access_token'];
+        $this->tokenExpiresAt = time() + intval($tokenData['expires_in']) - 60; // 60s buffer
+
+        return $this->accessToken;
+    }
+
+    /**
+     * Get the public URL for a GCS file path.
+     *
+     * @param string $path The file path.
+     * @return string
+     */
+    public function getUrl(string $path): string
+    {
+        return "https://storage.googleapis.com/{$this->bucketName}/" . $this->cleanPath($path);
+    }
+
+    /**
+     * Create virtual directory.
+     *
+     * @param string $path The directory path.
+     * @return bool
+     */
+    public function makeDirectory(string $path): bool
+    {
+        return true;
+    }
+
+    /**
+     * Upload an uploaded file to GCS.
+     *
+     * @param string $path The destination path.
+     * @param string $tmpFilePath The temporary file path.
+     * @return bool
+     */
+    public function putFile(string $path, string $tmpFilePath): bool
+    {
+        $cleanPath = $this->cleanPath($path);
+        $token = $this->getAccessToken();
+        $mime = mime_content_type($tmpFilePath) ?: 'application/octet-stream';
+
+        $acl = Env::get('GCS_PREDEFINED_ACL', '');
+        $aclParam = !empty($acl) ? '&predefinedAcl=' . urlencode($acl) : '';
+
+        $url = "https://storage.googleapis.com/upload/storage/v1/b/{$this->bucketName}/o?uploadType=media{$aclParam}&name=" . urlencode($cleanPath);
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_CUSTOMREQUEST => 'POST',
+            CURLOPT_POSTFIELDS => file_get_contents($tmpFilePath),
+            CURLOPT_HTTPHEADER => [
+                "Authorization: Bearer {$token}",
+                "Content-Type: {$mime}",
+                "Content-Length: " . filesize($tmpFilePath)
+            ]
+        ]);
+
+        curl_exec($ch);
+        $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        return $status === 200;
+    }
+
+    /**
+     * Rename/move a file on GCS.
+     *
+     * @param string $oldPath The original path.
+     * @param string $newPath The target path.
+     * @return bool
+     */
+    public function rename(string $oldPath, string $newPath): bool
+    {
+        $cleanOld = $this->cleanPath($oldPath);
+        $cleanNew = $this->cleanPath($newPath);
+        $token = $this->getAccessToken();
+
+        $acl = Env::get('GCS_PREDEFINED_ACL', '');
+        $aclParam = !empty($acl) ? '?destinationPredefinedAcl=' . urlencode($acl) : '';
+
+        // GCS has no native rename. Copy to new path, then delete original.
+        $copyUrl = "https://storage.googleapis.com/storage/v1/b/{$this->bucketName}/o/" . urlencode($cleanOld) . "/copyTo/b/{$this->bucketName}/o/" . urlencode($cleanNew) . $aclParam;
+        $ch = curl_init($copyUrl);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_CUSTOMREQUEST => 'POST',
+            CURLOPT_HTTPHEADER => ["Authorization: Bearer {$token}"]
+        ]);
+
+        curl_exec($ch);
+        $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($status === 200) {
+            return $this->delete($oldPath);
+        }
+
+        return false;
+    }
+
+    /**
+     * Write raw text content to GCS.
+     *
+     * @param string $path The destination path.
+     * @param string $content The text content.
+     * @return bool
+     */
+    public function write(string $path, string $content): bool
+    {
+        $cleanPath = $this->cleanPath($path);
+        $token = $this->getAccessToken();
+
+        $acl = Env::get('GCS_PREDEFINED_ACL', '');
+        $aclParam = !empty($acl) ? '&predefinedAcl=' . urlencode($acl) : '';
+
+        $url = "https://storage.googleapis.com/upload/storage/v1/b/{$this->bucketName}/o?uploadType=media{$aclParam}&name=" . urlencode($cleanPath);
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_CUSTOMREQUEST => 'POST',
+            CURLOPT_POSTFIELDS => $content,
+            CURLOPT_HTTPHEADER => [
+                "Authorization: Bearer {$token}",
+                "Content-Type: text/plain",
+                "Content-Length: " . strlen($content)
+            ]
+        ]);
+
+        curl_exec($ch);
+        $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        return $status === 200;
+    }
+}

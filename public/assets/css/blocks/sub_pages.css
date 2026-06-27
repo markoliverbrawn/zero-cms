@@ -1,0 +1,145 @@
+/* assets/css/blocks/sub_pages.css */
+/* Modern high-contrast Sub-Pages list grid container styles with zero inline styles */
+
+.block-sub-pages {
+    margin: 3rem 0;
+
+    .sub-pages-block-title {
+        font-size: 2rem;
+        color: var(--text-color, #ffffff);
+        margin-bottom: 1rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+    }
+
+    .sub-pages-block-desc {
+        font-size: 1.1rem;
+        color: var(--text-muted, #94a3b8);
+        line-height: 1.6;
+        margin-bottom: 2.5rem;
+    }
+
+    .sub-pages-wrapper {
+        .sub-pages-empty {
+            color: var(--text-muted, #94a3b8);
+            font-style: italic;
+            font-size: 1rem;
+            text-align: center;
+            padding: 2rem;
+            border: 1px dashed var(--border-color, #222636);
+            border-radius: 8px;
+        }
+
+        .sub-pages-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 2rem;
+
+            .sub-pages-card {
+                background-color: var(--card-bg, #0f172a);
+                border: 1px solid var(--border-color, #1e293b);
+                padding: 2rem;
+                border-radius: 12px;
+                cursor: pointer;
+                transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), border-color 0.2s ease, box-shadow 0.2s ease;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                min-height: 180px;
+
+                .sub-pages-card-title {
+                    margin: 0 0 10px 0;
+                    font-size: 1.25rem;
+                    font-weight: 700;
+
+                    a {
+                        color: var(--text-color, #ffffff);
+                        text-decoration: none;
+                        transition: color 0.15s ease;
+
+                        &:hover {
+                            color: var(--neon-cyan, #06b6d4);
+                        }
+                    }
+                }
+
+                .sub-pages-card-excerpt {
+                    color: var(--text-muted, #94a3b8);
+                    font-size: 0.95rem;
+                    line-height: 1.5;
+                    margin: 0 0 1.5rem 0;
+                    display: -webkit-box;
+                    -webkit-line-clamp: 3;
+                    -webkit-box-orient: vertical;
+                    overflow: hidden;
+                }
+
+                .sub-pages-card-btn-container {
+                    margin-top: auto;
+                    display: flex;
+                    align-items: center;
+
+                    .sub-pages-card-link {
+                        font-size: 0.85rem;
+                        font-weight: bold;
+                        text-transform: uppercase;
+                        letter-spacing: 0.05em;
+                        color: var(--neon-cyan, #06b6d4);
+                        transition: color 0.15s ease, transform 0.15s ease;
+                    }
+                }
+
+                &:hover {
+                    transform: translateY(-5px);
+                    border-color: var(--neon-cyan, #06b6d4);
+                    box-shadow: 0 8px 24px rgba(6, 182, 212, 0.15);
+
+                    .sub-pages-card-link {
+                        color: var(--neon-pink, #f43f5e);
+                    }
+                }
+            }
+        }
+    }
+
+    /* Clientside Search Filtering box */
+    .sub-pages-search-wrapper {
+        margin-bottom: 2rem;
+        max-width: 420px;
+        position: relative;
+
+        .sub-pages-search-input {
+            width: 100%;
+            padding: 0.75rem 1rem 0.75rem 2.75rem;
+            background-color: var(--bg-color, #0b0c10);
+            border: 1px solid var(--border-color, #222636);
+            border-radius: 8px;
+            color: var(--text-color, #ffffff);
+            font-family: inherit;
+            font-size: 0.95rem;
+            outline: none;
+            transition: all 0.2s ease;
+
+            &:focus {
+                border-color: var(--neon-cyan, #06b6d4);
+                box-shadow: 0 0 10px rgba(6, 182, 212, 0.25);
+            }
+        }
+
+        .sub-pages-search-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted, #94a3b8);
+            pointer-events: none;
+            transition: color 0.2s ease;
+        }
+
+        &:focus-within {
+            .sub-pages-search-icon {
+                color: var(--neon-cyan, #06b6d4);
+            }
+        }
+    }
+}

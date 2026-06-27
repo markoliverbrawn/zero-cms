@@ -1,0 +1,245 @@
+{
+    "sites": [
+        {
+            "name": "Zero CMS High-Impact Designer Portfolio",
+            "domain": "d6laptop.zero.portfolio",
+            "theme": "portfolio",
+            "enabled_modules": [
+                "blog",
+                "formbuilder",
+                "security",
+                "queue"
+            ]
+        }
+    ],
+    "media": [
+        {
+            "id": "019ec1cd-0001-7000-8000-000000000001",
+            "filename": "screenshot-portfolio1.jpg",
+            "mime": "image/jpeg",
+            "site_domain": "d6laptop.zero.portfolio"
+        },
+        {
+            "id": "019ec1cd-0002-7000-8000-000000000002",
+            "filename": "screenshot-portfolio2.jpg",
+            "mime": "image/jpeg",
+            "site_domain": "d6laptop.zero.portfolio"
+        },
+        {
+            "id": "019ec1cd-0003-7000-8000-000000000003",
+            "filename": "screenshot-portfolio3.jpg",
+            "mime": "image/jpeg",
+            "site_domain": "d6laptop.zero.portfolio"
+        },
+        {
+            "id": "019ec1cd-0004-7000-8000-000000000004",
+            "filename": "screenshot-portfolio4.jpg",
+            "mime": "image/jpeg",
+            "site_domain": "d6laptop.zero.portfolio"
+        },
+        {
+            "id": "019ec1cd-0005-7000-8000-000000000005",
+            "filename": "screenshot-portfolio5.jpg",
+            "mime": "image/jpeg",
+            "site_domain": "d6laptop.zero.portfolio"
+        }
+    ],
+    "pages": [
+        {
+            "title": "Welcome to Zero Studio",
+            "slug": "",
+            "status": "published",
+            "site_domain": "d6laptop.zero.portfolio",
+            "content": [
+                {
+                    "type": "text",
+                    "title": "We Architect Digitally Cohesive Products",
+                    "content": "<p>A high-impact, award-winning design agency engineering flawless user experiences, luxury interfaces, and stateless digital engines.</p>"
+                },
+                {
+                    "type": "text_image",
+                    "title": "Unrivalled Dynamic Layouts (Right Image)",
+                    "content": "<p>Our custom blocks-based design environment gives authors absolute freedom over their pages. Build high-impact grids and dynamic columns effortlessly.</p>",
+                    "media_id": "019ec1cd-0001-7000-8000-000000000001",
+                    "image_position": "right"
+                },
+                {
+                    "type": "text_image",
+                    "title": "Alternative Image Alignments (Left Image)",
+                    "content": "<p>This is a custom-engineered Text & Image column block with its alignment configured to the left. The fluid flex layout automatically wraps and renders columns in the alternate order.</p>",
+                    "media_id": "019ec1cd-0002-7000-8000-000000000002",
+                    "image_position": "left"
+                },
+                {
+                    "type": "testimonials",
+                    "title": "What Clients Say",
+                    "duration": 5000,
+                    "items": [
+                        {
+                            "content": "Zero Studio delivered a stateless, lightning-fast platform that cut our load times to under 2ms. Truly revolutionary engineering.",
+                            "person": "Alexander Vance, Director at Luxe Media"
+                        },
+                        {
+                            "content": "100% zero third-party dependencies means absolute peace of mind. No security alerts, no broken updates. Pure speed.",
+                            "person": "Clara Montgomery, Founder of Aesthete Agency"
+                        }
+                    ]
+                }
+            ],
+            "type": "page"
+        },
+        {
+            "title": "About Zero Studio",
+            "slug": "about",
+            "status": "published",
+            "site_domain": "d6laptop.zero.portfolio",
+            "content": [
+                {
+                    "type": "text",
+                    "title": "The Design Rebels",
+                    "content": "<p>Based in the digital ether, Zero Studio is a premium design collective engineering breathtaking spatial layouts, high-contrast typography grids, and stateless multitenant engines.</p>"
+                }
+            ],
+            "type": "page"
+        },
+        {
+            "title": "Studio Art Gallery Showcase",
+            "slug": "showcase",
+            "status": "published",
+            "site_domain": "d6laptop.zero.portfolio",
+            "content": [
+                {
+                    "type": "text",
+                    "title": "Aesthetic Visualization Gallery",
+                    "content": "<p>Welcome to our interactive design showcase. This page utilizes the newly developed **Image Gallery block** to render high-contrast design compositions. Our dynamic portfolio is styled for fluid rendering and high-impact visual representation.</p>"
+                },
+                {
+                    "type": "gallery",
+                    "title": "Curated Design Compositions",
+                    "media_ids": [
+                        "019ec1cd-0001-7000-8000-000000000001",
+                        "019ec1cd-0002-7000-8000-000000000002",
+                        "019ec1cd-0003-7000-8000-000000000003",
+                        "019ec1cd-0004-7000-8000-000000000004",
+                        "019ec1cd-0005-7000-8000-000000000005"
+                    ]
+                }
+            ],
+            "type": "page"
+        },
+        {
+            "title": "Contact Us",
+            "slug": "contact",
+            "status": "published",
+            "site_domain": "d6laptop.zero.portfolio",
+            "content": [
+                {
+                    "type": "text",
+                    "title": "Get in Touch",
+                    "content": "<p>Have any questions, inquiries, or feedback? Please use the form below to reach out to our team. We respond to all submissions within 24 hours.</p>"
+                },
+                {
+                    "type": "contact_form",
+                    "title": "Send Us a Message",
+                    "content": "",
+                    "recipient_email": "admin@d6laptop.zero",
+                    "id": "cf_port_contact",
+                    "items": [
+                        {
+                            "name": "full_name",
+                            "label": "Your Full Name",
+                            "type": "text",
+                            "required": "1",
+                            "options": "",
+                            "validation": "none"
+                        },
+                        {
+                            "name": "email_address",
+                            "label": "Your Email Address",
+                            "type": "email",
+                            "required": "1",
+                            "options": "",
+                            "validation": "email"
+                        },
+                        {
+                            "name": "subject",
+                            "label": "Inquiry Subject",
+                            "type": "select",
+                            "required": "0",
+                            "options": "General Question, Partnership Proposal, Tech Support, Careers",
+                            "validation": "none"
+                        },
+                        {
+                            "name": "message",
+                            "label": "Detailed Message",
+                            "type": "textarea",
+                            "required": "1",
+                            "options": "",
+                            "validation": "none"
+                        }
+                    ]
+                }
+            ],
+            "type": "page"
+        }
+    ],
+    "blog_posts": [
+        {
+            "title": "Interactive Brand Showcase",
+            "slug": "interactive-design",
+            "status": "published",
+            "site_domain": "d6laptop.zero.portfolio",
+            "content": [
+                {
+                    "type": "text",
+                    "title": "Project Overview",
+                    "content": "<p>An award-winning immersive showcase co-composed to demonstrate the core aesthetic capabilities of the high-contrast portfolio views system. Scroll down to see our custom-engineered Gallery and Masonry layout modules in action!</p>"
+                },
+                {
+                    "type": "gallery",
+                    "title": "Selected Studio Captures",
+                    "media_ids": [
+                        "019ec1cd-0001-7000-8000-000000000001",
+                        "019ec1cd-0002-7000-8000-000000000002",
+                        "019ec1cd-0003-7000-8000-000000000003",
+                        "019ec1cd-0004-7000-8000-000000000004",
+                        "019ec1cd-0005-7000-8000-000000000005"
+                    ]
+                },
+                {
+                    "type": "masonry",
+                    "title": "Pinterest-Style Masonry Grid",
+                    "items": [
+                        {
+                            "title": "Conceptual Geometry",
+                            "media_id": "019ec1cd-0001-7000-8000-000000000001",
+                            "desc": "An abstract concentric dashboard circle with neon cyan indicators. Proportion: 4:3 Aspect Ratio."
+                        },
+                        {
+                            "title": "The Aesthete Grid",
+                            "media_id": "019ec1cd-0002-7000-8000-000000000002",
+                            "desc": "High-impact crossed line vectors with giant neon pink blocks. Proportion: 1:1 Aspect Ratio (Tall)."
+                        },
+                        {
+                            "title": "Minimal Pyramid",
+                            "media_id": "019ec1cd-0003-7000-8000-000000000003",
+                            "desc": "Three-dimensional spatial vector triangles centered around solid pink core spheres. Proportion: 16:9 Aspect Ratio (Short)."
+                        },
+                        {
+                            "title": "Vertical Typography",
+                            "media_id": "019ec1cd-0004-7000-8000-000000000004",
+                            "desc": "A striking vertical typographic layout displaying clean letter arrays. Proportion: 4:5 Aspect Ratio (Extremely Tall Portrait)."
+                        },
+                        {
+                            "title": "Isometric Space",
+                            "media_id": "019ec1cd-0005-7000-8000-000000000005",
+                            "desc": "Isometric wireframe layouts demonstrating spatial cube dimensions. Proportion: 8:7 Aspect Ratio (Medium)."
+                        }
+                    ]
+                }
+            ],
+            "type": "post",
+            "summary": "Discover high-impact, modern design publications outlining technical layout aesthetics, user experience guidelines, and clean visual compositions. Specifically, this article explores the core paradigms, implementation metrics, and design philosophies regarding \"Interactive Brand Showcase\"."
+        }
+    ]
+}

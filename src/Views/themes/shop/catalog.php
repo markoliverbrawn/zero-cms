@@ -1,0 +1,129 @@
+<?php
+// src/Views/themes/shop/catalog.php
+?>
+<div class="catalog-layout">
+    
+    <!-- Filter Sidebar Column -->
+    <aside class="sidebar-filter">
+        
+        <!-- Categories Block -->
+        <div>
+            <h3 class="sidebar-section-title">Categories</h3>
+            <ul class="sidebar-list">
+                <li>
+                    <a href="/shop/catalog?search=<?php echo urlencode($search); ?>&min_price=<?php echo $minPrice ?: ''; ?>&max_price=<?php echo $maxPrice ?: ''; ?>&sort=<?php echo $sort; ?>" class="sidebar-link" style="color: <?php echo empty($categorySlug) ? 'var(--accent-color)' : 'var(--text-muted)'; ?>; font-weight: <?php echo empty($categorySlug) ? 'bold' : '600'; ?>; text-transform: uppercase; letter-spacing: 0.05em;">
+                        ✦ All Collections
+                    </a>
+                </li>
+                <?php foreach ($categories as $cat): ?>
+                    <li>
+                        <a href="/shop/catalog?category=<?php echo htmlspecialchars($cat->slug); ?>&search=<?php echo urlencode($search); ?>&min_price=<?php echo $minPrice ?: ''; ?>&max_price=<?php echo $maxPrice ?: ''; ?>&sort=<?php echo $sort; ?>" class="sidebar-link" style="color: <?php echo $categorySlug === $cat->slug ? 'var(--accent-color)' : 'var(--text-muted)'; ?>; font-weight: <?php echo $categorySlug === $cat->slug ? 'bold' : '500'; ?>;">
+                            <?php echo htmlspecialchars($cat->title); ?>
+                        </a>
+                    </li>
+                <?php endforeach; ?>
+            </ul>
+        </div>
+
+        <!-- Filter Studio Forms -->
+        <div>
+            <h3 class="sidebar-section-title">Filter Studio</h3>
+            
+            <form method="get" action="/shop/catalog">
+                <input type="hidden" name="category" value="<?php echo htmlspecialchars($categorySlug); ?>">
+                
+                <!-- Search -->
+                <div class="filter-form-group">
+                    <label class="checkout-label">Search</label>
+                    <input name="search" value="<?php echo htmlspecialchars($search); ?>" placeholder="Keywords..." class="filter-input-text">
+                </div>
+
+                <!-- Price bounds -->
+                <div class="filter-form-group">
+                    <label class="checkout-label">Price Range</label>
+                    <div class="filter-price-range">
+                        <input name="min_price" value="<?php echo $minPrice > 0 ? $minPrice : ''; ?>" type="number" placeholder="Min" class="filter-input-text">
+                        <span style="color: var(--border-color);">—</span>
+                        <input name="max_price" value="<?php echo $maxPrice > 0 ? $maxPrice : ''; ?>" type="number" placeholder="Max" class="filter-input-text">
+                    </div>
+                </div>
+
+                <!-- Sorting -->
+                <div class="filter-form-group" style="margin-bottom: 30px;">
+                    <label class="checkout-label">Sort By</label>
+                    <select name="sort" class="filter-select">
+                        <option value="newest" <?php echo $sort === 'newest' ? 'selected' : ''; ?>>Newest Arrivals</option>
+                        <option value="price_asc" <?php echo $sort === 'price_asc' ? 'selected' : ''; ?>>Price: Low to High</option>
+                        <option value="price_desc" <?php echo $sort === 'price_desc' ? 'selected' : ''; ?>>Price: High to Low</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn-luxe" style="width: 100%; margin-bottom: 12px;">Apply Filter</button>
+                <a href="/shop/catalog" class="btn-luxe-outline" style="width: 100%; display: block;">Reset Filters</a>
+            </form>
+        </div>
+    </aside>
+
+    <!-- Catalog Results Column -->
+    <div>
+        <div class="results-meta">
+            <p>
+                Showing <strong style="color: #fff;"><?php echo $totalItems; ?></strong> dynamic high-contrast items
+            </p>
+            <?php if ($activeCategory): ?>
+                <span class="results-badge">Category: <?php echo htmlspecialchars($activeCategory->title); ?></span>
+            <?php endif; ?>
+        </div>
+
+        <?php if (empty($products)): ?>
+            <div class="results-empty">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="results-empty-icon">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="8" y1="12" x2="16" y2="12"></line>
+                </svg>
+                <p class="results-empty-title">No items found matching filter criteria.</p>
+                <p class="results-empty-desc">Try adjusting price limits or clearing keyword parameters.</p>
+            </div>
+        <?php else: ?>
+            <div class="products-grid">
+                <?php foreach ($products as $product): ?>
+                    <a href="/shop/product/<?php echo htmlspecialchars($product->slug); ?>" class="product-card">
+                        <div class="product-card-image">
+                            <img src="<?php echo htmlspecialchars($product->main_image); ?>?v=1.2" alt="<?php echo htmlspecialchars($product->title); ?>">
+                        </div>
+                        <div class="product-card-content">
+                            <h4 class="product-card-title"><?php echo htmlspecialchars($product->title); ?></h4>
+                            <div class="product-card-price-container">
+                                <span class="product-card-price">$<?php echo number_format($product->price, 2); ?></span>
+                                <?php if ($product->compare_at_price > 0): ?>
+                                    <span class="product-card-compare">$<?php echo number_format($product->compare_at_price, 2); ?></span>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </a>
+                <?php endforeach; ?>
+            </div>
+
+            <!-- Catalog Pagination Block -->
+            <?php if ($totalPages > 1): ?>
+                <div style="display: flex; justify-content: center; gap: 8px; margin-top: 60px;">
+                    <?php if ($currentPage > 1): ?>
+                        <a href="/shop/catalog?page=<?php echo $currentPage - 1; ?>&category=<?php echo urlencode($categorySlug); ?>&search=<?php echo urlencode($search); ?>&min_price=<?php echo $minPrice ?: ''; ?>&max_price=<?php echo $maxPrice ?: ''; ?>&sort=<?php echo $sort; ?>" class="btn-luxe-outline" style="padding: 10px 18px; font-size: 0.75rem;">Prev</a>
+                    <?php endif; ?>
+
+                    <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+                        <?php if ($i === $currentPage): ?>
+                            <span class="btn-luxe" style="padding: 10px 18px; font-size: 0.75rem; border: 1px solid var(--accent-color); cursor: default;"><?php echo $i; ?></span>
+                        <?php else: ?>
+                            <a href="/shop/catalog?page=<?php echo $i; ?>&category=<?php echo urlencode($categorySlug); ?>&search=<?php echo urlencode($search); ?>&min_price=<?php echo $minPrice ?: ''; ?>&max_price=<?php echo $maxPrice ?: ''; ?>&sort=<?php echo $sort; ?>" class="btn-luxe-outline" style="padding: 10px 18px; font-size: 0.75rem;"><?php echo $i; ?></a>
+                        <?php endif; ?>
+                    <?php endfor; ?>
+
+                    <?php if ($currentPage < $totalPages): ?>
+                        <a href="/shop/catalog?page=<?php echo $currentPage + 1; ?>&category=<?php echo urlencode($categorySlug); ?>&search=<?php echo urlencode($search); ?>&min_price=<?php echo $minPrice ?: ''; ?>&max_price=<?php echo $maxPrice ?: ''; ?>&sort=<?php echo $sort; ?>" class="btn-luxe-outline" style="padding: 10px 18px; font-size: 0.75rem;">Next</a>
+                    <?php endif; ?>
+                </div>
+            <?php endif; ?>
+        <?php endif; ?>
+    </div>
+</div>

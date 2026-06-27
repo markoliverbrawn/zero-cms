@@ -1,0 +1,118 @@
+/* Public Display Styles for the Latest Blog Articles Block */
+.block-latest-articles-wrapper {
+    margin-bottom: 50px;
+
+    .block-latest-articles-title {
+        font-size: 1.8rem;
+        font-weight: 800;
+        margin-top: 0;
+        margin-bottom: 25px;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        text-align: center;
+        color: var(--text-color, #ffffff);
+    }
+
+    .latest-articles-container {
+        display: grid;
+        gap: 30px;
+        margin-top: 25px;
+
+        &.layout-grid {
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        }
+
+        &.layout-list {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .latest-article-card {
+        border: 1px solid var(--border-color, #cbd5e1);
+        border-radius: var(--border-radius, 8px);
+        padding: 25px;
+        background: var(--card-bg, #0b0f19);
+        transition: transform 0.3s ease, border-color 0.3s ease;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+
+        &:hover {
+            transform: translateY(-4px);
+            border-color: var(--accent-color, #d4af37) !important;
+        }
+    }
+
+    .latest-article-meta {
+        display: flex;
+        align-items: center;
+        font-size: 0.75rem;
+        color: var(--text-muted, #64748b);
+        font-weight: bold;
+    }
+
+    .latest-article-date {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .icon-svg-12 {
+        width: 12px;
+        height: 12px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .latest-article-title {
+        margin: 0;
+        font-size: 1.25rem;
+        font-weight: 800;
+
+        a {
+            color: var(--text-color, #ffffff);
+            text-decoration: none;
+            transition: color 0.15s ease;
+
+            &:hover {
+                color: var(--accent-color, #d4af37);
+            }
+        }
+    }
+
+    .latest-article-summary {
+        margin: 0;
+        font-size: 0.88rem;
+        color: var(--text-muted, #64748b);
+        line-height: 1.5;
+        flex-grow: 1;
+    }
+
+    .latest-article-more {
+        color: var(--accent-color, #d4af37);
+        font-size: 0.8rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: gap 0.2s ease;
+        margin-top: 10px;
+        width: fit-content;
+
+        &:hover {
+            gap: 10px;
+        }
+    }
+
+    .latest-articles-empty {
+        color: var(--text-muted, #64748b);
+        text-align: center;
+        grid-column: 1 / -1;
+        font-style: italic;
+        padding: 20px;
+    }
+}

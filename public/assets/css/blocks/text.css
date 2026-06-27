@@ -1,0 +1,18 @@
+.block-text {
+    margin-bottom: 35px;
+    padding: 0 24px;
+
+    h3 {
+        font-size: 1.6rem;
+        font-weight: 800;
+        margin-top: 35px;
+        margin-bottom: 20px;
+        color: inherit;
+    }
+
+    .block-content {
+        font-size: 1.05rem;
+        line-height: 1.6;
+        color: inherit;
+    }
+}

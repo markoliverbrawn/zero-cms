@@ -1,0 +1,225 @@
+/* Retro Vintage Greenscreen Preset Theme */
+
+[data-preset='vintage-greenscreen'] {
+  --text-font: 'Courier New', Courier, monospace !important;
+  --border-radius: 0px !important;
+}
+
+/* Light Mode: Forest Phosphor (Green on dark green) */
+body[data-theme='light'][data-preset='vintage-greenscreen'] {
+  --bg-color: #0b1d12 !important;
+  --text-color: #39ff14 !important;
+  --bg-color-inverse: #39ff14 !important;
+  --text-color-inverse: #0b1d12 !important;
+}
+
+/* Dark Mode: Pure Phosphor (Green on pitch black) */
+body[data-theme='dark'][data-preset='vintage-greenscreen'] {
+  --bg-color: #000000 !important;
+  --text-color: #00ff00 !important;
+  --bg-color-inverse: #00ff00 !important;
+  --text-color-inverse: #000000 !important;
+}
+
+/* Base Terminal Theme Styling Overrides */
+body[data-preset='vintage-greenscreen'] {
+  text-shadow: 0 0 3px color-mix(in srgb, var(--text-color) 70%, transparent) !important;
+  font-family: var(--text-font) !important;
+
+  header {
+    background-color: var(--bg-color) !important;
+    color: var(--text-color) !important;
+    border-bottom: 2px solid var(--text-color) !important;
+
+    h1 a {
+      color: var(--text-color) !important;
+      text-shadow: 0 0 6px var(--text-color) !important;
+    }
+  }
+
+  .header-username {
+    color: var(--text-color) !important;
+  }
+
+  aside {
+    background-color: var(--bg-color) !important;
+    border-right: 2px solid var(--text-color) !important;
+
+    ul li {
+      a {
+        color: var(--text-color);
+        border-radius: 0;
+        border: 1px solid transparent;
+
+        &:hover, &.active {
+          text-shadow: none !important;
+        }
+
+        &:hover {
+          background-color: var(--text-color) !important;
+          color: var(--bg-color) !important;
+        }
+
+        &.active {
+          background: var(--text-color) !important;
+          color: var(--text-color-inverse) !important;
+          opacity: 1 !important;
+        }
+      }
+    }
+  }
+
+  .sidebar-submenu li a:hover,
+  .sidebar-item a:hover {
+    background-color: var(--text-color) !important;
+    color: var(--bg-color) !important;
+    text-shadow: none !important;
+  }
+
+  .sidebar-submenu li a.active,
+  .sidebar-item a.active {
+    background: var(--text-color) !important;
+    color: var(--text-color-inverse) !important;
+    opacity: 1 !important;
+    text-shadow: none !important;
+  }
+
+  main {
+    background-color: var(--bg-color) !important;
+  }
+
+  footer {
+    border-top: 2px solid var(--text-color) !important;
+    background-color: var(--bg-color) !important;
+    color: var(--text-color) !important;
+  }
+
+  /* Card overrides */
+  .file-card,
+  .dashboard-card,
+  .media-upload-zone {
+    border: 1px solid var(--text-color) !important;
+    border-radius: 0 !important;
+    background-color: var(--bg-color) !important;
+    box-shadow: none !important;
+  }
+
+  form {
+    border: none !important;
+    border-radius: 0 !important;
+    background-color: var(--bg-color) !important;
+    box-shadow: none !important;
+  }
+
+  .file-card:hover {
+    border: 2px solid var(--text-color) !important;
+    transform: none !important;
+  }
+
+  .file-preview-container {
+    border-color: var(--text-color) !important;
+    border-radius: 0 !important;
+    background-color: var(--bg-color) !important;
+  }
+
+  /* Input, button & select styling */
+  input,
+  select,
+  textarea {
+    border: 1px solid var(--text-color) !important;
+    border-radius: 0 !important;
+    background-color: var(--bg-color) !important;
+    color: var(--text-color) !important;
+    font-family: var(--text-font) !important;
+
+    &:focus {
+      outline: none !important;
+      border-color: var(--text-color) !important;
+      box-shadow: 0 0 6px var(--text-color) !important;
+    }
+  }
+
+  button,
+  .action-btn {
+    border: 1px solid var(--text-color) !important;
+    background-color: var(--bg-color) !important;
+    color: var(--text-color) !important;
+    border-radius: 0 !important;
+    font-family: var(--text-font) !important;
+
+    &:hover {
+      background-color: var(--text-color) !important;
+      color: var(--bg-color) !important;
+      text-shadow: none !important;
+    }
+  }
+
+  /* Theme Switcher Links */
+  .theme-switcher li a {
+    border: 1px solid var(--text-color) !important;
+  }
+
+  /* Icons */
+  svg,
+  .icon-svg svg {
+    color: var(--text-color) !important;
+  }
+
+  .block-header {
+    svg, .icon-svg svg {
+      color: var(--text-color-inverse) !important;
+    }
+
+    .block-actions button {
+      background: none !important;
+      border: none !important;
+      color: var(--text-color-inverse) !important;
+    }
+  }
+
+  /* Table styling if any */
+  table,
+  th,
+  td {
+    border-color: var(--text-color) !important;
+  }
+
+  a {
+    color: var(--text-color) !important;
+  }
+
+  .dashboard-widget-toggle {
+    border: 1px solid var(--text-color) !important;
+    background-color: var(--bg-color) !important;
+    border-radius: 0 !important;
+  }
+
+  /* CRT Scanline Retro Effect overlay (optional and subtle) */
+  &::before {
+    content: " ";
+    display: block;
+    position: fixed;
+    top: 0; left: 0; bottom: 0; right: 0;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.15) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+    background-size: 100% 4px, 3px 100%;
+    z-index: 99999;
+    pointer-events: none;
+  }
+
+  /* Vintage Greenscreen Overrides for Module Checkboxes */
+  .admin-modules-container {
+    background-color: var(--bg-color) !important;
+    border: 2px solid var(--text-color) !important;
+    border-radius: 0 !important;
+  }
+
+  .admin-modules-label {
+    color: var(--text-color) !important;
+    font-family: var(--text-font, monospace) !important;
+  }
+
+  .admin-modules-input {
+    cursor: pointer;
+    accent-color: var(--text-color) !important; /* Make the checkbox tick glowing green! */
+  }
+}
