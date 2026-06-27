@@ -147,6 +147,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="block-live-preview-col">
                     <div class="block-live-preview-header">
                         <span>Live Theme Render</span>
+                        <div class="block-preview-viewport-controls">
+                            <button type="button" class="btn-viewport active" data-viewport="desktop" title="Desktop Viewport">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+                            </button>
+                            <button type="button" class="btn-viewport" data-viewport="tablet" title="Tablet Viewport">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>
+                            </button>
+                            <button type="button" class="btn-viewport" data-viewport="mobile" title="Mobile Viewport">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>
+                            </button>
+                        </div>
                         <button type="button" class="btn-toggle-preview-inline btn-hide-preview-trigger">Hide</button>
                     </div>
                     <div class="block-live-preview-iframe-wrapper">
@@ -307,6 +318,42 @@ document.addEventListener('DOMContentLoaded', function() {
     var previewDebounceMap = new Map();
 
     // Core Function to render live previews directly inside the block's left column iframe
+    function updateViewportScale(previewCol) {
+        if (!previewCol) return;
+        var iframeWrapper = previewCol.querySelector('.block-live-preview-iframe-wrapper');
+        if (!iframeWrapper) return;
+
+        var activeBtn = previewCol.querySelector('.btn-viewport.active');
+        var viewport = activeBtn ? activeBtn.getAttribute('data-viewport') : 'desktop';
+
+        var colWidth = iframeWrapper.parentNode.clientWidth || 400;
+        // Subtract a 24px layout safety margin to account for padding, borders, and column breathing room!
+        var usableWidth = Math.max(280, colWidth - 24);
+
+        var virtualWidth = 1200;
+        if (viewport === 'tablet') virtualWidth = 820;
+        if (viewport === 'mobile') virtualWidth = 375;
+
+        // Account for CSS padding/borders inside clientWidth bounds
+        var limitWidth = Math.min(usableWidth, virtualWidth);
+        var scale = limitWidth / virtualWidth;
+
+        iframeWrapper.setAttribute('data-scale', scale);
+        iframeWrapper.setAttribute('data-virtual-width', virtualWidth);
+
+        // Reset inline style overrides so CSS max-widths control wrapper width
+        iframeWrapper.style.width = '';
+        iframeWrapper.style.transform = '';
+        iframeWrapper.style.height = '';
+
+        // Apply custom CSS variables for our new iframe scaling engine
+        iframeWrapper.style.setProperty('--viewport-scale', scale);
+        iframeWrapper.style.setProperty('--viewport-width', virtualWidth + 'px');
+
+        iframeWrapper.classList.remove('viewport-desktop', 'viewport-tablet', 'viewport-mobile');
+        iframeWrapper.classList.add('viewport-' + viewport);
+    }
+
     function refreshLivePreview(blockItem) {
         if (!blockItem || blockItem.classList.contains('collapsed') || blockItem.classList.contains('preview-hidden')) return;
         
@@ -360,6 +407,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                     doc.write('</body></html>');
                     doc.close();
+
+                    var previewCol = blockItem.querySelector('.block-live-preview-col');
+                    if (previewCol) {
+                        updateViewportScale(previewCol);
+                    }
 
                     // Absolute, double-guaranteed fallback listener bound directly from parent window
                     setTimeout(function() {
@@ -457,6 +509,24 @@ document.addEventListener('DOMContentLoaded', function() {
             var gridRow = gridHeader.closest('.grid-item-row');
             if (gridRow) {
                 gridRow.classList.toggle('collapsed');
+            }
+            return;
+        }
+
+        var btnViewport = e.target.closest('.btn-viewport');
+        if (btnViewport) {
+            var viewportControls = btnViewport.closest('.block-preview-viewport-controls');
+            var previewCol = btnViewport.closest('.block-live-preview-col');
+            var blockItem = btnViewport.closest('.block-item');
+
+            viewportControls.querySelectorAll('.btn-viewport').forEach(function(b) {
+                b.classList.remove('active');
+            });
+            btnViewport.classList.add('active');
+
+            updateViewportScale(previewCol);
+            if (blockItem) {
+                refreshLivePreview(blockItem);
             }
             return;
         }
@@ -891,7 +961,17 @@ document.addEventListener('DOMContentLoaded', function() {
     initialBlocks.forEach(function(item) {
         if (!item.classList.contains('collapsed')) {
             refreshLivePreview(item);
+            var previewCol = item.querySelector('.block-live-preview-col');
+            if (previewCol) {
+                updateViewportScale(previewCol);
+            }
         }
+    });
+
+    window.addEventListener('resize', function() {
+        document.querySelectorAll('.block-live-preview-col').forEach(function(col) {
+            updateViewportScale(col);
+        });
     });
 
     // On form submit, serialize all blocks into JSON and put them into the hidden input
