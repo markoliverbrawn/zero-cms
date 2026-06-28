@@ -1669,22 +1669,35 @@ main.homepage-main {
     }
 }
 
-/* Beautiful modern tech block header titles (High-impact aligned layout with dynamic neon draw line) */
+/* Beautiful modern tech block header titles (High-impact aligned layout with dynamic neon draw line & CRT screen scanlines across text) */
 .block-section-title {
     font-family: 'Inter', sans-serif;
     font-size: 32px; /* Large modern font-size */
     font-weight: 300; /* Sleek, thinner light-weight */
-    color: var(--primary-color, #00f0ff); /* Glowing light-blue theme color */
     text-transform: uppercase;
     letter-spacing: 0.12em;
     margin: 0 var(--gutter, 24px) 32px var(--gutter, 24px); /* Offset margins to align perfectly with content cards below */
     padding: 0 0 12px 0; /* Padding at bottom for drawing line offset */
-    background: none;
-    border: none;
     line-height: 1.1;
-    text-shadow: 0 0 6px rgba(0, 240, 255, 0.2);
-    box-shadow: none;
+    text-shadow: 0 0 6px rgba(0, 240, 255, 0.25); /* Phosphor bloom outline glow */
     position: relative; /* Anchor for absolute pseudo-element line */
+
+    /* CRT old-fashioned scanlines overlaying directly across the text characters! */
+    background: 
+        repeating-linear-gradient(
+            0deg,
+            transparent 0px,
+            transparent 1px,
+            rgba(0, 0, 0, 0.45) 1px,
+            rgba(0, 0, 0, 0.45) 2px
+        ), 
+        var(--primary-color, #00f0ff);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+
+    /* Dynamic analog CRT display flicker (comfort-safe range) */
+    animation: crt-flicker 0.15s infinite;
 
     /* Bright glowing oscilloscope beam dot */
     &::before {
@@ -1692,10 +1705,10 @@ main.homepage-main {
         position: absolute;
         bottom: 0;
         left: 0;
-        width: 6px;
-        height: 6px;
+        width: 8px;
+        height: 8px;
         border-radius: 50%;
-        background-color: #ffffff; /* White-hot core */
+        background-color: var(--primary-color, #00f0ff); /* Pure glowing cyan to match text */
         box-shadow: 0 0 10px var(--primary-color, #00f0ff), 0 0 20px var(--primary-color, #00f0ff); /* Glowing neon cyan aura */
         transform: translate(-50%, 50%) scale(0); /* Centered and hidden by default */
         opacity: 0;
@@ -1710,47 +1723,123 @@ main.homepage-main {
         left: 0;
         width: 100%;
         height: 1px; /* Sleek, paper-thin neon line */
-        background-color: rgba(0, 240, 255, 0.4); /* Fainter trail */
-        box-shadow: 0 0 6px rgba(0, 240, 255, 0.3); /* Soft, glowing wake */
+        background-color: rgba(0, 240, 255, 0.08); /* Ultimate subtle final decay state */
+        box-shadow: none;
         transform: scaleX(0); /* Initially hidden/shrunk to 0 width */
         transform-origin: left center; /* Scaled from left-to-right */
-        transition: transform 1.8s cubic-bezier(0.25, 1, 0.5, 1); /* Ultra-smooth progressive easing curve */
         z-index: 1;
     }
 
     /* Active visibility state triggered dynamically by our zero-overhead Intersection Observer */
     &.visible {
         &::before {
-            /* Sweeps left-to-right matching the exact curve and duration of the trailing line! */
-            animation: oscilloscope-sweep 1.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+            /* Sweeps left-to-right, zooms up to text line level at the end, and then throbs infinitely! */
+            animation: 
+                oscilloscope-sweep 1.8s cubic-bezier(0.25, 1, 0.5, 1) forwards, 
+                oscilloscope-throb 1.2s ease-in-out infinite 1.8s,
+                crt-flicker 0.15s infinite;
         }
 
         &::after {
-            transform: scaleX(1); /* Draw/reveal the line left-to-right */
+            /* Animates the progressive draw and phosphor decay smoothly over 1.8s! */
+            animation: oscilloscope-trail 1.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
         }
     }
 }
 
-/* Oscilloscope beam sweep keyframe animations */
+/* Comfortable dynamic CRT screen flicker */
+@keyframes crt-flicker {
+    0% { opacity: 0.985; }
+    50% { opacity: 1.0; }
+    100% { opacity: 0.985; }
+}
+
+/* Oscilloscope beam sweep keyframe animations (sweeps bottom, teleports, zooms up to text level) */
 @keyframes oscilloscope-sweep {
     0% {
         left: 0%;
+        bottom: 0px;
         transform: translate(-50%, 50%) scale(0);
         opacity: 0;
     }
     10% {
         left: 0%;
+        bottom: 0px;
         transform: translate(-50%, 50%) scale(1);
         opacity: 1;
     }
-    90% {
+    75% {
         left: 100%;
+        bottom: 0px;
         transform: translate(-50%, 50%) scale(1);
+        opacity: 1;
+    }
+    76% {
+        left: 100%;
+        bottom: 0px;
+        transform: translate(-50%, 50%) scale(0); /* Instantly disappear! */
+        opacity: 0;
+    }
+    84% {
+        left: calc(100% - 12px); /* Teleport slightly to the right to align with padding margins */
+        bottom: 16px; /* Set vertical height centered perfectly with the text row */
+        transform: translate(-50%, -50%) scale(0); /* Remain shrunken & hidden during teleport */
+        opacity: 0;
+    }
+    85% {
+        left: calc(100% - 12px);
+        bottom: 16px;
+        transform: translate(-50%, -50%) scale(1.8); /* Zoom/Pop in extra large on arrival! */
         opacity: 1;
     }
     100% {
-        left: 100%;
-        transform: translate(-50%, 50%) scale(0);
-        opacity: 0;
+        left: calc(100% - 12px);
+        bottom: 16px;
+        transform: translate(-50%, -50%) scale(1.4); /* Settle at a larger throb base size */
+        opacity: 1;
+    }
+}
+
+/* Infinite looping oscilloscope pulsing throbber keyframes (active on top-right after 1.8s) */
+@keyframes oscilloscope-throb {
+    0% {
+        left: calc(100% - 12px);
+        bottom: 16px;
+        transform: translate(-50%, -50%) scale(1.4); /* Larger base size */
+        opacity: 0.9;
+        box-shadow: 0 0 12px var(--primary-color, #00f0ff), 0 0 18px var(--primary-color, #00f0ff);
+    }
+    50% {
+        left: calc(100% - 12px);
+        bottom: 16px;
+        transform: translate(-50%, -50%) scale(1.55); /* Subtle, ultra-smooth pulse breathing */
+        opacity: 1;
+        box-shadow: 0 0 15px var(--primary-color, #00f0ff), 0 0 24px var(--primary-color, #00f0ff); /* Glowing aura flare */
+    }
+    100% {
+        left: calc(100% - 12px);
+        bottom: 16px;
+        transform: translate(-50%, -50%) scale(1.4);
+        opacity: 0.9;
+        box-shadow: 0 0 12px var(--primary-color, #00f0ff), 0 0 18px var(--primary-color, #00f0ff);
+    }
+}
+
+/* Oscilloscope trailing line drawing & phosphor decay keyframes */
+@keyframes oscilloscope-trail {
+    0% {
+        transform: scaleX(0);
+        background-color: rgba(0, 240, 255, 0.9);
+        box-shadow: 0 0 10px rgba(0, 240, 255, 0.8);
+    }
+    85% {
+        transform: scaleX(1);
+        background-color: rgba(0, 240, 255, 0.9);
+        box-shadow: 0 0 10px rgba(0, 240, 255, 0.8);
+    }
+    100% {
+        transform: scaleX(1);
+        background-color: rgba(0, 240, 255, 0.08); /* Decays into an ultra-subtle, paper-thin faint line! */
+        box-shadow: none; /* Phosphor glow decays completely! */
     }
 }

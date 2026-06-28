@@ -296,7 +296,8 @@ $isHomepage = (isset($post) && property_exists($post, 'slug') && $post->slug ===
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
                     entry.target.classList.add('visible');
-                    obs.unobserve(entry.target); // Unobserve to reclaim memory and CPU instantly!
+                } else {
+                    entry.target.classList.remove('visible'); // Reset animations when scrolling out of view!
                 }
             });
         }, {
