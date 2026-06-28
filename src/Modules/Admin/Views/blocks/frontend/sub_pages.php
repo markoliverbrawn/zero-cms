@@ -29,10 +29,6 @@ if (!empty($parentSlug)) {
 $showSearch = count($subPages) > 6;
 ?>
 <div class="block block-sub-pages">
-  <?php if (!empty($block['title'])): ?>
-    <h2 class="sub-pages-block-title"><?php echo htmlspecialchars($block['title'], ENT_QUOTES, "UTF-8"); ?></h2>
-  <?php endif; ?>
-
   <?php if (!empty($block['content'])): ?>
     <div class="block-content sub-pages-block-desc">
       <?php echo Security::sanitizeHtml($block['content'] ?? ''); ?>
