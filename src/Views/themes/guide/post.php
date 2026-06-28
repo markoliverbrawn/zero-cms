@@ -99,7 +99,7 @@ $shouldOmitTitle = !empty($post->omit_title) || $hasHeroBlock;
     <?php endif; ?>
   </div>
 
-  <?php if (!$isBlogPost): ?>
+  <?php if (!$isBlogPost && !empty($post->slug)): ?>
     <div class="footer-date-tag">
       <span class="material-symbols-outlined" style="font-size: 14px;">schedule</span>
       <span>Published: <?php echo date('F j, Y', strtotime($post->created_at)); ?></span>

@@ -28,6 +28,42 @@
             "filename": "cybercity.mp4",
             "mime": "video/mp4",
             "site_domain": "d6laptop.zero.guide"
+        },
+        {
+            "filename": "icon-cloud.svg",
+            "mime": "image/svg+xml",
+            "site_domain": "d6laptop.zero.guide",
+            "content_base64": "PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDBmMGZmIiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNMTggMTBoLTEuMjZBOCA4IDAgMSAwIDkgMjBoOWE1IDUgMCAwIDAgMC0xMHoiLz48L3N2Zz4="
+        },
+        {
+            "filename": "icon-shield.svg",
+            "mime": "image/svg+xml",
+            "site_domain": "d6laptop.zero.guide",
+            "content_base64": "PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDBmMGZmIiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNMTIgMjJzOC00IDgtMTBWNWwtOC0zLTggM3Y3YzAgNiA4IDEwIDggMTB6Ii8+PC9zdmc+"
+        },
+        {
+            "filename": "icon-commerce.svg",
+            "mime": "image/svg+xml",
+            "site_domain": "d6laptop.zero.guide",
+            "content_base64": "PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDBmMGZmIiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNNiAyTDMgNnYxNGEyIDIgMCAwIDAgMiAyaDE0YTIgMiAwIDAgMCAyLTJWNmwtMy00eiIvPjxsaW5lIHgxPSIzIiB5MT0iNiIgeDI9IjIxIiB5Mj0iNiIvPjxwYXRoIGQ9Ik0xNiAxMGE0IDQgMCAwIDEtOCAwIi8+PC9zdmc+"
+        },
+        {
+            "filename": "icon-network.svg",
+            "mime": "image/svg+xml",
+            "site_domain": "d6laptop.zero.guide",
+            "content_base64": "PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDBmMGZmIiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48Y2lyY2xlIGN4PSIxMiIgY3k9IjUiIHI9IjMiLz48Y2lyY2xlIGN4PSIxMiIgY3k9IjE5IiByPSIzIi8+PGNpcmNsZSBjeD0iNSIgY3k9IjEyIiByPSIzIi8+PGNpcmNsZSBjeD0iMTkiIGN5PSIxMiIgcj0iMyIvPjxsaW5lIHgxPSIxMiIgeTE9IjgiIHgyPSIxMiIgeTI9IjE2Ii8+PGxpbmUgeDE9IjgiIHkxPSIxMiIgeDI9IjE2IiB5Mj0iMTIiLz48L3N2Zz4="
+        },
+        {
+            "filename": "icon-edge.svg",
+            "mime": "image/svg+xml",
+            "site_domain": "d6laptop.zero.guide",
+            "content_base64": "PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDBmMGZmIiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cG9seWdvbiBwb2ludHM9IjEzIDIgMyAxNCAxMiAxNCAxMSAyMiAyMSAxMCAxMiAxMCAxMyAyIi8+PC9zdmc+"
+        },
+        {
+            "filename": "icon-mail.svg",
+            "mime": "image/svg+xml",
+            "site_domain": "d6laptop.zero.guide",
+            "content_base64": "PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDBmMGZmIiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48bGluZSB4MT0iMiIgeTE9IjEyIiB4Mj0iNiIgeTI9IjEyIi8+PGxpbmUgeDE9IjMiIHkxPSI4IiB4Mj0iNSIgeTI9IjgiLz48bGluZSB4MT0iMyIgeTE9IjE2IiB4Mj0iNSIgeTI9IjE2Ii8+PHBhdGggZD0iTTkgNWgxMWEyIDIgMCAwIDEgMiAydjEwYTIgMiAwIDAgMS0yIDJIOWEyIDIgMCAwIDEtMi0yVjdhMiAyIDAgMCAxIDItMnoiLz48cG9seWxpbmUgcG9pbnRzPSIyMiw3IDE0LjUsMTIuNSA3LDciLz48L3N2Zz4="
         }
     ],
     "pages": [
@@ -57,6 +93,10 @@
                             "value": "30.31"
                         },
                         {
+                            "label": "Laravel (MVC)",
+                            "value": "12.80"
+                        },
+                        {
                             "label": "Drupal (Enterprise)",
                             "value": "8.20"
                         },
@@ -67,6 +107,33 @@
                         {
                             "label": "WordPress (LAMP)",
                             "value": "5.50"
+                        }
+                    ]
+                },
+                {
+                    "type": "chart",
+                    "title": "CMS Page Response Time Comparison (Lower is Better, in Milliseconds)",
+                    "chart_layout": "vertical",
+                    "items": [
+                        {
+                            "label": "Zero CMS",
+                            "value": "12.5"
+                        },
+                        {
+                            "label": "Laravel (MVC)",
+                            "value": "78.0"
+                        },
+                        {
+                            "label": "WordPress (LAMP)",
+                            "value": "210.0"
+                        },
+                        {
+                            "label": "Drupal (Enterprise)",
+                            "value": "290.0"
+                        },
+                        {
+                            "label": "Magento (Commerce)",
+                            "value": "450.0"
                         }
                     ]
                 },
@@ -148,49 +215,38 @@
                         {
                             "title": "Native GCS/S3 Support",
                             "desc": "Stream media assets directly from your preferred cloud provider with built-in edge caching protocols.",
-                            "link_url": "/docs/intro"
+                            "link_url": "/docs/intro",
+                            "media_placeholder": "icon-cloud.svg"
                         },
                         {
                             "title": "Security Auditing",
                             "desc": "Zero-trust architecture with real-time audit logs for every API transaction.",
-                            "link_url": "/architecture"
+                            "link_url": "/architecture",
+                            "media_placeholder": "icon-shield.svg"
                         },
                         {
                             "title": "Commerce Engine",
                             "desc": "PCI-compliant cart primitives for sub-millisecond checkout experiences.",
-                            "link_url": "/docs/intro"
+                            "link_url": "/docs/intro",
+                            "media_placeholder": "icon-commerce.svg"
                         },
                         {
                             "title": "Multisite Hub",
                             "desc": "Manage 100+ domains from a single kernel instance.",
-                            "link_url": "/docs/intro"
+                            "link_url": "/docs/intro",
+                            "media_placeholder": "icon-network.svg"
                         },
                         {
                             "title": "Edge Runtime Optimized",
                             "desc": "Built specifically for Cloud Run, Cloudflare Workers, and Fly.io. No heavy servers required.",
-                            "link_url": "/docs/intro"
-                        }
-                    ]
-                },
-                {
-                    "type": "chart",
-                    "title": "CMS Requests Per Second Throughput Comparison (Higher is Better)",
-                    "items": [
-                        {
-                            "label": "Zero CMS",
-                            "value": "30.31"
+                            "link_url": "/docs/intro",
+                            "media_placeholder": "icon-edge.svg"
                         },
                         {
-                            "label": "Drupal (Enterprise)",
-                            "value": "8.20"
-                        },
-                        {
-                            "label": "Shopify (SaaS)",
-                            "value": "7.10"
-                        },
-                        {
-                            "label": "WordPress (LAMP)",
-                            "value": "5.50"
+                            "title": "Zero-Dependency Mailer",
+                            "desc": "Dispatch transactional alerts natively via raw network sockets, bypassing heavy third-party vendor SDKs.",
+                            "link_url": "/docs/intro",
+                            "media_placeholder": "icon-mail.svg"
                         }
                     ]
                 },

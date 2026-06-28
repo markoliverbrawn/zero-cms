@@ -223,20 +223,51 @@ $isHomepage = (isset($post) && property_exists($post, 'slug') && $post->slug ===
 <?php endif; ?>
 </main>
 
-<!-- Footer -->
+<!-- Modern, Large, Structured Footer -->
 <footer class="footer">
     <div class="footer-grid">
+        <!-- Column 1: Site Info & Branding -->
         <div class="brand-section">
-            <div class="brand-caps">NO_DEP CMS</div>
+            <div class="brand-logo-row">
+                <span class="brand-dot"></span>
+                <span><?php echo htmlspecialchars(App::getCurrentSite()->name, ENT_QUOTES, 'UTF-8'); ?></span>
+            </div>
+            <p>
+                A high-performance, zero-dependency, multi-tenant headless CMS and high-contrast e-commerce platform built natively for Serverless edge runtimes.
+            </p>
             <p class="copyright-text">
-                © <?php echo date('Y'); ?> NO_DEP CMS. Built with Zero Dependencies. All rights reserved by the kernel collective.
+                &copy; <?php echo date('Y'); ?> Zero CMS. All rights reserved by the kernel collective.
             </p>
         </div>
-        <div class="footer-links">
-            <a href="/">Architecture</a>
-            <a href="/intro">Performance</a>
-            <a href="/intro">Security</a>
-            <a href="/admin/dashboard">Admin</a>
+
+        <!-- Column 2: Documentation (Nav) -->
+        <div class="footer-col">
+            <h4>Documentation</h4>
+            <ul>
+                <li><a href="/docs/intro">Getting Started</a></li>
+                <li><a href="/docs/benchmarks">Performance Audit</a></li>
+                <li><a href="/docs/intro">Architecture Blueprint</a></li>
+            </ul>
+        </div>
+
+        <!-- Column 3: Ecosystem & Modules -->
+        <div class="footer-col">
+            <h4>Ecosystem</h4>
+            <ul>
+                <li><a href="/docs/intro">PCI Commerce Engine</a></li>
+                <li><a href="/docs/intro">Security Telemetry</a></li>
+                <li><a href="/docs/intro">Zero-Trust Auditing</a></li>
+            </ul>
+        </div>
+
+        <!-- Column 4: Administrative Back-Office -->
+        <div class="footer-col">
+            <h4>Back-Office</h4>
+            <ul>
+                <li><a href="/admin/dashboard">Admin Dashboard</a></li>
+                <li><a href="/admin/dashboard">Database Seeder</a></li>
+                <li><a href="/admin/dashboard">Scheduled Runner</a></li>
+            </ul>
         </div>
     </div>
 </footer>
