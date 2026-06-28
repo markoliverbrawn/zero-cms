@@ -233,15 +233,26 @@ class AdminApiController extends ApiController
                 $html = Security::sanitizeHtml($html);
             }
 
-            // Determine appropriate theme stylesheets
+            // Determine appropriate theme stylesheets dynamically using App theme registry
             $themeStylesheets = [];
             $themeStylesheets[] = '/assets/css/blocks/baseline.css'; // Always load dynamic public block baseline styles!
-            if ($theme === 'default') {
-                $themeStylesheets[] = '/assets/css/corporate.css';
-            } elseif ($theme === 'shop') {
-                $themeStylesheets[] = '/assets/css/shop.css';
+            
+            // Dynamically load block-specific styles if they exist on disk (e.g. blocks/text_image.css)
+            $blockCss = '/assets/css/blocks/' . $type . '.css';
+            if (file_exists(APPLICATION_ROOT . '/public' . $blockCss)) {
+                $themeStylesheets[] = $blockCss;
+            }
+
+            // Resolve theme main stylesheet dynamically
+            $themeStylesheet = App::getThemeStylesheet($theme);
+            if (!empty($themeStylesheet)) {
+                $themeStylesheets[] = $themeStylesheet;
             } else {
-                $themeStylesheets[] = '/assets/css/' . $theme . '.css';
+                // Fallback to convention-based path
+                $fallbackPath = '/assets/css/' . $theme . '.css';
+                if (file_exists(APPLICATION_ROOT . '/public' . $fallbackPath)) {
+                    $themeStylesheets[] = $fallbackPath;
+                }
             }
 
             $this->respond([

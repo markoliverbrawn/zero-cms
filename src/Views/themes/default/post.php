@@ -123,6 +123,13 @@ $shouldOmitTitle = !empty($post->omit_title) || $hasHeroBlock;
         if (file_exists($blockPath)) {
             $rowClass = BlockHelper::getRowClasses($block, $type, false);
             echo '<div class="' . $rowClass . '">';
+            
+            // If hide_title is not explicitly enabled, render the section title as a block-level H2
+            $hideTitle = $block['hide_title'] ?? '0';
+            if ($hideTitle !== '1' && !empty($block['title']) && $type !== 'baseline') {
+                echo '<h2 class="block-section-title">' . htmlspecialchars($block['title'], ENT_QUOTES, 'UTF-8') . '</h2>';
+            }
+
             echo Template::renderFile($blockPath, [
                 'block' => $block,
                 'resolveMedia' => $resolveMedia

@@ -32,7 +32,7 @@ $imagePosition = $block['image_position'] ?? 'right';
     </div>
     <div class="field-group block-flex-col-1">
         <label>Image Alignment</label>
-        <select class="block-image-position-select">
+        <select class="block-image_position-select">
             <option value="right" <?php echo $imagePosition === 'right' ? 'selected' : ''; ?>>Align Right</option>
             <option value="left" <?php echo $imagePosition === 'left' ? 'selected' : ''; ?>>Align Left</option>
         </select>

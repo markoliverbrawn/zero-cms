@@ -1,9 +1,32 @@
 <?php
 // src/Modules/Admin/Views/blocks/admin/grid.php
 
+use Zero\Core\App;
+use Zero\Database\DB;
 use Zero\Models\Media;
 
 $items = $block['items'] ?? [];
+
+// Eager load all media records in a single database query to prevent N+1 queries!
+$mediaIds = [];
+foreach ($items as $item) {
+    if (!empty($item['media_id'])) {
+        $mediaIds[] = $item['media_id'];
+    }
+}
+
+$mediaRecords = [];
+if (!empty($mediaIds)) {
+    $uniqueIds = array_unique(array_filter($mediaIds));
+    if (!empty($uniqueIds)) {
+        $placeholders = implode(',', array_fill(0, count($uniqueIds), '?'));
+        $stmt = DB::query("SELECT * FROM media WHERE id IN ($placeholders)", array_values($uniqueIds));
+        $rows = $stmt->fetchAll();
+        foreach ($rows as $row) {
+            $mediaRecords[$row['id']] = $row;
+        }
+    }
+}
 ?>
 <div class="field-group">
     <label>Block Section Title</label>
@@ -18,31 +41,33 @@ $items = $block['items'] ?? [];
             $iDesc = $item['desc'] ?? '';
             $iLinkUrl = $item['link_url'] ?? '';
             $iMediaId = $item['media_id'] ?? '';
+            $iColSpanDesktop = $item['col_span_desktop'] ?? '1';
+            $iColSpanTablet = $item['col_span_tablet'] ?? '1';
+            
             $filename = '';
-            if (!empty($iMediaId)) {
-                $media = Media::find($iMediaId);
-                $filename = $media ? $media->filename : '';
+            if (!empty($iMediaId) && isset($mediaRecords[$iMediaId])) {
+                $filename = $mediaRecords[$iMediaId]['filename'] ?? '';
             }
             ?>
             <div class="grid-item-row collapsed">
                 <button type="button" class="btn-delete-grid-item" title="Remove Grid Card">
-                    <?php echo \Zero\Core\App::svg('trash-2'); ?>
+                    <?php echo App::svg('trash-2'); ?>
                 </button>
                 
                 <!-- Collapsible Header Panel (Clickable to Toggle Collapse/Expand) -->
                 <div class="grid-item-row-header">
                     <div class="grid-item-row-title-label">
                         <span class="grid-item-row-collapse-icon">
-                            <?php echo \Zero\Core\App::svg('chevron-right'); ?>
+                            <?php echo App::svg('chevron-right'); ?>
                         </span>
                         <span class="grid-item-row-title-text"><?php echo !empty($iTitle) ? htmlspecialchars($iTitle, ENT_QUOTES, 'UTF-8') : 'Grid Card (Untitled)'; ?></span>
                     </div>
                     <div class="grid-item-controls">
                         <button type="button" class="btn-sort-grid-item-up" title="Move Card Up">
-                            <?php echo \Zero\Core\App::svg('arrow-up'); ?>
+                            <?php echo App::svg('arrow-up'); ?>
                         </button>
                         <button type="button" class="btn-sort-grid-item-down" title="Move Card Down">
-                            <?php echo \Zero\Core\App::svg('arrow-down'); ?>
+                            <?php echo App::svg('arrow-down'); ?>
                         </button>
                     </div>
                 </div>
@@ -68,6 +93,25 @@ $items = $block['items'] ?? [];
                     <div class="field-group block-child-field-group-0" style="margin-top: 8px;">
                         <label class="block-child-label-desc">Card Click URL Link (e.g. /intro)</label>
                         <input type="text" class="grid-item-link_url-input" value="<?php echo htmlspecialchars($iLinkUrl, ENT_QUOTES, 'UTF-8'); ?>" placeholder="Enter card target URL...">
+                    </div>
+                    <div class="block-flex-row" style="margin-top: 8px; display: flex; gap: 10px;">
+                        <div class="field-group block-flex-col-1" style="flex: 1;">
+                            <label class="block-child-label-desc">Desktop Column Span</label>
+                            <select class="grid-item-col_span_desktop-select">
+                                <option value="1" <?php echo $iColSpanDesktop === '1' ? 'selected' : ''; ?>>1 Column</option>
+                                <option value="2" <?php echo $iColSpanDesktop === '2' ? 'selected' : ''; ?>>2 Columns</option>
+                                <option value="3" <?php echo $iColSpanDesktop === '3' ? 'selected' : ''; ?>>3 Columns</option>
+                                <option value="4" <?php echo $iColSpanDesktop === '4' ? 'selected' : ''; ?>>4 Columns</option>
+                            </select>
+                        </div>
+                        <div class="field-group block-flex-col-1" style="flex: 1;">
+                            <label class="block-child-label-desc">Tablet Column Span</label>
+                            <select class="grid-item-col_span_tablet-select">
+                                <option value="1" <?php echo $iColSpanTablet === '1' ? 'selected' : ''; ?>>1 Column</option>
+                                <option value="2" <?php echo $iColSpanTablet === '2' ? 'selected' : ''; ?>>2 Columns</option>
+                                <option value="3" <?php echo $iColSpanTablet === '3' ? 'selected' : ''; ?>>3 Columns</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
             </div>

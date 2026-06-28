@@ -278,7 +278,7 @@ $isHomepage = (isset($post) && property_exists($post, 'slug') && $post->slug ===
 <script src="/assets/js/blocks/masonry.js"></script>
 <script src="/assets/js/blocks/baseline.js"></script>
 
-<script>
+<script nonce="<?php echo \Zero\Core\App::getNonce(); ?>">
     // Micro-interaction for glass-panel hover effects
     document.querySelectorAll('.glass-panel').forEach(card => {
         card.addEventListener('mousemove', (e) => {
@@ -289,6 +289,30 @@ $isHomepage = (isset($post) && property_exists($post, 'slug') && $post->slug ===
             card.style.setProperty('--mouse-y', `${y}px`);
         });
     });
+
+    // Zero-overhead Intersection Observer to dynamically draw the glowing H2 neon lines on scroll
+    if ('IntersectionObserver' in window) {
+        const titleObserver = new IntersectionObserver((entries, obs) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    obs.unobserve(entry.target); // Unobserve to reclaim memory and CPU instantly!
+                }
+            });
+        }, {
+            threshold: 0.15,
+            rootMargin: '0px 0px -40px 0px' // Sleek triggering boundary
+        });
+
+        document.querySelectorAll('.block-section-title').forEach(title => {
+            titleObserver.observe(title);
+        });
+    } else {
+        // Fallback for legacy user agents
+        document.querySelectorAll('.block-section-title').forEach(title => {
+            title.classList.add('visible');
+        });
+    }
 </script>
 
 </body>

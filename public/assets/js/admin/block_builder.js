@@ -498,7 +498,9 @@ document.addEventListener('DOMContentLoaded', function() {
             if (blockItem) {
                 blockItem.classList.toggle('collapsed');
                 if (!blockItem.classList.contains('collapsed')) {
-                    refreshLivePreview(blockItem);
+                    setTimeout(function() {
+                        refreshLivePreview(blockItem);
+                    }, 50);
                 }
             }
             return;
@@ -717,6 +719,25 @@ document.addEventListener('DOMContentLoaded', function() {
                         <div class="field-group block-child-field-group-0" style="margin-top: 8px;">
                             <label class="block-child-label-desc">Card Click URL Link (e.g. /intro)</label>
                             <input type="text" class="grid-item-link_url-input" value="" placeholder="Enter card target URL...">
+                        </div>
+                        <div class="block-flex-row" style="margin-top: 8px; display: flex; gap: 10px;">
+                            <div class="field-group block-flex-col-1" style="flex: 1;">
+                                <label class="block-child-label-desc">Desktop Column Span</label>
+                                <select class="grid-item-col_span_desktop-select">
+                                    <option value="1" selected>1 Column</option>
+                                    <option value="2">2 Columns</option>
+                                    <option value="3">3 Columns</option>
+                                    <option value="4">4 Columns</option>
+                                </select>
+                            </div>
+                            <div class="field-group block-flex-col-1" style="flex: 1;">
+                                <label class="block-child-label-desc">Tablet Column Span</label>
+                                <select class="grid-item-col_span_tablet-select">
+                                    <option value="1" selected>1 Column</option>
+                                    <option value="2">2 Columns</option>
+                                    <option value="3">3 Columns</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
                 `;

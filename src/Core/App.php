@@ -33,6 +33,8 @@ class App
     protected static $registeredBlocks = [];
     protected static $registeredModels = [];
     protected static $themeFallbacks = [];
+    protected static $themeStylesheets = [];
+    protected static $nonce = '';
 
     public static function appendBenchmarkWidget()
     {
@@ -87,7 +89,7 @@ class App
                 </div>
             </div>
         </div>
-        <script>
+        <script nonce="<?php echo self::getNonce(); ?>">
         document.addEventListener('DOMContentLoaded', () => {
             const widget = document.getElementById('db-benchmark-widget');
             const header = document.getElementById('db-benchmark-header');
@@ -292,12 +294,12 @@ class App
             
             $homePage = null;
             if (!empty($homepageId)) {
-                $homePage = \Zero\Models\Page::find($homepageId);
+                $homePage = Page::find($homepageId);
             }
             
             if ($homePage === null) {
                 // Fallback: Query pages table for an empty slug ("") homepage under active site
-                $pages = \Zero\Models\Page::where('slug', '');
+                $pages = Page::where('slug', '');
                 if (!empty($pages)) {
                     $homePage = $pages[0];
                 }
@@ -305,7 +307,7 @@ class App
             
             if ($homePage === null) {
                 // Fallback: Query pages table for "home" slug page under active site
-                $pages = \Zero\Models\Page::where('slug', 'home');
+                $pages = Page::where('slug', 'home');
                 if (!empty($pages)) {
                     $homePage = $pages[0];
                 }
@@ -315,10 +317,10 @@ class App
                 // Fallback 3: Query pages table for the first page under active site (by precedence, then created_at)
                 try {
                     $sql = "SELECT id FROM pages WHERE site_id = ? AND deleted_at IS NULL ORDER BY precedence ASC, created_at ASC LIMIT 1";
-                    $stmt = \Zero\Database\DB::query($sql, [$siteId]);
+                    $stmt = DB::query($sql, [$siteId]);
                     $row = $stmt->fetch();
                     if ($row) {
-                        $homePage = \Zero\Models\Page::find($row['id']);
+                        $homePage = Page::find($row['id']);
                     }
                 } catch (\Exception $e) {
                     // Safe fallback
@@ -574,7 +576,7 @@ class App
             if (!empty($filteredIds)) {
                 $placeholders = implode(',', array_fill(0, count($filteredIds), '?'));
                 $sql = "SELECT id, path FROM media WHERE id IN ($placeholders) AND deleted_at IS NULL";
-                $stmt = \Zero\Database\DB::query($sql, array_values($filteredIds));
+                $stmt = DB::query($sql, array_values($filteredIds));
                 while ($row = $stmt->fetch()) {
                     $mediaIdMap[$row['id']] = $row['path'];
                 }
@@ -675,6 +677,16 @@ class App
         return self::$modules;
     }
 
+    /**
+     * Get the dynamic CSP cryptographic nonce.
+     *
+     * @return string
+     */
+    public static function getNonce(): string
+    {
+        return self::$nonce;
+    }
+
     
 
     public static function getRegisteredBlocks(): array
@@ -689,9 +701,24 @@ class App
         return self::$registeredModels;
     }
 
+    /**
+     * Get the registered stylesheet path for a theme.
+     *
+     * @param string $themeName
+     * @return string|null
+     */
+    public static function getThemeStylesheet(string $themeName): ?string
+    {
+        return self::$themeStylesheets[$themeName] ?? null;
+    }
+
     
 
     public static function init() {
+        self::registerThemeStylesheet('default', '/assets/css/corporate.css');
+        self::registerThemeStylesheet('shop', '/assets/css/shop.css');
+        self::registerThemeStylesheet('guide', '/assets/css/guide.css');
+        self::registerThemeStylesheet('portfolio', '/assets/css/portfolio.css');
     }
 
     /**
@@ -750,6 +777,18 @@ class App
     public static function registerThemeFallback(string $themeName)
     {
         self::$themeFallbacks[] = $themeName;
+    }
+
+    /**
+     * Register a stylesheet path dynamically for a theme.
+     *
+     * @param string $themeName
+     * @param string $stylesheetPath
+     * @return void
+     */
+    public static function registerThemeStylesheet(string $themeName, string $stylesheetPath): void
+    {
+        self::$themeStylesheets[$themeName] = $stylesheetPath;
     }
 
     
@@ -873,7 +912,7 @@ class App
     {
         self::$currentSite = $site;
         // Reset DB Column Cache and clear Identity Map to avoid cross-tenant caching pollution
-        \Zero\Database\DB::clearColumnCache();
+        DB::clearColumnCache();
     }
 
     
@@ -881,6 +920,17 @@ class App
     public static function setCurrentUser($user): void
     {
         self::$currentUser = $user;
+    }
+
+    /**
+     * Set the dynamic CSP cryptographic nonce.
+     *
+     * @param string $nonce
+     * @return void
+     */
+    public static function setNonce(string $nonce): void
+    {
+        self::$nonce = $nonce;
     }
 
     

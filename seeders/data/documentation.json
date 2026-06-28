@@ -216,7 +216,8 @@
                             "title": "Native GCS/S3 Support",
                             "desc": "Stream media assets directly from your preferred cloud provider with built-in edge caching protocols.",
                             "link_url": "/docs/intro",
-                            "media_placeholder": "icon-cloud.svg"
+                            "media_placeholder": "icon-cloud.svg",
+                            "col_span_desktop": "2"
                         },
                         {
                             "title": "Security Auditing",
@@ -246,7 +247,8 @@
                             "title": "Zero-Dependency Mailer",
                             "desc": "Dispatch transactional alerts natively via raw network sockets, bypassing heavy third-party vendor SDKs.",
                             "link_url": "/docs/intro",
-                            "media_placeholder": "icon-mail.svg"
+                            "media_placeholder": "icon-mail.svg",
+                            "col_span_desktop": "2"
                         }
                     ]
                 },

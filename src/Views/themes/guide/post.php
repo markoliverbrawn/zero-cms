@@ -87,6 +87,13 @@ $shouldOmitTitle = !empty($post->omit_title) || $hasHeroBlock;
             $rowClass = BlockHelper::getRowClasses($block, $type, $isBreakout);
             echo '<section class="' . $rowClass . '">';
             echo '  <div class="' . ($isBreakout ? 'block-container-fluid' : 'block-container') . '">';
+            
+            // If hide_title is not explicitly enabled, render the section title as a block-level H2
+            $hideTitle = $block['hide_title'] ?? '0';
+            if ($hideTitle !== '1' && !empty($block['title']) && $type !== 'baseline') {
+                echo '<h2 class="block-section-title">' . htmlspecialchars($block['title'], ENT_QUOTES, 'UTF-8') . '</h2>';
+            }
+
             echo Template::renderFile($blockPath, [
                 'block' => $block,
                 'resolveMedia' => $resolveMedia
@@ -99,7 +106,10 @@ $shouldOmitTitle = !empty($post->omit_title) || $hasHeroBlock;
     <?php endif; ?>
   </div>
 
-  <?php if (!$isBlogPost && !empty($post->slug)): ?>
+  <?php 
+  $isHomepage = (parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) === '/');
+  if (!$isBlogPost && !$isHomepage): 
+  ?>
     <div class="footer-date-tag">
       <span class="material-symbols-outlined" style="font-size: 14px;">schedule</span>
       <span>Published: <?php echo date('F j, Y', strtotime($post->created_at)); ?></span>
