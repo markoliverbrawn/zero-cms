@@ -25,7 +25,7 @@ class Product implements Model
 
     protected static $tableName = 'shop_products';
     protected static $modelType = 'product';
-    protected static $fillable = ['category_id', 'title', 'slug', 'sku', 'description', 'price', 'compare_at_price', 'main_image', 'media_ids', 'status'];
+    protected static $fillable = ['category_id', 'title', 'slug', 'sku', 'description', 'price', 'compare_at_price', 'main_image', 'media_ids', 'status', 'exclude_from_search'];
     protected static array $cascadeDeletes = [
         ProductVariant::class => 'product_id'
     ];
@@ -42,6 +42,7 @@ class Product implements Model
     public $main_image; // Dynamically contains path for views compatibility
     public $media_ids;
     public $status;
+    public $exclude_from_search = 0;
     public $created_at;
     public $updated_at;
 
@@ -193,8 +194,31 @@ class Product implements Model
                 'required' => true,
                 'section' => 'side',
                 'width' => 'full'
+            ],
+            'exclude_from_search' => [
+                'type' => 'select',
+                'label' => 'Exclude from Search',
+                'options' => [
+                    1 => 'Yes',
+                    0 => 'No'
+                ],
+                'editable' => true,
+                'listDisplay' => false,
+                'required' => true,
+                'section' => 'side',
+                'width' => 'full'
             ]
         ];
+    }
+
+    /**
+     * Resolves the public frontend routing URL for this product record.
+     * Keeps method sorting alphabetically correct (getConfig -> getFrontendUrl).
+     */
+    public function getFrontendUrl(): string
+    {
+        $slug = $this->slug ?? '';
+        return '/shop/product/' . ltrim($slug, '/');
     }
 
     /**

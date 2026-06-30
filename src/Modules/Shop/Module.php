@@ -81,5 +81,15 @@ class Module implements ModuleInterface
             'admin_view' => dirname(__FILE__) . '/Views/blocks/admin/categories.php',
             'frontend_view' => dirname(__FILE__) . '/Views/blocks/frontend/categories.php'
         ]);
+
+        if (class_exists(\Zero\Modules\Search\SearchService::class)) {
+            \Zero\Modules\Search\SearchService::register(Product::class, [
+                'type_label' => 'Product',
+                'search_fields' => ['title', 'description', 'sku'],
+                'title_field' => 'title',
+                'content_field' => 'description',
+                'status_field' => 'status'
+            ]);
+        }
     }
 }

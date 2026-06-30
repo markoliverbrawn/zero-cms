@@ -21,7 +21,7 @@ class Post extends Page
 
     protected static $tableName = 'blog_posts';
     protected static $modelType = 'post'; // Define type for Post model
-    protected static $fillable = ['title', 'summary', 'slug', 'content', 'status', 'allow_comments', 'comment_notifiers', 'featured_image'];
+    protected static $fillable = ['title', 'summary', 'slug', 'content', 'status', 'allow_comments', 'comment_notifiers', 'featured_image', 'exclude_from_search'];
     protected static array $cascadeDeletes = [
         Comment::class => 'post_id'
     ];

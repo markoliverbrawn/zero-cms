@@ -7,7 +7,8 @@
             "enabled_modules": [
                 "blog",
                 "security",
-                "queue"
+                "queue",
+                "site-search"
             ]
         }
     ],

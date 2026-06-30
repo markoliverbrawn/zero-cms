@@ -20,15 +20,16 @@ use Zero\Support\I18n;
     <?php foreach ($results as $res): ?>
       <div class="search-result-card" style="border-bottom: 1px solid #e9ecef; padding-bottom: 25px;">
         <h3 style="margin-top: 0; margin-bottom: 8px; font-size: 1.25rem;">
-          <a href="/<?php echo htmlspecialchars($res->slug ?? '', ENT_QUOTES, "UTF-8"); ?>" style="color: var(--accent-color); text-decoration: none; font-weight: bold;">
-            <?php echo htmlspecialchars($res->title ?? '', ENT_QUOTES, "UTF-8"); ?>
+          <a href="<?php echo htmlspecialchars($res['url'] ?? '', ENT_QUOTES, "UTF-8"); ?>" style="color: var(--accent-color); text-decoration: none; font-weight: bold;">
+            <?php echo htmlspecialchars($res['title'] ?? '', ENT_QUOTES, "UTF-8"); ?>
           </a>
         </h3>
         
         <p style="margin: 0; font-size: 0.95rem; color: #495057; line-height: 1.5;">
           <?php
             $preview = '';
-            $decoded = json_decode($res->content, true);
+            $content = $res['content'] ?? '';
+            $decoded = json_decode($content, true);
             if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
                 foreach ($decoded as $block) {
                     if (!empty($block['content'])) {
@@ -46,6 +47,16 @@ use Zero\Support\I18n;
                         }
                     }
                 }
+            } else {
+                $cleanText = strip_tags($content);
+                if ($q !== '' && ($pos = stripos($cleanText, $q)) !== false) {
+                    $start = max(0, $pos - 80);
+                    $length = 180;
+                    $snippet = substr($cleanText, $start, $length);
+                    $preview = ($start > 0 ? '...' : '') . $snippet . (strlen($cleanText) > ($start + $length) ? '...' : '');
+                } else {
+                    $preview = substr($cleanText, 0, 180) . (strlen($cleanText) > 180 ? '...' : '');
+                }
             }
             if (empty($preview)) {
                 $preview = 'Click to view this documentation page and read the detailed technical specification...';
@@ -53,7 +64,7 @@ use Zero\Support\I18n;
             echo htmlspecialchars($preview, ENT_QUOTES, 'UTF-8');
           ?>
         </p>
-        <a href="/<?php echo htmlspecialchars($res->slug ?? '', ENT_QUOTES, "UTF-8"); ?>" style="display: inline-block; margin-top: 10px; font-size: 0.85rem; font-weight: 600; color: var(--accent-color); text-decoration: none;">View Page ➔</a>
+        <a href="<?php echo htmlspecialchars($res['url'] ?? '', ENT_QUOTES, "UTF-8"); ?>" style="display: inline-block; margin-top: 10px; font-size: 0.85rem; font-weight: 600; color: var(--accent-color); text-decoration: none;">View Page ➔</a>
       </div>
     <?php endforeach; ?>
   </div>

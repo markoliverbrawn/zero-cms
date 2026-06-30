@@ -60,5 +60,15 @@ class Module implements ModuleInterface
             'admin_view' => dirname(__FILE__) . '/Views/blocks/admin/latest_articles.php',
             'frontend_view' => dirname(__FILE__) . '/Views/blocks/frontend/latest_articles.php'
         ]);
+
+        if (class_exists(\Zero\Modules\Search\SearchService::class)) {
+            \Zero\Modules\Search\SearchService::register(Post::class, [
+                'type_label' => 'Blog Post',
+                'search_fields' => ['title', 'content', 'summary'],
+                'title_field' => 'title',
+                'content_field' => 'content',
+                'status_field' => 'status'
+            ]);
+        }
     }
 }

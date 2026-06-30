@@ -143,6 +143,10 @@ $renderField = function($field, $fieldConfig) use ($record, $modelName, $csrf, $
                 <input type="checkbox" name="enabled_modules[]" value="forum" <?php echo in_array('forum', $activeModules) ? 'checked' : ''; ?> class="admin-modules-input">
                 <span><strong>Community Forum</strong> (Discussions, Boards, Threads, Replies)</span>
             </label>
+            <label class="admin-modules-label">
+                <input type="checkbox" name="enabled_modules[]" value="site-search" <?php echo in_array('search', $activeModules) ? 'checked' : ''; ?> class="admin-modules-input">
+                <span><strong>Search</strong> (Page and Posts)</span>
+            </label>
         </div>
     <?php elseif ($fieldConfig['type'] == "textarea"): ?>
         <?php if ($usesBlockBuilder && $field === $blockBuilderField): ?>

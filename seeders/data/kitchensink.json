@@ -12,7 +12,8 @@
                 "formbuilder",
                 "forum",
                 "security",
-                "queue"
+                "queue",
+                "site-search"
             ]
         }
     ],

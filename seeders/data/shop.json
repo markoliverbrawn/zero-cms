@@ -9,7 +9,8 @@
                 "blog",
                 "formbuilder",
                 "security",
-                "queue"
+                "queue",
+                "site-search"
             ]
         }
     ],

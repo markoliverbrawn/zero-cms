@@ -40,15 +40,16 @@ class Router
                     
                     // Identify if the matched route is associated with an active module
                     $moduleName = self::getModuleForController($controllerClass, $pattern);
-
+                    
                     if ($moduleName !== null) {
                         $site = App::getCurrentSite();
+                        // print_r([$moduleName, $site->isModuleEnabled($moduleName)]);
                         if ($site && !$site->isModuleEnabled($moduleName)) {
                             // Module is disabled for this site! Bypass routing (acts as a clean 404).
                             continue;
                         }
                     }
-
+                            
                     $controller = new $controllerClass();
                     $controller->handle($matches);
                     return true;

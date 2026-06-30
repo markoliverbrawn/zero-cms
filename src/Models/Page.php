@@ -21,7 +21,7 @@ class Page implements Model
 
     protected static $tableName = 'pages';
     protected static $modelType = 'page';
-    protected static $fillable = ['title', 'omit_title', 'slug', 'content', 'summary', 'controller', 'view', 'status', 'precedence', 'show_in_nav'];
+    protected static $fillable = ['title', 'omit_title', 'slug', 'content', 'summary', 'controller', 'view', 'status', 'precedence', 'show_in_nav', 'exclude_from_search'];
     protected static bool $restrictGuests = true;
 
     public $id;
@@ -35,6 +35,7 @@ class Page implements Model
     public $status; // Explicitly declared to prevent PHP 8.2+ dynamic property deprecation notices
     public $precedence;
     public $show_in_nav = 1;
+    public $exclude_from_search = 0;
     public $site_id;
     public $created_at;
     public $updated_at;
@@ -158,6 +159,17 @@ class Page implements Model
             'show_in_nav' => [
                 'type' => 'select',
                 'label' => 'Show in Main Navigation',
+                'options' => [
+                    1 => 'Yes',
+                    0 => 'No'
+                ],
+                'editable' => true,
+                'listDisplay' => false,
+                'required' => true
+            ],
+            'exclude_from_search' => [
+                'type' => 'select',
+                'label' => 'Exclude from Search',
                 'options' => [
                     1 => 'Yes',
                     0 => 'No'
