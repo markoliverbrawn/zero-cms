@@ -4,7 +4,7 @@ namespace Zero\Modules\Search;
 
 use Zero\Interfaces\Module as ModuleInterface;
 use Zero\Modules\Search\Controllers\SearchController;
-use Zero\Modules\Search\SearchService;
+use Zero\Modules\Search\Services\SearchService;
 use Zero\Core\App;
 
 class Module implements ModuleInterface

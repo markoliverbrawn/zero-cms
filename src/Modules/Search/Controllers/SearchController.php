@@ -4,7 +4,7 @@ namespace Zero\Modules\Search\Controllers;
 
 use Zero\Interfaces\Controller;
 use Zero\Core\App;
-use Zero\Modules\Search\SearchService;
+use Zero\Modules\Search\Services\SearchService;
 
 class SearchController implements Controller
 {

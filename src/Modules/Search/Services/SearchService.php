@@ -1,6 +1,6 @@
 <?php
 
-namespace Zero\Modules\Search;
+namespace Zero\Modules\Search\Services;
 
 use Zero\Core\App;
 use Zero\Database\DB;
