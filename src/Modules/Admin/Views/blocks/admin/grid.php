@@ -97,7 +97,7 @@ if (!empty($mediaIds)) {
                     <div class="block-flex-row" style="margin-top: 8px; display: flex; gap: 10px;">
                         <div class="field-group block-flex-col-1" style="flex: 1;">
                             <label class="block-child-label-desc">Desktop Column Span</label>
-                            <select class="grid-item-col_span_desktop-select">
+                            <select class="grid-item-col_span_desktop">
                                 <option value="1" <?php echo $iColSpanDesktop === '1' ? 'selected' : ''; ?>>1 Column</option>
                                 <option value="2" <?php echo $iColSpanDesktop === '2' ? 'selected' : ''; ?>>2 Columns</option>
                                 <option value="3" <?php echo $iColSpanDesktop === '3' ? 'selected' : ''; ?>>3 Columns</option>
@@ -106,7 +106,7 @@ if (!empty($mediaIds)) {
                         </div>
                         <div class="field-group block-flex-col-1" style="flex: 1;">
                             <label class="block-child-label-desc">Tablet Column Span</label>
-                            <select class="grid-item-col_span_tablet-select">
+                            <select class="grid-item-col_span_tablet">
                                 <option value="1" <?php echo $iColSpanTablet === '1' ? 'selected' : ''; ?>>1 Column</option>
                                 <option value="2" <?php echo $iColSpanTablet === '2' ? 'selected' : ''; ?>>2 Columns</option>
                                 <option value="3" <?php echo $iColSpanTablet === '3' ? 'selected' : ''; ?>>3 Columns</option>
