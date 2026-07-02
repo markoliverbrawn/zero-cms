@@ -5,6 +5,7 @@ use Zero\Core\App;
 use Zero\Database\DB;
 use Zero\Models\Media;
 
+$gap = $block['gap'] ?? '16px';
 $colsDesktop = $block['cols_desktop'] ?? '4';
 $colsTablet = $block['cols_tablet'] ?? '2';
 $colsMobile = $block['cols_mobile'] ?? '1';
@@ -31,7 +32,7 @@ if (!empty($mediaIds)) {
     }
 }
 ?>
-<div class="block-grid" style="--cols-desktop: <?php echo htmlspecialchars($colsDesktop, ENT_QUOTES, 'UTF-8'); ?>; --cols-tablet: <?php echo htmlspecialchars($colsTablet, ENT_QUOTES, 'UTF-8'); ?>; --cols-mobile: <?php echo htmlspecialchars($colsMobile, ENT_QUOTES, 'UTF-8'); ?>;">
+<div class="block-grid" style="--gap: <?php echo htmlspecialchars($gap, ENT_QUOTES, 'UTF-8'); ?>; --cols-desktop: <?php echo htmlspecialchars($colsDesktop, ENT_QUOTES, 'UTF-8'); ?>; --cols-tablet: <?php echo htmlspecialchars($colsTablet, ENT_QUOTES, 'UTF-8'); ?>; --cols-mobile: <?php echo htmlspecialchars($colsMobile, ENT_QUOTES, 'UTF-8'); ?>;">
     <?php foreach ($items as $item): 
         $iTitle = $item['title'] ?? '';
         $iDesc = $item['desc'] ?? '';
