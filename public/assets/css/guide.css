@@ -1316,15 +1316,6 @@ main.homepage-main {
     }
 }
 
-/* Responsive Grid Component Styles (Mobile-First CSS Var Layout) */
-.block-grid {
-    /* display: grid;
-    gap: 16px;
-    width: 100%;
-    padding: 0 24px;
-    margin-bottom: 24px;
-    grid-template-columns: repeat(var(--cols-mobile, 1), 1fr); */
-}
 
 .grid-card {
     background: var(--card-bg);
