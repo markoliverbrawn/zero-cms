@@ -107,7 +107,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <span>Block Settings</span>
                             </h4>
                             ${settingsHtml}
-                            <small>Note: Block-specific layout settings will not affect the preview panel.</small>
+                            <small>Note: Block-specific layout settings may not affect the preview panel.</small>
                         </div>
                     ` : ''}
 

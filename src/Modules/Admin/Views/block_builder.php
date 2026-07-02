@@ -133,7 +133,7 @@ foreach (App::getRegisteredBlocks() as $type => $config) {
                                     <span>Block Settings</span>
                                 </h4>
                                 <?php include $settingsPath; ?>
-                                <small>Note: Block-specific layout settings will not affect the preview panel.</small>
+                                <small>Note: Block-specific layout settings may not affect the preview panel.</small>
                             </div>
                         <?php endif; ?>
 
