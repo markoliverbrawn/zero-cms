@@ -71,6 +71,15 @@ $sidebarCategories = DB::query("SELECT title, slug FROM shop_categories WHERE si
 
         <!-- Sidebar Widgets Panel -->
         <aside>
+            <!-- WIDGET 0: Search Widget -->
+            <div class="sidebar-widget">
+                <h3>Search Showroom</h3>
+                <form method="get" action="/search" class="sidebar-search-container">
+                    <input type="text" name="q" placeholder="Enter keywords..." required class="sidebar-search-input">
+                    <button type="submit" class="admin-btn sidebar-search-btn">Go</button>
+                </form>
+            </div>
+
             <!-- WIDGET 1: Pages Directory -->
             <?php if (!empty($sidebarPages)): ?>
                 <div class="sidebar-widget">
@@ -144,5 +153,6 @@ $sidebarCategories = DB::query("SELECT title, slug FROM shop_categories WHERE si
     <script src="/assets/js/blocks/testimonials.js"></script>
     <script src="/assets/js/blocks/gallery.js"></script>
     <script src="/assets/js/blocks/masonry.js"></script>
+    <script src="/assets/js/blocks/sub_pages.js"></script>
 </body>
 </html>

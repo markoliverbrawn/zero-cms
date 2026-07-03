@@ -8,13 +8,14 @@ use Zero\Models\Traits\IsModel;
 use Zero\Models\Traits\HasSlug;
 use Zero\Models\Traits\IsOrderable;
 use Zero\Models\Traits\UsesBlockBuilder;
+use Zero\Modules\Search\Traits\Searchable;
 use Zero\Database\DB;
 use Zero\Support\I18n;
 use Zero\Core\App;
 
 class Page implements Model
 {
-    use IsModel, HasSlug, IsOrderable, UsesBlockBuilder {
+    use IsModel, HasSlug, IsOrderable, UsesBlockBuilder, Searchable {
         IsModel::delete as traitDelete;
         IsModel::forceDelete as traitForceDelete;
     }

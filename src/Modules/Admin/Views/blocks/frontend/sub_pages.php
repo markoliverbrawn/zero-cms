@@ -75,33 +75,3 @@ $showSearch = count($subPages) > 6;
     <?php endif; ?>
   </div>
 </div>
-
-<?php if ($showSearch): ?>
-<script>
-(function() {
-  // Select the newly loaded block container
-  var scripts = document.getElementsByTagName('script');
-  var currentScript = scripts[scripts.length - 1];
-  var blockContainer = currentScript.previousElementSibling.closest('.block-sub-pages');
-  var searchInput = blockContainer.querySelector('.sub-pages-search-input');
-  var cards = blockContainer.querySelectorAll('.sub-pages-card');
-
-  if (!searchInput || !cards.length) return;
-
-  searchInput.addEventListener('input', function() {
-    var query = searchInput.value.toLowerCase().trim();
-    
-    cards.forEach(function(card) {
-      var title = card.querySelector('.sub-pages-card-title').textContent.toLowerCase();
-      var excerpt = card.querySelector('.sub-pages-card-excerpt').textContent.toLowerCase();
-      
-      if (title.indexOf(query) !== -1 || excerpt.indexOf(query) !== -1) {
-        card.style.display = 'flex'; // Restore card card display!
-      } else {
-        card.style.display = 'none'; // Hide filtered card!
-      }
-    });
-  });
-})();
-</script>
-<?php endif; ?>

@@ -31,9 +31,20 @@ if ($activeSite) {
         $allPossibleWidgets[] = 'queue_summary';
         $allPossibleWidgets[] = 'scheduler_summary';
     }
+    if ($activeSite->isModuleEnabled('site-search')) {
+        $allPossibleWidgets[] = 'site_search_summary';
+    }
 }
 
 $enabledWidgets = $userPrefs['dashboard_layout'] ?? $allPossibleWidgets;
+
+// Super Admin widget auto-activation hook (strictly enforcing Guideline 24)
+$currentUser = App::getCurrentUser();
+if ($currentUser && $currentUser->role === 'super_admin') {
+    if (!in_array('site_search_summary', $enabledWidgets)) {
+        $enabledWidgets[] = 'site_search_summary';
+    }
+}
 
 // Fetch recent items for core system widgets strictly filtered by active site/domain!
 $recentPosts = DB::query("SELECT * FROM blog_posts WHERE site_id = ? AND deleted_at IS NULL ORDER BY created_at DESC LIMIT 5", [$activeSiteId])->fetchAll();
@@ -168,7 +179,10 @@ $recentMedia = DB::query("SELECT * FROM media WHERE site_id = ? AND deleted_at I
             if ($activeSite && $activeSite->isModuleEnabled($module->getId())) {
                 $widgetView = $module->getDashboardWidgetView();
                 if ($widgetView) {
-                    $widgetPath = APPLICATION_ROOT . '/src/Modules/' . ucfirst($module->getId()) . '/Views/' . basename($widgetView) . '.php';
+                    $ref = new \ReflectionClass($module);
+                    $moduleDir = dirname($ref->getFileName());
+                    $widgetPath = $moduleDir . '/Views/' . basename($widgetView) . '.php';
+                    
                     if (file_exists($widgetPath)) {
                         $renderWidgetKey = $widgetKey;
                         include $widgetPath;

@@ -1,5 +1,7 @@
 <?php
 // src/Views/themes/shop/blog.php
+
+use Zero\Core\App;
 ?>
 <style>
 .shop-blog-layout {
@@ -183,28 +185,7 @@
     </div>
 
     <!-- Monospace Pagination Controls -->
-    <?php if (!empty($pagination) && $pagination['totalPages'] > 1): ?>
-      <nav class="shop-pagination">
-        <!-- Previous Page -->
-        <?php if ($pagination['currentPage'] > 1): ?>
-          <a href="?page=<?php echo $pagination['currentPage'] - 1; ?>" class="pagination-btn">Prev</a>
-        <?php else: ?>
-          <span class="pagination-btn-disabled">Prev</span>
-        <?php endif; ?>
-
-        <!-- Page Numbers -->
-        <span class="pagination-numbers">
-          <?php echo $pagination['currentPage']; ?> / <?php echo $pagination['totalPages']; ?>
-        </span>
-
-        <!-- Next Page -->
-        <?php if ($pagination['currentPage'] < $pagination['totalPages']): ?>
-          <a href="?page=<?php echo $pagination['currentPage'] + 1; ?>" class="pagination-btn">Next</a>
-        <?php else: ?>
-          <span class="pagination-btn-disabled">Next</span>
-        <?php endif; ?>
-      </nav>
-    <?php endif; ?>
+    <?php echo App::renderPagination($pagination ?? [], '/blog', $_GET); ?>
   <?php else: ?>
     <p style="color: #64748b; font-style: italic; text-align: center;">No journal entries were found.</p>
   <?php endif; ?>

@@ -1,5 +1,7 @@
 <?php
 // src/Views/themes/kitchensink/blog.php
+
+use Zero\Core\App;
 ?>
 <div class="post-list-container">
   <h2 style="font-size: 2.2rem; margin-bottom: 2rem; background: linear-gradient(90deg, var(--neon-cyan), var(--neon-pink)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Latest Editorial News</h2>
@@ -36,14 +38,6 @@
     </div>
 
     <!-- Pagination links -->
-    <?php if ($pagination['totalPages'] > 1): ?>
-      <div class="pagination-container" style="display: flex; gap: 10px; margin-top: 3rem; justify-content: center;">
-        <?php for ($i = 1; $i <= $pagination['totalPages']; $i++): ?>
-          <a href="?page=<?php echo $i; ?>" class="page-link" style="padding: 8px 16px; background-color: <?php echo ($i === $pagination['currentPage']) ? 'var(--accent-color)' : 'var(--card-bg)'; ?>; border: 1px solid var(--border-color); border-radius: var(--border-radius); color: #ffffff; font-weight: bold;">
-            <?php echo $i; ?>
-          </a>
-        <?php endfor; ?>
-      </div>
-    <?php endif; ?>
+    <?php echo App::renderPagination($pagination ?? [], '/blog', $_GET); ?>
   <?php endif; ?>
 </div>

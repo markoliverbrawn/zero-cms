@@ -60,6 +60,11 @@ $shouldOmitTitle = !empty($post->omit_title) || $hasHeroBlock;
                 foreach ($block['images'] as $imgId) {
                     $mediaIds[] = $imgId;
                 }
+            } elseif ($type === 'gallery' && !empty($block['media_ids'])) {
+                // Support 'media_ids' fallback key for Showcase Grid Galleries seeding compatibility!
+                foreach ($block['media_ids'] as $imgId) {
+                    $mediaIds[] = $imgId;
+                }
             } elseif ($type === 'masonry' && !empty($block['items'])) {
                 foreach ($block['items'] as $item) {
                     if (!empty($item['image_path'])) {
@@ -70,7 +75,7 @@ $shouldOmitTitle = !empty($post->omit_title) || $hasHeroBlock;
         }
     }
     
-    // 2. Fetch all media records in a single database query
+    // 2. Fetch all media records (including path, title, and filename) in a single SQL query
     $mediaIdMap = [];
     if (!empty($mediaIds)) {
         $filteredIds = array_filter(array_unique($mediaIds), function($id) {
@@ -79,10 +84,13 @@ $shouldOmitTitle = !empty($post->omit_title) || $hasHeroBlock;
         
         if (!empty($filteredIds)) {
             $placeholders = implode(',', array_fill(0, count($filteredIds), '?'));
-            $sql = "SELECT id, path FROM media WHERE id IN ($placeholders) AND deleted_at IS NULL";
+            $sql = "SELECT id, path, title, filename FROM media WHERE id IN ($placeholders) AND deleted_at IS NULL";
             $stmt = DB::query($sql, array_values($filteredIds));
             while ($row = $stmt->fetch()) {
-                $mediaIdMap[$row['id']] = $row['path'];
+                $mediaIdMap[$row['id']] = [
+                    'path' => $row['path'],
+                    'title' => $row['title'] ?: $row['filename']
+                ];
             }
         }
     }
@@ -92,7 +100,10 @@ $shouldOmitTitle = !empty($post->omit_title) || $hasHeroBlock;
         if (empty($idOrPath)) {
             return '';
         }
-        $path = strpos($idOrPath, '/') === 0 ? $idOrPath : ($mediaIdMap[$idOrPath] ?? '');
+        if (strpos($idOrPath, '/') === 0) {
+            return Storage::getUrl($idOrPath);
+        }
+        $path = $mediaIdMap[$idOrPath]['path'] ?? '';
         if (empty($path)) {
             return '';
         }
@@ -180,12 +191,15 @@ $shouldOmitTitle = !empty($post->omit_title) || $hasHeroBlock;
                 if (!empty($block['title'])) {
                     echo '<h3 style="color: var(--neon-pink); margin-bottom: 1.25rem;">' . htmlspecialchars($block['title']) . '</h3>';
                 }
-                if (!empty($block['images'])) {
+                // Support both 'images' and 'media_ids' keys cleanly
+                $galleryImages = $block['images'] ?? ($block['media_ids'] ?? []);
+                if (!empty($galleryImages)) {
                     echo '<div class="gallery-grid">';
-                    foreach ($block['images'] as $imgId) {
+                    foreach ($galleryImages as $imgId) {
                         $mediaUrl = $resolveMedia($imgId);
-                        $mediaRec = Media::find($imgId);
-                        $titleText = $mediaRec ? ($mediaRec->title ?: $mediaRec->filename) : '';
+                        // Access the pre-fetched title fully in-memory with 0 database queries!
+                        $titleText = $mediaIdMap[$imgId]['title'] ?? '';
+                        
                         echo '<div class="gallery-item">';
                         echo '<img src="' . htmlspecialchars($mediaUrl) . '" class="gallery-lightbox-trigger" data-src="' . htmlspecialchars($mediaUrl) . '" data-title="' . htmlspecialchars($titleText) . '" style="cursor: pointer; transition: transform 0.2s ease;" alt="" />';
                         echo '</div>';

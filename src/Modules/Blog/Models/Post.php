@@ -8,11 +8,12 @@ use Zero\Models\Traits\CascadesDeletes;
 use Zero\Models\Traits\HasFeaturedImage;
 use Zero\Models\Traits\IsModel;
 use Zero\Modules\Blog\Models\Comment;
+use Zero\Modules\Search\Traits\Searchable;
 use Zero\Support\I18n;
 
 class Post extends Page
 {
-    use HasFeaturedImage, IsModel, CascadesDeletes {
+    use HasFeaturedImage, IsModel, CascadesDeletes, Searchable {
         CascadesDeletes::delete insteadof IsModel;
         CascadesDeletes::forceDelete insteadof IsModel;
         IsModel::delete as traitDelete;

@@ -46,8 +46,6 @@ trait IsModel
         return isset($this->$name);
     }
 
-    
-
     public static function all()
     {
         $sql = "SELECT * FROM " . static::$tableName;
@@ -68,8 +66,6 @@ trait IsModel
         }
         return $results;
     }
-
-    
 
     protected function create()
     {
@@ -113,10 +109,14 @@ trait IsModel
 
         $sql = "INSERT INTO " . static::$tableName . " (" . implode(', ', $fields) . ") VALUES (" . implode(', ', $placeholders) . ")";
         DB::query($sql, $values);
+
+        // Synchronize with search index if searchable
+        if (method_exists($this, 'indexInSearch')) {
+            $this->indexInSearch();
+        }
+
         return $this->id;
     }
-
-    
 
     public function delete()
     {
@@ -125,10 +125,13 @@ trait IsModel
         // Clear the globally centralized DB identity map cache for this record
         DB::setIdentity(static::$tableName, $this->id, null);
 
+        // Remove from search index if searchable
+        if (method_exists($this, 'removeFromSearch')) {
+            $this->removeFromSearch();
+        }
+
         return true;
     }
-
-    
 
     public static function find($id)
     {
@@ -157,8 +160,6 @@ trait IsModel
         return null;
     }
 
-    
-
     public static function findTrashed($id)
     {
         $tableName = static::$tableName;
@@ -170,8 +171,6 @@ trait IsModel
         return null;
     }
 
-    
-
     public function forceDelete()
     {
         DB::query("DELETE FROM " . static::$tableName . " WHERE id = ?", [$this->id]);
@@ -179,9 +178,18 @@ trait IsModel
         // Clear the globally centralized DB identity map cache for this record
         DB::setIdentity(static::$tableName, $this->id, null);
 
+        // Remove from search index if searchable
+        if (method_exists($this, 'removeFromSearch')) {
+            $this->removeFromSearch();
+        }
+
         return true;
     }
 
+    public static function getTableName(): string
+    {
+        return static::$tableName;
+    }
 
     public function restore()
     {
@@ -190,10 +198,13 @@ trait IsModel
         // Clear the globally centralized DB identity map cache for this record
         DB::setIdentity(static::$tableName, $this->id, null);
 
+        // Synchronize with search index if searchable
+        if (method_exists($this, 'indexInSearch')) {
+            $this->indexInSearch();
+        }
+
         return true;
     }
-
-    
 
     public function save()
     {
@@ -206,8 +217,6 @@ trait IsModel
         }
         return $this->create();
     }
-
-    
 
     protected function update()
     {
@@ -230,6 +239,11 @@ trait IsModel
 
         // Clear the globally centralized DB identity map cache for this record
         DB::setIdentity(static::$tableName, $this->id, null);
+
+        // Synchronize with search index if searchable
+        if (method_exists($this, 'indexInSearch')) {
+            $this->indexInSearch();
+        }
 
         return $this->id;
     }

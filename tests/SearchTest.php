@@ -9,7 +9,8 @@ use Zero\Database\DB;
 use Zero\Models\Page;
 use Zero\Modules\Blog\Models\Post;
 use Zero\Modules\Shop\Models\Product;
-use Zero\Modules\Search\SearchService;
+use Zero\Modules\Search\Services\SearchService;
+use Zero\Support\Security;
 
 echo "=== Global Site Search Module Component Tests ===\n";
 
@@ -27,7 +28,7 @@ $propSite->setValue(null, null);
 $_SERVER['HTTP_HOST'] = 'searchtest.zero';
 
 // Insert mock site for isolated integration testing
-$mockSiteId = \Zero\Support\Security::uuidv7();
+$mockSiteId = Security::uuidv7();
 DB::query("
     INSERT INTO sites (id, name, domain, theme, enabled_modules, created_at, updated_at)
     VALUES (?, 'Search Test Site', 'searchtest.zero', 'default', '[\"blog\", \"shop\", \"site-search\"]', NOW(), NOW())
@@ -133,32 +134,37 @@ assert_test(isset($searchables['Zero\Modules\Shop\Models\Product']), "Shop Produ
 echo "Testing global site search queries...\n";
 
 // Query 1: "Tutorial" (should match Page 1, but NOT Page 2 [excluded] and NOT Page 3 [draft])
-$results = SearchService::search("Tutorial");
+$searchData = SearchService::search("Tutorial");
+$results = $searchData['results'] ?? [];
 assert_test(count($results) === 1, "Query 'Tutorial' returns exactly 1 result (got: " . count($results) . ")");
 assert_test($results[0]['id'] === $page1->id, "Matched record is the Awesome Zero CMS Tutorial page");
 assert_test($results[0]['type_label'] === 'Page', "Result type label is correctly set to 'Page'");
 assert_test($results[0]['url'] === '/awesome-tutorial', "Result URL correctly resolved via getFrontendUrl()");
 
 // Query 2: "PHP" (should match Blog Post 1, but NOT Post 2 [excluded])
-$results = SearchService::search("PHP");
+$searchData = SearchService::search("PHP");
+$results = $searchData['results'] ?? [];
 assert_test(count($results) === 1, "Query 'PHP' returns exactly 1 result (got: " . count($results) . ")");
 assert_test($results[0]['id'] === $post1->id, "Matched record is the Ultimate PHP Programming Guide post");
 assert_test($results[0]['type_label'] === 'Blog Post', "Result type label is correctly set to 'Blog Post'");
 assert_test($results[0]['url'] === '/post/php-guide', "Result URL correctly resolved via blog post getFrontendUrl()");
 
 // Query 3: "Keyboard" (should match Product 1)
-$results = SearchService::search("Keyboard");
+$searchData = SearchService::search("Keyboard");
+$results = $searchData['results'] ?? [];
 assert_test(count($results) === 1, "Query 'Keyboard' returns exactly 1 result (got: " . count($results) . ")");
 assert_test($results[0]['id'] === $product1->id, "Matched record is the Luxe Gaming Keyboard product");
 assert_test($results[0]['type_label'] === 'Product', "Result type label is correctly set to 'Product'");
 assert_test($results[0]['url'] === '/shop/product/luxe-keyboard', "Result URL correctly resolved via product getFrontendUrl()");
 
 // Query 4: "Secret" (matches nothing because both Page 2, Post 2, and Product 2 containing secret are excluded from search!)
-$results = SearchService::search("Secret");
+$searchData = SearchService::search("Secret");
+$results = $searchData['results'] ?? [];
 assert_test(count($results) === 0, "Query 'Secret' returns 0 results due to strict exclude_from_search checks (got: " . count($results) . ")");
 
 // Query 5: Empty/blank
-$results = SearchService::search(" ");
+$searchData = SearchService::search(" ");
+$results = $searchData['results'] ?? [];
 assert_test(count($results) === 0, "Empty/blank search queries return 0 results safely");
 
 // Cleanup and Restore

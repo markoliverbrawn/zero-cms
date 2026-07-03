@@ -273,6 +273,21 @@ body {
             flex-direction: column;
             gap: 12px;
             font-size: 0.9rem;
+            max-height: 280px;
+            overflow-y: auto;
+            padding-right: 8px;
+
+            /* Custom Webkit scrollbar styling */
+            &::-webkit-scrollbar {
+                width: 4px;
+            }
+            &::-webkit-scrollbar-track {
+                background: rgba(255,255,255,0.02);
+            }
+            &::-webkit-scrollbar-thumb {
+                background: var(--accent-color, #2563eb);
+                border-radius: 2px;
+            }
 
             .sidebar-link {
                 text-decoration: none;

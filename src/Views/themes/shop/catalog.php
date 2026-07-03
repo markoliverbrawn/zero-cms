@@ -1,5 +1,7 @@
 <?php
 // src/Views/themes/shop/catalog.php
+
+use Zero\Core\App;
 ?>
 <div class="catalog-layout">
     
@@ -105,25 +107,10 @@
             </div>
 
             <!-- Catalog Pagination Block -->
-            <?php if ($totalPages > 1): ?>
-                <div style="display: flex; justify-content: center; gap: 8px; margin-top: 60px;">
-                    <?php if ($currentPage > 1): ?>
-                        <a href="/shop/catalog?page=<?php echo $currentPage - 1; ?>&category=<?php echo urlencode($categorySlug); ?>&search=<?php echo urlencode($search); ?>&min_price=<?php echo $minPrice ?: ''; ?>&max_price=<?php echo $maxPrice ?: ''; ?>&sort=<?php echo $sort; ?>" class="btn-luxe-outline" style="padding: 10px 18px; font-size: 0.75rem;">Prev</a>
-                    <?php endif; ?>
-
-                    <?php for ($i = 1; $i <= $totalPages; $i++): ?>
-                        <?php if ($i === $currentPage): ?>
-                            <span class="btn-luxe" style="padding: 10px 18px; font-size: 0.75rem; border: 1px solid var(--accent-color); cursor: default;"><?php echo $i; ?></span>
-                        <?php else: ?>
-                            <a href="/shop/catalog?page=<?php echo $i; ?>&category=<?php echo urlencode($categorySlug); ?>&search=<?php echo urlencode($search); ?>&min_price=<?php echo $minPrice ?: ''; ?>&max_price=<?php echo $maxPrice ?: ''; ?>&sort=<?php echo $sort; ?>" class="btn-luxe-outline" style="padding: 10px 18px; font-size: 0.75rem;"><?php echo $i; ?></a>
-                        <?php endif; ?>
-                    <?php endfor; ?>
-
-                    <?php if ($currentPage < $totalPages): ?>
-                        <a href="/shop/catalog?page=<?php echo $currentPage + 1; ?>&category=<?php echo urlencode($categorySlug); ?>&search=<?php echo urlencode($search); ?>&min_price=<?php echo $minPrice ?: ''; ?>&max_price=<?php echo $maxPrice ?: ''; ?>&sort=<?php echo $sort; ?>" class="btn-luxe-outline" style="padding: 10px 18px; font-size: 0.75rem;">Next</a>
-                    <?php endif; ?>
-                </div>
-            <?php endif; ?>
+            <?php echo App::renderPagination([
+                'currentPage' => $currentPage,
+                'totalPages' => $totalPages
+            ], '/shop/catalog', $_GET); ?>
         <?php endif; ?>
     </div>
 </div>

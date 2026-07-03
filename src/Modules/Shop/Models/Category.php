@@ -51,6 +51,49 @@ class Category implements Model
         }
     }
 
+    /**
+     * Override IsModel::all() to eager-load category image paths in a single query,
+     * preventing N+1 database queries on category listing loops.
+     */
+    public static function all(): array
+    {
+        $siteId = App::getCurrentSiteId();
+        $sql = "
+            SELECT shop_categories.*, media.path AS image_path 
+            FROM shop_categories 
+            LEFT JOIN media ON shop_categories.image = media.id 
+            WHERE shop_categories.site_id = ? AND shop_categories.deleted_at IS NULL
+            ORDER BY shop_categories.title ASC
+        ";
+        $stmt = DB::query($sql, [$siteId]);
+        $results = [];
+        while ($data = $stmt->fetch()) {
+            $results[] = new static($data);
+        }
+        return $results;
+    }
+
+    /**
+     * Override HasSlug::findBySlug() to eager-load category image path in a single query,
+     * preventing N+1 database queries on individual category resolutions.
+     */
+    public static function findBySlug($slug)
+    {
+        $siteId = App::getCurrentSiteId();
+        $stmt = DB::query("
+            SELECT shop_categories.*, media.path AS image_path 
+            FROM shop_categories 
+            LEFT JOIN media ON shop_categories.image = media.id 
+            WHERE shop_categories.slug = ? AND shop_categories.site_id = ? AND shop_categories.deleted_at IS NULL
+            LIMIT 1
+        ", [$slug, $siteId]);
+        $data = $stmt->fetch();
+        if ($data) {
+            return new static($data);
+        }
+        return null;
+    }
+
     public static function getConfig(): array
     {
         return [
@@ -149,5 +192,36 @@ class Category implements Model
             'totalItems' => $totalCount,
             'query' => $filters['q'] ?? ''
         ];
+    }
+
+    /**
+     * Override IsModel::where() to eager-load category image paths in a single query,
+     * preventing N+1 database queries on custom filtered category searches.
+     */
+    public static function where(string $column, $value, string $options = ''): array
+    {
+        $siteId = App::getCurrentSiteId();
+        
+        // Handle table prefix dynamically for columns
+        $columnSql = (strpos($column, '.') === false) ? "shop_categories.{$column}" : $column;
+        $sql = "
+            SELECT shop_categories.*, media.path AS image_path 
+            FROM shop_categories 
+            LEFT JOIN media ON shop_categories.image = media.id 
+            WHERE {$columnSql} = ? AND shop_categories.site_id = ? AND shop_categories.deleted_at IS NULL
+        ";
+        $params = [$value, $siteId];
+
+        if (!empty($options)) {
+            $options = str_replace('ORDER BY ', 'ORDER BY shop_categories.', $options);
+            $sql .= " " . $options;
+        }
+
+        $stmt = DB::query($sql, $params);
+        $results = [];
+        while ($data = $stmt->fetch()) {
+            $results[] = new static($data);
+        }
+        return $results;
     }
 }

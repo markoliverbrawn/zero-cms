@@ -2,11 +2,12 @@
 
 namespace Zero\Modules\Shop;
 
+use Zero\Core\App;
 use Zero\Interfaces\Module as ModuleInterface;
 use Zero\Modules\Admin\Controllers\FrontendLoginController;
-use Zero\Modules\Admin\Controllers\RegisterController;
 use Zero\Modules\Admin\Controllers\FrontendForgotController;
 use Zero\Modules\Admin\Controllers\FrontendResetController;
+use Zero\Modules\Admin\Controllers\RegisterController;
 use Zero\Modules\Shop\Controllers\AccountController;
 use Zero\Modules\Shop\Controllers\CatalogController;
 use Zero\Modules\Shop\Controllers\ProductViewController;
@@ -16,11 +17,11 @@ use Zero\Modules\Shop\Controllers\SuccessController;
 use Zero\Modules\Shop\Controllers\Api\ProductsController;
 use Zero\Modules\Shop\Controllers\Api\CategoriesController;
 use Zero\Modules\Shop\Database\Migration;
-use Zero\Core\App;
 use Zero\Modules\Shop\Models\Category;
 use Zero\Modules\Shop\Models\Order;
 use Zero\Modules\Shop\Models\Product;
 use Zero\Modules\Shop\Models\ProductVariant;
+use Zero\Modules\Search\Services\SearchService;
 
 class Module implements ModuleInterface
 {
@@ -82,8 +83,8 @@ class Module implements ModuleInterface
             'frontend_view' => dirname(__FILE__) . '/Views/blocks/frontend/categories.php'
         ]);
 
-        if (class_exists(\Zero\Modules\Search\SearchService::class)) {
-            \Zero\Modules\Search\SearchService::register(Product::class, [
+        if (class_exists(SearchService::class)) {
+            SearchService::register(Product::class, [
                 'type_label' => 'Product',
                 'search_fields' => ['title', 'description', 'sku'],
                 'title_field' => 'title',

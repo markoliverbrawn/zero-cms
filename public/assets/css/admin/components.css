@@ -3110,3 +3110,97 @@ button:disabled,
     to { transform: rotate(360deg); }
 }
 
+/* Search Indexing & Reindex Widget Layout */
+.search-widget {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+
+    .search-metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+
+        .search-stat-card {
+            background-color: var(--widget-card-bg, rgba(255, 255, 255, 0.02));
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 1rem;
+            text-align: center;
+
+            .search-stat-value {
+                font-size: 1.75rem;
+                font-family: monospace;
+                font-weight: 700;
+                color: var(--accent-color, #2563eb);
+                margin-bottom: 0.25rem;
+            }
+
+            .search-stat-label {
+                font-size: 0.8rem;
+                color: var(--text-muted, #64748b);
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+            }
+        }
+    }
+
+    .search-action-zone {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        border-top: 1px solid var(--border-color);
+        padding-top: 1rem;
+
+        .btn-reindex-trigger {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            
+            svg {
+                width: 16px;
+                height: 16px;
+                stroke-width: 2;
+            }
+        }
+
+        .search-progress-container {
+            display: none;
+            flex-direction: column;
+            gap: 6px;
+
+            &.active {
+                display: flex;
+            }
+
+            .progress-header-info {
+                display: flex;
+                justify-content: space-between;
+                font-size: 0.8rem;
+                font-family: monospace;
+                color: var(--text-muted, #64748b);
+            }
+
+            .progress-bar-track {
+                width: 100%;
+                background-color: var(--border-color, #e2e8f0);
+                height: 8px;
+                border-radius: 4px;
+                overflow: hidden;
+
+                .progress-bar-fill {
+                    width: 0%;
+                    height: 100%;
+                    background-color: var(--accent-color, #2563eb);
+                    border-radius: 4px;
+                    transition: width 0.2s ease;
+                }
+            }
+        }
+    }
+}
+
+

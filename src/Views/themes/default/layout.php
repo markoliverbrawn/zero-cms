@@ -111,5 +111,6 @@ $sidebarPosts = DB::query("SELECT title, slug FROM blog_posts WHERE status = 'pu
     <script src="/assets/js/blocks/accordion.js"></script>
     <script src="/assets/js/blocks/gallery.js"></script>
     <script src="/assets/js/blocks/masonry.js"></script>
+    <script src="/assets/js/blocks/sub_pages.js"></script>
 </body>
 </html>

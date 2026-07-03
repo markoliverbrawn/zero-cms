@@ -4,7 +4,7 @@
 $colsDesktop = $block['cols_desktop'] ?? '4';
 $colsTablet = $block['cols_tablet'] ?? '2';
 $colsMobile = $block['cols_mobile'] ?? '1';
-$iGap = $block['gap'] ?? '16px';
+$gap = $block['gap'] ?? '16px';
 ?>
 <div style="display:flex; align-items:flex-end; gap: 16px;">
 

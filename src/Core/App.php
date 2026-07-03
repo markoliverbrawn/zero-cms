@@ -863,6 +863,83 @@ class App
     }
 
     /**
+     * Render a unified, sliding-window pagination HTML block.
+     * Preserves active query parameters automatically and scales up safely.
+     *
+     * @param array $pagination Pagination metadata array
+     * @param string $baseUrl Base URL string (e.g. '/shop/catalog' or '/blog')
+     * @param array $queryParams Current $_GET parameters array to merge and preserve
+     * @return string Compiled HTML string
+     */
+    public static function renderPagination(array $pagination, string $baseUrl, array $queryParams = []): string
+    {
+        $currentPage = isset($pagination['currentPage']) ? (int)$pagination['currentPage'] : 1;
+        $totalPages = isset($pagination['totalPages']) ? (int)$pagination['totalPages'] : 1;
+
+        if ($totalPages <= 1) {
+            return '';
+        }
+
+        // Clean and prepare query parameters, skipping 'page' as it is appended dynamically
+        $cleanedParams = [];
+        foreach ($queryParams as $k => $v) {
+            if ($k !== 'page' && $v !== null && $v !== '') {
+                $cleanedParams[$k] = $v;
+            }
+        }
+
+        $buildUrl = function($pageNum) use ($baseUrl, $cleanedParams) {
+            $params = array_merge($cleanedParams, ['page' => $pageNum]);
+            return $baseUrl . '?' . http_build_query($params);
+        };
+
+        // Sliding window range calculation
+        $range = 2;
+        $startPage = $currentPage - $range;
+        $endPage = $currentPage + $range;
+
+        if ($startPage < 1) {
+            $endPage += abs($startPage) + 1;
+            $startPage = 1;
+        }
+        if ($endPage > $totalPages) {
+            $startPage -= ($endPage - $totalPages);
+            $endPage = $totalPages;
+        }
+        $startPage = max(1, $startPage);
+
+        $showFirst = ($startPage > 1);
+        $showLast = ($endPage < $totalPages);
+
+        // Buffer the baseline template render
+        ob_start();
+        $partialPath = APPLICATION_ROOT . '/src/Views/themes/default/partials/pagination.php';
+        if (file_exists($partialPath)) {
+            include $partialPath;
+        } else {
+            // Inline fallback markup if the partial file is missing
+            ?>
+            <nav class="unified-pagination-wrapper">
+                <?php if ($currentPage > 1): ?>
+                    <a href="<?php echo htmlspecialchars($buildUrl($currentPage - 1)); ?>" class="pagination-btn page-nav-prev">Prev</a>
+                <?php endif; ?>
+                <?php for ($i = $startPage; $i <= $endPage; $i++): ?>
+                    <?php if ($i === $currentPage): ?>
+                        <span class="pagination-btn active"><?php echo $i; ?></span>
+                    <?php else: ?>
+                        <a href="<?php echo htmlspecialchars($buildUrl($i)); ?>" class="pagination-btn"><?php echo $i; ?></a>
+                    <?php endif; ?>
+                <?php endfor; ?>
+                <?php if ($currentPage < $totalPages): ?>
+                    <a href="<?php echo htmlspecialchars($buildUrl($currentPage + 1)); ?>" class="pagination-btn page-nav-next">Next</a>
+                <?php endif; ?>
+            </nav>
+            <?php
+        }
+        return ob_get_clean();
+    }
+
+    /**
      * Renders a highly-polished, high-contrast, developer-friendly fallback page
      * when a requested host domain is not registered inside the multi-tenant database.
      */

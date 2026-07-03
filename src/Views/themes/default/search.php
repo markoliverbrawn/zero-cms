@@ -1,5 +1,7 @@
 <?php
 // src/Views/themes/default/search.php
+
+use Zero\Core\App;
 use Zero\Support\I18n;
 ?>
 <link rel="stylesheet" href="/assets/css/search.css?v=1.0">
@@ -35,33 +37,14 @@ use Zero\Support\I18n;
                         <?php
                         $preview = '';
                         $content = $res['content'] ?? '';
-                        $decoded = json_decode($content, true);
-                        if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-                            foreach ($decoded as $block) {
-                                if (!empty($block['content'])) {
-                                    $cleanText = strip_tags($block['content']);
-                                    if (!empty($q) && ($pos = stripos($cleanText, $q)) !== false) {
-                                        $start = max(0, $pos - 80);
-                                        $length = 180;
-                                        $snippet = substr($cleanText, $start, $length);
-                                        $preview = ($start > 0 ? '...' : '') . $snippet . (strlen($cleanText) > ($start + $length) ? '...' : '');
-                                        break;
-                                    }
-                                    if (empty($preview)) {
-                                        $preview = substr($cleanText, 0, 180) . (strlen($cleanText) > 180 ? '...' : '');
-                                    }
-                                }
-                            }
+                        $cleanText = strip_tags($content);
+                        if (!empty($q) && ($pos = stripos($cleanText, $q)) !== false) {
+                            $start = max(0, $pos - 80);
+                            $length = 180;
+                            $snippet = substr($cleanText, $start, $length);
+                            $preview = ($start > 0 ? '...' : '') . $snippet . (strlen($cleanText) > ($start + $length) ? '...' : '');
                         } else {
-                            $cleanText = strip_tags($content);
-                            if (!empty($q) && ($pos = stripos($cleanText, $q)) !== false) {
-                                $start = max(0, $pos - 80);
-                                $length = 180;
-                                $snippet = substr($cleanText, $start, $length);
-                                $preview = ($start > 0 ? '...' : '') . $snippet . (strlen($cleanText) > ($start + $length) ? '...' : '');
-                            } else {
-                                $preview = substr($cleanText, 0, 180) . (strlen($cleanText) > 180 ? '...' : '');
-                            }
+                            $preview = substr($cleanText, 0, 180) . (strlen($cleanText) > 180 ? '...' : '');
                         }
                         if (empty($preview)) {
                             $preview = 'Click to view this item and read the detailed specifications...';
@@ -73,6 +56,9 @@ use Zero\Support\I18n;
                 </div>
             <?php endforeach; ?>
         </div>
+
+        <!-- Pagination Controls -->
+        <?php echo App::renderPagination($pagination ?? [], '/search', $_GET); ?>
     <?php else: ?>
         <?php if (!empty($q)): ?>
             <div class="no-results">

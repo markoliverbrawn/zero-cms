@@ -1322,3 +1322,137 @@ document.addEventListener('DOMContentLoaded', function(){
           confirmClass: 'btn-confirm-primary'
       });
   };
+
+  // Search Index Reindex Widget Coordinator (Multi-batch timeout-proof indexing)
+  (function() {
+      window.addEventListener('DOMContentLoaded', function() {
+          var btn = document.getElementById('btn-trigger-reindex');
+          if (!btn) return;
+
+          btn.addEventListener('click', function() {
+              var btnLabel = document.getElementById('btn-reindex-label');
+              var progressContainer = document.getElementById('reindex-progress-container');
+              var statusText = document.getElementById('reindex-progress-status');
+              var percentText = document.getElementById('reindex-progress-percent');
+              var fillBar = document.getElementById('reindex-progress-fill');
+              var widgetCount = document.getElementById('search-widget-count');
+
+              btn.disabled = true;
+              progressContainer.classList.add('active');
+              btnLabel.textContent = 'Initializing...';
+              statusText.textContent = 'Clearing index...';
+              percentText.textContent = '0%';
+              fillBar.style.width = '0%';
+
+              // 1. Trigger Reindex Start (clears index, retrieves all searchable record IDs)
+              fetch('/api/v1/admin/search/reindex/start', {
+                  method: 'POST',
+                  headers: {
+                      'Content-Type': 'application/json',
+                      'X-CSRF-Token': window.ADMIN_CSRF_TOKEN || ''
+                  }
+              })
+              .then(function(res) { return res.json(); })
+              .then(function(data) {
+                  if (!data || !data.success) {
+                      throw new Error(data.error || 'Failed to initialize re-indexing.');
+                  }
+
+                  var total = data.total || 0;
+                  var batches = data.batches || [];
+
+                  if (total === 0) {
+                      fillBar.style.width = '100%';
+                      percentText.textContent = '100%';
+                      statusText.textContent = 'Completed (0 items)';
+                      widgetCount.textContent = '0';
+                      btn.disabled = false;
+                      btnLabel.textContent = 'Run Full Re-index';
+                      window.adminAlert('Search Index', 'The search index was cleared, but there were no searchable records to index.');
+                      return;
+                  }
+
+                  // 2. Compile flat chunks of work to execute sequentially
+                  var tasks = [];
+                  var chunkSize = 15;
+
+                  batches.forEach(function(batch) {
+                      var model = batch.model;
+                      var ids = batch.ids || [];
+                      for (var i = 0; i < ids.length; i += chunkSize) {
+                          tasks.push({
+                              model: model,
+                              ids: ids.slice(i, i + chunkSize)
+                          });
+                      }
+                  });
+
+                  var currentTaskIndex = 0;
+                  var indexedCount = 0;
+
+                  function runNextChunk() {
+                      if (currentTaskIndex >= tasks.length) {
+                          // All batches complete!
+                          fillBar.style.width = '100%';
+                          percentText.textContent = '100%';
+                          statusText.textContent = 'Successfully indexed ' + total + ' items!';
+                          widgetCount.textContent = total;
+                          btn.disabled = false;
+                          btnLabel.textContent = 'Run Full Re-index';
+                          window.adminAlert('Search Index Complete', 'Successfully re-indexed ' + total + ' items across all multi-tenant domains!');
+                          
+                          // Hide progress bar with delay
+                          setTimeout(function() {
+                              progressContainer.classList.remove('active');
+                          }, 3000);
+                          return;
+                      }
+
+                      var task = tasks[currentTaskIndex];
+                      statusText.textContent = 'Indexing ' + indexedCount + ' / ' + total + '...';
+                      btnLabel.textContent = 'Indexing... ' + Math.round((indexedCount / total) * 100) + '%';
+
+                      fetch('/api/v1/admin/search/reindex/batch', {
+                          method: 'POST',
+                          headers: {
+                              'Content-Type': 'application/json',
+                              'X-CSRF-Token': window.ADMIN_CSRF_TOKEN || ''
+                          },
+                          body: JSON.stringify(task)
+                      })
+                      .then(function(res) { return res.json(); })
+                      .then(function(resData) {
+                          if (resData && resData.success) {
+                              indexedCount += resData.indexed || 0;
+                              var progressPercent = Math.round((indexedCount / total) * 100);
+                              fillBar.style.width = progressPercent + '%';
+                              percentText.textContent = progressPercent + '%';
+                              
+                              currentTaskIndex++;
+                              runNextChunk();
+                          } else {
+                              throw new Error(resData.error || 'Failed to process batch.');
+                          }
+                      })
+                      .catch(function(err) {
+                          console.error(err);
+                          btn.disabled = false;
+                          btnLabel.textContent = 'Run Full Re-index';
+                          statusText.textContent = 'Error occurred.';
+                          window.adminAlert('Search Index Error', 'An error occurred during re-indexing: ' + err.message);
+                      });
+                  }
+
+                  // Start the recursive queue!
+                  runNextChunk();
+              })
+              .catch(function(err) {
+                  console.error(err);
+                  btn.disabled = false;
+                  btnLabel.textContent = 'Run Full Re-index';
+                  window.adminAlert('Search Index Error', 'Failed to start re-indexing: ' + err.message);
+              });
+          });
+      });
+  })();
+

@@ -1,6 +1,8 @@
 <?php
 // src/Views/themes/kitchensink/home.php
 // Renders the Luxe Cyber Shop featured products landing page.
+
+use Zero\Core\App;
 ?>
 <div class="shop-home-container">
   <h2 style="font-size: 2.2rem; margin-bottom: 1.5rem; background: linear-gradient(90deg, var(--neon-cyan), var(--neon-pink)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Luxe Cyber Shop</h2>
@@ -28,16 +30,31 @@
               </a>
             </h4>
             <div class="product-sku">SKU: <?php echo htmlspecialchars($prod->sku ?? 'N/A'); ?></div>
-            <div class="product-price">$<?php echo number_format($prod->price, 2); ?></div>
+            <div class="product-pricing">
+              <span class="price-value">$<?php echo number_format($prod->price, 2); ?></span>
+              <?php if ($prod->compare_at_price > 0): ?>
+                <span class="price-compare">$<?php echo number_format($prod->compare_at_price, 2); ?></span>
+              <?php endif; ?>
+            </div>
           </div>
         </div>
       <?php endforeach; ?>
     </div>
   <?php endif; ?>
 
-  <div style="margin-top: 4rem; text-align: center;">
+  <div style="margin-top: 4rem; text-align: center; margin-bottom: 4rem;">
     <a href="/shop/catalog" class="admin-btn">
       Browse Entire Catalog &rarr;
     </a>
   </div>
+
+  <!-- Dynamic Page Builder Content Showcase (including Showcase Grid Galleries) -->
+  <?php if (!empty($post) && !empty($post->content)): ?>
+    <div style="margin-top: 5rem; border-top: 2px dashed var(--border-color); padding-top: 4rem;">
+        <?php 
+        // Re-use the master block-renderer template cleanly!
+        include APPLICATION_ROOT . '/src/Views/themes/kitchensink/post.php'; 
+        ?>
+    </div>
+  <?php endif; ?>
 </div>

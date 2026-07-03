@@ -1280,6 +1280,43 @@
                 }
             ],
             "type": "page"
+        },
+        {
+            "title": "Search Index & Decoupled Driver Architecture",
+            "slug": "docs/how-tos/search-architecture",
+            "status": "published",
+            "show_in_nav": "0",
+            "site_domain": "d6laptop.zero.guide",
+            "content": [
+                {
+                    "type": "text",
+                    "title": "1. High-Level Architectural Summary",
+                    "content": "<p>Zero CMS features an advanced, 100% decoupled **Search Index and Driver Architecture**. Moving away from slow, un-indexed cross-table dynamic lookups, the system compiles searchable content into a dedicated <code>search_index</code> database table in real-time. This index-based search guarantees ultra-fast query execution, scales gracefully under heavy traffic, enforces strict multi-tenant boundary scoping, and supports weighted **Title-Hit Boosting** to ensure that relevance ranking prioritizes exact and partial title matches.</p>"
+                },
+                {
+                    "type": "text",
+                    "title": "2. Decoupled Search Drivers",
+                    "content": "<p>By utilizing a driver interface model, the search core is fully decoupled from the underlying index storage. This allows administrators to hot-swap search drivers based on environment variables (e.g., swapping from standard MySQL matching to Elasticsearch or Algolia) without modifying any application controller code.</p><pre><code class=\"language-ini\"># Configure active search index driver (defaults to database)\nSEARCH_DRIVER=database</code></pre>"
+                },
+                {
+                    "type": "text",
+                    "title": "3. The Hybrid Block Helper Model (No N+1 Queries)",
+                    "content": "<p>A critical architectural mandate of Zero CMS is the **absolute prevention of N+1 database queries**. When extracting search text from page-builder layouts (which are saved as structured JSON arrays of blocks), instantiating full layout renderers or calling individual database hooks for block assets would trigger a catastrophic N+1 query loop. To prevent this, Zero CMS implements a **Hybrid Block Helper Model**:</p><ul><li><strong>OOP Block Helpers:</strong> Blocks implement a standard <code>BlockHelperInterface</code>, acting as lightweight, in-memory data-transfer objects that extract searchable plain text from JSON attributes with <strong>zero database queries</strong>.</li><li><strong>Recursive Fallback Scanner:</strong> If a custom block does not have a specialized helper class defined, the indexing engine automatically falls back to an intelligent recursive array scanner, keeping the search index 100% self-healing and backward-compatible.</li></ul>"
+                },
+                {
+                    "type": "code",
+                    "title": "4. Developer How-To: Implementing Searchable Models",
+                    "language": "php",
+                    "code": "namespace Zero\\Custom\\Models;\n\nuse Zero\\Interfaces\\Model;\nuse Zero\\Models\\Traits\\IsModel;\nuse Zero\\Modules\\Search\\Traits\\Searchable;\n\nclass CustomBook implements Model\n{\n    // 1. Import Searchable Trait alongside standard active-record IsModel\n    use IsModel, Searchable;\n\n    protected static $tableName = 'custom_books';\n    protected static $modelType = 'book';\n\n    // 2. Include 'exclude_from_search' in DB and fillables\n    protected static $fillable = ['title', 'content', 'status', 'exclude_from_search'];\n\n    public $exclude_from_search = 0;\n    public $status;\n}"
+                },
+                {
+                    "type": "code",
+                    "title": "5. Developer How-To: Creating Custom Block Helpers",
+                    "language": "php",
+                    "code": "namespace Zero\\Blocks;\n\nuse Zero\\Interfaces\\BlockHelperInterface;\n\nclass ProductShowcaseBlock implements BlockHelperInterface\n{\n    protected array $data;\n\n    public function __construct(array $data)\n    {\n        $this->data = $data;\n    }\n\n    /**\n     * Compile plain text content from block parameters with 0 database hits.\n     */\n    public function getSearchableContent(): string\n    {\n        $parts = [];\n        if (!empty($this->data['heading'])) {\n            $parts[] = $this->data['heading'];\n        }\n        if (!empty($this->data['product_name'])) {\n            $parts[] = $this->data['product_name'];\n        }\n        if (!empty($this->data['description'])) {\n            $parts[] = strip_tags($this->data['description']);\n        }\n        return implode(' ', $parts);\n    }\n}"
+                }
+            ],
+            "type": "page"
         }
     ]
 }

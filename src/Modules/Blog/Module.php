@@ -2,14 +2,16 @@
 
 namespace Zero\Modules\Blog;
 
-use Zero\Interfaces\Module as ModuleInterface;
-use Zero\Modules\Blog\Controllers\PostViewController;
-use Zero\Modules\Blog\Controllers\Api\PostsController;
-use Zero\Modules\Blog\Database\Migration;
 use Zero\Core\App;
+use Zero\Interfaces\Module as ModuleInterface;
 use Zero\Modules\Blog\Controllers\Api\CommentsController;
+use Zero\Modules\Blog\Controllers\Api\PostsController;
+use Zero\Modules\Blog\Controllers\PostViewController;
+use Zero\Modules\Blog\Database\Migration;
 use Zero\Modules\Blog\Models\Comment;
 use Zero\Modules\Blog\Models\Post;
+use Zero\Modules\Queue\Support\Scheduler;
+use Zero\Modules\Search\Services\SearchService;
 
 class Module implements ModuleInterface
 {
@@ -51,7 +53,7 @@ class Module implements ModuleInterface
         App::registerModel('comments', Comment::class);
 
         // Register daily scheduled task to automatically purge rejected or spam comments (older than 7 days)
-        \Zero\Modules\Queue\Support\Scheduler::register(Jobs\PurgeOldCommentsJob::class, [], 'daily');
+        Scheduler::register(Jobs\PurgeOldCommentsJob::class, [], 'daily');
 
         App::registerBlock('latest_articles', [
             'label' => 'Latest Blog Articles',
@@ -61,8 +63,8 @@ class Module implements ModuleInterface
             'frontend_view' => dirname(__FILE__) . '/Views/blocks/frontend/latest_articles.php'
         ]);
 
-        if (class_exists(\Zero\Modules\Search\SearchService::class)) {
-            \Zero\Modules\Search\SearchService::register(Post::class, [
+        if (class_exists(SearchService::class)) {
+            SearchService::register(Post::class, [
                 'type_label' => 'Blog Post',
                 'search_fields' => ['title', 'content', 'summary'],
                 'title_field' => 'title',

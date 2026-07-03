@@ -10,13 +10,14 @@ use Zero\Models\Traits\CascadesDeletes;
 use Zero\Models\Traits\HasSlug;
 use Zero\Models\Traits\IsModel;
 use Zero\Models\Traits\Paginates;
+use Zero\Modules\Search\Traits\Searchable;
 use Zero\Modules\Shop\Models\ProductVariant;
 use Zero\Support\I18n;
 use Zero\Support\Security;
 
 class Product implements Model
 {
-    use IsModel, HasSlug, Paginates, CascadesDeletes {
+    use IsModel, HasSlug, Paginates, CascadesDeletes, Searchable {
         CascadesDeletes::delete insteadof IsModel;
         CascadesDeletes::forceDelete insteadof IsModel;
         IsModel::delete as traitDelete;
@@ -78,6 +79,28 @@ class Product implements Model
         }
     }
 
+    /**
+     * Override IsModel::all() to eager-load product image paths in a single query,
+     * preventing N+1 database queries on product list renders.
+     */
+    public static function all(): array
+    {
+        $siteId = App::getCurrentSiteId();
+        $sql = "
+            SELECT shop_products.*, media.path AS main_image_path 
+            FROM shop_products 
+            LEFT JOIN media ON shop_products.main_image = media.id 
+            WHERE shop_products.site_id = ? AND shop_products.deleted_at IS NULL
+            ORDER BY shop_products.title ASC
+        ";
+        $stmt = DB::query($sql, [$siteId]);
+        $results = [];
+        while ($data = $stmt->fetch()) {
+            $results[] = new static($data);
+        }
+        return $results;
+    }
+
     protected function createRecord()
     {
         if (empty($this->id)) {
@@ -107,6 +130,12 @@ class Product implements Model
 
         $sql = "INSERT INTO shop_products (" . implode(', ', $fields) . ") VALUES (" . implode(', ', $placeholders) . ")";
         DB::query($sql, $values);
+
+        // Synchronize with search index if searchable
+        if (method_exists($this, 'indexInSearch')) {
+            $this->indexInSearch();
+        }
+
         return $this->id;
     }
 
@@ -266,6 +295,15 @@ class Product implements Model
             $params[] = '%' . $filters['q'] . '%';
         }
 
+        if (!empty($filters['category_id'])) {
+            $where .= " AND (shop_products.category_id = ? OR EXISTS (
+                SELECT 1 FROM shop_product_category_links 
+                WHERE product_id = shop_products.id AND category_id = ?
+            ))";
+            $params[] = $filters['category_id'];
+            $params[] = $filters['category_id'];
+        }
+
         // Apply custom alias mapping for ordering
         if (strpos($orderBy, 'created_at') === 0) {
             $orderBy = 'shop_products.created_at ' . (str_ends_with($orderBy, 'DESC') ? 'DESC' : 'ASC');
@@ -352,6 +390,44 @@ class Product implements Model
 
         $sql = "UPDATE shop_products SET " . implode(', ', $set) . " WHERE id = ?";
         DB::query($sql, $values);
+
+        // Synchronize with search index if searchable
+        if (method_exists($this, 'indexInSearch')) {
+            $this->indexInSearch();
+        }
+
         return $this->id;
+    }
+
+    /**
+     * Override IsModel::where() to eager-load product image paths in a single query,
+     * preventing N+1 database queries on custom filtered product listings.
+     */
+    public static function where(string $column, $value, string $options = ''): array
+    {
+        $siteId = App::getCurrentSiteId();
+        
+        // Handle table prefix dynamically for columns
+        $columnSql = (strpos($column, '.') === false) ? "shop_products.{$column}" : $column;
+        $sql = "
+            SELECT shop_products.*, media.path AS main_image_path 
+            FROM shop_products 
+            LEFT JOIN media ON shop_products.main_image = media.id 
+            WHERE {$columnSql} = ? AND shop_products.site_id = ? AND shop_products.deleted_at IS NULL
+        ";
+        $params = [$value, $siteId];
+
+        if (!empty($options)) {
+            // Translate options to use correct aliases if needed
+            $options = str_replace('ORDER BY ', 'ORDER BY shop_products.', $options);
+            $sql .= " " . $options;
+        }
+
+        $stmt = DB::query($sql, $params);
+        $results = [];
+        while ($data = $stmt->fetch()) {
+            $results[] = new static($data);
+        }
+        return $results;
     }
 }

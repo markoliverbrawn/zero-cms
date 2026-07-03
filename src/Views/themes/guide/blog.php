@@ -1,5 +1,8 @@
 <?php
 // src/Views/themes/guide/blog.php
+
+use Zero\Core\App;
+
 $hasHeroBlock = false;
 if (!empty($post->content)) {
     $blocks = json_decode($post->content, true);
@@ -83,25 +86,7 @@ $shouldOmitTitle = !empty($post->omit_title) || $hasHeroBlock;
     </div>
 
     <!-- Dynamic Pagination Controls -->
-    <?php if (!empty($pagination) && $pagination['totalPages'] > 1): ?>
-      <div class="pagination-container">
-        <?php if ($pagination['currentPage'] > 1): ?>
-          <a href="?page=<?php echo $pagination['currentPage'] - 1; ?>" class="btn-pagination">➔ Prev</a>
-        <?php else: ?>
-          <span class="btn-pagination disabled">➔ Prev</span>
-        <?php endif; ?>
-
-        <span class="pagination-info">
-          Page <?php echo $pagination['currentPage']; ?> of <?php echo $pagination['totalPages']; ?>
-        </span>
-
-        <?php if ($pagination['currentPage'] < $pagination['totalPages']): ?>
-          <a href="?page=<?php echo $pagination['currentPage'] + 1; ?>" class="btn-pagination">Next ➔</a>
-        <?php else: ?>
-          <span class="btn-pagination disabled">Next ➔</span>
-        <?php endif; ?>
-      </div>
-    <?php endif; ?>
+    <?php echo App::renderPagination($pagination ?? [], '/blog', $_GET); ?>
 
   <?php else: ?>
     <p style="color: var(--text-muted); font-style: italic;">No publications matching the criteria were found.</p>

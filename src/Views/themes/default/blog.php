@@ -1,5 +1,8 @@
 <?php
 // src/Views/themes/default/blog.php
+
+use Zero\Core\App;
+
 $hasHeroBlock = false;
 if (!empty($post->content)) {
     $blocks = json_decode($post->content, true);
@@ -86,28 +89,7 @@ $shouldOmitTitle = !empty($post->omit_title) || $hasHeroBlock;
     </div>
 
     <!-- Pagination Controls -->
-    <?php if (!empty($pagination) && $pagination['totalPages'] > 1): ?>
-      <nav class="blog-pagination" style="display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 40px; padding-top: 20px; border-top: 1px solid #cbd5e1;">
-        <!-- Previous Page -->
-        <?php if ($pagination['currentPage'] > 1): ?>
-          <a href="?page=<?php echo $pagination['currentPage'] - 1; ?>" style="color: #2563eb; text-decoration: none; font-size: 0.9rem; font-weight: bold;">Prev</a>
-        <?php else: ?>
-          <span style="color: #cbd5e1; font-size: 0.9rem; font-weight: bold; cursor: default;">Prev</span>
-        <?php endif; ?>
-
-        <!-- Page Numbers -->
-        <span style="color: #475569; font-size: 0.9rem; font-family: monospace; font-weight: 500;">
-          <?php echo $pagination['currentPage']; ?> / <?php echo $pagination['totalPages']; ?>
-        </span>
-
-        <!-- Next Page -->
-        <?php if ($pagination['currentPage'] < $pagination['totalPages']): ?>
-          <a href="?page=<?php echo $pagination['currentPage'] + 1; ?>" style="color: #2563eb; text-decoration: none; font-size: 0.9rem; font-weight: bold;">Next</a>
-        <?php else: ?>
-          <span style="color: #cbd5e1; font-size: 0.9rem; font-weight: bold; cursor: default;">Next</span>
-        <?php endif; ?>
-      </nav>
-    <?php endif; ?>
+    <?php echo App::renderPagination($pagination ?? [], '/blog', $_GET); ?>
     
     <style>
       .blog-card {

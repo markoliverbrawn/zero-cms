@@ -124,7 +124,6 @@ class Seeder
         }
     }
 
-
     public function run(bool $cleanUploads = true): bool
     {
         echo "Parsing seeder definition JSON...\n";
@@ -320,6 +319,38 @@ class Seeder
             DB::clearIdentityMap();
         }
 
+        // Step 3: Bulk-index seeded records across all sites
+        echo "Bulk-indexing seeded searchable records...\n";
+        try {
+            // 1. Pages
+            if (class_exists('\\Zero\\Models\\Page')) {
+                $rows = DB::query("SELECT * FROM pages WHERE deleted_at IS NULL")->fetchAll();
+                foreach ($rows as $row) {
+                    $model = new \Zero\Models\Page($row);
+                    $model->indexInSearch();
+                }
+            }
+            // 2. Blog Posts
+            if (class_exists('\\Zero\\Modules\\Blog\\Models\\Post')) {
+                $rows = DB::query("SELECT * FROM blog_posts WHERE deleted_at IS NULL")->fetchAll();
+                foreach ($rows as $row) {
+                    $model = new \Zero\Modules\Blog\Models\Post($row);
+                    $model->indexInSearch();
+                }
+            }
+            // 3. Products
+            if (class_exists('\\Zero\\Modules\\Shop\\Models\\Product')) {
+                $rows = DB::query("SELECT * FROM shop_products WHERE deleted_at IS NULL")->fetchAll();
+                foreach ($rows as $row) {
+                    $model = new \Zero\Modules\Shop\Models\Product($row);
+                    $model->indexInSearch();
+                }
+            }
+            echo "Successfully bulk-indexed all seeded searchable items!\n";
+        } catch (\Exception $e) {
+            echo "Warning: Bulk-indexing failed: " . $e->getMessage() . "\n";
+        }
+
         // Generate distribution ZIP package generically
         try {
             $this->createDistributionZip();
@@ -330,5 +361,4 @@ class Seeder
         echo "Data seeding finished successfully!\n";
         return true;
     }
-
-    }
+}
