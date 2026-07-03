@@ -59,17 +59,15 @@ $showSearch = count($subPages) > 6;
               $preview = 'Explore our detailed guidelines, developer tutorials, and native code samples...';
           }
           ?>
-          <div class="sub-pages-card" onclick="window.location.href='/<?php echo htmlspecialchars($sp['slug'], ENT_QUOTES, 'UTF-8'); ?>'">
+          <a class="sub-pages-card" href="/<?php echo htmlspecialchars($sp['slug'], ENT_QUOTES, 'UTF-8'); ?>">
             <h3 class="sub-pages-card-title">
-              <a href="/<?php echo htmlspecialchars($sp['slug'], ENT_QUOTES, 'UTF-8'); ?>">
-                <?php echo htmlspecialchars($sp['title'], ENT_QUOTES, 'UTF-8'); ?>
-              </a>
+              <?php echo htmlspecialchars($sp['title'], ENT_QUOTES, 'UTF-8'); ?>
             </h3>
             <p class="sub-pages-card-excerpt"><?php echo $preview; ?></p>
             <div class="sub-pages-card-btn-container">
               <span class="sub-pages-card-link">View Documentation ➔</span>
             </div>
-          </div>
+          </a>
         <?php endforeach; ?>
       </div>
     <?php endif; ?>

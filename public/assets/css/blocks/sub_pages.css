@@ -43,26 +43,20 @@
                 padding: 2rem;
                 border-radius: 12px;
                 cursor: pointer;
-                transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), border-color 0.2s ease, box-shadow 0.2s ease;
+                transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), border-color 0.2s ease, box-shadow 0.2s ease, color 0.15s ease;
                 display: flex;
                 flex-direction: column;
                 justify-content: space-between;
                 min-height: 180px;
+                text-decoration: none;
+                color: var(--text-color, #ffffff);
 
                 .sub-pages-card-title {
                     margin: 0 0 10px 0;
                     font-size: 1.25rem;
                     font-weight: 700;
-
-                    a {
-                        color: var(--text-color, #ffffff);
-                        text-decoration: none;
-                        transition: color 0.15s ease;
-
-                        &:hover {
-                            color: var(--neon-cyan, #06b6d4);
-                        }
-                    }
+                    color: var(--text-color, #ffffff);
+                    transition: color 0.15s ease;
                 }
 
                 .sub-pages-card-excerpt {
@@ -86,18 +80,25 @@
                         font-weight: bold;
                         text-transform: uppercase;
                         letter-spacing: 0.05em;
-                        color: var(--neon-cyan, #06b6d4);
-                        transition: color 0.15s ease, transform 0.15s ease;
+                        color: var(--neon-cyan, var(--primary-color, #06b6d4));
+                        transition: color 0.15s ease, transform 0.15s ease, text-shadow 0.15s ease;
                     }
                 }
 
                 &:hover {
                     transform: translateY(-5px);
-                    border-color: var(--neon-cyan, #06b6d4);
+                    border-color: var(--neon-cyan, var(--primary-color, #06b6d4));
                     box-shadow: 0 8px 24px rgba(6, 182, 212, 0.15);
+                    color: var(--text-color, #ffffff);
+                    text-shadow: none;
+
+                    .sub-pages-card-title {
+                        color: var(--neon-cyan, var(--primary-color, #06b6d4));
+                    }
 
                     .sub-pages-card-link {
-                        color: var(--neon-pink, #f43f5e);
+                        color: var(--neon-pink, var(--primary-dim, #f43f5e));
+                        text-shadow: 0 0 8px rgba(244, 63, 94, 0.4);
                     }
                 }
             }
@@ -123,7 +124,7 @@
             transition: all 0.2s ease;
 
             &:focus {
-                border-color: var(--neon-cyan, #06b6d4);
+                border-color: var(--neon-cyan, var(--primary-color, #06b6d4));
                 box-shadow: 0 0 10px rgba(6, 182, 212, 0.25);
             }
         }
@@ -140,7 +141,7 @@
 
         &:focus-within {
             .sub-pages-search-icon {
-                color: var(--neon-cyan, #06b6d4);
+                color: var(--neon-cyan, var(--primary-color, #06b6d4));
             }
         }
     }

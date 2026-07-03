@@ -1,4 +1,5 @@
 /* assets/css/guide.css - Custom Modern Tech Theme Frontend Stylesheet (Highly Compatible Flat CSS) */
+@import url('blocks/sub_pages.css');
 
 :root {
     --bg-color: #051424;
@@ -31,6 +32,11 @@
 
 body {
     background-color: var(--bg-color);
+    background-image: linear-gradient(to bottom, rgba(5, 20, 36, 1) 0%, rgba(5, 20, 36, 0.95) 75%, rgba(5, 20, 36, 0.2) 100%), url('/assets/img/cybercity-bg.jpg');
+    background-repeat: no-repeat;
+    background-position: center bottom;
+    background-size: 100% auto;
+    background-attachment: scroll;
     color: var(--text-color);
     font-family: 'Inter', sans-serif;
     line-height: 1.5;
@@ -1054,7 +1060,9 @@ main.homepage-main {
 
 /* Footer style mapping */
 .footer {
-    background-color: var(--surface-container-lowest);
+    background-color: rgba(5, 20, 36, 0.6);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
     border-top: 1px solid rgba(255, 255, 255, 0.05);
     margin-top: 48px;
 

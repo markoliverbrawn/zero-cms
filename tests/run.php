@@ -1,7 +1,7 @@
 <?php
 // tests/run.php
 // Master Test Runner for Zero CMS exhaustive unit test suite.
-// Discovers and runs all *Test.php files in isolated subprocesses, aggregating results.
+// Discovers and runs all *Test.php files in isolated subprocesses, aggregating results and counting assertions.
 
 define('TESTS_ROOT', __DIR__);
 
@@ -19,6 +19,7 @@ echo "Found " . count($testFiles) . " test suite files matching *Test.php.\n\n";
 
 $passedCount = 0;
 $failedCount = 0;
+$totalAssertionsCount = 0;
 $failedSuites = [];
 
 foreach ($testFiles as $index => $file) {
@@ -27,7 +28,6 @@ foreach ($testFiles as $index => $file) {
     echo "--------------------------------------------------\n";
     
     // Build isolated PHP CLI command to execute the test suite
-    // Note: We use raw path to the PHP executable in the Docker container
     $command = "php " . escapeshellarg($file);
     
     // Execute command capturing stdout/stderr and the exit code
@@ -35,9 +35,14 @@ foreach ($testFiles as $index => $file) {
     $exitCode = 0;
     exec($command, $output, $exitCode);
     
-    // Print captured output indented for clear structural visual layout
+    // Print captured output indented and count assertions
     foreach ($output as $line) {
         echo "  " . $line . "\n";
+        
+        // Detect assertion passes and fails cleanly by checking for standard ANSI colorized checkmarks
+        if (strpos($line, 'PASS:') !== false || strpos($line, 'FAIL:') !== false) {
+            $totalAssertionsCount++;
+        }
     }
     
     echo "--------------------------------------------------\n";
@@ -61,6 +66,7 @@ echo "==================================================\033[0m\n";
 echo "  Total Suites Executed: " . ($passedCount + $failedCount) . " / " . count($testFiles) . "\n";
 echo "  Passed Suites:         \033[32m{$passedCount}\033[0m\n";
 echo "  Failed Suites:         " . ($failedCount > 0 ? "\033[31m{$failedCount}\033[0m" : "0") . "\n";
+echo "  Total Assertions:      \033[32m{$totalAssertionsCount}\033[0m\n";
 
 if ($failedCount > 0) {
     echo "\n  \033[1;31mList of Failed Test Suites:\033[0m\n";
