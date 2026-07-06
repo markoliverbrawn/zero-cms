@@ -1,5 +1,5 @@
 /* High-Impact Luxury Portfolio Theme Stylesheet */
-@import url('blocks/baseline.css');
+@import url('../../blocks/baseline.css');
 
 :root {
     --bg-color: #050505;

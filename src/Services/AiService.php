@@ -32,6 +32,20 @@ class AiService
     }
 
     /**
+     * Generate an image using the active AI provider.
+     * Returns the raw generated image bytes encoded as a Base64 string.
+     *
+     * @param string $prompt The image generation prompt description.
+     * @param array $options Optional configuration override parameters.
+     * @return string Generated image Base64 string.
+     * @throws Exception
+     */
+    public static function generateImage(string $prompt, array $options = []): string
+    {
+        return self::getProvider()->generateImage($prompt, $options);
+    }
+
+    /**
      * Get the active AI provider instance.
      *
      * @return AiProvider

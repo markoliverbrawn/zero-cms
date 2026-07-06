@@ -709,16 +709,15 @@ class App
      */
     public static function getThemeStylesheet(string $themeName): ?string
     {
-        return self::$themeStylesheets[$themeName] ?? null;
-    }
+        if (isset(self::$themeStylesheets[$themeName])) {
+            return self::$themeStylesheets[$themeName];
+        }
 
-    
-
-    public static function init() {
-        self::registerThemeStylesheet('default', '/assets/css/corporate.css');
-        self::registerThemeStylesheet('shop', '/assets/css/shop.css');
-        self::registerThemeStylesheet('guide', '/assets/css/guide.css');
-        self::registerThemeStylesheet('portfolio', '/assets/css/portfolio.css');
+        $path = "/assets/css/themes/{$themeName}/{$themeName}.css";
+        if (file_exists(APPLICATION_ROOT . '/public' . $path)) {
+            return $path;
+        }
+        return null;
     }
 
     /**

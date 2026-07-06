@@ -1,6 +1,6 @@
 /* Corporate Deep Blue Theme Stylesheet */
-@import url('blocks/baseline.css');
-@import url('blocks/sub_pages.css');
+@import url('../../blocks/baseline.css');
+@import url('../../blocks/sub_pages.css');
 
 :root {
     --bg-color: #f1f5f9;

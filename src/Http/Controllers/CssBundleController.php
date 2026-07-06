@@ -21,10 +21,6 @@ class CssBundleController implements Controller
         if (empty($theme)) {
             $theme = App::getCurrentSite()->theme ?? 'default';
         }
-        
-        if ($theme === 'default') {
-            $theme = 'corporate';
-        }
 
         $targetFile = APPLICATION_ROOT . "/public/assets/css/main-{$theme}.css";
         $isDevelopment = Env::get('APP_ENV', 'production') === 'development';
@@ -46,7 +42,7 @@ class CssBundleController implements Controller
         $cssFiles = [
             // Fonts & Layouts
             '/public/assets/css/fonts.css',
-            "/public/assets/css/{$theme}.css"
+            "/public/assets/css/themes/{$theme}/{$theme}.css"
         ];
 
         // If it is the guide theme, we also bundle all of its block-specific stylesheets

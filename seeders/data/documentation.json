@@ -20,10 +20,9 @@
             "content_base64": "PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MDAgMjAwIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMDUwNTA1Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJtb25vc3BhY2UiIGZvbnQtc2l6ZT0iMjQiIGZpbGw9IiMwMGZmY2MiIGRvbWluYW50LWJhc2VsaW5lPSJtaWRkbGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiPkRFVkVMT1BFUiBET0NTPC90ZXh0Pjwvc3ZnPg=="
         },
         {
-            "filename": "screenshot-preferences.svg",
-            "mime": "image/svg+xml",
-            "site_domain": "d6laptop.zero.guide",
-            "content_base64": "PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MDAgMjAwIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMDUwNTA1Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJtb25vc3BhY2UiIGZvbnQtc2l6ZT0iMjQiIGZpbGw9IiMwMGZmY2MiIGRvbWluYW50LWJhc2VsaW5lPSJtaWRkbGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiPkRFVkVMT1BFUiBET0NTPC90ZXh0Pjwvc3ZnPg=="
+            "filename": "decoupled-architecture.jpg",
+            "mime": "image/jpeg",
+            "site_domain": "d6laptop.zero.guide"
         },
         {
             "filename": "cybercity.mp4",
@@ -267,7 +266,7 @@
                     "type": "text_image",
                     "title": "Lightweight Decoupled Architecture",
                     "content": "<p>Read through our comprehensive guides and explore how the unified single-query bootsrapper, native CSS nesting, and decoupled blocks view fallbacks make Zero the most modern, local-friendly PHP framework on earth.</p>",
-                    "media_placeholder": "screenshot-preferences.svg",
+                    "media_placeholder": "decoupled-architecture.jpg",
                     "image_position": "left"
                 }
             ],

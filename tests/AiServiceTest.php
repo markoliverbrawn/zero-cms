@@ -108,6 +108,11 @@ class CustomTestAiProvider implements AiProvider
     {
         return "Custom response for: " . $prompt;
     }
+
+    public function generateImage(string $prompt, array $options = []): string
+    {
+        return base64_encode("Custom image for: " . $prompt);
+    }
 }
 
 try {

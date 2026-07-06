@@ -4,7 +4,7 @@
 use Zero\Support\Security;
 
 ?>
-<link rel="stylesheet" href="/assets/css/forum.css?v=1.0">
+<link rel="stylesheet" href="/assets/css/themes/forum/forum.css?v=1.0">
 
 <div class="forum-container">
     <div class="forum-header-bar">

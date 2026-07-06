@@ -249,7 +249,7 @@ class AdminApiController extends ApiController
                 $themeStylesheets[] = $themeStylesheet;
             } else {
                 // Fallback to convention-based path
-                $fallbackPath = '/assets/css/' . $theme . '.css';
+                $fallbackPath = '/assets/css/themes/' . $theme . '/' . $theme . '.css';
                 if (file_exists(APPLICATION_ROOT . '/public' . $fallbackPath)) {
                     $themeStylesheets[] = $fallbackPath;
                 }

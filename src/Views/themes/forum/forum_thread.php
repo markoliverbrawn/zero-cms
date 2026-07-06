@@ -25,7 +25,7 @@ if (!empty($replyParentId)) {
     }
 }
 ?>
-<link rel="stylesheet" href="/assets/css/forum.css?v=1.0">
+<link rel="stylesheet" href="/assets/css/themes/forum/forum.css?v=1.0">
 
 <div class="forum-container">
     <div class="forum-breadcrumb">

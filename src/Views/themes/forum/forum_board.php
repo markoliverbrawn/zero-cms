@@ -1,5 +1,5 @@
 <!-- src/Views/themes/forum/forum_board.php -->
-<link rel="stylesheet" href="/assets/css/forum.css?v=1.0">
+<link rel="stylesheet" href="/assets/css/themes/forum/forum.css?v=1.0">
 
 <div class="forum-container">
     <div style="margin-bottom: 1.5rem; font-size: 0.9rem;">

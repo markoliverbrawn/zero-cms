@@ -33,7 +33,7 @@ $sidebarPosts = DB::query("SELECT title, slug FROM blog_posts WHERE status = 'pu
     <meta name="description" content="<?php echo htmlspecialchars($metaDescription, ENT_QUOTES, 'UTF-8'); ?>"/>
     <title>Zero CMS Corporate Portal</title>
     <link rel="icon" type="image/svg+xml" href="/assets/favicons/corporate.svg">
-    <link rel="stylesheet" href="/assets/css/main-corporate.css?v=1.0">
+    <link rel="stylesheet" href="/assets/css/main-default.css?v=1.0">
     <meta name="csrf-token" content="<?php echo htmlspecialchars($csrf ?? '', ENT_QUOTES, "UTF-8"); ?>">
 </head>
 <body>
