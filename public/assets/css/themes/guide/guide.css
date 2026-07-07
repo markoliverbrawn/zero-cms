@@ -83,15 +83,22 @@ h3 {
 /* Typography mappings */
 .font-label-mono { font-family: 'JetBrains Mono', monospace; font-size: 12px; line-height: 16px; letter-spacing: 0.05em; font-weight: 500; }
 .font-label-caps { font-family: 'JetBrains Mono', monospace; font-size: 10px; line-height: 12px; letter-spacing: 0.1em; font-weight: 700; text-transform: uppercase; }
-.font-headline-xl { font-family: 'Inter', sans-serif; font-size: 48px; line-height: 56px; letter-spacing: -0.02em; font-weight: 700; }
+.font-headline-xl { 
+    font-family: 'Inter', sans-serif; 
+    font-size: 32px; 
+    line-height: 40px; 
+    letter-spacing: -0.02em; 
+    font-weight: 700; 
+
+    @media (min-width: 768px) {
+        font-size: 48px;
+        line-height: 56px;
+    }
+}
 .font-headline-lg { font-family: 'Inter', sans-serif; font-size: 32px; line-height: 40px; letter-spacing: -0.01em; font-weight: 600; }
 .font-headline-lg-mobile { font-family: 'Inter', sans-serif; font-size: 24px; line-height: 32px; font-weight: 600; }
 .font-body-md { font-family: 'Inter', sans-serif; font-size: 16px; line-height: 24px; font-weight: 400; }
 .font-body-sm { font-family: 'Inter', sans-serif; font-size: 14px; line-height: 20px; font-weight: 400; }
-
-@media (max-width: 768px) {
-    .font-headline-xl { font-size: 32px; line-height: 40px; }
-}
 
 /* Custom interactive Glassmorphism style definitions */
 .glass-panel {
@@ -336,14 +343,19 @@ h3 {
     .hero-content {
         position: relative;
         z-index: 10;
-        padding: 48px var(--gutter);
+        padding: 96px var(--gutter); /* Mobile padding default */
         max-width: var(--container-max);
         margin: 0 auto;
         width: 100%;
         display: flex;
-        flex-direction: row;
+        flex-direction: column; /* Mobile column default */
         align-items: center;
         gap: 48px;
+
+        @media (min-width: 1025px) {
+            flex-direction: row; /* Desktop scaling */
+            padding: 48px var(--gutter);
+        }
     }
 
     .hero-info {
@@ -865,10 +877,10 @@ h3 {
     padding: 48px var(--gutter);
     display: flex;
     flex-direction: column;
-    gap: 48px;
+    gap: 24px; /* Mobile default gap */
 
     .docs-sidebar {
-        width: 100%;
+        width: 100%; /* Mobile default width */
         display: flex;
         flex-direction: column;
         gap: 32px;
@@ -878,7 +890,6 @@ h3 {
             display: flex;
             align-items: center;
             width: 100%;
-            margin-bottom: 16px;
 
             input {
                 background: rgba(18, 33, 49, 0.5);
@@ -1068,19 +1079,19 @@ h3 {
 
     .footer-grid {
         display: grid;
-        grid-template-columns: 2fr 1fr 1fr 1fr; /* Large brand column + 3 link columns */
+        grid-template-columns: 1fr; /* Default mobile single column stack */
         gap: 32px;
         padding: 64px var(--gutter);
         max-width: var(--container-max);
         margin: 0 auto;
         width: 100%;
 
-        @media (max-width: 900px) {
+        @media (min-width: 576px) {
             grid-template-columns: 1fr 1fr; /* Split into 2 columns on tablet */
         }
 
-        @media (max-width: 600px) {
-            grid-template-columns: 1fr; /* Stack vertically on mobile */
+        @media (min-width: 1025px) {
+            grid-template-columns: 2fr 1fr 1fr 1fr; /* Large brand column + 3 link columns */
         }
     }
 
@@ -1339,7 +1350,7 @@ h3 {
     transition: all 0.3s ease;
 
     /* Proportional Column Span Sizing Rules */
-    grid-column: span var(--col-span-desktop, 1);
+    grid-column: span 1; /* Mobile default stack */
 
     &.has-link {
         cursor: pointer;
@@ -1449,12 +1460,12 @@ h3 {
         line-height: 20px;
     }
 
-    @media (max-width: 900px) {
+    @media (min-width: 576px) {
         grid-column: span var(--col-span-tablet, 1);
     }
 
-    @media (max-width: 600px) {
-        grid-column: span 1; /* Always stack cleanly as single column on mobile */
+    @media (min-width: 1025px) {
+        grid-column: span var(--col-span-desktop, 1);
     }
 }
 
@@ -1478,37 +1489,21 @@ h3 {
     }
 }
 
-/* Tablet & Mobile Media Grid Queries mapped flat outside nesting */
-@media (max-width: 1024px) {
-    .hero-section {
-        .hero-content {
-            flex-direction: column;
-            padding: 96px var(--gutter);
-        }
-        
-        .hero-info, 
-        .stats-panel-wrapper {
-            width: 100% !important;
-        }
-    }
-
+/* Side-by-side desktop dual columns for documentation layout */
+@media (min-width: 1025px) {
     .docs-layout {
-        gap: 24px;
+        flex-direction: row;
+        align-items: flex-start;
+        gap: 48px;
 
-        .docs-sidebar, .docs-content-wrapper {
-            width: 100%;
-        }
-    }
-}
-
-@media (max-width: 768px) {
-    .footer {
-        .footer-grid {
-            grid-template-columns: 1fr;
+        .docs-sidebar {
+            width: 300px;
+            flex-shrink: 0;
         }
 
-        .footer-links {
-            justify-content: flex-start;
+        .docs-content-wrapper {
+            flex: 1;
+            width: auto;
         }
     }
 }
@@ -1632,25 +1627,6 @@ h3 {
             &:hover {
                 text-decoration: underline;
             }
-        }
-    }
-}
-
-/* Side-by-side desktop dual columns for documentation layout */
-@media (min-width: 1025px) {
-    .docs-layout {
-        flex-direction: row;
-        align-items: flex-start;
-        gap: 48px;
-
-        .docs-sidebar {
-            width: 300px;
-            flex-shrink: 0;
-        }
-
-        .docs-content-wrapper {
-            flex: 1;
-            width: auto;
         }
     }
 }
@@ -1837,22 +1813,44 @@ h3 {
 
     &.image-left {
         /* Mirror TRON-style circuit wires cleanly for left-aligned images */
-        &::before {
-            left: auto;
-            right: 32%; /* Starts at the middle of the right-aligned text column */
-            width: 33%; /* Spans from the middle of the text column to the left image edge */
-            border-top: 2px solid var(--neon-cyan, var(--primary-color, #06b6d4));
-            border-right: 2px solid var(--neon-cyan, var(--primary-color, #06b6d4)); /* Descends at the middle-text mark */
-            border-left: none;
-        }
+        @media (min-width: 769px) {
+            &::before {
+                left: auto;
+                right: 32%; /* Starts at the middle of the right-aligned text column */
+                width: 33%; /* Spans from the middle of the text column to the left image edge */
+                height: 35px; /* Shorter vertically to stay clear of text paragraphs */
+                border-top: 2px solid var(--neon-cyan, var(--primary-color, #06b6d4));
+                border-right: 2px solid var(--neon-cyan, var(--primary-color, #06b6d4)); /* Descends at the middle-text mark */
+                border-left: none;
 
-        &::after {
-            left: auto;
-            right: 32%; /* Starts at the middle of the right-aligned text column */
-            width: 33%; /* Spans from the middle of the text column to the left image edge */
-            border-bottom: 2px solid var(--neon-pink, #ff007f);
-            border-right: 2px solid var(--neon-pink, #ff007f); /* Rises at the middle-text mark */
-            border-left: none;
+                background-image: 
+                    radial-gradient(circle, var(--neon-cyan, #00f0ff) 2.5px, transparent 3.5px),
+                    radial-gradient(circle, var(--neon-cyan, #00f0ff) 2.5px, transparent 3.5px);
+                background-position: 
+                    -3px -3px, /* Horizontal start-point (top-left) */
+                    calc(100% - 3px) calc(100% - 3px); /* Vertical end-point (bottom-right) */
+                background-size: 8px 8px;
+                background-repeat: no-repeat;
+            }
+
+            &::after {
+                left: auto;
+                right: 32%; /* Starts at the middle of the right-aligned text column */
+                width: 33%; /* Spans from the middle of the text column to the left image edge */
+                height: 35px; /* Shorter vertically to stay clear of text paragraphs */
+                border-bottom: 2px solid var(--neon-pink, #ff007f);
+                border-right: 2px solid var(--neon-pink, #ff007f); /* Rises at the middle-text mark */
+                border-left: none;
+
+                background-image: 
+                    radial-gradient(circle, var(--neon-pink, #ff007f) 2.5px, transparent 3.5px),
+                    radial-gradient(circle, var(--neon-pink, #ff007f) 2.5px, transparent 3.5px);
+                background-position: 
+                    -3px calc(100% - 3px), /* Horizontal start-point (bottom-left) */
+                    calc(100% - 3px) -3px; /* Vertical end-point (top-right) */
+                background-size: 8px 8px;
+                background-repeat: no-repeat;
+            }
         }
     }
 
@@ -1876,76 +1874,94 @@ h3 {
         }
     }
 
-    /* TRON-style Circuit Wires (Upper Cyan wire: runs above half the text width, then bends down to point to text-center) */
-    &::before {
-        content: '';
-        position: absolute;
-        top: -15px; /* Sits above the text */
-        left: 32%; /* Starts exactly at the middle of the text column */
-        width: 33%; /* Spans from the text-middle across the gap to touch the image */
-        height: calc(50% + 15px); /* Reaches down to the middle-height of the image */
-        border-top: 2px solid var(--neon-cyan, var(--primary-color, #06b6d4));
-        border-left: 2px solid var(--neon-cyan, var(--primary-color, #06b6d4)); /* Bends downwards into the text-middle */
-        border-right: none;
-        filter: drop-shadow(0 0 5px var(--neon-cyan, #06b6d4));
-        opacity: 0.35;
-        pointer-events: none;
-        z-index: 1;
-        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    }
+    @media (min-width: 769px) {
+        /* TRON-style Circuit Wires (Upper Cyan wire: runs above half the text width, then bends down to point to text-center) */
+        &::before {
+            content: '';
+            position: absolute;
+            top: -15px; /* Sits above the text */
+            left: 32%; /* Starts exactly at the middle of the text column */
+            width: 25%; /* Spans from the text-middle across the gap to touch the image */
+            height: 35px; /* Shorter vertically to stay clear of text paragraphs */
+            border-top: 2px solid var(--neon-cyan, var(--primary-color, #06b6d4));
+            border-left: 2px solid var(--neon-cyan, var(--primary-color, #06b6d4)); /* Bends downwards into the text-middle */
+            border-right: none;
 
-    /* TRON-style Circuit Wires (Lower Pink wire: runs below half the text width, then bends up to point to text-center) */
-    &::after {
-        content: '';
-        position: absolute;
-        bottom: -15px; /* Sits below the text */
-        left: 32%; /* Starts exactly at the middle of the text column */
-        width: 33%; /* Spans from the text-middle across the gap to touch the image */
-        height: calc(50% + 15px); /* Reaches up to the middle-height of the image */
-        border-bottom: 2px solid var(--neon-pink, #ff007f);
-        border-left: 2px solid var(--neon-pink, #ff007f); /* Bends upwards into the text-middle */
-        border-right: none;
-        filter: drop-shadow(0 0 5px var(--neon-pink, #ff007f));
-        opacity: 0.35;
-        pointer-events: none;
-        z-index: 1;
-        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    }
+            /* Solder/Circuit circular node pads at the endpoints */
+            background-image: 
+                radial-gradient(circle, var(--neon-cyan, #00f0ff) 2.5px, transparent 3.5px),
+                radial-gradient(circle, var(--neon-cyan, #00f0ff) 2.5px, transparent 3.5px);
+            background-position: 
+                calc(100% - 3px) -3px, /* Horizontal endpoint (top-right) */
+                -3px calc(100% - 3px); /* Vertical endpoint (bottom-left) */
+            background-size: 8px 8px;
+            background-repeat: no-repeat;
 
-    /* Cyberpunk Interactive Hover States */
-    &:hover {
-        .block-text-col {
-            border-color: var(--neon-pink, #ff007f);
+            filter: drop-shadow(0 0 5px var(--neon-cyan, #06b6d4));
+            opacity: 0.35;
+            pointer-events: none;
+            z-index: 1;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
-        .block-image-col {
-            transform: translateY(-5px) scale(1.02);
-            border-color: var(--neon-pink, #ff007f);
-            box-shadow: 0 0 25px rgba(255, 0, 127, 0.45), inset 0 0 15px rgba(255, 0, 127, 0.2);
+        /* TRON-style Circuit Wires (Lower Pink wire: runs below half the text width, then bends up to point to text-center) */
+        &::after {
+            content: '';
+            position: absolute;
+            bottom: -15px; /* Sits below the text */
+            left: 32%; /* Starts exactly at the middle of the text column */
+            width: 33%; /* Spans from the text-middle across the gap to touch the image */
+            height: 35px; /* Shorter vertically to stay clear of text paragraphs */
+            border-bottom: 2px solid var(--neon-pink, #ff007f);
+            border-left: 2px solid var(--neon-pink, #ff007f); /* Bends upwards into the text-middle */
+            border-right: none;
 
-            img {
-                transform: scale(1.05);
+            /* Solder/Circuit circular node pads at the endpoints */
+            background-image: 
+                radial-gradient(circle, var(--neon-pink, #ff007f) 2.5px, transparent 3.5px),
+                radial-gradient(circle, var(--neon-pink, #ff007f) 2.5px, transparent 3.5px);
+            background-position: 
+                calc(100% - 3px) calc(100% - 3px), /* Horizontal endpoint (bottom-right) */
+                -3px -3px; /* Vertical endpoint (top-left) */
+            background-size: 8px 8px;
+            background-repeat: no-repeat;
+
+            filter: drop-shadow(0 0 5px var(--neon-pink, #ff007f));
+            opacity: 0.35;
+            pointer-events: none;
+            z-index: 1;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        /* Cyberpunk Interactive Hover States */
+        &:hover {
+            .block-text-col {
+                border-color: var(--neon-pink, #ff007f);
+            }
+
+            .block-image-col {
+                transform: translateY(-5px) scale(1.02);
+                border-color: var(--neon-pink, #ff007f);
+                box-shadow: 0 0 25px rgba(255, 0, 127, 0.45), inset 0 0 15px rgba(255, 0, 127, 0.2);
+
+                img {
+                    transform: scale(1.05);
+                }
+            }
+
+            /* Power up the glowing TRON-style circuit energy lines on hover */
+            &::before {
+                opacity: 0.95;
+                filter: drop-shadow(0 0 10px var(--neon-cyan, var(--primary-color, #06b6d4)));
+                transform: translateY(-2px);
+            }
+
+            &::after {
+                opacity: 0.95;
+                filter: drop-shadow(0 0 10px var(--neon-pink, #ff007f));
+                transform: translateY(2px);
             }
         }
-
-        /* Power up the glowing TRON-style circuit energy lines on hover */
-        &::before {
-            opacity: 0.95;
-            filter: drop-shadow(0 0 10px var(--neon-cyan, var(--primary-color, #06b6d4)));
-            transform: translateY(-2px);
-        }
-
-        &::after {
-            opacity: 0.95;
-            filter: drop-shadow(0 0 10px var(--neon-pink, #ff007f));
-            transform: translateY(2px);
-        }
     }
-
-    @media (max-width: 768px) {
-        /* Hide circuit wires on mobile viewports to prevent layout overlap */
-        &::before, &::after {
-            display: none !important;
-        }
-    }
+}
 }

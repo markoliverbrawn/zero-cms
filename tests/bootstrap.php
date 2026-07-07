@@ -44,6 +44,10 @@ try {
     $originalDbName = $data['DB_NAME'] ?? 'cms';
     $testDbName = $originalDbName . '_test';
     
+    if ($workerToken = getenv('TEST_TOKEN')) {
+        $testDbName .= '_' . $workerToken;
+    }
+    
     $data['DB_NAME'] = $testDbName;
     $data['GCS_PREDEFINED_ACL'] = '';
     $data['STORAGE_DRIVER'] = 'local';

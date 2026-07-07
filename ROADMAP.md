@@ -37,6 +37,11 @@ Create a strict developer checklist for database updates to ensure older active 
 *   **Constraint 1:** Columns are **never** renamed or dropped in a single deployment.
 *   **Constraint 2:** Use **Dual-State Rollout** (Add nullable column $\rightarrow$ Deploy code to write to both $\rightarrow$ Backfill data $\rightarrow$ Shift reads $\rightarrow$ Drop old column).
 
+### 2.3 Modular CSS Bundle Optimization & Developer Workflows
+Improve front-office asset management and theme developer experience without introducing heavy third-party build tools (like Vite, Webpack, or PostCSS):
+*   **Modular Stylesheet Splitting:** Refactor large monolithic theme files (such as `guide.css`) into smaller, domain-specific modular stylesheets (e.g., `layout.css`, `typography.css`, `blocks.css`) inside their corresponding nested theme subdirectories.
+*   **Dynamic Server-Side Compilation:** Register the new broken-up stylesheets directly inside the dynamic `CssBundleController.php` load sequence. This compiles, concatenates, and minifies them into a single, high-performance inlined CSS bundle (`main-*.css`) on the server-side—completely avoiding spec-violating browser `@import` statements and redundant, render-blocking HTTP latency.
+
 ---
 
 ## 🟢 Phase 3: Blue/Green Serverless Deployments & Patching (Staging to Prod)

@@ -197,6 +197,6 @@ use Zero\Support\I18n;
 </div>
 
 <!-- Extra link for live preview load of preset CSS if selected -->
-<link id="vintage-greenscreen-stylesheet" rel="stylesheet" href="/assets/css/admin-vintage-greenscreen.css" style="display:none">
+<link id="vintage-greenscreen-stylesheet" rel="stylesheet" href="/assets/css/admin-themes/admin-vintage-greenscreen.css" style="display:none">
 
 <script src="/assets/js/admin/preferences.js"></script>

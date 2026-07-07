@@ -39,8 +39,8 @@ if (!file_exists(APPLICATION_ROOT . '/public' . $adminFavicon)) {
     <title>Zero</title>
     <link rel="icon" type="image/svg+xml" href="<?php echo htmlspecialchars($adminFavicon, ENT_QUOTES, 'UTF-8'); ?>">
     <link rel="stylesheet" href="/assets/css/admin.css?v=<?php echo time(); ?>">
-    <?php if ($themePreset !== 'default' && file_exists(APPLICATION_ROOT . '/public/assets/css/admin-' . $themePreset . '.css')): ?>
-        <link rel="stylesheet" href="/assets/css/admin-<?php echo htmlspecialchars($themePreset, ENT_QUOTES, 'UTF-8'); ?>.css">
+    <?php if ($themePreset !== 'default' && file_exists(APPLICATION_ROOT . '/public/assets/css/admin-themes/admin-' . $themePreset . '.css')): ?>
+        <link rel="stylesheet" href="/assets/css/admin-themes/admin-<?php echo htmlspecialchars($themePreset, ENT_QUOTES, 'UTF-8'); ?>.css">
     <?php endif; ?>
     <meta name="csrf-token" content="<?php echo htmlspecialchars($csrf ?? '', ENT_QUOTES, "UTF-8"); ?>">
 </head>
