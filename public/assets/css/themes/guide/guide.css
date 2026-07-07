@@ -1820,36 +1820,18 @@ h3 {
                 width: 33%; /* Spans from the middle of the text column to the left image edge */
                 height: 35px; /* Shorter vertically to stay clear of text paragraphs */
                 border-top: 2px solid var(--neon-cyan, var(--primary-color, #06b6d4));
-                border-right: 2px solid var(--neon-cyan, var(--primary-color, #06b6d4)); /* Descends at the middle-text mark */
+                border-right: 20px solid var(--neon-cyan, var(--primary-color, #06b6d4)); /* Descends at the middle-text mark */
                 border-left: none;
-
-                background-image: 
-                    radial-gradient(circle, var(--neon-cyan, #00f0ff) 2.5px, transparent 3.5px),
-                    radial-gradient(circle, var(--neon-cyan, #00f0ff) 2.5px, transparent 3.5px);
-                background-position: 
-                    -3px -3px, /* Horizontal start-point (top-left) */
-                    calc(100% - 3px) calc(100% - 3px); /* Vertical end-point (bottom-right) */
-                background-size: 8px 8px;
-                background-repeat: no-repeat;
             }
 
             &::after {
                 left: auto;
-                right: 32%; /* Starts at the middle of the right-aligned text column */
-                width: 33%; /* Spans from the middle of the text column to the left image edge */
+                right: 25%; /* Starts at the middle of the right-aligned text column */
+                width: 50%; /* Spans from the middle of the text column to the left image edge */
                 height: 35px; /* Shorter vertically to stay clear of text paragraphs */
                 border-bottom: 2px solid var(--neon-pink, #ff007f);
-                border-right: 2px solid var(--neon-pink, #ff007f); /* Rises at the middle-text mark */
+                border-right: 20px solid var(--neon-pink, #ff007f); /* Rises at the middle-text mark */
                 border-left: none;
-
-                background-image: 
-                    radial-gradient(circle, var(--neon-pink, #ff007f) 2.5px, transparent 3.5px),
-                    radial-gradient(circle, var(--neon-pink, #ff007f) 2.5px, transparent 3.5px);
-                background-position: 
-                    -3px calc(100% - 3px), /* Horizontal start-point (bottom-left) */
-                    calc(100% - 3px) -3px; /* Vertical end-point (top-right) */
-                background-size: 8px 8px;
-                background-repeat: no-repeat;
             }
         }
     }
@@ -1884,24 +1866,15 @@ h3 {
             width: 25%; /* Spans from the text-middle across the gap to touch the image */
             height: 35px; /* Shorter vertically to stay clear of text paragraphs */
             border-top: 2px solid var(--neon-cyan, var(--primary-color, #06b6d4));
-            border-left: 2px solid var(--neon-cyan, var(--primary-color, #06b6d4)); /* Bends downwards into the text-middle */
+            border-left: 20px solid var(--neon-cyan, var(--primary-color, #06b6d4)); /* Bends downwards into the text-middle */
             border-right: none;
-
-            /* Solder/Circuit circular node pads at the endpoints */
-            background-image: 
-                radial-gradient(circle, var(--neon-cyan, #00f0ff) 2.5px, transparent 3.5px),
-                radial-gradient(circle, var(--neon-cyan, #00f0ff) 2.5px, transparent 3.5px);
-            background-position: 
-                calc(100% - 3px) -3px, /* Horizontal endpoint (top-right) */
-                -3px calc(100% - 3px); /* Vertical endpoint (bottom-left) */
-            background-size: 8px 8px;
-            background-repeat: no-repeat;
 
             filter: drop-shadow(0 0 5px var(--neon-cyan, #06b6d4));
             opacity: 0.35;
             pointer-events: none;
             z-index: 1;
             transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transform: skewx(45deg);
         }
 
         /* TRON-style Circuit Wires (Lower Pink wire: runs below half the text width, then bends up to point to text-center) */
@@ -1909,23 +1882,14 @@ h3 {
             content: '';
             position: absolute;
             bottom: -15px; /* Sits below the text */
-            left: 32%; /* Starts exactly at the middle of the text column */
-            width: 33%; /* Spans from the text-middle across the gap to touch the image */
+            left: 50%; /* Starts exactly at the middle of the text column */
+            width: 75%; /* Spans from the text-middle across the gap to touch the image */
             height: 35px; /* Shorter vertically to stay clear of text paragraphs */
             border-bottom: 2px solid var(--neon-pink, #ff007f);
             border-left: 2px solid var(--neon-pink, #ff007f); /* Bends upwards into the text-middle */
             border-right: none;
-
-            /* Solder/Circuit circular node pads at the endpoints */
-            background-image: 
-                radial-gradient(circle, var(--neon-pink, #ff007f) 2.5px, transparent 3.5px),
-                radial-gradient(circle, var(--neon-pink, #ff007f) 2.5px, transparent 3.5px);
-            background-position: 
-                calc(100% - 3px) calc(100% - 3px), /* Horizontal endpoint (bottom-right) */
-                -3px -3px; /* Vertical endpoint (top-left) */
-            background-size: 8px 8px;
-            background-repeat: no-repeat;
-
+            transform: skewx(-45deg);
+            
             filter: drop-shadow(0 0 5px var(--neon-pink, #ff007f));
             opacity: 0.35;
             pointer-events: none;
@@ -1953,15 +1917,14 @@ h3 {
             &::before {
                 opacity: 0.95;
                 filter: drop-shadow(0 0 10px var(--neon-cyan, var(--primary-color, #06b6d4)));
-                transform: translateY(-2px);
+                transform: skewx(50deg) translateY(-2px) scalex(90%);
             }
 
             &::after {
                 opacity: 0.95;
                 filter: drop-shadow(0 0 10px var(--neon-pink, #ff007f));
-                transform: translateY(2px);
+                transform: skewx(-50deg) translateY(2px) scalex(150%);
             }
         }
     }
-}
 }
