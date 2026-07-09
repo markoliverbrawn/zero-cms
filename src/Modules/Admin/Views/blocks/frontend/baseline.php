@@ -19,7 +19,7 @@ if (!empty($mediaId)) {
 
 $bgStyle = '';
 if (!empty($resolvedUrl) && !$isVideo) {
-    $bgStyle = "background-image: linear-gradient(to right, var(--bg-color), rgba(5, 20, 36, 0.6) 60%, rgba(5, 20, 36, 0.2)), url('{$resolvedUrl}');";
+    $bgStyle = "background-image: linear-gradient(to bottom, transparent 60%, var(--bg-color, #051424) 100%), linear-gradient(to right, var(--bg-color, #051424) 0%, rgba(5, 20, 36, 0.75) 50%, rgba(5, 20, 36, 0.25) 100%), url('{$resolvedUrl}');";
 }
 
 $minHeight = $block['min_height'] ?? 'default';

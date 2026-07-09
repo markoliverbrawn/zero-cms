@@ -14,6 +14,11 @@
     ],
     "media": [
         {
+            "filename": "framework-speed-benchmarks.jpg",
+            "mime": "image/jpeg",
+            "site_domain": "d6laptop.zero.guide"
+        },
+        {
             "filename": "screenshot-dashboard.svg",
             "mime": "image/svg+xml",
             "site_domain": "d6laptop.zero.guide",
@@ -82,7 +87,7 @@
                     "type": "baseline",
                     "title": "Framework Speed & Throughput Benchmarks",
                     "content": "<p>A high-concurrency performance audit comparing the lightweight, zero-dependency architecture of Zero CMS against mainstream content management systems under heavy parallel loads.</p>",
-                    "media_placeholder": "screenshot-dashboard.svg"
+                    "media_placeholder": "framework-speed-benchmarks.jpg"
                 },
                 {
                     "type": "text",

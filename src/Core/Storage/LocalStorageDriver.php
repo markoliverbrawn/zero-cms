@@ -106,7 +106,10 @@ class LocalStorageDriver implements StorageDriver
             mkdir($dir, 0775, true);
             @chmod($dir, 0775);
         }
-        return move_uploaded_file($tmpFilePath, $resolved);
+        if (is_uploaded_file($tmpFilePath)) {
+            return move_uploaded_file($tmpFilePath, $resolved);
+        }
+        return copy($tmpFilePath, $resolved);
     }
 
     public function rename(string $oldPath, string $newPath): bool

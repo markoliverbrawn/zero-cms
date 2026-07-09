@@ -1,5 +1,4 @@
 /* assets/css/themes/guide/guide.css - Custom Modern Tech Theme Frontend Stylesheet (Highly Compatible Flat CSS) */
-@import url('../../blocks/sub_pages.css');
 
 :root {
     --bg-color: #051424;
@@ -1225,8 +1224,7 @@ h3 {
 
     &.full-width-hero {
         width: 100%;
-        border-left: none;
-        border-right: none;
+        border: none;
         border-radius: 0;
         padding-left: var(--gutter);
         padding-right: var(--gutter);
@@ -1633,9 +1631,9 @@ h3 {
 
 /* Beautiful modern tech block header titles (High-impact aligned layout with dynamic neon draw line & CRT screen scanlines across text) */
 .block-section-title {
-    font-family: 'Inter', sans-serif;
-    font-size: 32px; /* Large modern font-size */
-    font-weight: 300; /* Sleek, thinner light-weight */
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 24px; /* Reduced modern font-size */
+    font-weight: 700; /* Monospace Bold */
     text-transform: uppercase;
     letter-spacing: 0.12em;
     margin: 0 var(--gutter, 24px) 32px var(--gutter, 24px); /* Offset margins to align perfectly with content cards below */

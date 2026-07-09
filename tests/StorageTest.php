@@ -99,4 +99,37 @@ $mediaRecord->forceDelete();
 assert_test(Media::find($mediaRecordId) === null, "Media database active record successfully deleted");
 assert_test(!Storage::exists($mediaRelativePath), "Media physical file successfully deleted from storage");
 
+// 7. Test automatic image optimization
+echo "  Testing automatic image optimization (resizing and compression)...\n";
+if (extension_loaded('gd')) {
+    $largeImageWidth = 1500;
+    $largeImageHeight = 1000;
+    $img = imagecreatetruecolor($largeImageWidth, $largeImageHeight);
+    $bg = imagecolorallocate($img, 255, 0, 0);
+    imagefill($img, 0, 0, $bg);
+    
+    $tmpImgPath = tempnam(sys_get_temp_dir(), 'test_large_img_');
+    imagejpeg($img, $tmpImgPath, 100);
+    imagedestroy($img);
+    
+    $targetImgPath = 'optimized-test-image-' . bin2hex(random_bytes(4)) . '.jpg';
+    
+    // Store image via putFile
+    $putResult = Storage::putFile($targetImgPath, $tmpImgPath);
+    assert_test($putResult, "Large image uploaded successfully");
+    
+    // Verify saved image dimensions
+    $physicalSavedPath = APPLICATION_ROOT . '/public/storage/uploads/' . $targetImgPath;
+    $savedInfo = @getimagesize($physicalSavedPath);
+    assert_test($savedInfo !== false, "Saved file is a valid image");
+    assert_test($savedInfo[0] <= 1200, "Width of saved image is resized to no larger than 1200px (Actual width: {$savedInfo[0]}px)");
+    assert_test($savedInfo[1] <= 1200, "Height of saved image is resized to no larger than 1200px (Actual height: {$savedInfo[1]}px)");
+    
+    // Cleanup
+    @unlink($tmpImgPath);
+    Storage::delete($targetImgPath);
+} else {
+    echo "    Skipping image optimization test (GD extension not loaded).\n";
+}
+
 echo "Storage driver component tests completed.\n\n";
