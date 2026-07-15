@@ -41,7 +41,7 @@ $comments = Comment::getForPost($post->id);
       <form class="ajax-comment-form" style="display: flex; flex-direction: column; gap: 1.25rem;">
         <input type="hidden" name="post_id" value="<?php echo htmlspecialchars($post->id, ENT_QUOTES, 'UTF-8'); ?>">
         
-        <!-- Hardened Honeypot Decoy Field (styled with .website-field-wrapper in contact_form.css) -->
+        <!-- Hardened Honeypot Decoy Field (styled with .website-field-wrapper in form_builder.css) -->
         <div class="form-group website-field-wrapper">
           <label>Website URL</label>
           <input type="text" name="website_url" autocomplete="off" tabindex="-1">

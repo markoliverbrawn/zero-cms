@@ -268,7 +268,7 @@
                     "content": "<p>Have any questions, inquiries, or feedback? Please use the form below to reach out to our team. We respond to all submissions within 24 hours.</p>"
                 },
                 {
-                    "type": "contact_form",
+                    "type": "form_builder",
                     "title": "Send Us a Message",
                     "content": "",
                     "recipient_email": "admin@d6laptop.zero",

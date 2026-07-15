@@ -404,6 +404,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         doc.write('<script src="/assets/js/blocks/accordion.js?v=' + Date.now() + '"><\/script>');
                     } else if (type === 'baseline') {
                         doc.write('<script src="/assets/js/blocks/baseline.js?v=' + Date.now() + '"><\/script>');
+                    } else if (type === 'form_builder') {
+                        doc.write('<script src="/assets/js/blocks/form_builder.js?v=' + Date.now() + '"><\/script>');
                     }
                     doc.write('</body></html>');
                     doc.close();

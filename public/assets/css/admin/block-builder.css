@@ -760,8 +760,8 @@
     --block-accent-color: #b45309; /* Shop Module - Commerce Gold */
 }
 
-.block-item[data-type="contact_form"],
-.block-select-card[data-type="contact_form"] {
+.block-item[data-type="form_builder"],
+.block-select-card[data-type="form_builder"] {
     --block-accent-color: #10b981; /* FormBuilder Module - Emerald Green */
 }
 

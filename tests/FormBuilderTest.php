@@ -71,7 +71,7 @@ DB::query("
 $mockPageId = \Zero\Support\Security::uuidv7();
 $mockContent = json_encode([
     [
-        'type' => 'contact_form',
+        'type' => 'form_builder',
         'id' => 'cf_corp_contact',
         'recipient_email' => 'admin@d6laptop.zero',
         'items' => [

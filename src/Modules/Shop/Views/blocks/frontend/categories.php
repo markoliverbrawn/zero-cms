@@ -10,11 +10,6 @@ if (class_exists(Category::class)) {
 }
 ?>
 <div class="block-categories-wrapper" style="margin-bottom: 50px;">
-  <?php if (!empty($block['title'])): ?>
-    <h3 style="font-size: 1.8rem; font-weight: 800; margin-top: 0; margin-bottom: 25px; text-transform: uppercase; letter-spacing: 0.1em; text-align: center;">
-        <?php echo htmlspecialchars($block['title'], ENT_QUOTES, "UTF-8"); ?>
-    </h3>
-  <?php endif; ?>
 
   <div class="categories-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; margin-top: 25px;">
     <?php if (!empty($categories)): ?>

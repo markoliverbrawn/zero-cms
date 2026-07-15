@@ -690,7 +690,7 @@ Zero CMS features a fully dynamic, fully featured, and 100% styled-separated **F
    * Form blocks are saved as serialized JSON blocks containing an array of dynamic field specifications:
      ```json
      {
-       "type": "contact_form",
+       "type": "form_builder",
        "id": "cf_custom_recruitment",
        "recipient_email": "careers@zero.cms",
        "items": [

@@ -231,6 +231,10 @@ $shouldOmitTitle = !empty($post->omit_title) || $hasHeroBlock;
                     }
                 }
                 if (file_exists($blockPath)) {
+                    $hideTitle = $block['hide_title'] ?? '0';
+                    if ($hideTitle !== '1' && !empty($block['title'])) {
+                        echo '<h3 style="color: var(--neon-cyan); margin-bottom: 1.25rem;">' . htmlspecialchars($block['title']) . '</h3>';
+                    }
                     echo Template::renderFile($blockPath, [
                         'block' => $block,
                         'resolveMedia' => $resolveMedia

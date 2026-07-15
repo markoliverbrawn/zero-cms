@@ -6,9 +6,6 @@ use Zero\Models\Media;
 $mediaIds = $block['media_ids'] ?? [];
 ?>
 <div class="block block-gallery">
-  <?php if (!empty($block['title'])): ?>
-    <h3><?php echo htmlspecialchars($block['title'], ENT_QUOTES, "UTF-8"); ?></h3>
-  <?php endif; ?>
   <div class="gallery-grid">
     <?php if (!empty($mediaIds)): ?>
       <?php foreach ($mediaIds as $img): 

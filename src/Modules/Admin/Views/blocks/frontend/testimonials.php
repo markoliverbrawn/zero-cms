@@ -3,9 +3,6 @@ $duration = $block['duration'] ?? 5000;
 $items = $block['items'] ?? [];
 ?>
 <div class="block block-testimonials" data-duration="<?php echo $duration; ?>">
-  <?php if (!empty($block['title'])): ?>
-    <h3><?php echo htmlspecialchars($block['title'], ENT_QUOTES, "UTF-8"); ?></h3>
-  <?php endif; ?>
   
   <div class="testimonials-carousel-container">
     <div class="testimonials-slides-wrapper">

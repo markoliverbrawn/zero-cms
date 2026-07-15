@@ -78,4 +78,11 @@ assert_test(strpos($cleanHtml, 'javascript:') === false, "Removes links containi
 assert_test(strpos($cleanHtml, 'data:') === false, "Removes elements containing data: protocol schemas");
 assert_test(strpos($cleanHtml, 'good-image.jpg') !== false, "Preserves safe elements and safe attribute URIs");
 
+// 5. Test Escape HTML (escape)
+echo "Testing HTML escaping...\n";
+$dirtyHtml = '<script>alert("XSS")</script> & "quotes"';
+$escaped = Security::escape($dirtyHtml);
+assert_test($escaped === '&lt;script&gt;alert(&quot;XSS&quot;)&lt;/script&gt; &amp; &quot;quotes&quot;', "Security::escape correctly encodes HTML tags, double quotes, and ampersands");
+assert_test(Security::escape(null) === '', "Security::escape handles null values gracefully");
+
 echo "Security component tests completed.\n\n";

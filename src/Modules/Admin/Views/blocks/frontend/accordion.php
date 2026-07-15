@@ -4,11 +4,6 @@
 $items = $block['items'] ?? [];
 ?>
 <div class="block-accordion-wrapper" style="margin-bottom: 50px;">
-  <?php if (!empty($block['title'])): ?>
-    <h3 class="accordion-section-title" style="font-size: 1.8rem; font-weight: 800; margin-top: 0; margin-bottom: 25px; text-transform: uppercase; letter-spacing: 0.1em; text-align: left;">
-        <?php echo htmlspecialchars($block['title'], ENT_QUOTES, "UTF-8"); ?>
-    </h3>
-  <?php endif; ?>
 
   <div class="accordion-list" style="display: flex; flex-direction: column; border-top: 1px solid var(--border-color, #e2e8f0);">
     <?php if (!empty($items)): ?>

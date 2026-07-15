@@ -41,12 +41,12 @@ class Module implements ModuleInterface
 
     public function init()
     {
-        App::registerBlock('contact_form', [
+        App::registerBlock('form_builder', [
             'label' => 'Dynamic Form Builder',
             'description' => 'A dynamic AJAX form builder block supporting custom text, select, checkboxes, and radio options.',
             'icon' => 'inbox',
-            'admin_view' => dirname(__FILE__) . '/Views/blocks/admin/contact_form.php',
-            'frontend_view' => dirname(__FILE__) . '/Views/blocks/frontend/contact_form.php',
+            'admin_view' => dirname(__FILE__) . '/Views/blocks/admin/form_builder.php',
+            'frontend_view' => dirname(__FILE__) . '/Views/blocks/frontend/form_builder.php',
             'bypass_preview_sanitizer' => true
         ]);
 

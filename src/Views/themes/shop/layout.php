@@ -132,5 +132,6 @@ if (isset($_SESSION['cart'])) {
     <script src="/assets/js/blocks/gallery.js"></script>
     <script src="/assets/js/blocks/masonry.js"></script>
     <script src="/assets/js/blocks/sub_pages.js"></script>
+    <script src="/assets/js/blocks/form_builder.js"></script>
 </body>
 </html>

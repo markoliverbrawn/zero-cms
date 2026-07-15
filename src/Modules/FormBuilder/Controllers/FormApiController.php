@@ -56,7 +56,7 @@ class FormApiController implements Controller
                 $blocks = json_decode($p['content'], true);
                 if (is_array($blocks)) {
                     foreach ($blocks as $b) {
-                        if (($b['type'] ?? '') === 'contact_form' && ($b['id'] ?? '') === $blockId) {
+                        if (($b['type'] ?? '') === 'form_builder' && ($b['id'] ?? '') === $blockId) {
                             $matchedBlock = $b;
                             $sourcePageTitle = $p['title'];
                             break 2;
@@ -72,7 +72,7 @@ class FormApiController implements Controller
                     $blocks = json_decode($po['content'], true);
                     if (is_array($blocks)) {
                         foreach ($blocks as $b) {
-                            if (($b['type'] ?? '') === 'contact_form' && ($b['id'] ?? '') === $blockId) {
+                            if (($b['type'] ?? '') === 'form_builder' && ($b['id'] ?? '') === $blockId) {
                                 $matchedBlock = $b;
                                 $sourcePageTitle = $po['title'];
                                 break 2;

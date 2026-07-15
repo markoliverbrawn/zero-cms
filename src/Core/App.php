@@ -3,6 +3,7 @@
 namespace Zero\Core;
 
 use Zero\Support\Security;
+use Zero\Support\Str;
 use Zero\Database\DB;
 use Zero\Http\Middleware\AuthMiddleware;
 use Zero\Http\Middleware\CsrfMiddleware;
@@ -1013,18 +1014,7 @@ class App
 
     public static function slugify($text)
     {
-        $text = preg_replace('~[^\pL\d]+~u', '-', $text);
-        $text = iconv('utf-8', 'us-ascii//TRANSLIT', $text);
-        $text = preg_replace('~[^-\w]+~', '', $text);
-        $text = trim($text, '-');
-        $text = preg_replace('~-+~', '-', $text);
-        $text = strtolower($text);
-
-        if (empty($text)) {
-            return 'n-a';
-        }
-
-        return $text;
+        return Str::slug($text);
     }
 
     /**
@@ -1033,15 +1023,7 @@ class App
      */
     public static function slugifyPath($text)
     {
-        $segments = explode('/', $text);
-        $slugifiedSegments = [];
-        foreach ($segments as $segment) {
-            $slugified = self::slugify($segment);
-            if ($slugified !== '' && $slugified !== 'n-a') {
-                $slugifiedSegments[] = $slugified;
-            }
-        }
-        return empty($slugifiedSegments) ? 'n-a' : implode('/', $slugifiedSegments);
+        return Str::slugPath($text);
     }
 
     /**

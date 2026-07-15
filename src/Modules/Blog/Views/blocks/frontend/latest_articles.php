@@ -19,11 +19,6 @@ if (class_exists(Post::class)) {
 }
 ?>
 <div class="block-latest-articles-wrapper">
-    <?php if (!empty($title)): ?>
-        <h3 class="block-latest-articles-title">
-            <?php echo htmlspecialchars($title, ENT_QUOTES, "UTF-8"); ?>
-        </h3>
-    <?php endif; ?>
 
     <div class="latest-articles-container <?php echo $layout === 'list' ? 'layout-list' : 'layout-grid'; ?>">
         <?php if (!empty($posts)): ?>

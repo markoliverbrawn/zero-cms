@@ -1,6 +1,8 @@
 <?php
-// src/Modules/FormBuilder/Views/blocks/admin/contact_form.php
+// src/Modules/FormBuilder/Views/blocks/admin/form_builder.php
 // Dynamic Form Builder Admin Configuration layout with list overrides and zero inline styles
+
+use Zero\Support\Str;
 
 $recipientEmail = $block['recipient_email'] ?? '';
 $blockId = $block['id'] ?? '';
@@ -9,16 +11,16 @@ if (empty($blockId)) {
 }
 $fields = $block['items'] ?? []; // dynamically serialized fields list!
 ?>
-<input type="hidden" class="block-id-input" value="<?php echo htmlspecialchars($blockId, ENT_QUOTES, 'UTF-8'); ?>">
+<input type="hidden" class="block-id-input" value="<?php echo Str::escape($blockId); ?>">
 
 <div class="field-group">
     <label>Form Title / Header</label>
-    <input type="text" class="block-title-input" value="<?php echo htmlspecialchars($blockTitle, ENT_QUOTES, 'UTF-8'); ?>" placeholder="Send Us a Message">
+    <input type="text" class="block-title-input" value="<?php echo Str::escape($blockTitle); ?>" placeholder="Send Us a Message">
 </div>
 
 <div class="field-group">
     <label>Form Recipient Email Address *</label>
-    <input type="email" class="block-recipient_email-input" value="<?php echo htmlspecialchars($recipientEmail, ENT_QUOTES, 'UTF-8'); ?>" placeholder="e.g. admin@yourdomain.com" required>
+    <input type="email" class="block-recipient_email-input" value="<?php echo Str::escape($recipientEmail); ?>" placeholder="e.g. admin@yourdomain.com" required>
 </div>
 
 <div class="field-group">
@@ -55,11 +57,11 @@ $fields = $block['items'] ?? []; // dynamically serialized fields list!
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; width: 100%;">
                         <div class="field-group block-child-field-group-8">
                             <label class="block-child-label-desc">Field Database Key *</label>
-                            <input type="text" class="form_field-item-name-input" value="<?php echo htmlspecialchars($fieldName, ENT_QUOTES, 'UTF-8'); ?>" placeholder="e.g. first_name" required>
+                            <input type="text" class="form_field-item-name-input" value="<?php echo Str::escape($fieldName); ?>" placeholder="e.g. first_name" required>
                         </div>
                         <div class="field-group block-child-field-group-8">
                             <label class="block-child-label-desc">Field Visual Label *</label>
-                            <input type="text" class="form_field-item-label-input" value="<?php echo htmlspecialchars($fieldLabel, ENT_QUOTES, 'UTF-8'); ?>" placeholder="e.g. First Name" required>
+                            <input type="text" class="form_field-item-label-input" value="<?php echo Str::escape($fieldLabel); ?>" placeholder="e.g. First Name" required>
                         </div>
                         <div class="field-group block-child-field-group-8">
                             <label class="block-child-label-desc">Input Type</label>
@@ -83,7 +85,7 @@ $fields = $block['items'] ?? []; // dynamically serialized fields list!
                         </div>
                         <div class="field-group block-child-field-group-8">
                             <label class="block-child-label-desc">Options (Select/Check/Radio)</label>
-                            <input type="text" class="form_field-item-options-input" value="<?php echo htmlspecialchars($fieldOptions, ENT_QUOTES, 'UTF-8'); ?>" placeholder="Option1, Option2, Option3">
+                            <input type="text" class="form_field-item-options-input" value="<?php echo Str::escape($fieldOptions); ?>" placeholder="Option1, Option2, Option3">
                         </div>
                         <div class="field-group block-child-field-group-8">
                             <label class="block-child-label-desc">Type Validation</label>

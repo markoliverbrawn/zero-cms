@@ -8,7 +8,8 @@
                 "blog",
                 "security",
                 "queue",
-                "site-search"
+                "site-search",
+                "formbuilder"
             ]
         }
     ],
@@ -987,7 +988,7 @@
             "site_domain": "d6laptop.zero.guide",
             "content": [
                 {
-                    "type": "contact_form",
+                    "type": "form_builder",
                     "title": "Send Us a Message",
                     "id": "cf_guide_contact",
                     "recipient_email": "admin@d6laptop.zero",

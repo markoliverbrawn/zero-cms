@@ -3,9 +3,6 @@
 
 ?>
 <div class="block-masonry-wrapper">
-  <?php if (!empty($block['title'])): ?>
-    <h3><?php echo htmlspecialchars($block['title'], ENT_QUOTES, "UTF-8"); ?></h3>
-  <?php endif; ?>
 
   <div class="block-masonry">
     <?php if (!empty($block['items'])): ?>

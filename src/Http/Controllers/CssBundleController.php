@@ -54,7 +54,7 @@ class CssBundleController implements Controller
                 '/public/assets/css/blocks/masonry.css',
                 '/public/assets/css/blocks/testimonials.css',
                 '/public/assets/css/blocks/code.css',
-                '/public/assets/css/blocks/contact_form.css',
+                '/public/assets/css/blocks/form_builder.css',
                 '/public/assets/css/blocks/latest_articles.css',
                 '/public/assets/css/blocks/sub_pages.css',
                 '/public/assets/css/blocks/chart.css',
