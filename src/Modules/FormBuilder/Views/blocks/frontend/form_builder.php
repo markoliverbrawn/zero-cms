@@ -49,7 +49,7 @@ $fields = $block['items'] ?? [];
               <textarea name="<?php echo Str::escape($name); ?>" <?php echo $required ? 'required' : ''; ?> placeholder="Enter <?php echo Str::escape(strtolower($label)); ?>..." rows="4"></textarea>
             
             <?php elseif ($type === 'select'): ?>
-              <select name="<?php echo Str::escape($name); ?>" <?php echo $required ? 'required' : ''; >>
+              <select name="<?php echo Str::escape($name); ?>" <?php echo $required ? 'required' : ''; ?>>
                 <option value="">-- Select Option --</option>
                 <?php foreach ($options as $opt): ?>
                   <option value="<?php echo Str::escape($opt); ?>"><?php echo Str::escape($opt); ?></option>
