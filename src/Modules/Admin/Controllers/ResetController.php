@@ -5,6 +5,8 @@ namespace Zero\Modules\Admin\Controllers;
 use Zero\Core\App;
 use Zero\Database\DB;
 use Zero\Support\Logger;
+use Zero\Support\Security;
+use Zero\Http\Middleware\AuthThrottlingMiddleware;
 use Zero\Interfaces\Controller;
 
 class ResetController implements Controller
@@ -14,9 +16,19 @@ class ResetController implements Controller
         $method = $_SERVER['REQUEST_METHOD'];
         $token = $_GET['token'] ?? ($_POST['token'] ?? '');
         if ($method === 'POST') {
+            $ip = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+
+            // Enforce centralized rate limiting and progressive lockout protection via Middleware
+            AuthThrottlingMiddleware::handle('password_reset', 'admin/reset', ['token' => $token], function() {});
+
             $new = $_POST['password'] ?? '';
             $row = DB::query('SELECT * FROM password_resets WHERE token = ? LIMIT 1', [$token])->fetch();
             if (!$row || strtotime($row['expires_at']) < time()) {
+                // Log failed attempt to increment rate limit counter
+                Logger::log(null, 'password_reset_failed', 'user', null, [
+                    'ip_address' => $ip,
+                    'token' => $token
+                ]);
                 App::render('admin/reset', ['error' => 'Invalid or expired token']);
                 exit;
             }

@@ -129,6 +129,11 @@ class LocalStorageDriver implements StorageDriver
      */
     protected function resolvePath(string $path): string
     {
+        // Path Traversal check: Block '..' traversal and path manipulation
+        if (strpos($path, '..') !== false || strpos($path, '\\') !== false) {
+            throw new \InvalidArgumentException("Security exception: Malformed path traversal detected.");
+        }
+
         // Get active site_id dynamically
         $siteId = class_exists('\\Zero\\Core\\App') ? \Zero\Core\App::getCurrentSiteId() : null;
         $prefix = !empty($siteId) ? '/' . $siteId : '';

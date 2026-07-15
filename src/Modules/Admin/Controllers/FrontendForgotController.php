@@ -8,6 +8,7 @@ use Zero\Support\Logger;
 use Zero\Interfaces\Controller;
 use Zero\Support\Emailer;
 use Zero\Support\Security;
+use Zero\Http\Middleware\AuthThrottlingMiddleware;
 use Zero\Core\Template;
 
 class FrontendForgotController implements Controller
@@ -26,6 +27,9 @@ class FrontendForgotController implements Controller
             
             $username = trim($_POST['username'] ?? '');
             $siteId = App::getCurrentSiteId();
+
+            // Enforce centralized rate limiting and progressive lockout protection via Middleware
+            AuthThrottlingMiddleware::handle('password_reset', 'forgot', [], function() {});
             
             // Query user strictly on the active tenant site_id!
             $user = DB::query('SELECT * FROM users WHERE username = ? AND site_id = ? LIMIT 1', [$username, $siteId])->fetch();
@@ -61,6 +65,14 @@ class FrontendForgotController implements Controller
                 
                 // Send Recovery Email via dynamic Mailpit SMTP helper!
                 Emailer::send($user['email'], $subject, $htmlBody);
+            } else {
+                // Log failed attempt to trigger rate limiting and prevent brute-force requests
+                Logger::log(null, 'password_reset_request_failed', 'user', null, [
+                    'username' => $username,
+                    'ip_address' => $_SERVER['REMOTE_ADDR']
+                ]);
+                // Introduce simulated timing delay to match successful path
+                usleep(250000); // 250ms
             }
             
             // SECURITY REMEDIATION (Timing mitigation):

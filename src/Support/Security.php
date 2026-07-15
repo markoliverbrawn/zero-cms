@@ -3,8 +3,55 @@
 namespace Zero\Support;
 
 use Zero\Core\App;
+use Zero\Database\DB;
 
 class Security {
+    /**
+     * Check if authentication attempts are exceeded for a combination of IP and identifier.
+     * Action parameter can be 'login' or 'password_reset'.
+     */
+    public static function checkAuthRateLimit(string $action, string $identifier, int $maxAttempts = 5, int $decaySeconds = 900): bool
+    {
+        $ip = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+        $timeWindow = gmdate('Y-m-d H:i:s', time() - $decaySeconds);
+
+        // Map general actions to database actions
+        $failedActions = [];
+        if ($action === 'login') {
+            $failedActions = ['login_failed', 'frontend_login_failed'];
+        } elseif ($action === 'password_reset') {
+            $failedActions = ['password_reset_failed', 'password_reset_request_failed'];
+        }
+
+        if (empty($failedActions)) {
+            return true;
+        }
+
+        // Prepare query with correct in clause
+        $placeholders = implode(',', array_fill(0, count($failedActions), '?'));
+        $params = array_merge($failedActions, [$timeWindow]);
+
+        $logs = DB::query("
+            SELECT meta FROM audit_logs
+            WHERE action IN ({$placeholders})
+              AND created_at >= ?
+              AND deleted_at IS NULL
+        ", $params)->fetchAll();
+
+        $attempts = 0;
+        foreach ($logs as $log) {
+            $meta = json_decode($log['meta'] ?? '{}', true);
+            $metaIp = $meta['ip_address'] ?? '';
+            $metaUser = $meta['username'] ?? '';
+
+            if ($metaIp === $ip || (!empty($metaUser) && strtolower($metaUser) === strtolower($identifier))) {
+                $attempts++;
+            }
+        }
+
+        return $attempts < $maxAttempts;
+    }
+
     public static function csrfInput() {
         return '<input type="hidden" name="csrf" value="' . htmlspecialchars(self::csrfToken(), ENT_QUOTES, "UTF-8") . '">';
     }

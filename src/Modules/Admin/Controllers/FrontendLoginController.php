@@ -5,6 +5,8 @@ namespace Zero\Modules\Admin\Controllers;
 use Zero\Core\App;
 use Zero\Database\DB;
 use Zero\Support\Logger;
+use Zero\Support\Security;
+use Zero\Http\Middleware\AuthThrottlingMiddleware;
 use Zero\Interfaces\Controller;
 
 class FrontendLoginController implements Controller
@@ -16,6 +18,9 @@ class FrontendLoginController implements Controller
             App::applyCsrfMiddleware();
             $user = $_POST['username'] ?? '';
             $pass = $_POST['password'] ?? '';
+
+            // Enforce centralized rate limiting and progressive lockout protection via Middleware
+            AuthThrottlingMiddleware::handle('login', 'login', [], function() {});
 
             $row = DB::query('SELECT * FROM users WHERE username = ? LIMIT 1', [$user])->fetch();
             if ($row && password_verify($pass, $row['password_hash'])) {

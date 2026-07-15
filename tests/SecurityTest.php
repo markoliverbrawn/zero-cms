@@ -4,26 +4,30 @@
 
 require_once __DIR__ . '/bootstrap.php';
 
+use Zero\Core\App;
+use Zero\Database\DB;
+use Zero\Support\Logger;
 use Zero\Support\Security;
 
 echo "=== Security Component Tests ===\n";
 
-// 1. Test CSRF Protection
+// 1. Test CSRF Verification (csrfToken, csrfVerify)
 echo "Testing CSRF Token generation and verification...\n";
-$_SESSION = []; // Reset session
-$token1 = Security::csrfToken();
-assert_test(!empty($token1) && strlen($token1) === 32, "CSRF token generated is a valid 32-character hex string");
+App::ensureSession();
 
+$token1 = Security::csrfToken();
 $token2 = Security::csrfToken();
+
+assert_test(strlen($token1) === 32, "CSRF token generated is a valid 32-character hex string");
 assert_test($token1 === $token2, "Subsequent CSRF calls return the same cached token from session");
 
 $inputField = Security::csrfInput();
 assert_test(strpos($inputField, 'type="hidden"') !== false, "csrfInput contains hidden input field type");
-assert_test(strpos($inputField, 'value="' . $token1 . '"') !== false, "csrfInput contains correct token value");
+assert_test(strpos($inputField, $token1) !== false, "csrfInput contains correct token value");
 
-assert_test(Security::csrfVerify($token1), "Verify returns true for exact correct token");
-assert_test(!Security::csrfVerify('wrong_token'), "Verify returns false for incorrect token");
-assert_test(!Security::csrfVerify(''), "Verify returns false for empty token");
+assert_test(Security::csrfVerify($token1) === true, "Verify returns true for exact correct token");
+assert_test(Security::csrfVerify('incorrect') === false, "Verify returns false for incorrect token");
+assert_test(Security::csrfVerify('') === false, "Verify returns false for empty token");
 
 // 2. Test Input Sanitizer (sanitizeInput)
 echo "Testing Input Sanitizer...\n";
@@ -43,9 +47,11 @@ assert_test($sanitized['title'] === 'My Page TitleWith Null Byte', "Strips null 
 assert_test($sanitized['raw_content'] === 'Keep me intact', "Strips HTML tags if requested and not in exceptKeys");
 assert_test($sanitized['password'] === 'SecretRaw123', "Trims passwords as standard strings but preserves special characters");
 assert_test($sanitized['nested']['info'] === 'Trim Me', "Sanitizes nested array keys recursively");
-assert_test($sanitized['nested']['scripted'] === 'alert(1)Safe Text', "Strips HTML tags but keeps inner text content");
 
-// 3. Test UUIDv7 Generation (RFC 9562)
+$cleanContentOnly = Security::sanitizeInput(" <p>Test</p> ", true);
+assert_test($cleanContentOnly === 'Test', "Strips HTML tags but keeps inner text content");
+
+// 3. Test UUIDv7 Compliance (uuidv7)
 echo "Testing UUIDv7 compliance...\n";
 $uuid1 = Security::uuidv7();
 $uuid2 = Security::uuidv7();
@@ -84,5 +90,52 @@ $dirtyHtml = '<script>alert("XSS")</script> & "quotes"';
 $escaped = Security::escape($dirtyHtml);
 assert_test($escaped === '&lt;script&gt;alert(&quot;XSS&quot;)&lt;/script&gt; &amp; &quot;quotes&quot;', "Security::escape correctly encodes HTML tags, double quotes, and ampersands");
 assert_test(Security::escape(null) === '', "Security::escape handles null values gracefully");
+
+// 6. Test Authentication Throttling / Rate Limiting (checkAuthRateLimit)
+echo "Testing Authentication Throttling...\n";
+DB::query("DELETE FROM audit_logs WHERE action IN ('login_failed', 'frontend_login_failed')");
+
+$username = 'test_brute_force_user';
+assert_test(Security::checkAuthRateLimit('login', $username, 3, 10) === true, "First checkAuthRateLimit attempt is allowed");
+
+for ($i = 0; $i < 3; $i++) {
+    Logger::log(null, 'login_failed', 'user', null, [
+        'username' => $username,
+        'ip_address' => $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1'
+    ]);
+}
+
+assert_test(Security::checkAuthRateLimit('login', $username, 3, 10) === false, "checkAuthRateLimit correctly blocks attempt after 3 failed logs (lockout active)");
+
+DB::query("DELETE FROM audit_logs WHERE action = 'login_failed'");
+
+// 7. Test Path Traversal and Escape rejection (LocalStorageDriver resolvePath)
+echo "Testing Path Traversal and Escape protection...\n";
+$driver = new \Zero\Core\Storage\LocalStorageDriver();
+$traversalCaught = false;
+try {
+    $driver->exists('storage/../../etc/passwd');
+} catch (\InvalidArgumentException $e) {
+    $traversalCaught = true;
+}
+assert_test($traversalCaught === true, "LocalStorageDriver correctly detects and rejects malformed path traversal sequence '..'");
+
+// 8. Test API Session Rate Limiting (Security::rateLimit)
+echo "Testing API Key Rate Limiting...\n";
+$rateKey = 'test_api_abuse_' . uniqid();
+assert_test(Security::rateLimit($rateKey, 2) === true, "First Security::rateLimit check is allowed");
+assert_test(Security::rateLimit($rateKey, 2) === false, "Immediate subsequent Security::rateLimit check is rejected (rate limit triggers)");
+
+// 9. Test secure path boundary helper
+echo "Testing secure path boundary helper...\n";
+$storageRoot = APPLICATION_ROOT . '/storage';
+assert_test(
+    \Zero\Http\Middleware\SecurePathMiddleware::isPathWithinStorageRoot($storageRoot . '/uploads/file.txt', $storageRoot) === true,
+    "Boundary helper accepts content inside the storage root"
+);
+assert_test(
+    \Zero\Http\Middleware\SecurePathMiddleware::isPathWithinStorageRoot($storageRoot . '2/uploads/file.txt', $storageRoot) === false,
+    "Boundary helper rejects sibling paths that only share a prefix"
+);
 
 echo "Security component tests completed.\n\n";

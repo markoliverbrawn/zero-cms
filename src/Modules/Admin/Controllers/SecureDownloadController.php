@@ -4,6 +4,7 @@ namespace Zero\Modules\Admin\Controllers;
 
 use Zero\Core\App;
 use Zero\Database\DB;
+use Zero\Http\Middleware\SecurePathMiddleware;
 use Zero\Interfaces\Controller;
 
 class SecureDownloadController implements Controller
@@ -29,35 +30,36 @@ class SecureDownloadController implements Controller
             exit;
         }
 
-        $physicalPath = APPLICATION_ROOT . $file['path'];
+        // 2.5 Delegate path traversal, containment, and symlink validation to Middleware
+        SecurePathMiddleware::handle($fileId, $file['path'], function(string $physicalPath) use ($file) {
+            if (!file_exists($physicalPath)) {
+                http_response_code(404);
+                echo "Physical file missing from secure disk storage.";
+                exit;
+            }
 
-        if (!file_exists($physicalPath)) {
-            http_response_code(404);
-            echo "Physical file missing from secure disk storage.";
+            // 3. Securely stream the private file to the browser with protective headers
+            $originalName = $file['original_name'] ?? $file['filename'];
+            $mimeType = $file['mime'] ?? 'application/octet-stream';
+            $fileSize = $file['file_size'] ?? filesize($physicalPath);
+
+            header('Content-Description: File Transfer');
+            header('Content-Type: ' . $mimeType);
+            header('Content-Disposition: attachment; filename="' . basename($originalName) . '"');
+            header('Content-Length: ' . $fileSize);
+            header('Expires: 0');
+            header('Cache-Control: private, must-revalidate');
+            header('Pragma: public');
+            
+            // Output file in small, non-blocking chunks to prevent PHP memory exhaustion on heavy files
+            $fileHandle = fopen($physicalPath, 'rb');
+            while (!feof($fileHandle)) {
+                echo fread($fileHandle, 8192);
+                ob_flush();
+                flush();
+            }
+            fclose($fileHandle);
             exit;
-        }
-
-        // 3. Securely stream the private file to the browser with protective headers
-        $originalName = $file['original_name'] ?? $file['filename'];
-        $mimeType = $file['mime'] ?? 'application/octet-stream';
-        $fileSize = $file['file_size'] ?? filesize($physicalPath);
-
-        header('Content-Description: File Transfer');
-        header('Content-Type: ' . $mimeType);
-        header('Content-Disposition: attachment; filename="' . basename($originalName) . '"');
-        header('Content-Length: ' . $fileSize);
-        header('Expires: 0');
-        header('Cache-Control: private, must-revalidate');
-        header('Pragma: public');
-        
-        // Output file in small, non-blocking chunks to prevent PHP memory exhaustion on heavy files
-        $fileHandle = fopen($physicalPath, 'rb');
-        while (!feof($fileHandle)) {
-            echo fread($fileHandle, 8192);
-            ob_flush();
-            flush();
-        }
-        fclose($fileHandle);
-        exit;
+        });
     }
 }

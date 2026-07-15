@@ -7,6 +7,7 @@ use Zero\Database\DB;
 use Zero\Support\Logger;
 use Zero\Interfaces\Controller;
 use Zero\Support\Security;
+use Zero\Http\Middleware\AuthThrottlingMiddleware;
 
 class LoginController implements Controller
 {
@@ -31,6 +32,9 @@ class LoginController implements Controller
             App::applyCsrfMiddleware();
             $user = $_POST['username'] ?? '';
             $pass = $_POST['password'] ?? '';
+
+            // Enforce centralized rate limiting and progressive lockout protection via Middleware
+            AuthThrottlingMiddleware::handle('login', 'admin/login', [], function() {});
 
             $row = DB::query('SELECT * FROM users WHERE username = ? LIMIT 1', [$user])->fetch();
             

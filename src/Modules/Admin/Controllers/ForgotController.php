@@ -8,6 +8,7 @@ use Zero\Support\Logger;
 use Zero\Interfaces\Controller;
 use Zero\Support\Emailer;
 use Zero\Support\Security;
+use Zero\Http\Middleware\AuthThrottlingMiddleware;
 use Zero\Core\Template;
 
 class ForgotController implements Controller
@@ -18,6 +19,10 @@ class ForgotController implements Controller
         if ($method === 'POST') {
             App::applyCsrfMiddleware();
             $username = trim($_POST['username'] ?? '');
+
+            // Enforce centralized rate limiting and progressive lockout protection via Middleware
+            AuthThrottlingMiddleware::handle('password_reset', 'admin/forgot', [], function() {});
+
             $user = DB::query('SELECT * FROM users WHERE username = ? LIMIT 1', [$username])->fetch();
             
             if ($user && !empty($user['email'])) {
@@ -51,6 +56,14 @@ class ForgotController implements Controller
                 
                 // Send Recovery Email via dynamic Mailpit SMTP helper!
                 Emailer::send($user['email'], $subject, $htmlBody);
+            } else {
+                // Log failed attempt to trigger rate limiting and prevent brute-force requests
+                Logger::log(null, 'password_reset_request_failed', 'user', null, [
+                    'username' => $username,
+                    'ip_address' => $_SERVER['REMOTE_ADDR']
+                ]);
+                // Introduce simulated timing delay to match successful path
+                usleep(250000); // 250ms
             }
             
             // SECURITY REMEDIATION (Timing mitigation):
