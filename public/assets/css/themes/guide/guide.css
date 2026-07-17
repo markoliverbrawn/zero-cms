@@ -586,7 +586,7 @@ h3 {
 .block-row {
     width: 100%;
     position: relative;
-    margin-bottom: 48px; /* Standard vertical spacing between adjacent block rows */
+    margin-bottom: 80px; /* Increased comfortable vertical spacing between adjacent block rows */
     
     &:last-of-type {
         margin-bottom: 0;
@@ -1636,11 +1636,17 @@ h3 {
     font-weight: 700; /* Monospace Bold */
     text-transform: uppercase;
     letter-spacing: 0.12em;
-    margin: 0 var(--gutter, 24px) 32px var(--gutter, 24px); /* Offset margins to align perfectly with content cards below */
+    margin: 0 var(--gutter, 24px) 32px var(--gutter, 24px); /* Offset margins to align perfectly on the homepage */
     padding: 0 0 12px 0; /* Padding at bottom for drawing line offset */
     line-height: 1.1;
     text-shadow: 0 0 6px rgba(0, 240, 255, 0.25); /* Phosphor bloom outline glow */
     position: relative; /* Anchor for absolute pseudo-element line */
+
+    /* Override horizontal margins when titles are rendered inside the docs/panel content wrapper */
+    .docs-content-wrapper & {
+        margin-left: 0;
+        margin-right: 0;
+    }
 
     /* CRT old-fashioned scanlines overlaying directly across the text characters! */
     background: 
@@ -1695,14 +1701,14 @@ h3 {
         &::before {
             /* Sweeps left-to-right, zooms up to text line level at the end, and then throbs infinitely! */
             animation: 
-                oscilloscope-sweep 1.8s cubic-bezier(0.25, 1, 0.5, 1) forwards, 
-                oscilloscope-throb 1.2s ease-in-out infinite 1.8s,
-                crt-flicker 0.15s infinite;
+                oscilloscope-sweep 1.8s cubic-bezier(0.25, 1, 0.5, 1) var(--anim-delay, 0s) forwards, 
+                oscilloscope-throb 1.2s ease-in-out infinite calc(var(--anim-delay, 0s) + 1.8s),
+                crt-flicker 0.15s infinite var(--anim-delay, 0s);
         }
 
         &::after {
             /* Animates the progressive draw and phosphor decay smoothly over 1.8s! */
-            animation: oscilloscope-trail 1.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+            animation: oscilloscope-trail 1.8s cubic-bezier(0.25, 1, 0.5, 1) var(--anim-delay, 0s) forwards;
         }
     }
 }

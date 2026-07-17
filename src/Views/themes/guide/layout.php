@@ -308,11 +308,16 @@ $isHomepage = (isset($post) && property_exists($post, 'slug') && $post->slug ===
         });
 
         document.querySelectorAll('.block-section-title').forEach(title => {
+            // Apply randomized dynamic CSS variable delay to desynchronize animations on entry
+            const randomDelay = (Math.random() * 0.6).toFixed(2) + 's';
+            title.style.setProperty('--anim-delay', randomDelay);
             titleObserver.observe(title);
         });
     } else {
         // Fallback for legacy user agents
         document.querySelectorAll('.block-section-title').forEach(title => {
+            const randomDelay = (Math.random() * 0.6).toFixed(2) + 's';
+            title.style.setProperty('--anim-delay', randomDelay);
             title.classList.add('visible');
         });
     }
