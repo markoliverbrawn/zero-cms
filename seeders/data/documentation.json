@@ -75,6 +75,46 @@
             "filename": "documentation.jpg",
             "mime": "image/jpeg",
             "site_domain": "d6laptop.zero.guide"
+        },
+        {
+            "filename": "supply-chain-security.jpg",
+            "mime": "image/jpeg",
+            "site_domain": "d6laptop.zero.guide"
+        },
+        {
+            "filename": "database-performance.jpg",
+            "mime": "image/jpeg",
+            "site_domain": "d6laptop.zero.guide"
+        },
+        {
+            "filename": "tcp-socket-emailer.jpg",
+            "mime": "image/jpeg",
+            "site_domain": "d6laptop.zero.guide"
+        },
+        {
+            "filename": "code-simplicity.jpg",
+            "mime": "image/jpeg",
+            "site_domain": "d6laptop.zero.guide"
+        },
+        {
+            "filename": "concurrency-race-conditions.jpg",
+            "mime": "image/jpeg",
+            "site_domain": "d6laptop.zero.guide"
+        },
+        {
+            "filename": "xss-prevention.jpg",
+            "mime": "image/jpeg",
+            "site_domain": "d6laptop.zero.guide"
+        },
+        {
+            "filename": "database-boundary-isolation.jpg",
+            "mime": "image/jpeg",
+            "site_domain": "d6laptop.zero.guide"
+        },
+        {
+            "filename": "ci-isolated-tests.jpg",
+            "mime": "image/jpeg",
+            "site_domain": "d6laptop.zero.guide"
         }
     ],
     "pages": [
@@ -93,7 +133,7 @@
                 {
                     "type": "text",
                     "title": "The Performance Mandate: Latency Matters",
-                    "content": "<p>Zero CMS was engineered from day one to deliver the fastest first-paints and most responsive interactions possible. By purging heavy framework runtimes, bloated object-relational mappers, and sequential file-request chains, the system achieves phenomenal server-response times that directly translate to perfect core-web-vital scores.</p><div class=\"callout callout-accent\"><p><strong>⚠️ Performance Note (No-Caching Baseline):</strong> These load benchmarks were executed with completely un-cached database queries and page compiles in Zero CMS (0% page-level or database-level caching active). This represents raw, baseline relational speed, which scales even further under standard reverse-proxy caching!</p></div><h3>Concurrent Load-Testing Results</h3><p>Using <strong>ApacheBench (ab)</strong> on a standard local environment simulating 10 concurrent parallel visitors hammering the un-cached homepage, the CMS achieved:</p><ul><li><strong>Throughput:</strong> 30.31 completed HTML transactions per second.</li><li><strong>Median Server Latency:</strong> 73 ms (Lighthouse considers anything under 200ms to be excellent).</li><li><strong>90% Percentile Latency:</strong> 196 ms (90% of requests fully compiled and delivered in under a fifth of a second!).</li><li><strong>Cached Stylesheets (Dynamic Disk Compilation):</strong> 67 ms median latency at 50 concurrent users with 0 failed requests, transferring over 1.2 MB/sec!</li></ul>"
+                    "content": "<p>Zero CMS was engineered from day one to deliver the fastest first-paints and most responsive interactions possible. By purging heavy framework runtimes, bloated object-relational mappers, and sequential file-request chains, the system achieves phenomenal server-response times that directly translate to perfect core-web-vital scores.</p><div class=\"callout callout-accent\"><p><strong>\u26a0\ufe0f Performance Note (No-Caching Baseline):</strong> These load benchmarks were executed with completely un-cached database queries and page compiles in Zero CMS (0% page-level or database-level caching active). This represents raw, baseline relational speed, which scales even further under standard reverse-proxy caching!</p></div><h3>Concurrent Load-Testing Results</h3><p>Using <strong>ApacheBench (ab)</strong> on a standard local environment simulating 10 concurrent parallel visitors hammering the un-cached homepage, the CMS achieved:</p><ul><li><strong>Throughput:</strong> 30.31 completed HTML transactions per second.</li><li><strong>Median Server Latency:</strong> 73 ms (Lighthouse considers anything under 200ms to be excellent).</li><li><strong>90% Percentile Latency:</strong> 196 ms (90% of requests fully compiled and delivered in under a fifth of a second!).</li><li><strong>Cached Stylesheets (Dynamic Disk Compilation):</strong> 67 ms median latency at 50 concurrent users with 0 failed requests, transferring over 1.2 MB/sec!</li></ul>"
                 },
                 {
                     "type": "chart",
@@ -358,7 +398,7 @@
                 {
                     "type": "text",
                     "title": "5. AI Augmentation: The Zero Dependency Paradox Solved",
-                    "content": "<p>Historically, the major argument against zero-dependency engineering was <strong>development velocity</strong>. Writing raw socket handlers, custom template engines, and direct SQL migrations by hand takes significant time. However, in the era of advanced AI, this bottleneck is completely eliminated.</p><p>By pairing zero-dependency philosophy with high-performance AI models like <strong>Gemini</strong>, developers can generate bespoke, secure, and production-ready code blocks instantly. Whether you need a raw PHP payment integration signature checker, a custom MIME email builder over TCP, or a precise SQL migration, Gemini generates highly optimized, custom solutions on demand.</p><p>This paradigm gives developers the best of both worlds: the absolute speed and permanent lifecycle security of a 100% zero-dependency framework, coupled with the rapid prototyping speed of an AI copilot. As a testament to this power, <strong>the entire Zero CMS framework itself—including multi-tenant routing, custom block-builders, full-featured Luxe e-commerce carts, and automated database seeders—was engineered, validated, and seeded from scratch in less than a week!</strong></p>"
+                    "content": "<p>Historically, the major argument against zero-dependency engineering was <strong>development velocity</strong>. Writing raw socket handlers, custom template engines, and direct SQL migrations by hand takes significant time. However, in the era of advanced AI, this bottleneck is completely eliminated.</p><p>By pairing zero-dependency philosophy with high-performance AI models like <strong>Gemini</strong>, developers can generate bespoke, secure, and production-ready code blocks instantly. Whether you need a raw PHP payment integration signature checker, a custom MIME email builder over TCP, or a precise SQL migration, Gemini generates highly optimized, custom solutions on demand.</p><p>This paradigm gives developers the best of both worlds: the absolute speed and permanent lifecycle security of a 100% zero-dependency framework, coupled with the rapid prototyping speed of an AI copilot. As a testament to this power, <strong>the entire Zero CMS framework itself\u2014including multi-tenant routing, custom block-builders, full-featured Luxe e-commerce carts, and automated database seeders\u2014was engineered, validated, and seeded from scratch in less than a week!</strong></p>"
                 }
             ],
             "type": "page",
@@ -504,7 +544,7 @@
                 {
                     "type": "text",
                     "title": "Dynamic Theme Fallbacks & Cascading Path Resolution",
-                    "content": "<p>When rendering templates via <code>App::render($view, $data)</code>, the template engine employs an intelligent cascading resolution pattern. It checks the active site's selected <code>theme</code> configuration (e.g. <code>\"guide\"</code>). The resolver first attempts to load templates from the child theme: <code>src/Views/themes/{activeTheme}/{view}.php</code>. If that file is missing on disk, it gracefully and silently falls back to <code>src/Views/themes/default/{view}.php</code>—ensuring the application never triggers compilation or crash errors while enabling rapid, non-destructive child theme customisations!</p>"
+                    "content": "<p>When rendering templates via <code>App::render($view, $data)</code>, the template engine employs an intelligent cascading resolution pattern. It checks the active site's selected <code>theme</code> configuration (e.g. <code>\"guide\"</code>). The resolver first attempts to load templates from the child theme: <code>src/Views/themes/{activeTheme}/{view}.php</code>. If that file is missing on disk, it gracefully and silently falls back to <code>src/Views/themes/default/{view}.php</code>\u2014ensuring the application never triggers compilation or crash errors while enabling rapid, non-destructive child theme customisations!</p>"
                 },
                 {
                     "type": "text",
@@ -590,7 +630,7 @@
                 {
                     "type": "text",
                     "title": "Module Directory Structure",
-                    "content": "<p>Establish your module's folder tree conforming with the following strict naming conventions:</p><pre><code>src/Modules/Shop/\n├── Controllers/\n│   ├── CatalogController.php\n│   └── CartController.php\n├── Models/\n│   ├── Product.php\n│   └── Order.php\n└── Views/\n    └── dashboard-widget.php</code></pre>"
+                    "content": "<p>Establish your module's folder tree conforming with the following strict naming conventions:</p><pre><code>src/Modules/Shop/\n\u251c\u2500\u2500 Controllers/\n\u2502   \u251c\u2500\u2500 CatalogController.php\n\u2502   \u2514\u2500\u2500 CartController.php\n\u251c\u2500\u2500 Models/\n\u2502   \u251c\u2500\u2500 Product.php\n\u2502   \u2514\u2500\u2500 Order.php\n\u2514\u2500\u2500 Views/\n    \u2514\u2500\u2500 dashboard-widget.php</code></pre>"
                 },
                 {
                     "type": "text",
@@ -625,7 +665,7 @@
                 {
                     "type": "text",
                     "title": "Anatomy of a Time-Ordered UUIDv7 Key",
-                    "content": "<p>UUIDv7 (defined in RFC 9562) solves this natively. It is a 128-bit string structured sequentially with a timestamp prefix:</p><pre><code> 019ec4ee-fdda-7049-81d9-446133464390\n └───┬───┘ └──┬─┘ └──┬─┘ └──────┬─────┘\n  48-bit     4-bit  12-bit   64-bit Random\n Timestamp    Ver  Variant     Entropy Bits</code></pre><ul><li><strong>First 48 bits</strong>: Millisecond Unix epoch timestamp (ensures time-ordered sorting).</li><li><strong>Entropy bits</strong>: Provides cryptographic randomness to guarantee absolute uniqueness across replication nodes.</li></ul>"
+                    "content": "<p>UUIDv7 (defined in RFC 9562) solves this natively. It is a 128-bit string structured sequentially with a timestamp prefix:</p><pre><code> 019ec4ee-fdda-7049-81d9-446133464390\n \u2514\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2518 \u2514\u2500\u2500\u252c\u2500\u2518 \u2514\u2500\u2500\u252c\u2500\u2518 \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2518\n  48-bit     4-bit  12-bit   64-bit Random\n Timestamp    Ver  Variant     Entropy Bits</code></pre><ul><li><strong>First 48 bits</strong>: Millisecond Unix epoch timestamp (ensures time-ordered sorting).</li><li><strong>Entropy bits</strong>: Provides cryptographic randomness to guarantee absolute uniqueness across replication nodes.</li></ul>"
                 },
                 {
                     "type": "text",
@@ -700,7 +740,7 @@
                 {
                     "type": "text",
                     "title": "Zero CMS Security Philosophy",
-                    "content": "<p>Security in Zero CMS is baked directly into the core kernel class handlers. By rejecting massive, third-party libraries, we eliminate the primary attack vector of modern PHP applications (upstream package exploits). Every protection pipeline—including CSRF token validation, input sanitization, HTML scrubbers, and spam traps—is written natively, keeping the system extremely fast, transparent, and secure.</p>"
+                    "content": "<p>Security in Zero CMS is baked directly into the core kernel class handlers. By rejecting massive, third-party libraries, we eliminate the primary attack vector of modern PHP applications (upstream package exploits). Every protection pipeline\u2014including CSRF token validation, input sanitization, HTML scrubbers, and spam traps\u2014is written natively, keeping the system extremely fast, transparent, and secure.</p>"
                 },
                 {
                     "type": "text",

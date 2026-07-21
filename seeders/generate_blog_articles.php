@@ -35,6 +35,20 @@ if (!is_array($postsData)) {
 // Fetch any available media IDs for this site to use as featured images
 $mediaIds = DB::query("SELECT id FROM media WHERE site_id = ? AND deleted_at IS NULL", [$siteId])->fetchAll(\PDO::FETCH_COLUMN);
 
+// Explicit, robust mapping of blog post slug -> featured image filename
+$slugImageMap = [
+    'intro-to-zero-dependency-cms-architecture' => 'framework-speed-benchmarks.jpg',
+    'managing-supply-chain-risks-web-apps' => 'supply-chain-security.jpg',
+    'how-ai-driven-exploit-scanning-affects-patching' => 'decoupled-architecture.jpg',
+    'securing-web-applications-code-simplicity' => 'code-simplicity.jpg',
+    'comparing-orms-to-raw-sql-prepared-queries' => 'database-performance.jpg',
+    'sending-transactional-emails-php-tcp-sockets' => 'tcp-socket-emailer.jpg',
+    'handling-concurrency-race-conditions-checkouts' => 'concurrency-race-conditions.jpg',
+    'preventing-cross-site-scripting-recursive-input-sanitization' => 'xss-prevention.jpg',
+    'enforcing-strict-database-boundary-isolation-multi-tenant' => 'database-boundary-isolation.jpg',
+    'continuous-integration-isolated-tests-php-subprocesses' => 'ci-isolated-tests.jpg',
+];
+
 // Loop over our 10 beautifully hand-written posts and save them cleanly into the database!
 foreach ($postsData as $index => $pData) {
     $title = $pData['title'];
@@ -56,8 +70,18 @@ foreach ($postsData as $index => $pData) {
     $createdAt = date('Y-m-d H:i:s', time() - (10 - $index) * 86400);
     $updatedAt = $createdAt;
     
+    // Resolve featured image from direct slug map
     $featuredImageId = null;
-    if (!empty($mediaIds)) {
+    if (isset($slugImageMap[$slug])) {
+        $filename = $slugImageMap[$slug];
+        $mediaRow = DB::query("SELECT id FROM media WHERE site_id = ? AND filename = ? LIMIT 1", [$siteId, $filename])->fetch();
+        if ($mediaRow) {
+            $featuredImageId = $mediaRow['id'];
+        }
+    }
+    
+    // Fallback to traditional modulo selection if direct mapping is not found or resolved
+    if (!$featuredImageId && !empty($mediaIds)) {
         $featuredImageId = $mediaIds[$index % count($mediaIds)];
     }
     
