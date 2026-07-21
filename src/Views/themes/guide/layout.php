@@ -69,9 +69,9 @@ $isHomepage = (isset($post) && property_exists($post, 'slug') && $post->slug ===
             </div>
         </div>
         
-        <button onclick="window.location.href='/admin/dashboard'" class="btn-deploy">
+        <a href="/docs/how-tos/deploy-cloud-run" class="btn-deploy">
             Deploy
-        </button>
+        </a>
     </div>
 </nav>
 

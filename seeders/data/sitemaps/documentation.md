@@ -61,6 +61,7 @@ graph TD
     secure_uploads["🔏 Secure Uploads & Private Storage<br/><i>(Slug: 'docs/how-tos/secure-uploads')</i>"]
     s3["🗄️ Configuring AWS S3 Storage<br/><i>(Slug: 'docs/how-tos/aws-s3-setup')</i>"]
     search_arch["🔍 Search Index & Driver Architecture<br/><i>(Slug: 'docs/how-tos/search-architecture')</i>"]
+    deploy["☁️ Serverless Deployments & low-cost Cloud Run<br/><i>(Slug: 'docs/how-tos/deploy-cloud-run')</i>"]
     
     how_tos --> models
     how_tos --> views
@@ -78,6 +79,7 @@ graph TD
     how_tos --> secure_uploads
     how_tos --> s3
     how_tos --> search_arch
+    how_tos --> deploy
     
     %% Platform Modules Hub
     modules["📦 Platform Modules Directory<br/><i>(Slug: 'docs/modules')</i>"]
@@ -166,6 +168,7 @@ The table below catalogs every page record compiled on seed bootstrap, capturing
 | **Secure Frontend Uploads & Private Storage** | `docs/how-tos/secure-uploads` | How-Tos | No (`0`) | `text` (binaries obfuscation, secure download route stream) |
 | **Configuring AWS S3 Storage (Zero Dependencies)** | `docs/how-tos/aws-s3-setup` | How-Tos | No (`0`) | `text` (SigV4 cryptographic hmac signature generation) |
 | **Search Index & Decoupled Driver Architecture** | `docs/how-tos/search-architecture` | How-Tos | No (`0`) | `text`, `code` (database search driver, block helpers, N+1 preventions) |
+| **Serverless Blueprints: Google Cloud Run & Cloud SQL Setup** | `docs/how-tos/deploy-cloud-run` | How-Tos | No (`0`) | `text`, `code` (Stateless architecture, low-cost db-f1-micro instance/bucket creation, DB_SOCKET connection) |
 | **Modules** | `docs/modules` | Docs / Sub-Hub | No (`0`) | `sub_pages` (Decoupled system modules list) |
 | **How to Create Modules** | `docs/modules/how-to-create` | Modules | No (`0`) | `text` (Hot-swappable toggle structures, widgets) |
 | **Blog & Commenting Module** | `docs/modules/blog` | Modules | No (`0`) | `text` (moderation flow), `code` (comment model), `sub_pages` (tutorials) |

@@ -1362,6 +1362,99 @@
                 }
             ],
             "type": "page"
+        },
+        {
+            "title": "Serverless Blueprints: Google Cloud Run & Cloud SQL Setup",
+            "slug": "docs/how-tos/deploy-cloud-run",
+            "status": "published",
+            "show_in_nav": "0",
+            "site_domain": "d6laptop.zero.guide",
+            "content": [
+                {
+                    "type": "text",
+                    "title": "1. High-Level Architectural Summary",
+                    "content": "<p>Zero CMS features a highly optimized, fully stateless backend perfectly suited for modern serverless container environments like <strong>Google Cloud Run</strong>. By utilizing lightweight native PHP and bypassing heavy third-party core packages, the bootstrap cycle of Zero CMS executes in under <strong>1.5 milliseconds</strong>. This raw execution speed completely eliminates serverless latency cold-starts: container scaling is immediate and entirely transparent to end-users.</p><p>In a production serverless environment, the CMS operates in a fully decoupled architecture:</p><ul><li><strong>Stateless Compute:</strong> Google Cloud Run manages stateless PHP containers, scaling down to <code>0</code> active instances when idle to achieve absolute base-cost optimization.</li><li><strong>Relational Storage:</strong> A Google Cloud SQL MySQL database instance manages data tables with strict multi-tenant boundaries.</li><li><strong>Object Storage:</strong> Asset uploads and cropped media files stream directly to a Google Cloud Storage bucket (or AWS S3) via zero-dependency drivers.</li></ul>"
+                },
+                {
+                    "type": "text",
+                    "title": "2. Sizing Strategy for the Lowest-Cost Setup",
+                    "content": "<p>To host Zero CMS with maximum performance for the lowest possible price (under $10/month or even fully covered under GCP's Free Tier under low traffic), configure your Google Cloud components with these precise settings:</p><ul><li><strong>Cloud Run Compute Sizing:</strong> Allocate <code>512 MB RAM</code> and <code>1 CPU</code> per container instance. Set the <em>Minimum Instances</em> to <code>0</code> (so that you pay exactly $0.00 when there is no traffic) and set the CPU Allocation to <strong>\"CPU is only allocated during request processing\"</strong> to avoid paying for idle server cycles.</li><li><strong>Cloud SQL Database Sizing:</strong> Provision a shared-core <code>db-f1-micro</code> database instance (the smallest tier available, which costs around $9/month) running MySQL 8.0. Set the storage disk type to a 10 GB HDD (or SSD) and disable \"automatic storage increase\" for development to lock in the baseline rate. Additionally, use <strong>Single-Zone</strong> hosting to bypass multi-zone replication costs.</li><li><strong>Cloud Storage Sizing:</strong> Standard GCS Buckets cost only $0.02 per GB per month. Enable GCS lifecycle policies to auto-purge temporary files after 30 days to optimize storage overhead.</li></ul>"
+                },
+                {
+                    "type": "text",
+                    "title": "3. Provisioning Cloud Resources (Cloud SQL & GCS)",
+                    "content": "<p>To provision the GCP infrastructure natively using the Google Cloud CLI, execute the following commands in your terminal. Ensure that you have already run <code>gcloud auth login</code> and set your target GCP project via <code>gcloud config set project YOUR_PROJECT_ID</code>.</p><p><strong>Step 1. Provision GCS Storage Bucket:</strong> Create an optimized, uniform-access Google Cloud Storage bucket to host public media uploads and cached crops:</p>"
+                },
+                {
+                    "type": "code",
+                    "title": "Create Google Cloud Storage Bucket",
+                    "language": "bash",
+                    "code": "gcloud storage buckets create gs://YOUR_BUCKET_NAME --location=YOUR_REGION --uniform-bucket-level-access"
+                },
+                {
+                    "type": "text",
+                    "content": "<p><strong>Step 2. Provision Cloud SQL Instance:</strong> Create an ultra-low-cost, shared-core <code>db-f1-micro</code> database instance running MySQL 8.0, locked to a single zone with a 10GB HDD size constraint to guarantee the lowest possible base cost:</p>"
+                },
+                {
+                    "type": "code",
+                    "title": "Create Low-Cost MySQL Instance",
+                    "language": "bash",
+                    "code": "gcloud sql instances create YOUR_INSTANCE_NAME \\n  --database-version=MYSQL_8_0 \\n  --tier=db-f1-micro \\n  --region=YOUR_REGION \\n  --storage-size=10GB \\n  --storage-type=HDD \\n  --availability-type=zonal"
+                },
+                {
+                    "type": "text",
+                    "content": "<p><strong>Step 3. Provision Database & DB User:</strong> Initialize a new SQL database schema container and configure a secure database user account on the Cloud SQL instance:</p>"
+                },
+                {
+                    "type": "code",
+                    "title": "Create Database & DB User",
+                    "language": "bash",
+                    "code": "gcloud sql databases create zerocms_db --instance=YOUR_INSTANCE_NAME\n\ngcloud sql users create zerocms_db_user --instance=YOUR_INSTANCE_NAME --password=your_strong_password_here"
+                },
+                {
+                    "type": "text",
+                    "title": "4. The Unix Socket Connection Config (.env)",
+                    "content": "<p>To connect Cloud Run securely to Cloud SQL without public IP exposure or expensive NAT gateway costs, the containers must communicate via a local <strong>Unix Domain Socket</strong>. Zero CMS integrates an automated Unix socket connection resolver in <code>src/Database/DB.php</code> that activates dynamically whenever <code>DB_SOCKET</code> is present in the environment.</p><p>Inject the following environment parameters directly into your Google Cloud Run service revision:</p>"
+                },
+                {
+                    "type": "code",
+                    "title": "Cloud Run Environment Configurations (.env)",
+                    "language": "ini",
+                    "code": "# Database credentials\nDB_HOST=127.0.0.1\nDB_USER=zerocms_db_user\nDB_PASS=your_strong_password_here\nDB_NAME=zerocms_db\n\n# The Cloud SQL Unix Socket Connection Path (forces PDO socket resolution)\nDB_SOCKET=/cloudsql/YOUR_GCP_PROJECT_ID:YOUR_GCP_REGION:YOUR_CLOUDSQL_INSTANCE_NAME\n\n# Cloud Storage configurations\nSTORAGE_DRIVER=gcs\nGCS_BUCKET=your-custom-gcs-bucket-name"
+                },
+                {
+                    "type": "text",
+                    "title": "5. Step-by-Step Deployment & Seeding Workflow",
+                    "content": "<p>Because serverless Cloud Run compute is completely stateless, database migrations and initial seeding operations should never be run inside the web container on boot. Instead, Zero CMS utilizes isolated **Google Cloud Run Jobs** to run migrations and seeder scripts to completion independently.</p><p>Follow this standard, low-cost deployment pipeline blueprint:</p><p><strong>Step 1. Build the Container:</strong> Package your codebase and compile the optimized static CSS assets centrally, uploading the image to Artifact Registry via Cloud Build:</p>"
+                },
+                {
+                    "type": "code",
+                    "title": "Build Container Image via Cloud Build",
+                    "language": "bash",
+                    "code": "gcloud builds submit --tag gcr.io/YOUR_PROJECT_ID/zerocms-app:v1"
+                },
+                {
+                    "type": "text",
+                    "content": "<p><strong>Step 2. Execute Migration & Seeding via Cloud Run Jobs:</strong> Create and execute a short-lived Cloud Run Job to construct database schemas and seed multi-tenant tenant domains:</p>"
+                },
+                {
+                    "type": "code",
+                    "title": "Execute Cloud Run Migrations & Seeding Job",
+                    "language": "bash",
+                    "code": "gcloud run jobs create zerocms-seed-job \\n  --image gcr.io/YOUR_PROJECT_ID/zerocms-app:v1 \\n  --command=\"php\" \\n  --args=\"seeders/seeder.php\" \\n  --set-env-vars=\"DB_SOCKET=/cloudsql/YOUR_PROJECT_ID:YOUR_REGION:YOUR_INSTANCE_NAME,DB_USER=...,DB_PASS=...,DB_NAME=...\" \\n  --set-cloudsql-instances=\"YOUR_PROJECT_ID:YOUR_REGION:YOUR_INSTANCE_NAME\"\n\ngcloud run jobs execute zerocms-seed-job"
+                },
+                {
+                    "type": "text",
+                    "content": "<p><strong>Step 3. Deploy the Web Service:</strong> Deploy the stateless frontend service, enabling scale-to-zero compute:</p>"
+                },
+                {
+                    "type": "code",
+                    "title": "Deploy Stateless Cloud Run Web Service",
+                    "language": "bash",
+                    "code": "gcloud run deploy zerocms-service \\n  --image gcr.io/YOUR_PROJECT_ID/zerocms-app:v1 \\n  --min-instances=0 \\n  --max-instances=10 \\n  --set-cloudsql-instances=\"YOUR_PROJECT_ID:YOUR_REGION:YOUR_INSTANCE_NAME\" \\n  --set-env-vars=\"DB_SOCKET=/cloudsql/YOUR_PROJECT_ID:YOUR_REGION:YOUR_INSTANCE_NAME,DB_USER=...,DB_PASS=...,DB_NAME=...\""
+                }
+            ],
+            "type": "page"
         }
     ]
 }

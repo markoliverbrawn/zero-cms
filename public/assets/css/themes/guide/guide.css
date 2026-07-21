@@ -286,6 +286,7 @@ h3 {
 .btn-deploy {
     background-color: var(--primary-color);
     color: #002022;
+    display: inline-block;
     font-family: 'JetBrains Mono', monospace;
     font-size: 12px;
     font-weight: 500;
@@ -293,6 +294,7 @@ h3 {
     border: none;
     border-radius: 2px;
     cursor: pointer;
+    text-decoration: none;
     transition: all 0.2s ease;
 
     &:hover {
@@ -937,6 +939,7 @@ h3 {
         color: var(--primary-color);
         border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         padding-bottom: 4px;
+        margin: 0;
         letter-spacing: 0.1em;
         text-transform: uppercase;
     }
@@ -1931,4 +1934,33 @@ h3 {
             }
         }
     }
+}
+
+/* Code and Pre blocks wrapping and containment */
+pre {
+    background-color: var(--surface-container-low, #0d1c2d);
+    border: 1px solid var(--border-color, rgba(255, 255, 255, 0.05));
+    border-radius: 4px;
+    padding: 16px;
+    margin: 20px 0;
+    overflow-x: auto;
+    max-width: 100%;
+    white-space: pre-wrap;
+    word-break: break-all;
+    word-wrap: break-word;
+}
+
+code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.9rem;
+    color: var(--primary-color, #00f0ff);
+}
+
+pre code {
+    color: var(--text-color, #d4e4fa);
+    font-size: 0.85rem;
+    line-height: 1.6;
+    display: block;
+    word-break: break-all;
+    white-space: pre-wrap;
 }
