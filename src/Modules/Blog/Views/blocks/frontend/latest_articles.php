@@ -23,7 +23,7 @@ if (class_exists(Post::class)) {
     <div class="latest-articles-container <?php echo $layout === 'list' ? 'layout-list' : 'layout-grid'; ?>">
         <?php if (!empty($posts)): ?>
             <?php foreach ($posts as $post): ?>
-                <div class="latest-article-card">
+                <div class="latest-article-card" style="cursor: pointer;" onclick="window.location.href='/post/<?php echo htmlspecialchars($post->slug, ENT_QUOTES, 'UTF-8'); ?>'">
                     <div class="latest-article-meta">
                         <span class="latest-article-date">
                             <span class="icon-svg icon-svg-12"><?php echo App::svg('clock'); ?></span>

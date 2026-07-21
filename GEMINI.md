@@ -98,8 +98,9 @@ To maintain the high-quality, professional, and scalable state of the Zero CMS w
   1. **High-Level Architectural Summary**: An accessible overview of the feature's design, purposes, and systemic role.
   2. **Configuration Information**: Complete description of environmental variable properties (e.g. `.env`) and setup settings.
   3. **Extension Developer How-Tos**: Code snippets, interfaces/contracts, and practical, clean examples demonstrating how to build, register, or extend the feature.
-* **Convention:** 
+* **Convention:**
   - Register dedicated technical page records under the `pages` array inside the central documentation seeder file (`seeders/data/documentation.json`), specifying appropriate descriptive text blocks detailing its architecture, database schemas, multi-tenant boundaries, and administrative workflows.
+  - **Sitemap Synchronization:** Additionally, whenever new seeder data is created or the page tree hierarchy is modified, the Mermaid sitemap document (`seeders/data/sitemaps/documentation.md`) MUST be updated to ensure the guide site's interactive sitemap remains completely accurate.
   - **Navigation Scoping:** To prevent main menu clutter on the public site, any sub-pages seeded beneath the parent nodes `modules/` or `how-tos/` (such as `modules/forum` or `how-tos/custom-blocks`) MUST explicitly specify `"show_in_nav": "0"` to keep them hidden from primary navigation menus (accessible strictly as sub-pages from their respective indices).
   - **Execute Seeders:** After editing the seeder JSON configurations, always execute `php seeders/seeder.php` via the docker container command wrapper to persist, compile, and verify the physical presence of the new documentation pages in the SQL database.
 

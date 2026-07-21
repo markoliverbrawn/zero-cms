@@ -63,7 +63,9 @@ $shouldOmitTitle = !empty($post->omit_title) || $hasHeroBlock;
         <div class="blog-card" onclick="window.location.href='/post/<?php echo htmlspecialchars($p->slug, ENT_QUOTES, 'UTF-8'); ?>'">
           <div>
             <h3 class="blog-card-title">
-              <?php echo htmlspecialchars($p->title, ENT_QUOTES, 'UTF-8'); ?>
+              <a href="/post/<?php echo htmlspecialchars($p->slug, ENT_QUOTES, 'UTF-8'); ?>" style="color: inherit; text-decoration: none;">
+                <?php echo htmlspecialchars($p->title, ENT_QUOTES, 'UTF-8'); ?>
+              </a>
             </h3>
             <div class="blog-card-meta">
               <span class="icon-svg">

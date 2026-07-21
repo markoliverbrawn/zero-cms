@@ -66,8 +66,10 @@ $shouldOmitTitle = !empty($post->omit_title) || $hasHeroBlock;
           <?php endif; ?>
           <div style="display: flex; flex-direction: column; justify-content: space-between; flex-grow: 1;">
             <div>
-              <h3 style="margin-top: 0; margin-bottom: 8px; font-size: 1.25rem; color: #2563eb; font-weight: 800;">
-                <?php echo htmlspecialchars($p->title, ENT_QUOTES, 'UTF-8'); ?>
+              <h3 style="margin-top: 0; margin-bottom: 8px; font-size: 1.25rem; font-weight: 800;">
+                <a href="/post/<?php echo htmlspecialchars($p->slug, ENT_QUOTES, 'UTF-8'); ?>" style="color: #2563eb; text-decoration: none;">
+                  <?php echo htmlspecialchars($p->title, ENT_QUOTES, 'UTF-8'); ?>
+                </a>
               </h3>
               <div style="font-size: 0.8rem; color: #64748b; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; font-weight: 500;">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: middle;">

@@ -11,7 +11,7 @@ use Zero\Core\App;
   <?php else: ?>
     <div class="post-list">
       <?php foreach ($pagination['data'] as $post): ?>
-        <article class="post-row" style="display: flex; gap: 2rem; margin-bottom: 2.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 2rem; align-items: flex-start;">
+        <article class="post-row" style="display: flex; gap: 2rem; margin-bottom: 2.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 2rem; align-items: flex-start; cursor: pointer;" onclick="window.location.href='/post/<?php echo htmlspecialchars($post->slug, ENT_QUOTES, 'UTF-8'); ?>'">
           <?php if (!empty($post->featured_image)): ?>
             <div class="post-row-image" style="width: 150px; height: 150px; flex-shrink: 0; border: 1px solid var(--border-color); border-radius: var(--border-radius); overflow: hidden; display: flex; align-items: center; justify-content: center;">
               <img src="<?php echo htmlspecialchars($post->featured_image); ?>" alt="" style="width: 100%; height: 100%; object-fit: cover;" />

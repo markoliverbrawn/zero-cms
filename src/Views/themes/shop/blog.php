@@ -75,6 +75,10 @@ use Zero\Core\App;
     letter-spacing: -0.01em;
     line-height: 1.3;
 }
+.journal-card h3 a {
+    color: inherit;
+    text-decoration: none;
+}
 .journal-card-preview {
     margin: 0;
     font-size: 0.95rem;
@@ -172,7 +176,11 @@ use Zero\Core\App;
         <article class="journal-card" onclick="window.location.href='/post/<?php echo htmlspecialchars($p->slug, ENT_QUOTES, 'UTF-8'); ?>'">
           <div>
             <div class="journal-card-date"><?php echo date('F j, Y', strtotime($p->created_at)); ?></div>
-            <h3><?php echo htmlspecialchars($p->title, ENT_QUOTES, 'UTF-8'); ?></h3>
+            <h3>
+              <a href="/post/<?php echo htmlspecialchars($p->slug, ENT_QUOTES, 'UTF-8'); ?>">
+                <?php echo htmlspecialchars($p->title, ENT_QUOTES, 'UTF-8'); ?>
+              </a>
+            </h3>
             <p class="journal-card-preview">
               <?php echo htmlspecialchars($p->summary ?? '', ENT_QUOTES, 'UTF-8'); ?>
             </p>
