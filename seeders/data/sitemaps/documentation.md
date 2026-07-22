@@ -144,6 +144,7 @@ The table below catalogs every page record compiled on seed bootstrap, capturing
 | **Technical Contact & Feedback Form** | `contact` | Root / Sidebar | **Yes (`1`)** | `form_builder` (Dynamic Contact Form Block) |
 | **Blog** | `blog` | Root / Sidebar | **Yes (`1`)** | `latest_articles` (Grid block-renderer) |
 | **Developer Documentation** | `docs` | Root / Sidebar | **Yes (`1`)** | `baseline`, `sub_pages` (Dynamic sub-page cards hub) |
+| **Zero CMS On-Demand Sandbox Demo Generator** | `docs/demo` | Docs | No (`0`) | `demo_creator` (Interactive form to spin up demo multi-tenant sandboxes) |
 | **Performance & Load Benchmarks** | `docs/benchmarks` | Docs | No (`0`) | `baseline`, `text`, `chart` (Throughput/Response), `grid`, `code` (ab log) |
 | **Introduction to Zero CMS** | `docs/intro` | Docs | No (`0`) | `text` (Core Philosophy & Abstract Boundaries) |
 | **Framework Comparison: Zero vs. The Giants** | `docs/framework-comparison` | Docs | No (`0`) | `text` (Comprehensive architectural metrics grid) |

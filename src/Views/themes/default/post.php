@@ -51,45 +51,13 @@ $shouldOmitTitle = !empty($post->omit_title) || $hasHeroBlock;
     $content = $post->content ?? '';
     $decodedBlocks = json_decode($content, true);
     
-    // 1. Collect all media IDs referenced across all blocks
-    $mediaIds = [];
-    if (json_last_error() === JSON_ERROR_NONE && is_array($decodedBlocks)) {
-        foreach ($decodedBlocks as $block) {
-            $type = $block['type'] ?? '';
-            if ($type === 'text_image' && !empty($block['image_path'])) {
-                $mediaIds[] = $block['image_path'];
-            } elseif ($type === 'gallery' && !empty($block['images'])) {
-                foreach ($block['images'] as $imgId) {
-                    $mediaIds[] = $imgId;
-                }
-            } elseif ($type === 'masonry' && !empty($block['items'])) {
-                foreach ($block['items'] as $item) {
-                    if (!empty($item['image_path'])) {
-                        $mediaIds[] = $item['image_path'];
-                    }
-                }
-            }
-        }
-    }
-    
-    // 2. Fetch all media records in a single database query
+    // 1. Eager load all media assets referenced across all blocks (resolves both media_id and media_ids recursively)
     $mediaIdMap = [];
-    if (!empty($mediaIds)) {
-        $filteredIds = array_filter(array_unique($mediaIds), function($id) {
-            return !empty($id) && strpos($id, '/') !== 0;
-        });
-        
-        if (!empty($filteredIds)) {
-            $placeholders = implode(',', array_fill(0, count($filteredIds), '?'));
-            $sql = "SELECT id, path FROM media WHERE id IN ($placeholders) AND deleted_at IS NULL";
-            $stmt = DB::query($sql, array_values($filteredIds));
-            while ($row = $stmt->fetch()) {
-                $mediaIdMap[$row['id']] = $row['path'];
-            }
-        }
+    if (json_last_error() === JSON_ERROR_NONE && is_array($decodedBlocks)) {
+        $mediaIdMap = App::eagerLoadBlockMedia($decodedBlocks);
     }
 
-    // 3. Ultra-fast media resolver helper (no DB hits!)
+    // 2. Ultra-fast media resolver helper (no DB hits!)
     $resolveMedia = function($idOrPath) use ($mediaIdMap) {
         if (empty($idOrPath)) {
             return '';

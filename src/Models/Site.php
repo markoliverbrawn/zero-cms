@@ -21,7 +21,7 @@ class Site implements Model
 
     protected static $tableName = 'sites';
     protected static $modelType = null;
-    protected static $fillable = ['name', 'domain', 'theme', 'enabled_modules', 'timezone', 'default_language', 'homepage_id'];
+    protected static $fillable = ['name', 'domain', 'theme', 'enabled_modules', 'timezone', 'default_language', 'homepage_id', 'expires_at'];
     protected static $systemModules = ['admin', 'queue', 'security'];
     protected static array $cascadeDeletes = [
         User::class => 'site_id',
@@ -46,6 +46,7 @@ class Site implements Model
     public $timezone = 'UTC';
     public $default_language = 'en';
     public $homepage_id;
+    public $expires_at;
     public $created_at;
     public $updated_at;
     public $deleted_at;
@@ -81,7 +82,24 @@ class Site implements Model
             throw new \Exception("Permanent deletion blocked: You cannot delete the active tenant site.");
         }
         $this->cascadeForceDeleteChildren();
-        return $this->traitForceDelete();
+        
+        $res = $this->traitForceDelete();
+
+        // Recursively clean up the empty tenant uploads directory if it exists
+        $uploadDir = APPLICATION_ROOT . '/public/storage/uploads/' . $this->id;
+        if (file_exists($uploadDir) && is_dir($uploadDir)) {
+            $files = glob($uploadDir . '/*');
+            if (is_array($files)) {
+                foreach ($files as $file) {
+                    if (is_file($file)) {
+                        unlink($file);
+                    }
+                }
+            }
+            rmdir($uploadDir);
+        }
+
+        return $res;
     }
 
     /**

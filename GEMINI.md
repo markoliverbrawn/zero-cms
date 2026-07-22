@@ -168,6 +168,10 @@ To maintain the high-quality, professional, and scalable state of the Zero CMS w
   * **Convention:**
   - To override default styles (like margins on `.block-row`), increase selector specificity by combining classes (e.g., `.block-row.space-before-small`) instead of utilizing broad overrides or warning suppressions.
 
+  ### 27. Mandatory Template Rendering (No Inline HTML in Classes)
+  * **Rule:** Multi-line blocks of rendered HTML, email bodies, UI cards, or interactive layouts must always be defined in dedicated PHP template files under `/src/Views/` (or relative views folders) and rendered via the core templating engine (`Template::renderFile`). Under no circumstances is it permitted to hardcode multi-line HTML structures, inline document fragments, or email envelopes directly within controllers, models, or service classes.
+  * **Convention:** Always invoke `Template::renderFile($path, $data)` to decouple presentational rendering from business logic, maintaining a high clean separation and keeping classes pristine.
+
   ---
 
   ## Part 2: Folder Directory Map

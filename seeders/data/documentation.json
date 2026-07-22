@@ -9,7 +9,8 @@
                 "security",
                 "queue",
                 "site-search",
-                "formbuilder"
+                "formbuilder",
+                "demogenerator"
             ]
         }
     ],
@@ -1452,6 +1453,21 @@
                     "title": "Deploy Stateless Cloud Run Web Service",
                     "language": "bash",
                     "code": "gcloud run deploy zerocms-service \\n  --image gcr.io/YOUR_PROJECT_ID/zerocms-app:v1 \\n  --min-instances=0 \\n  --max-instances=10 \\n  --set-cloudsql-instances=\"YOUR_PROJECT_ID:YOUR_REGION:YOUR_INSTANCE_NAME\" \\n  --set-env-vars=\"DB_SOCKET=/cloudsql/YOUR_PROJECT_ID:YOUR_REGION:YOUR_INSTANCE_NAME,DB_USER=...,DB_PASS=...,DB_NAME=...\""
+                }
+            ],
+            "type": "page"
+        },
+        {
+            "title": "Zero CMS On-Demand Sandbox Demo Generator",
+            "slug": "docs/demo",
+            "status": "published",
+            "show_in_nav": "0",
+            "site_domain": "d6laptop.zero.guide",
+            "content": [
+                {
+                    "type": "demo_creator",
+                    "title": "Spin Up a Demo Sandbox Instance",
+                    "content": "<p>Experience the power of Zero CMS. Spin up a fully functional, transaction-isolated, multi-tenant sandbox instance seeded with premium demo content in under 5 seconds!</p>"
                 }
             ],
             "type": "page"

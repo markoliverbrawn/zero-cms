@@ -1,0 +1,30 @@
+<?php
+// src/Modules/DemoGenerator/Jobs/TeardownExpiredDemosJob.php
+
+namespace Zero\Modules\DemoGenerator\Jobs;
+
+use Zero\Interfaces\Job;
+use Zero\Database\DB;
+use Zero\Models\Site;
+
+class TeardownExpiredDemosJob implements Job
+{
+    /**
+     * Execute the job to query and permanently purge all expired demo sites and their physical assets.
+     */
+    public function execute(array $payload): void
+    {
+        // Query expired sites (where expires_at is in the past) across all multi-tenant boundaries
+        $pdo = DB::getPDO();
+        $stmt = $pdo->query("SELECT id FROM sites WHERE expires_at IS NOT NULL AND expires_at < NOW() AND deleted_at IS NULL");
+        $expiredRows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        foreach ($expiredRows as $row) {
+            $site = Site::find($row['id']);
+            if ($site) {
+                // This triggers cascading permanent deletions of all users, pages, media records, and physical disk files/folders
+                $site->forceDelete();
+            }
+        }
+    }
+}

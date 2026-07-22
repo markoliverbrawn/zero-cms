@@ -279,6 +279,7 @@ $isHomepage = (isset($post) && property_exists($post, 'slug') && $post->slug ===
 <script src="/assets/js/blocks/baseline.js"></script>
 <script src="/assets/js/blocks/sub_pages.js"></script>
 <script src="/assets/js/blocks/form_builder.js"></script>
+<script src="/assets/js/blocks/demo_creator.js"></script>
 
 <script nonce="<?php echo \Zero\Core\App::getNonce(); ?>">
     // Micro-interaction for glass-panel hover effects
