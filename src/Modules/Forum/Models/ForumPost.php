@@ -15,6 +15,7 @@ class ForumPost implements ModelInterface
     protected static $fillable = ['thread_id', 'user_id', 'content', 'parent_id', 'status'];
 
     public $id;
+    public $site_id;
     public $thread_id;
     public $user_id;
     public $content;

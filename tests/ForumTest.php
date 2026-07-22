@@ -128,6 +128,15 @@ assert_test($thread->getRepliesCount() === 1, "getRepliesCount() correctly retur
 $author = $posts[0]->getUser();
 assert_test($author !== null && $author->username === 'neo_test', "getUser() correctly resolves the post author username");
 
+// 6. Verify thread findBySlug and site_id hydration
+$foundThread = ForumThread::findBySlug('test-thread');
+assert_test($foundThread !== null, "findBySlug() successfully retrieves the forum thread by its slug");
+assert_test($foundThread->site_id === $siteId, "hydrated ForumThread has a non-empty site_id matching the active site");
+
+$foundPost = ForumPost::find($rootPostId);
+assert_test($foundPost !== null, "find() successfully retrieves the forum post by id");
+assert_test($foundPost->site_id === $siteId, "hydrated ForumPost has a non-empty site_id matching the active site");
+
 // Clean up database tables
 DB::query("DELETE FROM forum_posts WHERE thread_id = ?", [$threadId]);
 DB::query("DELETE FROM forum_threads WHERE id = ?", [$threadId]);

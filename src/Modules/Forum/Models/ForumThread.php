@@ -30,6 +30,7 @@ class ForumThread implements ModelInterface
     ];
 
     public $id;
+    public $site_id;
     public $board_id;
     public $user_id;
     public $title;
@@ -163,9 +164,29 @@ class ForumThread implements ModelInterface
         )->fetchAll();
 
         $posts = [];
+        $userIds = [];
         foreach ($postsData as $row) {
             $posts[] = new ForumPost($row);
+            if (!empty($row['user_id'])) {
+                $userIds[] = $row['user_id'];
+            }
         }
+
+        // Eager load User models directly into the globally centralized DB identity map cache to prevent N+1 queries
+        if (!empty($userIds)) {
+            $userIds = array_values(array_unique($userIds));
+            $placeholders = implode(',', array_fill(0, count($userIds), '?'));
+            $usersData = DB::query(
+                "SELECT * FROM users WHERE id IN ($placeholders) AND deleted_at IS NULL",
+                $userIds
+            )->fetchAll();
+            
+            foreach ($usersData as $userData) {
+                $userModel = new User($userData);
+                DB::setIdentity('users', $userModel->id, $userModel);
+            }
+        }
+
         return $posts;
     }
 

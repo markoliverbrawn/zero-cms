@@ -110,6 +110,9 @@ trait IsModel
         $sql = "INSERT INTO " . static::$tableName . " (" . implode(', ', $fields) . ") VALUES (" . implode(', ', $placeholders) . ")";
         DB::query($sql, $values);
 
+        // Clear the globally centralized DB identity map cache for this newly created record (force fresh lookup for full hydration)
+        DB::setIdentity(static::$tableName, $this->id, null);
+
         // Synchronize with search index if searchable
         if (method_exists($this, 'indexInSearch')) {
             $this->indexInSearch();

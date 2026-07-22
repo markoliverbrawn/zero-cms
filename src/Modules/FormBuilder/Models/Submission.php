@@ -12,6 +12,7 @@ class Submission implements Model
     protected static string $tableName = 'form_submissions';
     protected static array $fillable = ['name', 'email', 'phone', 'message'];
 
+    public $site_id;
     public $name;
     public $email;
     public $phone;

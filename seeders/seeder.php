@@ -115,6 +115,14 @@ if ($runKitchenSink) {
     foreach ($output as $line) {
         echo "   " . $line . "\n";
     }
+
+    echo "--> Running Kitchen Sink dynamic forum seeder...\n";
+    $outputForum = [];
+    $exitCodeForum = 0;
+    exec("php " . APPLICATION_ROOT . "/seeders/seed_kitchensink_forum.php", $outputForum, $exitCodeForum);
+    foreach ($outputForum as $line) {
+        echo "   " . $line . "\n";
+    }
 }
 
 // Dynamically generate and seed 50 premium long-form blog posts (at least 5000 words each) for the Guide site
