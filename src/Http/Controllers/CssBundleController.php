@@ -45,8 +45,10 @@ class CssBundleController implements Controller
             "/public/assets/css/themes/{$theme}/{$theme}.css"
         ];
 
-        // If it is the guide theme, we also bundle all of its block-specific stylesheets
-        if ($theme === 'guide') {
+        // Dynamically append block-specific stylesheets if those modules are active on the current site
+        $site = App::getCurrentSite();
+        if ($site) {
+            // A. Core Block Stylesheets (Core-level layout blocks available to any site)
             $cssFiles = array_merge($cssFiles, [
                 '/public/assets/css/blocks/text.css',
                 '/public/assets/css/blocks/text_image.css',
@@ -54,12 +56,20 @@ class CssBundleController implements Controller
                 '/public/assets/css/blocks/masonry.css',
                 '/public/assets/css/blocks/testimonials.css',
                 '/public/assets/css/blocks/code.css',
-                '/public/assets/css/blocks/form_builder.css',
-                '/public/assets/css/blocks/latest_articles.css',
-                '/public/assets/css/blocks/sub_pages.css',
                 '/public/assets/css/blocks/chart.css',
                 '/public/assets/css/blocks/grid.css'
             ]);
+
+            // B. FormBuilder Module Block Stylesheets
+            if ($site->isModuleEnabled('formbuilder')) {
+                $cssFiles[] = '/public/assets/css/blocks/form_builder.css';
+            }
+
+            // C. Blog Module Block Stylesheets
+            if ($site->isModuleEnabled('blog')) {
+                $cssFiles[] = '/public/assets/css/blocks/latest_articles.css';
+                $cssFiles[] = '/public/assets/css/blocks/sub_pages.css';
+            }
         }
 
         $combinedCss = '';

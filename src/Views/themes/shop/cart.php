@@ -101,21 +101,21 @@ $total = $subtotal - $discount;
             <!-- Coupon Code Entry Form -->
             <form method="get" action="/shop/cart" class="coupon-entry-form">
                 <input name="coupon" value="<?php echo htmlspecialchars($coupon); ?>" placeholder="Coupon Code" class="coupon-input">
-                <button type="submit" class="btn-luxe-outline" style="padding: 10px 15px; font-size: 0.75rem;">Apply</button>
+                <button type="submit" class="btn-apply-coupon">Apply</button>
             </form>
 
             <?php if (!empty($discountMsg)): ?>
-                <div class="coupon-msg" style="background-color: <?php echo $discount > 0 ? '#1b2c1f' : '#2d1818'; ?>; border: 1px solid <?php echo $discount > 0 ? '#223c26' : '#452222'; ?>; color: <?php echo $discount > 0 ? '#4ade80' : '#f87171'; ?>;">
+                <div class="coupon-msg <?php echo $discount > 0 ? 'coupon-success' : 'coupon-error'; ?>">
                     <?php echo htmlspecialchars($discountMsg); ?>
                 </div>
             <?php endif; ?>
 
             <div class="cart-summary-total">
                 <span>Total Amount:</span>
-                <span class="receipt-total-val" style="font-size: 1.25rem;">$<?php echo number_format($total + ($subtotal >= 150 ? 0 : 15), 2); ?></span>
+                <span class="receipt-total-val">$<?php echo number_format($total + ($subtotal >= 150 ? 0 : 15), 2); ?></span>
             </div>
 
-            <a href="/shop/checkout" class="btn-luxe" style="width: 100%; display: block; text-align: center;">Proceed to Checkout</a>
+            <a href="/shop/checkout" class="btn-luxe">Proceed to Checkout</a>
         </aside>
 
     </div>

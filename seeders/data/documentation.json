@@ -253,7 +253,7 @@
                 {
                     "type": "baseline",
                     "title": "<small>Version 1.0</small>Unparalleled Native Speed & <em>Dynamic Freedom</em>",
-                    "content": "<p>Zero CMS features zero vendor lock-ins, zero package dependencies, and sub-millisecond execution times. Built natively for serverless and high-performance multi-tenant deployments.</p><p><a href=\"/docs/intro\">Get Started Now</a></p>",
+                    "content": "<p>Zero CMS features zero vendor lock-ins, zero package dependencies, and sub-millisecond execution times. Built natively for serverless and high-performance multi-tenant deployments.</p><p><a href=\"/docs/intro\" class=\"btn-primary\">Get Started Now</a> &nbsp; <a href=\"/docs/demo\" class=\"btn-secondary\">Spin Up a Demo Site</a></p>",
                     "media_placeholder": "cybercity.mp4",
                     "full_width": "1"
                 },

@@ -155,5 +155,6 @@ $sidebarCategories = DB::query("SELECT title, slug FROM shop_categories WHERE si
     <script src="/assets/js/blocks/masonry.js"></script>
     <script src="/assets/js/blocks/sub_pages.js"></script>
     <script src="/assets/js/blocks/form_builder.js"></script>
+    <script src="/assets/js/shop-product.js"></script>
 </body>
 </html>

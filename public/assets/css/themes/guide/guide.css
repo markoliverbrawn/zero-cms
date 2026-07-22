@@ -1975,6 +1975,18 @@ pre code {
     flex-direction: column;
     gap: 24px;
 
+    .form-general-error {
+        padding: 16px 20px;
+        border-radius: 4px;
+        background: rgba(255, 0, 127, 0.1);
+        border: 1px solid var(--neon-pink, #ff007f);
+        color: #fff;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 13px;
+        line-height: 1.5;
+        box-shadow: 0 0 15px rgba(255, 0, 127, 0.15);
+    }
+
     .form-group {
         display: flex;
         flex-direction: column;

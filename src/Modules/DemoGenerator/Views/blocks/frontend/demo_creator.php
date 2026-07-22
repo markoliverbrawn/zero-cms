@@ -23,65 +23,8 @@ $content = $block['content'] ?? 'Experience the power of Zero CMS. Spin up a ful
             <input type="email" id="demo_email" name="email" class="form-input" placeholder="e.g. dev@yourcompany.com" required>
         </div>
 
-        <!-- Preset Template Selection Grid -->
-        <div class="form-group" style="margin-top: 30px;">
-            <label class="form-label">Select Workspace Blueprint Template *</label>
-            <p class="form-desc">Choose a pre-populated preset theme and database records blueprint to seed your sandbox workspace:</p>
-            
-            <div class="preset-cards-grid">
-                <!-- Preset 1: Shop -->
-                <label class="preset-card-label">
-                    <input type="radio" name="preset" value="shop" checked class="preset-radio-input">
-                    <div class="preset-card-inner glass-panel">
-                        <div class="preset-card-header">
-                            <span class="material-symbols-outlined preset-icon">shopping_cart</span>
-                            <span class="preset-badge">E-Commerce</span>
-                        </div>
-                        <h4>Luxe Emporium</h4>
-                        <p>Fully functional luxury e-commerce catalog featuring product variants, shopping carts, checkout states, and transactional ledger databases.</p>
-                    </div>
-                </label>
-
-                <!-- Preset 2: KitchenSink -->
-                <label class="preset-card-label">
-                    <input type="radio" name="preset" value="kitchensink" class="preset-radio-input">
-                    <div class="preset-card-inner glass-panel">
-                        <div class="preset-card-header">
-                            <span class="material-symbols-outlined preset-icon">package</span>
-                            <span class="preset-badge">All Features</span>
-                        </div>
-                        <h4>Kitchen Sink Showroom</h4>
-                        <p>Complete Zero CMS suite: E-commerce, community forums, article blogs with notifications, form builder submissions, and security audits combined.</p>
-                    </div>
-                </label>
-
-                <!-- Preset 3: Corporate -->
-                <label class="preset-card-label">
-                    <input type="radio" name="preset" value="corporate" class="preset-radio-input">
-                    <div class="preset-card-inner glass-panel">
-                        <div class="preset-card-header">
-                            <span class="material-symbols-outlined preset-icon">home</span>
-                            <span class="preset-badge">Corporate</span>
-                        </div>
-                        <h4>Corporate Blueprint</h4>
-                        <p>Clean multi-page corporate website layout containing baseline video heroes, testimonials, capability grids, contact forms, and company blogs.</p>
-                    </div>
-                </label>
-
-                <!-- Preset 4: Portfolio -->
-                <label class="preset-card-label">
-                    <input type="radio" name="preset" value="portfolio" class="preset-radio-input">
-                    <div class="preset-card-inner glass-panel">
-                        <div class="preset-card-header">
-                            <span class="material-symbols-outlined preset-icon">image</span>
-                            <span class="preset-badge">Creative</span>
-                        </div>
-                        <h4>Designer Portfolio</h4>
-                        <p>Sleek, high-impact creative portfolio displaying masonry layouts, imagery sliders, customizable columns, and focus-pointed visual grids.</p>
-                    </div>
-                </label>
-            </div>
-        </div>
+        <!-- Hidden Preset Mapping (Forces Kitchen Sink) -->
+        <input type="hidden" name="preset" value="kitchensink">
 
         <!-- Progressive Loading Indicator -->
         <div class="demo-progress-indicator" style="display: none; margin-top: 30px;">

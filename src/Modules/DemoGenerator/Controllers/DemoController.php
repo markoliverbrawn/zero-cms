@@ -100,7 +100,7 @@ class DemoController implements Controller
     public function handle($matches): void
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $preset = $_POST['preset'] ?? 'corporate';
+            $preset = $_POST['preset'] ?? 'kitchensink';
             $email = filter_var($_POST['email'] ?? '', FILTER_VALIDATE_EMAIL);
 
             if (!$email) {
@@ -110,11 +110,10 @@ class DemoController implements Controller
                 exit;
             }
 
-            $validPresets = ['corporate', 'shop', 'portfolio', 'kitchensink', 'documentation'];
-            if (!in_array($preset, $validPresets)) {
+            if ($preset !== 'kitchensink') {
                 http_response_code(400);
                 header('Content-Type: application/json');
-                echo json_encode(['success' => false, 'error' => 'Invalid preset template selected.']);
+                echo json_encode(['success' => false, 'error' => 'Invalid preset template selected. Only the Kitchen Sink Showroom is available.']);
                 exit;
             }
 

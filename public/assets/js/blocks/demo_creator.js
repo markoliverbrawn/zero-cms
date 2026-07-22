@@ -4,6 +4,11 @@
     var form = e.target.closest('.demo-creator-form');
     if (!form) return;
 
+    // Standard HTML5 validation constraint check
+    if (form.checkValidity && !form.checkValidity()) {
+      return;
+    }
+
     e.preventDefault();
 
     var blockContainer = form.closest('.block-demo-creator');
