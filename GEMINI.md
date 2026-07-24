@@ -172,6 +172,12 @@ To maintain the high-quality, professional, and scalable state of the Zero CMS w
   * **Rule:** Multi-line blocks of rendered HTML, email bodies, UI cards, or interactive layouts must always be defined in dedicated PHP template files under `/src/Views/` (or relative views folders) and rendered via the core templating engine (`Template::renderFile`). Under no circumstances is it permitted to hardcode multi-line HTML structures, inline document fragments, or email envelopes directly within controllers, models, or service classes.
   * **Convention:** Always invoke `Template::renderFile($path, $data)` to decouple presentational rendering from business logic, maintaining a high clean separation and keeping classes pristine.
 
+  ### 28. Standardized HTML Escaping (Mandatory Str::escape)
+  * **Rule:** The raw PHP `htmlspecialchars` function MUST NOT be used directly in any controllers, models, helper utilities, or view templates across the application. Developers MUST exclusively employ the unified `Zero\Support\Str::escape()` helper class for HTML character escaping to ensure consistent, secure, and type-safe XSS protection.
+  * **Convention:**
+    - To prevent class-loading and scoping errors, any file calling the escaping helper must declare `use Zero\Support\Str;` at the top of the file as mandated in Rule 13, referencing `Str::escape($value)` directly inside the logic or view templates (e.g. `<?= Str::escape($var) ?>`).
+    - The low-level escaping and highlighting implementation files (e.g., `src/Support/Str.php`) are the sole exceptions permitted to execute raw `htmlspecialchars`.
+
   ---
 
   ## Part 2: Folder Directory Map
