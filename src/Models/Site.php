@@ -60,7 +60,49 @@ class Site implements Model
             throw new \Exception("Deletion blocked: You cannot delete the active tenant site.");
         }
         $this->cascadeDeleteChildren();
-        return $this->traitDelete();
+        
+        $res = $this->traitDelete();
+
+        // Recursively clean up the tenant uploads directory if it exists
+        $uploadDir = APPLICATION_ROOT . '/public/storage/uploads/' . $this->id;
+        $this->deleteDirectoryRecursive($uploadDir);
+
+        return $res;
+    }
+
+    /**
+     * Helper to recursively delete a directory, all of its subdirectories, and files.
+     */
+    private function deleteDirectoryRecursive(string $dir): bool
+    {
+        if (!file_exists($dir)) {
+            return true;
+        }
+
+        // Configure a temporary custom error handler to trap and convert filesystem warnings into exceptions,
+        // avoiding any output printing (which would corrupt HTTP redirect headers).
+        set_error_handler(function($errno, $errstr) {
+            throw new \ErrorException($errstr, 0, $errno);
+        });
+
+        try {
+            if (!is_dir($dir)) {
+                return unlink($dir);
+            }
+            foreach (scandir($dir) as $item) {
+                if ($item === '.' || $item === '..') {
+                    continue;
+                }
+                // Recurse without interrupting the loop if one file encounters a permission blockage
+                $this->deleteDirectoryRecursive($dir . '/' . $item);
+            }
+            return rmdir($dir);
+        } catch (\Exception $e) {
+            // Gracefully catch and suppress filesystem/permission blockages to avoid premature header output
+            return false;
+        } finally {
+            restore_error_handler();
+        }
     }
 
     public static function findByDomain(string $domain)
@@ -85,19 +127,9 @@ class Site implements Model
         
         $res = $this->traitForceDelete();
 
-        // Recursively clean up the empty tenant uploads directory if it exists
+        // Recursively clean up the tenant uploads directory if it exists
         $uploadDir = APPLICATION_ROOT . '/public/storage/uploads/' . $this->id;
-        if (file_exists($uploadDir) && is_dir($uploadDir)) {
-            $files = glob($uploadDir . '/*');
-            if (is_array($files)) {
-                foreach ($files as $file) {
-                    if (is_file($file)) {
-                        unlink($file);
-                    }
-                }
-            }
-            rmdir($uploadDir);
-        }
+        $this->deleteDirectoryRecursive($uploadDir);
 
         return $res;
     }

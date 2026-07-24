@@ -1109,15 +1109,132 @@ document.addEventListener('DOMContentLoaded', function(){
       });
   };
 
-  // Intercept standard submit actions for back-office list delete forms
+  // Helper to execute AJAX-based model deletions using the unified REST API
+  function executeAjaxDelete(form) {
+      var recordId = form.getAttribute('data-id');
+      var modelName = form.getAttribute('data-model');
+      var csrfToken = form.querySelector('input[name="csrf"]')?.value || '';
+      var submitBtn = form.querySelector('button[type="submit"]');
+      var originalText = submitBtn ? submitBtn.innerHTML : 'Delete';
+
+      if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.innerHTML = '...';
+      }
+
+      fetch('/api/v1/admin/models/' + modelName + '/' + recordId, {
+          method: 'DELETE',
+          headers: {
+              'Accept': 'application/json',
+              'X-CSRF-Token': csrfToken
+          }
+      })
+      .then(function(res) {
+          if (res.ok) return res.json();
+          throw new Error('Delete failed');
+      })
+      .then(function(data) {
+          if (submitBtn) {
+              submitBtn.disabled = false;
+              submitBtn.innerHTML = originalText;
+          }
+          if (data.success) {
+              var row = form.closest('tr');
+              if (row) {
+                  row.style.transition = 'opacity 0.25s ease';
+                  row.style.opacity = '0';
+                  setTimeout(function() {
+                      row.parentNode.removeChild(row);
+                      // If the table is now completely empty, reload the page to display its empty state cleanly
+                      var tbody = document.querySelector('table tbody');
+                      if (tbody && tbody.querySelectorAll('tr').length === 0) {
+                          location.reload();
+                      }
+                  }, 250);
+              }
+          } else {
+              throw new Error(data.error || 'Delete failed');
+          }
+      })
+      .catch(function(err) {
+          if (submitBtn) {
+              submitBtn.disabled = false;
+              submitBtn.innerHTML = originalText;
+          }
+          window.adminConfirm({
+              title: 'Error',
+              message: err.message,
+              confirmText: 'OK',
+              confirmClass: 'btn-confirm-primary'
+          });
+      });
+  }
+
+  // Helper to execute AJAX-based permanent force deletions using the unified REST API
+  function executeAjaxForceDelete(form) {
+      var recordId = form.getAttribute('data-id') || form.querySelector('input[name="id"]')?.value || '';
+      var modelName = form.getAttribute('data-model') || '';
+      var csrfToken = form.querySelector('input[name="csrf"]')?.value || '';
+      var submitBtn = form.querySelector('button[type="submit"]');
+      var originalText = submitBtn ? submitBtn.innerHTML : 'Delete Permanently';
+
+      if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.innerHTML = '...';
+      }
+
+      fetch('/api/v1/admin/models/' + modelName + '/' + recordId + '?force=true', {
+          method: 'DELETE',
+          headers: {
+              'Accept': 'application/json',
+              'X-CSRF-Token': csrfToken
+          }
+      })
+      .then(function(res) {
+          if (res.ok) return res.json();
+          throw new Error('Permanent deletion failed');
+      })
+      .then(function(data) {
+          if (submitBtn) {
+              submitBtn.disabled = false;
+              submitBtn.innerHTML = originalText;
+          }
+          if (data.success) {
+              var row = form.closest('tr');
+              if (row) {
+                  row.style.transition = 'opacity 0.25s ease';
+                  row.style.opacity = '0';
+                  setTimeout(function() {
+                      row.parentNode.removeChild(row);
+                      // If the table is now completely empty, reload the page to display its empty state cleanly
+                      var tbody = document.querySelector('table tbody');
+                      if (tbody && tbody.querySelectorAll('tr').length === 0) {
+                          location.reload();
+                      }
+                  }, 250);
+              }
+          } else {
+              throw new Error(data.error || 'Permanent deletion failed');
+          }
+      })
+      .catch(function(err) {
+          if (submitBtn) {
+              submitBtn.disabled = false;
+              submitBtn.innerHTML = originalText;
+          }
+          window.adminConfirm({
+              title: 'Error',
+              message: err.message,
+              confirmText: 'OK',
+              confirmClass: 'btn-confirm-primary'
+          });
+      });
+  }
+
+  // Intercept standard submit actions for back-office list delete forms to perform seamless, instant AJAX deletions
   document.addEventListener('submit', function(e) {
       if (e.target.classList.contains('admin-delete-form')) {
           var form = e.target;
-          if (form.dataset.confirmed === 'true') {
-              form.dataset.confirmed = '';
-              return; // Proceed with submission
-          }
-
           e.preventDefault();
 
           var details = form.getAttribute('data-cascade-details') || '';
@@ -1134,8 +1251,7 @@ document.addEventListener('DOMContentLoaded', function(){
                   confirmClass: 'btn-confirm'
               }).then(function(confirmed) {
                   if (confirmed) {
-                      form.dataset.confirmed = 'true';
-                      form.submit();
+                      executeAjaxDelete(form);
                   }
               });
           } else {
@@ -1150,8 +1266,7 @@ document.addEventListener('DOMContentLoaded', function(){
                       confirmClass: 'btn-confirm'
                   }).then(function(confirmed) {
                       if (confirmed) {
-                          form.dataset.confirmed = 'true';
-                          form.submit();
+                          executeAjaxDelete(form);
                       }
                   });
                   return;
@@ -1183,8 +1298,7 @@ document.addEventListener('DOMContentLoaded', function(){
                       confirmClass: 'btn-confirm'
                   }).then(function(confirmed) {
                       if (confirmed) {
-                          form.dataset.confirmed = 'true';
-                          form.submit();
+                          executeAjaxDelete(form);
                       }
                   });
               })
@@ -1198,28 +1312,18 @@ document.addEventListener('DOMContentLoaded', function(){
                       confirmClass: 'btn-confirm'
                   }).then(function(confirmed) {
                       if (confirmed) {
-                          form.dataset.confirmed = 'true';
-                          form.submit();
+                          executeAjaxDelete(form);
                       }
                   });
               });
           }
       }
-  });
 
-  // Intercept listing links click events (restore and force delete)
-  document.addEventListener('click', function(e) {
-      // Force Delete
-      if (e.target.classList.contains('btn-force-delete')) {
-          var link = e.target;
-          if (link.dataset.confirmed === 'true') {
-              link.dataset.confirmed = '';
-              return;
-          }
-
+      if (e.target.classList.contains('admin-force-delete-form')) {
+          var form = e.target;
           e.preventDefault();
 
-          var details = link.getAttribute('data-cascade-details') || '';
+          var details = form.getAttribute('data-cascade-details') || '';
           var message = 'Are you sure you want to permanently delete this record? This action is completely irreversible';
           if (details) {
               message += ' and will permanently wipe the following associated child records:';
@@ -1235,12 +1339,14 @@ document.addEventListener('DOMContentLoaded', function(){
               confirmClass: 'btn-confirm'
           }).then(function(confirmed) {
               if (confirmed) {
-                  link.dataset.confirmed = 'true';
-                  link.click();
+                  executeAjaxForceDelete(form);
               }
           });
       }
+  });
 
+  // Intercept listing links click events (restore)
+  document.addEventListener('click', function(e) {
       // Restore
       if (e.target.classList.contains('btn-restore')) {
           var link = e.target;
@@ -1293,10 +1399,10 @@ document.addEventListener('DOMContentLoaded', function(){
           .catch(function() { /* Ignore background errors */ });
       });
 
-      // 2. Permanent Force Delete Links background fetch
-      document.querySelectorAll('.btn-force-delete').forEach(function(link) {
-          var recordId = link.getAttribute('data-id');
-          var modelName = link.getAttribute('data-model');
+      // 2. Permanent Force Delete Forms background fetch
+      document.querySelectorAll('.admin-force-delete-form').forEach(function(form) {
+          var recordId = form.getAttribute('data-id');
+          var modelName = form.getAttribute('data-model');
           if (!recordId || !modelName) return;
 
           fetch('/api/v1/admin/models/' + modelName + '/' + recordId + '/cascade-check', {
@@ -1306,7 +1412,7 @@ document.addEventListener('DOMContentLoaded', function(){
           .then(function(res) { return res.json(); })
           .then(function(data) {
               if (data && data.success && data.details) {
-                  link.setAttribute('data-cascade-details', data.details);
+                  form.setAttribute('data-cascade-details', data.details);
               }
           })
           .catch(function() { /* Ignore background errors */ });

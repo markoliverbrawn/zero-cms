@@ -392,17 +392,25 @@ class AdminApiController extends ApiController
             $this->respond(['success' => false, 'error' => 'Invalid model name'], 400);
         }
 
-        // Apply Super Admin middleware protection for highly sensitive tables
-        if ($modelName === 'users' || $modelName === 'sites') {
+        // Apply Super Admin middleware protection for highly sensitive tables or force-deletes
+        $isForce = isset($_GET['force']) && $_GET['force'] === 'true';
+        if ($modelName === 'users' || $modelName === 'sites' || $isForce) {
             App::applyRoleMiddleware('super_admin');
         }
 
-        $record = $model::find($id);
+        $record = $isForce ? $model::findTrashed($id) : $model::find($id);
         if ($record) {
-            $record->delete();
-            Logger::log($_SESSION['user_id'] ?? null, 'delete', $modelName, $id, [
-                'title' => $record->title ?? ($record->filename ?? ($record->username ?? ''))
-            ]);
+            if ($isForce) {
+                $record->forceDelete();
+                Logger::log($_SESSION['user_id'] ?? null, 'force_delete', $modelName, $id, [
+                    'title' => $record->title ?? ($record->filename ?? ($record->username ?? ''))
+                ]);
+            } else {
+                $record->delete();
+                Logger::log($_SESSION['user_id'] ?? null, 'delete', $modelName, $id, [
+                    'title' => $record->title ?? ($record->filename ?? ($record->username ?? ''))
+                ]);
+            }
             $this->respond(['success' => true]);
         }
 

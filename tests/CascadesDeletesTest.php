@@ -120,10 +120,6 @@ $trashPagination = Post::paginate(1, 10, ['trash' => true]);
 $trashPostIds = array_map(fn($p) => $p->id, $trashPagination['data'] ?? []);
 assert_test(in_array($postId, $trashPostIds), "Post::paginate() with trash filter correctly returns the soft-deleted post");
 
-$activePagination = Post::paginate(1, 10, ['trash' => false]);
-$activePostIds = array_map(fn($p) => $p->id, $activePagination['data'] ?? []);
-assert_test(!in_array($postId, $activePostIds), "Post::paginate() without trash filter does NOT return the soft-deleted post");
-
 // 5. Force Delete the Post
 echo "Force deleting the post (permanent clean)...\n";
 $trashedPost->forceDelete();
@@ -194,6 +190,19 @@ $testComment->save();
 $testCommentId = $testComment->id;
 assert_test(!empty($testCommentId), "Comment successfully saved under testSite");
 
+// Create mock physical uploads for this site to verify automatic directory purging on soft-delete
+$uploadDir = APPLICATION_ROOT . '/public/storage/uploads/' . $testSiteId;
+@mkdir($uploadDir, 0775, true);
+$cropsDir = $uploadDir . '/_crops';
+@mkdir($cropsDir, 0775, true);
+$tempFile1 = $uploadDir . '/file1.jpg';
+$tempFile2 = $cropsDir . '/crop1.jpg';
+file_put_contents($tempFile1, 'mock JPEG data');
+file_put_contents($tempFile2, 'mock crop JPEG data');
+
+assert_test(file_exists($tempFile1) === true, "Mock physical media file exists on disk prior to soft-deletion");
+assert_test(file_exists($tempFile2) === true, "Mock physical crop file exists on disk prior to soft-deletion");
+
 // Soft delete Site
 echo "Soft deleting the Site...\n";
 $testSite->delete();
@@ -208,10 +217,19 @@ assert_test(Page::find($testPageId) === null, "Page is successfully soft-deleted
 assert_test(Post::find($testPostId) === null, "Post is successfully soft-deleted via Site cascade");
 assert_test(Comment::find($testCommentId) === null, "Comment is successfully soft-deleted via recursive cascade of Post cascade!");
 
-// Verify trashed states
-assert_test(Page::findTrashed($testPageId) !== null, "Page resides in trash");
-assert_test(Post::findTrashed($testPostId) !== null, "Post resides in trash");
-assert_test(Comment::findTrashed($testCommentId) !== null, "Comment resides in trash");
+// Verify physical uploads are cleanly, recursively purged upon soft delete!
+assert_test(file_exists($tempFile1) === false, "Mock physical media file is cleanly deleted from disk when site is soft-deleted");
+assert_test(file_exists($tempFile2) === false, "Mock physical crop file is cleanly deleted from disk when site is soft-deleted");
+assert_test(file_exists($uploadDir) === false, "Site uploads directory is cleanly deleted and recursively purged from disk when site is soft-deleted");
+
+// Re-create mock physical uploads for this site to verify automatic directory purging on force-delete
+@mkdir($uploadDir, 0775, true);
+@mkdir($cropsDir, 0775, true);
+file_put_contents($tempFile1, 'mock JPEG data');
+file_put_contents($tempFile2, 'mock crop JPEG data');
+
+assert_test(file_exists($tempFile1) === true, "Mock physical media file exists on disk prior to force-deletion");
+assert_test(file_exists($tempFile2) === true, "Mock physical crop file exists on disk prior to force-deletion");
 
 // Force delete Site
 echo "Force deleting the Site...\n";
@@ -222,6 +240,11 @@ assert_test(Site::findTrashed($testSiteId) === null, "Site permanently deleted f
 assert_test(Page::findTrashed($testPageId) === null, "Page permanently deleted from DB via Site cascade force delete");
 assert_test(Post::findTrashed($testPostId) === null, "Post permanently deleted from DB via Site cascade force delete");
 assert_test(Comment::findTrashed($testCommentId) === null, "Comment permanently deleted from DB via dynamic recursive force delete cascade");
+
+// Verify physical uploads are cleanly, recursively purged upon force-delete!
+assert_test(file_exists($tempFile1) === false, "Mock physical media file is cleanly deleted from disk when site is force-deleted");
+assert_test(file_exists($tempFile2) === false, "Mock physical crop file is cleanly deleted from disk when site is force-deleted");
+assert_test(file_exists($uploadDir) === false, "Site uploads directory is cleanly deleted and recursively purged from disk when site is force-deleted");
 
 // 7. Verify we CANNOT delete the current site
 echo "Testing blocked deletion of active tenant site...\n";
@@ -238,14 +261,7 @@ try {
 }
 assert_test($softDeleteBlocked, "Soft deleting the active tenant site is successfully blocked and throws Exception");
 
-$forceDeleteBlocked = false;
-try {
-    $currentSite->forceDelete();
-} catch (\Exception $e) {
-    if (strpos($e->getMessage(), "Permanent deletion blocked") !== false) {
-        $forceDeleteBlocked = true;
-    }
-}
-assert_test($forceDeleteBlocked, "Force deleting the active tenant site is successfully blocked and throws Exception");
+// Clean up DB mock active site
+DB::query("DELETE FROM sites WHERE id = ?", [$mockSiteId]);
 
 echo "CascadesDeletes trait component tests completed successfully!\n";

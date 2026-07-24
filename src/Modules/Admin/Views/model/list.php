@@ -171,7 +171,7 @@
                 <?php if ($isHomepageRow): ?>
                   <button type="button" class="btn-force-delete-link" disabled title="The designated site homepage cannot be deleted.">Delete Permanently</button>
                 <?php else: ?>
-                  <form method="post" action="/admin/force-delete/<?php echo htmlspecialchars($modelName ?? '', ENT_QUOTES, "UTF-8"); ?>" class="admin-force-delete-form">
+                  <form method="post" action="/admin/force-delete/<?php echo htmlspecialchars($modelName ?? '', ENT_QUOTES, "UTF-8"); ?>" class="admin-force-delete-form" data-id="<?php echo htmlspecialchars($record->id ?? '', ENT_QUOTES, "UTF-8"); ?>" data-model="<?php echo htmlspecialchars($modelName ?? '', ENT_QUOTES, "UTF-8"); ?>">
                     <input type="hidden" name="csrf" value="<?php echo htmlspecialchars($csrf ?? '', ENT_QUOTES, "UTF-8"); ?>">
                     <input type="hidden" name="id" value="<?php echo htmlspecialchars($record->id ?? '', ENT_QUOTES, "UTF-8"); ?>">
                     <button type="submit" class="btn-force-delete-link">Delete Permanently</button>
