@@ -1,4 +1,5 @@
-<?php use Zero\Support\I18n; ?>
+<?php
+use Zero\Support\Str; use Zero\Support\I18n; ?>
 <div class="listrecords">
   <?php
   $titleKey = strtolower($modelName ?? '');
@@ -46,26 +47,26 @@
       }
   }
   ?>
-  <h2><?php echo htmlspecialchars($displayName, ENT_QUOTES, "UTF-8"); ?></h2>
+  <h2><?php echo Str::escape($displayName); ?></h2>
   
   <div class="list-tabs-container">
-      <a href="/admin/list/<?php echo htmlspecialchars($modelName ?? ''); ?>?status=active" class="list-tab-link <?php echo ($status === 'active') ? 'active' : ''; ?>">View Active</a>
-      <a href="/admin/list/<?php echo htmlspecialchars($modelName ?? ''); ?>?status=trash" class="list-tab-link <?php echo ($status === 'trash') ? 'active' : ''; ?>">View Trash</a>
+      <a href="/admin/list/<?php echo Str::escape($modelName ?? ''); ?>?status=active" class="list-tab-link <?php echo ($status === 'active') ? 'active' : ''; ?>">View Active</a>
+      <a href="/admin/list/<?php echo Str::escape($modelName ?? ''); ?>?status=trash" class="list-tab-link <?php echo ($status === 'trash') ? 'active' : ''; ?>">View Trash</a>
   </div>
 
   <div class="list-actions-bar">
-    <form method="get" action="/admin/list/<?php echo htmlspecialchars($modelName ?? '', ENT_QUOTES, "UTF-8"); ?>" class="search-form">
-      <input type="text" name="q" placeholder="Search..." value="<?php echo htmlspecialchars($q ?? '', ENT_QUOTES, "UTF-8"); ?>" class="admin-search-input" />
-      <input type="hidden" name="status" value="<?php echo htmlspecialchars($status ?? 'active', ENT_QUOTES, "UTF-8"); ?>" />
+    <form method="get" action="/admin/list/<?php echo Str::escape($modelName ?? ''); ?>" class="search-form">
+      <input type="text" name="q" placeholder="Search..." value="<?php echo Str::escape($q ?? ''); ?>" class="admin-search-input" />
+      <input type="hidden" name="status" value="<?php echo Str::escape($status ?? 'active'); ?>" />
       <button type="submit">Search</button>
     </form>
 
     <div class="list-action-btn-wrapper">
       <?php if ($modelName !== 'audit_logs'): ?>
-          <a href="/admin/edit/<?php echo htmlspecialchars($modelName ?? '', ENT_QUOTES, "UTF-8"); ?>/new" class="btn btn-save">New</a>
+          <a href="/admin/edit/<?php echo Str::escape($modelName ?? ''); ?>/new" class="btn btn-save">New</a>
       <?php else: ?>
-          <a href="/admin/export/<?php echo htmlspecialchars($modelName ?? '', ENT_QUOTES, "UTF-8"); ?>" class="btn btn-continue">Export CSV</a>
-          <button type="button" id="btn-purge-logs" class="btn btn-danger" data-csrf="<?php echo htmlspecialchars($csrf ?? '', ENT_QUOTES, "UTF-8"); ?>" data-is-super="<?php echo (\Zero\Core\App::getCurrentUserRole() === 'super_admin') ? '1' : '0'; ?>">Purge Logs</button>
+          <a href="/admin/export/<?php echo Str::escape($modelName ?? ''); ?>" class="btn btn-continue">Export CSV</a>
+          <button type="button" id="btn-purge-logs" class="btn btn-danger" data-csrf="<?php echo Str::escape($csrf ?? ''); ?>" data-is-super="<?php echo (\Zero\Core\App::getCurrentUserRole() === 'super_admin') ? '1' : '0'; ?>">Purge Logs</button>
       <?php endif; ?>
     </div>
   </div>
@@ -82,8 +83,8 @@
           <?php foreach ($config as $field => $fieldConfig): ?>
             <?php if (($fieldConfig['listDisplay'] ?? true)): ?>
               <th>
-                <a href="?sort=<?php echo htmlspecialchars($field ?? '', ENT_QUOTES, "UTF-8"); ?>&order=<?php echo ($sort === $field && $order === 'asc') ? 'desc' : 'asc'; ?>&q=<?php echo htmlspecialchars($q ?? '', ENT_QUOTES, "UTF-8"); ?>&status=<?php echo htmlspecialchars($status ?? 'active', ENT_QUOTES, "UTF-8"); ?>">
-                  <?php echo htmlspecialchars($fieldConfig['label'] ?? '', ENT_QUOTES, "UTF-8"); ?>
+                <a href="?sort=<?php echo Str::escape($field ?? ''); ?>&order=<?php echo ($sort === $field && $order === 'asc') ? 'desc' : 'asc'; ?>&q=<?php echo Str::escape($q ?? ''); ?>&status=<?php echo Str::escape($status ?? 'active'); ?>">
+                  <?php echo Str::escape($fieldConfig['label'] ?? ''); ?>
                   <?php if ($sort === $field): ?>
                     <span style="font-size: 0.75rem; color: var(--accent-color, #2563eb);"><?php echo $order === 'asc' ? '▲' : '▼'; ?></span>
                   <?php endif; ?>
@@ -101,7 +102,7 @@
               draggable="false" 
               class="draggable-row"
             <?php endif; ?>
-            data-id="<?php echo htmlspecialchars($record->id ?? '', ENT_QUOTES, "UTF-8"); ?>"
+            data-id="<?php echo Str::escape($record->id ?? ''); ?>"
           >
             <?php if (($isOrderable ?? false) && $status === 'active'): ?>
               <td class="drag-handle-cell">⋮⋮</td>
@@ -112,9 +113,9 @@
             ?>
             <?php foreach ($config as $field => $fieldConfig): ?>
               <?php if (($fieldConfig['listDisplay'] ?? true)): ?>
-                <td data-field="<?php echo htmlspecialchars($field ?? '', ENT_QUOTES, "UTF-8"); ?>" data-label="<?php echo htmlspecialchars($fieldConfig['label'] ?? '', ENT_QUOTES, "UTF-8"); ?>">
+                <td data-field="<?php echo Str::escape($field ?? ''); ?>" data-label="<?php echo Str::escape($fieldConfig['label'] ?? ''); ?>">
                   <?php if ($isFirstColumn && $status !== 'trash'): ?>
-                    <a href="/admin/edit/<?php echo htmlspecialchars($modelName ?? '', ENT_QUOTES, "UTF-8"); ?>/<?php echo htmlspecialchars($record->id ?? '', ENT_QUOTES, "UTF-8"); ?>" class="list-first-column-link">
+                    <a href="/admin/edit/<?php echo Str::escape($modelName ?? ''); ?>/<?php echo Str::escape($record->id ?? ''); ?>" class="list-first-column-link">
                   <?php endif; ?>
 
                   <?php if (!empty($fieldConfig['listView'])): ?>
@@ -123,12 +124,12 @@
                       if (file_exists($viewPath)) {
                           echo \Zero\Core\Template::renderFile($viewPath, ['value' => $record->{$field}, 'record' => $record]);
                       } else {
-                          echo htmlspecialchars($record->{$field} ?? '', ENT_QUOTES, "UTF-8");
+                          echo Str::escape($record->{$field} ?? '');
                       }
                     ?>
                   <?php elseif (($field === 'main_image' || $field === 'featured_image') && !empty($record->{$field})): ?>
                     <div class="list-thumbnail-box">
-                      <img src="<?php echo htmlspecialchars($record->{$field}); ?>" class="list-thumbnail-img" alt="Thumbnail" />
+                      <img src="<?php echo Str::escape($record->{$field}); ?>" class="list-thumbnail-img" alt="Thumbnail" />
                     </div>
                   <?php elseif ($field === 'comment_count'): ?>
                     <?php if ($record->comment_count > 0): ?>
@@ -144,9 +145,9 @@
                   <?php else: ?>
                     <?php 
                       if (($fieldConfig['type'] ?? '') === 'datetime' && !empty($record->{$field})) {
-                          echo htmlspecialchars(I18n::localizeDateTime($record->{$field}), ENT_QUOTES, "UTF-8");
+                          echo Str::escape(I18n::localizeDateTime($record->{$field}));
                       } else {
-                          echo htmlspecialchars($record->{$field} ?? '', ENT_QUOTES, "UTF-8");
+                          echo Str::escape($record->{$field} ?? '');
                       }
                     ?>
                   <?php endif; ?>
@@ -163,25 +164,25 @@
               $isHomepageRow = $record && method_exists($record, 'isHomepage') && $record->isHomepage();
               ?>
               <?php if ($status === 'trash'): ?>
-                <form method="post" action="/admin/restore/<?php echo htmlspecialchars($modelName ?? '', ENT_QUOTES, "UTF-8"); ?>" class="admin-restore-form">
-                  <input type="hidden" name="csrf" value="<?php echo htmlspecialchars($csrf ?? '', ENT_QUOTES, "UTF-8"); ?>">
-                  <input type="hidden" name="id" value="<?php echo htmlspecialchars($record->id ?? '', ENT_QUOTES, "UTF-8"); ?>">
+                <form method="post" action="/admin/restore/<?php echo Str::escape($modelName ?? ''); ?>" class="admin-restore-form">
+                  <input type="hidden" name="csrf" value="<?php echo Str::escape($csrf ?? ''); ?>">
+                  <input type="hidden" name="id" value="<?php echo Str::escape($record->id ?? ''); ?>">
                   <button type="submit" class="btn-restore-link">Restore</button>
                 </form>
                 <?php if ($isHomepageRow): ?>
                   <button type="button" class="btn-force-delete-link" disabled title="The designated site homepage cannot be deleted.">Delete Permanently</button>
                 <?php else: ?>
-                  <form method="post" action="/admin/force-delete/<?php echo htmlspecialchars($modelName ?? '', ENT_QUOTES, "UTF-8"); ?>" class="admin-force-delete-form" data-id="<?php echo htmlspecialchars($record->id ?? '', ENT_QUOTES, "UTF-8"); ?>" data-model="<?php echo htmlspecialchars($modelName ?? '', ENT_QUOTES, "UTF-8"); ?>">
-                    <input type="hidden" name="csrf" value="<?php echo htmlspecialchars($csrf ?? '', ENT_QUOTES, "UTF-8"); ?>">
-                    <input type="hidden" name="id" value="<?php echo htmlspecialchars($record->id ?? '', ENT_QUOTES, "UTF-8"); ?>">
+                  <form method="post" action="/admin/force-delete/<?php echo Str::escape($modelName ?? ''); ?>" class="admin-force-delete-form" data-id="<?php echo Str::escape($record->id ?? ''); ?>" data-model="<?php echo Str::escape($modelName ?? ''); ?>">
+                    <input type="hidden" name="csrf" value="<?php echo Str::escape($csrf ?? ''); ?>">
+                    <input type="hidden" name="id" value="<?php echo Str::escape($record->id ?? ''); ?>">
                     <button type="submit" class="btn-force-delete-link">Delete Permanently</button>
                   </form>
                 <?php endif; ?>
               <?php else: ?>
-                <a href="/admin/edit/<?php echo htmlspecialchars($modelName ?? '', ENT_QUOTES, "UTF-8"); ?>/<?php echo htmlspecialchars($record->id ?? '', ENT_QUOTES, "UTF-8"); ?>"><?php echo htmlspecialchars($editLabel, ENT_QUOTES, "UTF-8"); ?></a>
-                <form method="post" action="/admin/delete/<?php echo htmlspecialchars($modelName ?? '', ENT_QUOTES, "UTF-8"); ?>" class="admin-delete-form" data-id="<?php echo htmlspecialchars($record->id ?? '', ENT_QUOTES, "UTF-8"); ?>" data-model="<?php echo htmlspecialchars($modelName ?? '', ENT_QUOTES, "UTF-8"); ?>">
-                  <input type="hidden" name="csrf" value="<?php echo htmlspecialchars($csrf ?? '', ENT_QUOTES, "UTF-8"); ?>">
-                  <input type="hidden" name="id" value="<?php echo htmlspecialchars($record->id ?? '', ENT_QUOTES, "UTF-8"); ?>">
+                <a href="/admin/edit/<?php echo Str::escape($modelName ?? ''); ?>/<?php echo Str::escape($record->id ?? ''); ?>"><?php echo Str::escape($editLabel); ?></a>
+                <form method="post" action="/admin/delete/<?php echo Str::escape($modelName ?? ''); ?>" class="admin-delete-form" data-id="<?php echo Str::escape($record->id ?? ''); ?>" data-model="<?php echo Str::escape($modelName ?? ''); ?>">
+                  <input type="hidden" name="csrf" value="<?php echo Str::escape($csrf ?? ''); ?>">
+                  <input type="hidden" name="id" value="<?php echo Str::escape($record->id ?? ''); ?>">
                   <?php if ($isHomepageRow): ?>
                     <button type="button" class="btn-delete-link" disabled style="opacity: 0.4; cursor: not-allowed;" title="The designated site homepage cannot be deleted.">Delete</button>
                   <?php else: ?>
@@ -200,7 +201,7 @@
 
 <?php if (($isOrderable ?? false) && $status === 'active'): ?>
 <script nonce="<?php echo \Zero\Core\App::getNonce(); ?>">
-window.ADMIN_MODEL_NAME = "<?php echo htmlspecialchars($modelName ?? '', ENT_QUOTES, 'UTF-8'); ?>";
+window.ADMIN_MODEL_NAME = "<?php echo Str::escape($modelName ?? ''); ?>";
 </script>
 <?php endif; ?>
 <script src="/assets/js/admin/model_list.js"></script>

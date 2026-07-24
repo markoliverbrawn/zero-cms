@@ -3,6 +3,7 @@
 
 use Zero\Core\Env;
 use Zero\Support\Security;
+use Zero\Support\Str;
 
 $errorMsg = $error ?? '';
 if (empty($errorMsg) && !empty($_GET['error'])) {
@@ -60,12 +61,12 @@ if ($googleEnabled) {
   
   <?php if (!empty($errorMsg)): ?>
     <div class="auth-error-box">
-      <?php echo htmlspecialchars($errorMsg, ENT_QUOTES, "UTF-8"); ?>
+      <?php echo Str::escape($errorMsg); ?>
     </div>
   <?php endif; ?>
 
   <form method="post" class="login-form">
-    <input type="hidden" name="csrf" value="<?php echo htmlspecialchars($csrf ?? '', ENT_QUOTES, "UTF-8"); ?>">
+    <input type="hidden" name="csrf" value="<?php echo Str::escape($csrf ?? ''); ?>">
     
     <div class="auth-form-group">
       <label for="username">Username</label>
@@ -84,7 +85,7 @@ if ($googleEnabled) {
     <div class="oauth-divider">
       <span>or</span>
     </div>
-    <a href="<?php echo htmlspecialchars($googleAuthUrl, ENT_QUOTES, 'UTF-8'); ?>" class="btn-google-login">
+    <a href="<?php echo Str::escape($googleAuthUrl); ?>" class="btn-google-login">
       <svg class="google-icon" viewBox="0 0 24 24" width="18" height="18" xmlns="http://www.w3.org/2000/svg">
         <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
         <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>

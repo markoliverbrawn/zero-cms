@@ -4,6 +4,7 @@
 use Zero\Core\App;
 use Zero\Database\DB;
 use Zero\Support\I18n;
+use Zero\Support\Str;
 
 $renderWidgetKey = $renderWidgetKey ?? '';
 $activeSiteId = App::getCurrentSiteId();
@@ -145,8 +146,8 @@ if ($renderWidgetKey === 'scheduler_summary' && in_array('scheduler_summary', $e
           ?>
             <div class="queue-telemetry-row">
               <span class="telemetry-label">
-                <strong><?php echo htmlspecialchars($friendlyName); ?></strong>
-                <span style="font-size: 0.75rem; color: var(--text-muted, #64748b); display: block;">Interval: <?php echo htmlspecialchars($task['expression']); ?></span>
+                <strong><?php echo Str::escape($friendlyName); ?></strong>
+                <span style="font-size: 0.75rem; color: var(--text-muted, #64748b); display: block;">Interval: <?php echo Str::escape($task['expression']); ?></span>
               </span>
               <span class="telemetry-value">
                 <span class="status-badge <?php echo ($task['last_run_at'] ? 'badge-ok' : 'badge-info'); ?>">

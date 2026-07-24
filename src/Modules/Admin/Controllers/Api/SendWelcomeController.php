@@ -9,6 +9,7 @@ use Zero\Interfaces\Controller;
 use Zero\Models\User;
 use Zero\Support\Emailer;
 use Zero\Support\Security;
+use Zero\Support\Str;
 
 class SendWelcomeController implements Controller
 {
@@ -94,7 +95,7 @@ class SendWelcomeController implements Controller
             Emailer::send($user->email, $subject, $htmlBody);
             echo json_encode([
                 'success' => true,
-                'message' => 'Welcome email dispatched successfully to ' . htmlspecialchars($user->email) . '!'
+                'message' => 'Welcome email dispatched successfully to ' . Str::escape($user->email) . '!'
             ]);
         } catch (\Exception $e) {
             http_response_code(500);

@@ -3,6 +3,7 @@
 
 use Zero\Core\App;
 use Zero\Support\I18n;
+use Zero\Support\Str;
 ?>
 
 <h2 style="margin-top: 0; margin-bottom: 25px; border-bottom: 2px solid #e9ecef; padding-bottom: 10px; font-weight: 700; font-size: 1.5rem;">
@@ -11,7 +12,7 @@ use Zero\Support\I18n;
 
 <p style="color: var(--text-muted); margin-bottom: 30px;">
   <?php if ($q !== ''): ?>
-    Showing matches for "<strong><?php echo htmlspecialchars($q); ?></strong>"
+    Showing matches for "<strong><?php echo Str::escape($q); ?></strong>"
   <?php else: ?>
     Please enter a search query in the search bar above.
   <?php endif; ?>
@@ -22,8 +23,8 @@ use Zero\Support\I18n;
     <?php foreach ($results as $res): ?>
       <div class="search-result-card" style="border-bottom: 1px solid #e9ecef; padding-bottom: 25px;">
         <h3 style="margin-top: 0; margin-bottom: 8px; font-size: 1.25rem;">
-          <a href="<?php echo htmlspecialchars($res['url'] ?? '', ENT_QUOTES, "UTF-8"); ?>" style="color: var(--accent-color); text-decoration: none; font-weight: bold;">
-            <?php echo htmlspecialchars($res['title'] ?? '', ENT_QUOTES, "UTF-8"); ?>
+          <a href="<?php echo Str::escape($res['url'] ?? ''); ?>" style="color: var(--accent-color); text-decoration: none; font-weight: bold;">
+            <?php echo Str::escape($res['title'] ?? ''); ?>
           </a>
         </h3>
         
@@ -43,10 +44,10 @@ use Zero\Support\I18n;
             if (empty($preview)) {
                 $preview = 'Click to view this documentation page and read the detailed technical specification...';
             }
-            echo htmlspecialchars($preview, ENT_QUOTES, 'UTF-8');
+            echo Str::escape($preview);
           ?>
         </p>
-        <a href="<?php echo htmlspecialchars($res['url'] ?? '', ENT_QUOTES, "UTF-8"); ?>" style="display: inline-block; margin-top: 10px; font-size: 0.85rem; font-weight: 600; color: var(--accent-color); text-decoration: none;">View Page ➔</a>
+        <a href="<?php echo Str::escape($res['url'] ?? ''); ?>" style="display: inline-block; margin-top: 10px; font-size: 0.85rem; font-weight: 600; color: var(--accent-color); text-decoration: none;">View Page ➔</a>
       </div>
     <?php endforeach; ?>
   </div>

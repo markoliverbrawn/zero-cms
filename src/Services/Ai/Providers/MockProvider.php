@@ -4,6 +4,7 @@ namespace Zero\Services\Ai\Providers;
 
 use Zero\Interfaces\AiProvider;
 use Exception;
+use Zero\Support\Str;
 
 class MockProvider implements AiProvider
 {
@@ -36,7 +37,7 @@ class MockProvider implements AiProvider
         if (isset($options['should_fail']) && $options['should_fail']) {
             throw new Exception("Simulated AI Image Provider Failure.");
         }
-        $svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#0b0f19"/><text x="10" y="50" fill="#00f0ff">Mock Image: ' . htmlspecialchars($prompt) . '</text></svg>';
+        $svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#0b0f19"/><text x="10" y="50" fill="#00f0ff">Mock Image: ' . Str::escape($prompt) . '</text></svg>';
         return base64_encode($svg);
     }
 }

@@ -1,4 +1,5 @@
 <?php
+use Zero\Support\Str;
 // src/Modules/Admin/Views/fields/favicon.php
 
 $siteDomain = $record->domain ?? '';
@@ -21,4 +22,4 @@ if (empty($faviconUrl)) {
     $faviconUrl = '/assets/favicons/corporate.svg'; // Safe fallback
 }
 ?>
-<img src="<?php echo htmlspecialchars($faviconUrl); ?>" alt="Favicon" class="admin-favicon-preview" />
+<img src="<?php echo Str::escape($faviconUrl); ?>" alt="Favicon" class="admin-favicon-preview" />

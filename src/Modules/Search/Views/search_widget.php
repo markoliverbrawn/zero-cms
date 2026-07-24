@@ -5,6 +5,7 @@ use Zero\Core\App;
 use Zero\Core\Env;
 use Zero\Database\DB;
 use Zero\Support\I18n;
+use Zero\Support\Str;
 
 $renderWidgetKey = $renderWidgetKey ?? '';
 $activeSiteId = App::getCurrentSiteId();
@@ -43,7 +44,7 @@ if ($renderWidgetKey === 'site_search_summary' && in_array('site_search_summary'
 
         <div class="search-stat-card">
           <div class="search-stat-value" style="font-size: 1.15rem; font-family: inherit; line-height: 1.75rem; text-transform: uppercase;">
-            <?php echo htmlspecialchars($activeDriver); ?>
+            <?php echo Str::escape($activeDriver); ?>
           </div>
           <div class="search-stat-label">Active Driver</div>
         </div>

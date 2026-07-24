@@ -3,6 +3,7 @@
 // Highly polished, modern, and style-separated media item edit template.
 
 use Zero\Core\App;
+use Zero\Support\Str;
 
 $titleValue = $file['title'] ?? '';
 $filenameValue = $file['filename'] ?? '';
@@ -31,7 +32,7 @@ $createdAt = $file['created_at'] ?? '';
         <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
         <polyline points="22 4 12 14.01 9 11.01"></polyline>
       </svg>
-      <span><?php echo htmlspecialchars($_SESSION['success'], ENT_QUOTES, 'UTF-8'); unset($_SESSION['success']); ?></span>
+      <span><?php echo Str::escape($_SESSION['success']); unset($_SESSION['success']); ?></span>
     </div>
   <?php endif; ?>
   
@@ -42,7 +43,7 @@ $createdAt = $file['created_at'] ?? '';
         <line x1="12" y1="8" x2="12" y2="12"></line>
         <line x1="12" y1="16" x2="12.01" y2="16"></line>
       </svg>
-      <span><?php echo htmlspecialchars($_SESSION['error'], ENT_QUOTES, 'UTF-8'); unset($_SESSION['error']); ?></span>
+      <span><?php echo Str::escape($_SESSION['error']); unset($_SESSION['error']); ?></span>
     </div>
   <?php endif; ?>
 
@@ -53,11 +54,11 @@ $createdAt = $file['created_at'] ?? '';
         <h3>Asset Settings</h3>
       </div>
       <form method="post" enctype="multipart/form-data" class="modern-form">
-        <input type="hidden" name="csrf" value="<?php echo htmlspecialchars($csrf, ENT_QUOTES, 'UTF-8'); ?>">
+        <input type="hidden" name="csrf" value="<?php echo Str::escape($csrf); ?>">
         
         <div class="form-group">
           <label for="title-input">Asset Title</label>
-          <input type="text" name="title" id="title-input" value="<?php echo htmlspecialchars($titleValue, ENT_QUOTES, 'UTF-8'); ?>" placeholder="Enter a descriptive title for this file..." required>
+          <input type="text" name="title" id="title-input" value="<?php echo Str::escape($titleValue); ?>" placeholder="Enter a descriptive title for this file..." required>
           <span class="help-text">Used for accessibility alternative descriptions and back-office search indexing.</span>
         </div>
 
@@ -65,12 +66,12 @@ $createdAt = $file['created_at'] ?? '';
           <div class="form-group-row">
             <div class="form-group half">
               <label for="focus-x-input">Crop Focus X (%)</label>
-              <input type="number" name="focus_x" id="focus-x-input" min="0" max="100" value="<?php echo htmlspecialchars($file['focus_x'] ?? 50, ENT_QUOTES, 'UTF-8'); ?>" required>
+              <input type="number" name="focus_x" id="focus-x-input" min="0" max="100" value="<?php echo Str::escape($file['focus_x'] ?? 50); ?>" required>
               <span class="help-text">Side-to-side alignment focusing.</span>
             </div>
             <div class="form-group half">
               <label for="focus-y-input">Crop Focus Y (%)</label>
-              <input type="number" name="focus_y" id="focus-y-input" min="0" max="100" value="<?php echo htmlspecialchars($file['focus_y'] ?? 50, ENT_QUOTES, 'UTF-8'); ?>" required>
+              <input type="number" name="focus_y" id="focus-y-input" min="0" max="100" value="<?php echo Str::escape($file['focus_y'] ?? 50); ?>" required>
               <span class="help-text">Top-to-bottom alignment focusing.</span>
             </div>
           </div>
@@ -79,18 +80,18 @@ $createdAt = $file['created_at'] ?? '';
         <div class="form-group-row">
           <div class="form-group half">
             <label>Filename (Read-Only)</label>
-            <div class="readonly-field"><?php echo htmlspecialchars($filenameValue, ENT_QUOTES, 'UTF-8'); ?></div>
+            <div class="readonly-field"><?php echo Str::escape($filenameValue); ?></div>
           </div>
           <div class="form-group half">
             <label>MIME Format (Read-Only)</label>
-            <div class="readonly-field"><?php echo htmlspecialchars($mimeValue, ENT_QUOTES, 'UTF-8'); ?></div>
+            <div class="readonly-field"><?php echo Str::escape($mimeValue); ?></div>
           </div>
         </div>
 
         <div class="form-group">
           <label>Public Web Accessible Link</label>
           <div class="copy-input-wrapper">
-            <input type="text" id="public-url-input" class="readonly-field-input" value="<?php echo htmlspecialchars($pathValue, ENT_QUOTES, 'UTF-8'); ?>" readonly>
+            <input type="text" id="public-url-input" class="readonly-field-input" value="<?php echo Str::escape($pathValue); ?>" readonly>
             <button type="button" id="copy-link-btn" class="btn-copy">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px; margin-right: 6px;">
                 <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
@@ -139,7 +140,7 @@ $createdAt = $file['created_at'] ?? '';
           <?php if (str_starts_with($mimeValue, 'image/')): ?>
             <div class="checkered-background">
               <div class="focal-container" id="focal-container">
-                <img src="<?php echo htmlspecialchars($pathValue, ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars($titleValue ?: $filenameValue, ENT_QUOTES, 'UTF-8'); ?>" class="preview-media-image" id="preview-image">
+                <img src="<?php echo Str::escape($pathValue); ?>" alt="<?php echo Str::escape($titleValue ?: $filenameValue); ?>" class="preview-media-image" id="preview-image">
                 <div class="focal-overlay" id="focal-overlay">
                   <div class="focal-square" id="focal-square">
                     <div class="focal-crosshair"></div>
@@ -152,8 +153,8 @@ $createdAt = $file['created_at'] ?? '';
               <span class="icon-svg-wrapper">
                 <?php echo App::svg('file'); ?>
               </span>
-              <span class="doc-extension-badge"><?php echo htmlspecialchars(strtoupper(pathinfo($filenameValue, PATHINFO_EXTENSION)), ENT_QUOTES, 'UTF-8'); ?></span>
-              <span class="doc-mime-label"><?php echo htmlspecialchars($mimeValue, ENT_QUOTES, 'UTF-8'); ?></span>
+              <span class="doc-extension-badge"><?php echo Str::escape(strtoupper(pathinfo($filenameValue, PATHINFO_EXTENSION))); ?></span>
+              <span class="doc-mime-label"><?php echo Str::escape($mimeValue); ?></span>
             </div>
           <?php endif; ?>
         </div>
@@ -161,15 +162,15 @@ $createdAt = $file['created_at'] ?? '';
         <div class="metadata-details-list">
           <div class="meta-row">
             <span class="meta-label">Unique Record ID (UUID)</span>
-            <span class="meta-val monospace-val"><?php echo htmlspecialchars($idValue, ENT_QUOTES, 'UTF-8'); ?></span>
+            <span class="meta-val monospace-val"><?php echo Str::escape($idValue); ?></span>
           </div>
           <div class="meta-row">
             <span class="meta-label">Uploaded / Created</span>
-            <span class="meta-val"><?php echo htmlspecialchars($createdAt, ENT_QUOTES, 'UTF-8'); ?></span>
+            <span class="meta-val"><?php echo Str::escape($createdAt); ?></span>
           </div>
           <div class="meta-row">
             <span class="meta-label">Parent Folder Location</span>
-            <span class="meta-val">/uploads/<?php echo !empty($folderValue) ? htmlspecialchars($folderValue, ENT_QUOTES, 'UTF-8') : 'Root'; ?></span>
+            <span class="meta-val">/uploads/<?php echo !empty($folderValue) ? Str::escape($folderValue) : 'Root'; ?></span>
           </div>
         </div>
       </div>

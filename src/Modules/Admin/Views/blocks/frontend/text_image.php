@@ -2,6 +2,7 @@
 // src/Modules/Admin/Views/blocks/frontend/text_image.php
 
 use Zero\Support\Security;
+use Zero\Support\Str;
 
 $imagePos = $block['image_position'] ?? 'right';
 $mediaId = $block['media_id'] ?? '';
@@ -14,7 +15,7 @@ $mediaId = $block['media_id'] ?? '';
   </div>
   <div class="block-image-col">
     <?php if (!empty($mediaId)): ?>
-      <img src="<?php echo htmlspecialchars($resolveMedia($mediaId), ENT_QUOTES, "UTF-8"); ?>?v=1.2" alt="<?php echo htmlspecialchars($block['title'] ?? '', ENT_QUOTES, "UTF-8"); ?>" />
+      <img src="<?php echo Str::escape($resolveMedia($mediaId)); ?>?v=1.2" alt="<?php echo Str::escape($block['title'] ?? ''); ?>" />
     <?php endif; ?>
   </div>
 </div>

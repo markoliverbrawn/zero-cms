@@ -4,6 +4,7 @@
 
 use Zero\Modules\Blog\Models\Comment;
 use Zero\Support\I18n;
+use Zero\Support\Str;
 
 $comments = Comment::getForPost($post->id);
 ?>
@@ -19,11 +20,11 @@ $comments = Comment::getForPost($post->id);
       <?php foreach ($comments as $comment): ?>
         <div class="comment-card" style="background-color: var(--card-bg, #141722); border: 1px solid var(--border-color, #222636); border-radius: 8px; padding: 1.5rem; box-shadow: 0 2px 10px rgba(0,0,0,0.15);">
           <div class="comment-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
-            <strong class="comment-author" style="color: var(--neon-cyan, #06b6d4); font-size: 1rem;"><?php echo htmlspecialchars($comment->author_name, ENT_QUOTES, 'UTF-8'); ?></strong>
-            <span class="comment-date" style="color: var(--text-muted, #94a3b8); font-size: 0.82rem; font-family: var(--font-mono, monospace);"><?php echo htmlspecialchars(I18n::localizeDateTime($comment->created_at, 'F d, Y \a\t g:i A'), ENT_QUOTES, 'UTF-8'); ?></span>
+            <strong class="comment-author" style="color: var(--neon-cyan, #06b6d4); font-size: 1rem;"><?php echo Str::escape($comment->author_name); ?></strong>
+            <span class="comment-date" style="color: var(--text-muted, #94a3b8); font-size: 0.82rem; font-family: var(--font-mono, monospace);"><?php echo Str::escape(I18n::localizeDateTime($comment->created_at, 'F d, Y \a\t g:i A')); ?></span>
           </div>
           <div class="comment-body" style="color: var(--text-color, #f8fafc); line-height: 1.6; font-size: 0.95rem;">
-            <?php echo nl2br(htmlspecialchars($comment->content, ENT_QUOTES, 'UTF-8')); ?>
+            <?php echo nl2br(Str::escape($comment->content)); ?>
           </div>
         </div>
       <?php endforeach; ?>
@@ -39,7 +40,7 @@ $comments = Comment::getForPost($post->id);
       <h4 style="font-size: 1.25rem; margin-bottom: 1.5rem; letter-spacing: -0.01em;">Leave a Comment</h4>
       
       <form class="ajax-comment-form" style="display: flex; flex-direction: column; gap: 1.25rem;">
-        <input type="hidden" name="post_id" value="<?php echo htmlspecialchars($post->id, ENT_QUOTES, 'UTF-8'); ?>">
+        <input type="hidden" name="post_id" value="<?php echo Str::escape($post->id); ?>">
         
         <!-- Hardened Honeypot Decoy Field (styled with .website-field-wrapper in form_builder.css) -->
         <div class="form-group website-field-wrapper">

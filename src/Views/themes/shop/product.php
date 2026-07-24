@@ -2,6 +2,7 @@
 // src/Views/themes/shop/product.php
 
 use Zero\Support\Security;
+use Zero\Support\Str;
 ?>
 <div class="product-detail-layout">
     
@@ -9,19 +10,19 @@ use Zero\Support\Security;
     <div>
         <!-- Main Image -->
         <div class="main-img-box">
-            <img id="main-product-img" src="<?php echo htmlspecialchars($product->main_image); ?>?v=1.2" class="main-img">
+            <img id="main-product-img" src="<?php echo Str::escape($product->main_image); ?>?v=1.2" class="main-img">
         </div>
 
         <!-- Thumbnails Gallery -->
         <?php if (!empty($gallery)): ?>
             <div class="thumb-gallery">
                 <!-- Main image thumbnail -->
-                <div class="thumb-box active" data-src="<?php echo htmlspecialchars($product->main_image); ?>?v=1.2">
-                    <img src="<?php echo htmlspecialchars($product->main_image); ?>?v=1.2" class="thumb-img">
+                <div class="thumb-box active" data-src="<?php echo Str::escape($product->main_image); ?>?v=1.2">
+                    <img src="<?php echo Str::escape($product->main_image); ?>?v=1.2" class="thumb-img">
                 </div>
                 <?php foreach ($gallery as $img): ?>
-                    <div class="thumb-box" data-src="<?php echo htmlspecialchars($img['path']); ?>?v=1.2">
-                        <img src="<?php echo htmlspecialchars($img['path']); ?>?v=1.2" class="thumb-img">
+                    <div class="thumb-box" data-src="<?php echo Str::escape($img['path']); ?>?v=1.2">
+                        <img src="<?php echo Str::escape($img['path']); ?>?v=1.2" class="thumb-img">
                     </div>
                 <?php endforeach; ?>
             </div>
@@ -31,7 +32,7 @@ use Zero\Support\Security;
     <!-- Product Details Information Column -->
     <div class="prod-detail-info">
         <span class="prod-studio-tag">Premium Studio Line</span>
-        <h2 class="prod-detail-title"><?php echo htmlspecialchars($product->title); ?></h2>
+        <h2 class="prod-detail-title"><?php echo Str::escape($product->title); ?></h2>
         
         <!-- Interactive Price Indicator -->
         <div class="prod-price-box">
@@ -47,9 +48,9 @@ use Zero\Support\Security;
 
         <!-- Add to Cart Form -->
         <form id="add-to-cart-form" method="post" action="/shop/cart">
-            <input type="hidden" name="csrf" value="<?php echo htmlspecialchars($csrf ?? '', ENT_QUOTES, 'UTF-8'); ?>">
+            <input type="hidden" name="csrf" value="<?php echo Str::escape($csrf ?? ''); ?>">
             <input type="hidden" name="action" value="add">
-            <input type="hidden" name="product_id" value="<?php echo htmlspecialchars($product->id); ?>">
+            <input type="hidden" name="product_id" value="<?php echo Str::escape($product->id); ?>">
             
             <!-- Variants selection -->
             <?php if (!empty($variants)): ?>
@@ -58,9 +59,9 @@ use Zero\Support\Security;
                     <div class="variant-chips-box">
                         <?php foreach ($variants as $idx => $v): ?>
                             <label class="variant-chip-label" style="cursor: pointer;">
-                                <input type="radio" name="variant_id" value="<?php echo htmlspecialchars($v->id); ?>" <?php echo $idx === 0 ? 'checked' : ''; ?> class="variant-chip-radio">
-                                <span class="variant-chip <?php echo $idx === 0 ? 'selected' : ''; ?>" data-variant-price="<?php echo $v->price; ?>" data-variant-sku="<?php echo htmlspecialchars($v->sku); ?>" data-variant-stock="<?php echo $v->stock; ?>">
-                                    <?php echo htmlspecialchars($v->title); ?>
+                                <input type="radio" name="variant_id" value="<?php echo Str::escape($v->id); ?>" <?php echo $idx === 0 ? 'checked' : ''; ?> class="variant-chip-radio">
+                                <span class="variant-chip <?php echo $idx === 0 ? 'selected' : ''; ?>" data-variant-price="<?php echo $v->price; ?>" data-variant-sku="<?php echo Str::escape($v->sku); ?>" data-variant-stock="<?php echo $v->stock; ?>">
+                                    <?php echo Str::escape($v->title); ?>
                                 </span>
                             </label>
                         <?php endforeach; ?>
@@ -72,7 +73,7 @@ use Zero\Support\Security;
             <div class="prod-meta-box">
                 <div class="prod-meta-row">
                     <span>SKU Product Variant:</span>
-                    <span id="meta-variant-sku" class="prod-meta-val"><?php echo htmlspecialchars($variants ? $variants[0]->sku : $product->sku); ?></span>
+                    <span id="meta-variant-sku" class="prod-meta-val"><?php echo Str::escape($variants ? $variants[0]->sku : $product->sku); ?></span>
                 </div>
                 <div class="prod-meta-row">
                     <span>Inventory Status:</span>

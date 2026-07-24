@@ -4,6 +4,7 @@
 use Zero\Core\App;
 use Zero\Database\DB;
 use Zero\Support\I18n;
+use Zero\Support\Str;
 
 // Fetch dynamic pages, blog posts, and shop categories for the Kitchen Sink widgets
 $siteId = App::getCurrentSiteId();
@@ -31,11 +32,11 @@ $sidebarCategories = DB::query("SELECT title, slug FROM shop_categories WHERE si
         $metaDescription = substr($metaDescription, 0, 157) . '...';
     }
     ?>
-    <meta name="description" content="<?php echo htmlspecialchars($metaDescription, ENT_QUOTES, 'UTF-8'); ?>"/>
+    <meta name="description" content="<?php echo Str::escape($metaDescription); ?>"/>
     <title>Zero CMS — Kitchen Sink Showroom</title>
     <link rel="icon" type="image/svg+xml" href="/assets/favicons/kitchensink.svg">
     <link rel="stylesheet" href="/assets/css/main-kitchensink.css?v=1.0">
-    <meta name="csrf-token" content="<?php echo htmlspecialchars($csrf ?? '', ENT_QUOTES, "UTF-8"); ?>">
+    <meta name="csrf-token" content="<?php echo Str::escape($csrf ?? ''); ?>">
 </head>
 <body>
 
@@ -87,12 +88,12 @@ $sidebarCategories = DB::query("SELECT title, slug FROM shop_categories WHERE si
                     <ul>
                         <?php foreach ($sidebarPages as $page): ?>
                             <li>
-                                <a href="/<?php echo htmlspecialchars($page['slug'], ENT_QUOTES, 'UTF-8'); ?>">
+                                <a href="/<?php echo Str::escape($page['slug']); ?>">
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--neon-cyan);">
                                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                                         <polyline points="14 2 14 8 20 8"></polyline>
                                     </svg>
-                                    <?php echo htmlspecialchars($page['title'], ENT_QUOTES, 'UTF-8'); ?>
+                                    <?php echo Str::escape($page['title']); ?>
                                 </a>
                             </li>
                         <?php endforeach; ?>
@@ -107,12 +108,12 @@ $sidebarCategories = DB::query("SELECT title, slug FROM shop_categories WHERE si
                     <ul>
                         <?php foreach ($sidebarCategories as $cat): ?>
                             <li>
-                                <a href="/shop/catalog?category=<?php echo htmlspecialchars($cat['slug'], ENT_QUOTES, 'UTF-8'); ?>">
+                                <a href="/shop/catalog?category=<?php echo Str::escape($cat['slug']); ?>">
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--neon-pink);">
                                         <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
                                         <line x1="7" y1="7" x2="7.01" y2="7"></line>
                                     </svg>
-                                    <?php echo htmlspecialchars($cat['title'], ENT_QUOTES, 'UTF-8'); ?>
+                                    <?php echo Str::escape($cat['title']); ?>
                                 </a>
                             </li>
                         <?php endforeach; ?>
@@ -127,12 +128,12 @@ $sidebarCategories = DB::query("SELECT title, slug FROM shop_categories WHERE si
                     <ul>
                         <?php foreach ($sidebarPosts as $post): ?>
                             <li>
-                                <a href="/post/<?php echo htmlspecialchars($post['slug'], ENT_QUOTES, 'UTF-8'); ?>">
+                                <a href="/post/<?php echo Str::escape($post['slug']); ?>">
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--accent-color);">
                                         <path d="M12 20h9"></path>
                                         <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
                                     </svg>
-                                    <?php echo htmlspecialchars($post['title'], ENT_QUOTES, 'UTF-8'); ?>
+                                    <?php echo Str::escape($post['title']); ?>
                                 </a>
                             </li>
                         <?php endforeach; ?>

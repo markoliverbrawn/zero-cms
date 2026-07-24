@@ -1,4 +1,5 @@
 <?php
+use Zero\Support\Str;
 // src/Modules/Admin/Views/blocks/admin/baseline.php
 $mediaId = $block['media_id'] ?? '';
 $fullWidth = !empty($block['full_width']) && $block['full_width'] === '1';
@@ -34,7 +35,7 @@ $fullWidth = !empty($block['full_width']) && $block['full_width'] === '1';
     <div class="field-group block-flex-col-1-5">
         <label>Background Hero Image</label>
         <div class="block-flex-align-center">
-            <input type="text" class="block-media_id-input flex-1" value="<?php echo htmlspecialchars($mediaId, ENT_QUOTES, 'UTF-8'); ?>" placeholder="No background image selected" readonly>
+            <input type="text" class="block-media_id-input flex-1" value="<?php echo Str::escape($mediaId); ?>" placeholder="No background image selected" readonly>
             <button type="button" class="btn-select-block-image width-auto">Select Image</button>
         </div>
     </div>

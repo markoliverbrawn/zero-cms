@@ -78,10 +78,10 @@ class App
                                     <span>QUERY #<?php echo $idx + 1; ?></span>
                                     <span style="color: #00ffcc; font-weight: bold;"><?php echo number_format($q['duration'] * 1000, 2); ?>ms</span>
                                 </div>
-                                <div style="color: #ffffff; white-space: pre-wrap; word-break: break-all; margin-bottom: 6px; line-height: 1.4; background: #151d30; padding: 6px; border-radius: 4px; border: 1px solid #1e293b; font-family: monospace; font-size: 0.72rem;"><?php echo htmlspecialchars($q['sql']); ?></div>
+                                <div style="color: #ffffff; white-space: pre-wrap; word-break: break-all; margin-bottom: 6px; line-height: 1.4; background: #151d30; padding: 6px; border-radius: 4px; border: 1px solid #1e293b; font-family: monospace; font-size: 0.72rem;"><?php echo Str::escape($q['sql']); ?></div>
                                 <?php if (!empty($q['params'])): ?>
                                     <div style="color: #94a3b8; font-size: 0.68rem; word-break: break-all; background: #0d121f; padding: 4px; border-radius: 2px;">
-                                        <strong style="color: #ff0055;">BINDS:</strong> <?php echo htmlspecialchars(json_encode($q['params'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)); ?>
+                                        <strong style="color: #ff0055;">BINDS:</strong> <?php echo Str::escape(json_encode($q['params'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)); ?>
                                     </div>
                                 <?php endif; ?>
                             </div>
@@ -858,7 +858,7 @@ class App
         }
 
         // If .php file not found, directly return "View not found".
-        echo "View not found: " . htmlspecialchars($view);
+        echo "View not found: " . Str::escape($view);
         return;
     }
 
@@ -921,17 +921,17 @@ class App
             ?>
             <nav class="unified-pagination-wrapper">
                 <?php if ($currentPage > 1): ?>
-                    <a href="<?php echo htmlspecialchars($buildUrl($currentPage - 1)); ?>" class="pagination-btn page-nav-prev">Prev</a>
+                    <a href="<?php echo Str::escape($buildUrl($currentPage - 1)); ?>" class="pagination-btn page-nav-prev">Prev</a>
                 <?php endif; ?>
                 <?php for ($i = $startPage; $i <= $endPage; $i++): ?>
                     <?php if ($i === $currentPage): ?>
                         <span class="pagination-btn active"><?php echo $i; ?></span>
                     <?php else: ?>
-                        <a href="<?php echo htmlspecialchars($buildUrl($i)); ?>" class="pagination-btn"><?php echo $i; ?></a>
+                        <a href="<?php echo Str::escape($buildUrl($i)); ?>" class="pagination-btn"><?php echo $i; ?></a>
                     <?php endif; ?>
                 <?php endfor; ?>
                 <?php if ($currentPage < $totalPages): ?>
-                    <a href="<?php echo htmlspecialchars($buildUrl($currentPage + 1)); ?>" class="pagination-btn page-nav-next">Next</a>
+                    <a href="<?php echo Str::escape($buildUrl($currentPage + 1)); ?>" class="pagination-btn page-nav-next">Next</a>
                 <?php endif; ?>
             </nav>
             <?php

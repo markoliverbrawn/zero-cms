@@ -3,6 +3,7 @@
 
 use Zero\Core\App;
 use Zero\Support\Security;
+use Zero\Support\Str;
 
 $hasHeroBlock = false;
 if (!empty($post->content)) {
@@ -22,7 +23,7 @@ $shouldOmitTitle = !empty($post->omit_title) || $hasHeroBlock;
   <!-- Blog Parent Page Title & Body -->
   <?php if (!$shouldOmitTitle): ?>
     <h1 style="margin-top: 0; margin-bottom: 10px; font-size: 2.2rem; font-weight: 800; line-height: 1.2; color: #0f172a; letter-spacing: -0.02em;">
-      <?php echo htmlspecialchars($post->title ?? '', ENT_QUOTES, "UTF-8"); ?>
+      <?php echo Str::escape($post->title ?? ''); ?>
     </h1>
   <?php endif; ?>
   
@@ -59,17 +60,17 @@ $shouldOmitTitle = !empty($post->omit_title) || $hasHeroBlock;
   <?php if (!empty($posts)): ?>
     <div style="display: flex; flex-direction: column; gap: 25px;">
       <?php foreach ($posts as $p): ?>
-        <div class="blog-card" style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 25px; background: #ffffff; box-shadow: 0 4px 6px rgba(0,0,0,0.01); display: flex; flex-direction: row; gap: 25px; transition: transform 0.15s ease, border-color 0.15s ease; cursor: pointer;" onclick="window.location.href='/post/<?php echo htmlspecialchars($p->slug, ENT_QUOTES, 'UTF-8'); ?>'">
+        <div class="blog-card" style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 25px; background: #ffffff; box-shadow: 0 4px 6px rgba(0,0,0,0.01); display: flex; flex-direction: row; gap: 25px; transition: transform 0.15s ease, border-color 0.15s ease; cursor: pointer;" onclick="window.location.href='/post/<?php echo Str::escape($p->slug); ?>'">
           <?php if (!empty($p->featured_image)): ?>
             <div style="width: 150px; height: 150px; flex-shrink: 0; border-radius: 6px; overflow: hidden; background-color: #f1f5f9; display: flex; align-items: center; justify-content: center; border: 1px solid #e2e8f0;">
-              <img src="<?php echo htmlspecialchars($p->featured_image); ?>" alt="" style="width: 100%; height: 100%; object-fit: cover;" />
+              <img src="<?php echo Str::escape($p->featured_image); ?>" alt="" style="width: 100%; height: 100%; object-fit: cover;" />
             </div>
           <?php endif; ?>
           <div style="display: flex; flex-direction: column; justify-content: space-between; flex-grow: 1;">
             <div>
               <h3 style="margin-top: 0; margin-bottom: 8px; font-size: 1.25rem; font-weight: 800;">
-                <a href="/post/<?php echo htmlspecialchars($p->slug, ENT_QUOTES, 'UTF-8'); ?>" style="color: #2563eb; text-decoration: none;">
-                  <?php echo htmlspecialchars($p->title, ENT_QUOTES, 'UTF-8'); ?>
+                <a href="/post/<?php echo Str::escape($p->slug); ?>" style="color: #2563eb; text-decoration: none;">
+                  <?php echo Str::escape($p->title); ?>
                 </a>
               </h3>
               <div style="font-size: 0.8rem; color: #64748b; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; font-weight: 500;">
@@ -82,10 +83,10 @@ $shouldOmitTitle = !empty($post->omit_title) || $hasHeroBlock;
                 <span style="vertical-align: middle; margin-left: 2px;"><?php echo date('F j, Y', strtotime($p->created_at)); ?></span>
               </div>
               <p style="margin: 0; font-size: 0.95rem; color: #334155; line-height: 1.6; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
-                <?php echo htmlspecialchars($p->summary ?? '', ENT_QUOTES, 'UTF-8'); ?>
+                <?php echo Str::escape($p->summary ?? ''); ?>
               </p>
             </div>
-            <a href="/post/<?php echo htmlspecialchars($p->slug, ENT_QUOTES, 'UTF-8'); ?>" style="display: inline-block; margin-top: 15px; font-size: 0.9rem; font-weight: bold; color: #2563eb; text-decoration: none;">Read Publication ➔</a>
+            <a href="/post/<?php echo Str::escape($p->slug); ?>" style="display: inline-block; margin-top: 15px; font-size: 0.9rem; font-weight: bold; color: #2563eb; text-decoration: none;">Read Publication ➔</a>
           </div>
         </div>
       <?php endforeach; ?>

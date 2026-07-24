@@ -5,6 +5,7 @@
 use Zero\Core\App;
 use Zero\Database\DB;
 use Zero\Support\Security;
+use Zero\Support\Str;
 
 $siteId = App::getCurrentSiteId();
 
@@ -54,14 +55,14 @@ $showSearch = count($subPages) > 6;
       <div class="sub-pages-grid">
         <?php foreach ($subPages as $sp): ?>
           <?php
-          $preview = htmlspecialchars($sp['summary'] ?? '', ENT_QUOTES, 'UTF-8');
+          $preview = Str::escape($sp['summary'] ?? '');
           if (empty($preview)) {
               $preview = 'Explore our detailed guidelines, developer tutorials, and native code samples...';
           }
           ?>
-          <a class="sub-pages-card" href="/<?php echo htmlspecialchars($sp['slug'], ENT_QUOTES, 'UTF-8'); ?>">
+          <a class="sub-pages-card" href="/<?php echo Str::escape($sp['slug']); ?>">
             <h3 class="sub-pages-card-title">
-              <?php echo htmlspecialchars($sp['title'], ENT_QUOTES, 'UTF-8'); ?>
+              <?php echo Str::escape($sp['title']); ?>
             </h3>
             <p class="sub-pages-card-excerpt"><?php echo $preview; ?></p>
             <div class="sub-pages-card-btn-container">

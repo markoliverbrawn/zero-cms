@@ -3,6 +3,7 @@
 // Renders the Luxe Cyber Shop featured products landing page.
 
 use Zero\Core\App;
+use Zero\Support\Str;
 ?>
 <div class="shop-home-container">
   <h2 style="font-size: 2.2rem; margin-bottom: 1.5rem; background: linear-gradient(90deg, var(--neon-cyan), var(--neon-pink)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Luxe Cyber Shop</h2>
@@ -20,16 +21,16 @@ use Zero\Core\App;
       <?php foreach ($featuredProducts as $prod): ?>
         <div class="product-card">
           <div class="product-image-box">
-            <img src="<?php echo htmlspecialchars($prod->main_image ?? '/assets/svgs/image.svg', ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars($prod->title); ?>" />
+            <img src="<?php echo Str::escape($prod->main_image ?? '/assets/svgs/image.svg'); ?>" alt="<?php echo Str::escape($prod->title); ?>" />
             <span class="product-badge">New</span>
           </div>
           <div class="product-info">
             <h4>
-              <a href="/shop/product/<?php echo htmlspecialchars($prod->slug, ENT_QUOTES, 'UTF-8'); ?>">
-                <?php echo htmlspecialchars($prod->title, ENT_QUOTES, 'UTF-8'); ?>
+              <a href="/shop/product/<?php echo Str::escape($prod->slug); ?>">
+                <?php echo Str::escape($prod->title); ?>
               </a>
             </h4>
-            <div class="product-sku">SKU: <?php echo htmlspecialchars($prod->sku ?? 'N/A'); ?></div>
+            <div class="product-sku">SKU: <?php echo Str::escape($prod->sku ?? 'N/A'); ?></div>
             <div class="product-pricing">
               <span class="price-value">$<?php echo number_format($prod->price, 2); ?></span>
               <?php if ($prod->compare_at_price > 0): ?>

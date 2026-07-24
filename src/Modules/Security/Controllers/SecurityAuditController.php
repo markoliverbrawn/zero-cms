@@ -8,6 +8,7 @@ use Zero\Core\Env;
 use Zero\Database\DB;
 use Zero\Interfaces\Controller;
 use Zero\Modules\Security\Models\SecurityAudit;
+use Zero\Support\Str;
 
 class SecurityAuditController implements Controller
 {
@@ -191,7 +192,7 @@ class SecurityAuditController implements Controller
         }
 
         if ($telemetry['default_admin_password_in_use']) {
-            $usernamesList = implode(', ', array_map(fn($u) => "`" . htmlspecialchars($u, ENT_QUOTES, 'UTF-8') . "`", $telemetry['default_password_usernames'] ?? []));
+            $usernamesList = implode(', ', array_map(fn($u) => "`" . Str::escape($u) . "`", $telemetry['default_password_usernames'] ?? []));
             if ($isDev) {
                 $warningsCount++;
                 $vulnerabilitiesSection .= "### [LOW] Severity: Default Password Active on Account(s): {$usernamesList} (Sandbox De-escalated)

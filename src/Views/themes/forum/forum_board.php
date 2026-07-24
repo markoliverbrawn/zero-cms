@@ -8,14 +8,15 @@
 
     <div class="forum-header-bar" style="margin-bottom: 1rem; border-bottom: none;">
         <div>
-            <h1 style="font-size: 2rem;"><?php echo htmlspecialchars($board->title, ENT_QUOTES, 'UTF-8'); ?></h1>
+            <h1 style="font-size: 2rem;"><?php
+use Zero\Support\Str; echo Str::escape($board->title); ?></h1>
             <p style="margin: 5px 0 0 0; color: var(--text-muted, #6c757d); font-size: 1rem;">
-                <?php echo htmlspecialchars($board->description ?? '', ENT_QUOTES, 'UTF-8'); ?>
+                <?php echo Str::escape($board->description ?? ''); ?>
             </p>
         </div>
         <div>
             <?php if (!empty($user)): ?>
-                <button class="form-box" onclick="window.location.href='/forum/board/<?php echo htmlspecialchars($board->slug, ENT_QUOTES, 'UTF-8'); ?>/create'" style="padding: 10px 18px; background-color: var(--accent-color, #0056b3); border: none; border-radius: 6px; color: #ffffff; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: background-color 0.2s ease;">
+                <button class="form-box" onclick="window.location.href='/forum/board/<?php echo Str::escape($board->slug); ?>/create'" style="padding: 10px 18px; background-color: var(--accent-color, #0056b3); border: none; border-radius: 6px; color: #ffffff; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: background-color 0.2s ease;">
                     + New Thread
                 </button>
             <?php else: ?>
@@ -47,13 +48,13 @@
                                     <?php elseif ($thread->status === 'locked'): ?>
                                         <span class="thread-status-badge badge-locked">Locked</span>
                                     <?php endif; ?>
-                                    <a href="/forum/thread/<?php echo htmlspecialchars($thread->slug, ENT_QUOTES, 'UTF-8'); ?>" style="font-weight: 700; font-size: 1.05rem;">
-                                        <?php echo htmlspecialchars($thread->title, ENT_QUOTES, 'UTF-8'); ?>
+                                    <a href="/forum/thread/<?php echo Str::escape($thread->slug); ?>" style="font-weight: 700; font-size: 1.05rem;">
+                                        <?php echo Str::escape($thread->title); ?>
                                     </a>
                                 </div>
                                 <div class="meta-text" style="margin-top: 4px;">
                                     Started by <strong>
-                                        <?php echo htmlspecialchars($thread->getAuthorUsername(), ENT_QUOTES, 'UTF-8'); ?>
+                                        <?php echo Str::escape($thread->getAuthorUsername()); ?>
                                     </strong>
                                 </div>
                             </td>

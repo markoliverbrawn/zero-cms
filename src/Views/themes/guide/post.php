@@ -7,6 +7,7 @@ use Zero\Core\Template;
 use Zero\Database\DB;
 use Zero\Modules\Blog\Models\Post;
 use Zero\Support\BlockHelper;
+use Zero\Support\Str;
 
 $isBlogPost = $post instanceof Post;
 
@@ -27,7 +28,7 @@ $shouldOmitTitle = !empty($post->omit_title) || $hasHeroBlock;
 <div class="article-container">
   <?php if (!$shouldOmitTitle): ?>
     <h1 class="article-title">
-      <?php echo htmlspecialchars($post->title ?? '', ENT_QUOTES, "UTF-8"); ?>
+      <?php echo Str::escape($post->title ?? ''); ?>
     </h1>
   <?php endif; ?>
 
@@ -40,7 +41,7 @@ $shouldOmitTitle = !empty($post->omit_title) || $hasHeroBlock;
 
   <?php if (!empty($post->featured_image)): ?>
     <div class="featured-image-wrapper">
-      <img src="<?php echo htmlspecialchars($post->featured_image); ?>" alt="" />
+      <img src="<?php echo Str::escape($post->featured_image); ?>" alt="" />
     </div>
   <?php endif; ?>
 
@@ -91,7 +92,7 @@ $shouldOmitTitle = !empty($post->omit_title) || $hasHeroBlock;
             // If hide_title is not explicitly enabled, render the section title as a block-level H2
             $hideTitle = $block['hide_title'] ?? '0';
             if ($hideTitle !== '1' && !empty($block['title']) && $type !== 'baseline') {
-                echo '<h2 class="block-section-title">' . htmlspecialchars($block['title'], ENT_QUOTES, 'UTF-8') . '</h2>';
+                echo '<h2 class="block-section-title">' . Str::escape($block['title']) . '</h2>';
             }
 
             echo Template::renderFile($blockPath, [

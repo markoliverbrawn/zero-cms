@@ -4,6 +4,7 @@
 use Zero\Core\App;
 use Zero\Models\User;
 use Zero\Support\I18n;
+use Zero\Support\Str;
 
 ?>
 <div class="security-audit-container">
@@ -89,7 +90,7 @@ use Zero\Support\I18n;
                 $warnings[] = "<strong style='color: #f59e0b;'>[MEDIUM] Performance Benchmarking Active:</strong> Telemetries are outputting SQL details publicly on production. Set <code>BENCHMARKING=false</code> in <code>.env</code>.";
             }
             if ($telemetry['default_admin_password_in_use'] ?? false) {
-                $usernames = implode(', ', array_map(fn($u) => "<code>" . htmlspecialchars($u, ENT_QUOTES, 'UTF-8') . "</code>", $telemetry['default_password_usernames'] ?? []));
+                $usernames = implode(', ', array_map(fn($u) => "<code>" . Str::escape($u) . "</code>", $telemetry['default_password_usernames'] ?? []));
                 $warnings[] = "<strong style='color: #ef4444;'>[HIGH] Default Credentials Active:</strong> Account(s) {$usernames} still carry default credentials. Update them in <em>Manage Users</em>.";
             }
             if ($telemetry['storage_directory_open_access'] ?? false) {
@@ -139,7 +140,7 @@ use Zero\Support\I18n;
                     <?php foreach ($pastAudits as $audit): ?>
                         <tr>
                             <td data-label="Execution Time" style="font-weight: 600;">
-                                <?php echo htmlspecialchars(I18n::localizeDateTime($audit['created_at'], 'M d, Y H:i:s'), ENT_QUOTES, 'UTF-8'); ?>
+                                <?php echo Str::escape(I18n::localizeDateTime($audit['created_at'], 'M d, Y H:i:s')); ?>
                             </td>
                             <td data-label="Security Score" style="text-align: center; font-weight: 800;">
                                 <?php
@@ -151,11 +152,11 @@ use Zero\Support\I18n;
                                 <span style="color: <?php echo $color; ?>;"><?php echo $score; ?>/100</span>
                             </td>
                             <td data-label="Environment" style="text-align: center; text-transform: uppercase; font-family: monospace; font-size: 0.9rem;">
-                                <?php echo htmlspecialchars($audit['environment'], ENT_QUOTES, 'UTF-8'); ?>
+                                <?php echo Str::escape($audit['environment']); ?>
                             </td>
                             <td>
                                 <!-- Hidden textarea storing raw markdown for browser-side instant loading on click! -->
-                                <textarea id="markdown-archive-<?php echo $audit['id']; ?>" style="display: none;"><?php echo htmlspecialchars($audit['report'], ENT_QUOTES, 'UTF-8'); ?></textarea>
+                                <textarea id="markdown-archive-<?php echo $audit['id']; ?>" style="display: none;"><?php echo Str::escape($audit['report']); ?></textarea>
                                 
                                 <button type="button" class="btn-view-report" data-id="<?php echo $audit['id']; ?>" style="margin-right: 12px; cursor: pointer; background: none; border: none; color: var(--accent-color); font-weight: 500; padding: 0;">View Report</button>
                                 <a href="/admin/list/security_audits?delete=<?php echo $audit['id']; ?>" onclick="return confirm('Are you sure you want to permanently delete this archived audit report?');" style="color: #ef4444; font-weight: 500; text-decoration: none;">Delete</a>

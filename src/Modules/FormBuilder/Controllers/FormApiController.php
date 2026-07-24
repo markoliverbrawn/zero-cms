@@ -8,6 +8,7 @@ use Zero\Database\DB;
 use Zero\Support\Security;
 use Zero\Support\Emailer;
 use Zero\Interfaces\Controller;
+use Zero\Support\Str;
 
 class FormApiController implements Controller
 {
@@ -187,13 +188,13 @@ class FormApiController implements Controller
             $subject = "New Submission: " . $formTitle;
             $htmlBody = "
                 <h2>New Dynamic Form Submission</h2>
-                <p>A new form has been submitted on your site page: <strong>" . htmlspecialchars($sourcePageTitle, ENT_QUOTES, 'UTF-8') . "</strong>.</p>
+                <p>A new form has been submitted on your site page: <strong>" . Str::escape($sourcePageTitle) . "</strong>.</p>
                 <hr style='border: none; border-top: 1px solid #ddd; margin: 15px 0;'>
             ";
 
             foreach ($submissionDetails as $label => $val) {
                 if (strpos($label, '_meta_') === 0) continue; // skip metadata keys in email
-                $htmlBody .= "<p><strong>" . htmlspecialchars($label, ENT_QUOTES, 'UTF-8') . ":</strong> " . nl2br(htmlspecialchars($val, ENT_QUOTES, 'UTF-8')) . "</p>";
+                $htmlBody .= "<p><strong>" . Str::escape($label) . ":</strong> " . nl2br(Str::escape($val)) . "</p>";
             }
 
             Emailer::send($recipientEmail, $subject, $htmlBody);

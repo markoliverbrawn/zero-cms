@@ -1,4 +1,5 @@
 <?php
+use Zero\Support\Str;
 // src/Modules/Admin/Views/blocks/frontend/chart.php
 
 $title = $block['title'] ?? '';
@@ -20,7 +21,7 @@ foreach ($items as $item) {
 ?>
 <div class="block-chart-container">
     <?php if (!empty($title)): ?>
-        <h3 class="block-chart-title"><?php echo htmlspecialchars($title, ENT_QUOTES, 'UTF-8'); ?></h3>
+        <h3 class="block-chart-title"><?php echo Str::escape($title); ?></h3>
     <?php endif; ?>
 
     <!-- Beautiful Dashboard Window Header Toolbar -->
@@ -98,12 +99,12 @@ foreach ($items as $item) {
                             $words = explode(' ', $label);
                             foreach ($words as $wIndex => $word): 
                             ?>
-                                <tspan x="<?php echo $barX + ($barWidth / 2); ?>" dy="<?php echo $wIndex === 0 ? '0' : '15'; ?>"><?php echo htmlspecialchars($word, ENT_QUOTES, 'UTF-8'); ?></tspan>
+                                <tspan x="<?php echo $barX + ($barWidth / 2); ?>" dy="<?php echo $wIndex === 0 ? '0' : '15'; ?>"><?php echo Str::escape($word); ?></tspan>
                             <?php endforeach; ?>
                         </text>
                         
                         <!-- Numeric Value Display above column -->
-                        <text x="<?php echo $barX + ($barWidth / 2); ?>" y="<?php echo $barY - 8; ?>" class="chart-value-text" fill="<?php echo $textColor; ?>" text-anchor="middle"><?php echo htmlspecialchars($item['value'], ENT_QUOTES, 'UTF-8'); ?></text>
+                        <text x="<?php echo $barX + ($barWidth / 2); ?>" y="<?php echo $barY - 8; ?>" class="chart-value-text" fill="<?php echo $textColor; ?>" text-anchor="middle"><?php echo Str::escape($item['value']); ?></text>
                     </g>
                 <?php endforeach; ?>
                 
@@ -153,10 +154,10 @@ foreach ($items as $item) {
                     $textColor = $isZeroCms ? 'var(--primary-color, #00f0ff)' : 'var(--text-color, #d4e4fa)';
                     ?>
                     <g class="chart-row-group">
-                        <text x="10" y="<?php echo $rowY + 12; ?>" class="chart-label" fill="var(--text-color, #d4e4fa)"><?php echo htmlspecialchars($label, ENT_QUOTES, 'UTF-8'); ?></text>
+                        <text x="10" y="<?php echo $rowY + 12; ?>" class="chart-label" fill="var(--text-color, #d4e4fa)"><?php echo Str::escape($label); ?></text>
                         <rect x="180" y="<?php echo $rowY; ?>" width="<?php echo $barContainerWidth; ?>" height="20" rx="3" fill="rgba(255, 255, 255, 0.01)" stroke="rgba(255, 255, 255, 0.03)" stroke-width="1" />
                         <rect x="180" y="<?php echo $rowY; ?>" width="<?php echo $barWidth; ?>" height="20" rx="3" fill="<?php echo $barFill; ?>" class="chart-fill-bar" />
-                        <text x="<?php echo 180 + $barWidth + 10; ?>" y="<?php echo $rowY + 12; ?>" class="chart-value-text" fill="<?php echo $textColor; ?>"><?php echo htmlspecialchars($item['value'], ENT_QUOTES, 'UTF-8'); ?></text>
+                        <text x="<?php echo 180 + $barWidth + 10; ?>" y="<?php echo $rowY + 12; ?>" class="chart-value-text" fill="<?php echo $textColor; ?>"><?php echo Str::escape($item['value']); ?></text>
                     </g>
                 <?php endforeach; ?>
             </svg>

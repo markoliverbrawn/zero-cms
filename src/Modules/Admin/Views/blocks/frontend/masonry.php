@@ -1,4 +1,5 @@
 <?php
+use Zero\Support\Str;
 // src/Modules/Admin/Views/blocks/frontend/masonry.php
 
 ?>
@@ -9,10 +10,10 @@
       <?php foreach ($block['items'] as $item): ?>
         <div class="masonry-item">
           <?php if (!empty($item['media_id'])): ?>
-            <img src="<?php echo htmlspecialchars($resolveMedia($item['media_id']), ENT_QUOTES, 'UTF-8'); ?>?v=1.2" class="masonry-trigger-img" />
+            <img src="<?php echo Str::escape($resolveMedia($item['media_id'])); ?>?v=1.2" class="masonry-trigger-img" />
           <?php endif; ?>
-          <h4><?php echo htmlspecialchars($item['title'] ?? '', ENT_QUOTES, 'UTF-8'); ?></h4>
-          <p><?php echo htmlspecialchars($item['desc'] ?? '', ENT_QUOTES, 'UTF-8'); ?></p>
+          <h4><?php echo Str::escape($item['title'] ?? ''); ?></h4>
+          <p><?php echo Str::escape($item['desc'] ?? ''); ?></p>
         </div>
       <?php endforeach; ?>
     <?php endif; ?>

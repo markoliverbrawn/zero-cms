@@ -1,4 +1,5 @@
 <?php
+use Zero\Support\Str;
 // src/Modules/Blog/Views/blocks/latest_articles.php
 $limit = $block['limit'] ?? 3;
 $layout = $block['layout'] ?? 'grid';
@@ -6,7 +7,7 @@ $layout = $block['layout'] ?? 'grid';
 
 <div class="field-group">
     <label>Block Title</label>
-    <input type="text" class="block-title-input" value="<?php echo htmlspecialchars($blockTitle, ENT_QUOTES, 'UTF-8'); ?>" placeholder="Enter block title...">
+    <input type="text" class="block-title-input" value="<?php echo Str::escape($blockTitle); ?>" placeholder="Enter block title...">
 </div>
 <div class="block-flex-row">
     <div class="field-group block-flex-col-1">

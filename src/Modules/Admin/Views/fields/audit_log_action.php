@@ -1,4 +1,5 @@
 <?php
+use Zero\Support\Str;
 // src/Modules/Admin/Views/fields/audit_log_action.php
 
 $val = strtolower($value ?? '');
@@ -29,5 +30,5 @@ if (
 }
 ?>
 <span class="security-action-badge <?php echo $class; ?>">
-    <?php echo htmlspecialchars($value ?? '', ENT_QUOTES, 'UTF-8'); ?>
+    <?php echo Str::escape($value ?? ''); ?>
 </span>

@@ -9,6 +9,7 @@ use Zero\Models\Media;
 use Zero\Modules\Blog\Models\Post;
 use Zero\Support\BlockHelper;
 use Zero\Support\Security;
+use Zero\Support\Str;
 
 $isBlogPost = $post instanceof Post;
 
@@ -29,7 +30,7 @@ $shouldOmitTitle = !empty($post->omit_title) || $hasHeroBlock;
 <article class="post-detail-container" style="background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--border-radius); padding: 3rem; box-shadow: 0 4px 20px rgba(0,0,0,0.2);">
   <?php if (!$shouldOmitTitle): ?>
     <h1 style="font-size: 2.5rem; margin-bottom: 0.5rem; background: linear-gradient(90deg, var(--text-color), var(--neon-cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
-      <?php echo htmlspecialchars($post->title ?? '', ENT_QUOTES, 'UTF-8'); ?>
+      <?php echo Str::escape($post->title ?? ''); ?>
     </h1>
   <?php endif; ?>
   
@@ -41,7 +42,7 @@ $shouldOmitTitle = !empty($post->omit_title) || $hasHeroBlock;
 
   <?php if (!empty($post->featured_image)): ?>
     <div class="post-featured-image-wrapper" style="margin-bottom: 2.5rem; border-radius: var(--border-radius); overflow: hidden; max-height: 400px; border: 1px solid var(--border-color); box-shadow: 0 4px 20px rgba(0,0,0,0.15);">
-      <img src="<?php echo htmlspecialchars($post->featured_image); ?>" alt="" style="width: 100%; height: 100%; object-fit: cover; display: block;" />
+      <img src="<?php echo Str::escape($post->featured_image); ?>" alt="" style="width: 100%; height: 100%; object-fit: cover; display: block;" />
     </div>
   <?php endif; ?>
 
@@ -121,14 +122,14 @@ $shouldOmitTitle = !empty($post->omit_title) || $hasHeroBlock;
         switch ($blockType) {
             case 'baseline':
                 echo '<div class="block-baseline">';
-                echo '<h1>' . htmlspecialchars($block['title'] ?? '') . '</h1>';
+                echo '<h1>' . Str::escape($block['title'] ?? '') . '</h1>';
                 echo '<p>' . Security::sanitizeHtml($block['content'] ?? '') . '</p>';
                 echo '</div>';
                 break;
             case 'text':
                 echo '<div class="block-text">';
                 if (!empty($block['title'])) {
-                    echo '<h3 style="color: var(--neon-cyan); margin-bottom: 1.25rem;">' . htmlspecialchars($block['title']) . '</h3>';
+                    echo '<h3 style="color: var(--neon-cyan); margin-bottom: 1.25rem;">' . Str::escape($block['title']) . '</h3>';
                 }
                 echo '<div>' . Security::sanitizeHtml($block['content'] ?? '') . '</div>';
                 echo '</div>';
@@ -140,13 +141,13 @@ $shouldOmitTitle = !empty($post->omit_title) || $hasHeroBlock;
                 echo '<div class="block-text-image" ' . $rowClass . '>';
                 echo '<div class="block-text-col" style="flex: 1 1 50%; min-width: 280px;">';
                 if (!empty($block['title'])) {
-                    echo '<h3 style="color: var(--neon-pink); margin-bottom: 1.25rem;">' . htmlspecialchars($block['title']) . '</h3>';
+                    echo '<h3 style="color: var(--neon-pink); margin-bottom: 1.25rem;">' . Str::escape($block['title']) . '</h3>';
                 }
                 echo '<div>' . Security::sanitizeHtml($block['content'] ?? '') . '</div>';
                 echo '</div>';
                 echo '<div class="block-image-col" style="flex: 1 1 35%; min-width: 250px; border-radius: var(--border-radius); overflow: hidden; border: 1px solid var(--border-color);">';
                 if (!empty($img)) {
-                    echo '<img src="' . htmlspecialchars($resolveMedia($img)) . '" style="width: 100%; height: 100%; object-fit: cover; display: block;" alt="" />';
+                    echo '<img src="' . Str::escape($resolveMedia($img)) . '" style="width: 100%; height: 100%; object-fit: cover; display: block;" alt="" />';
                 }
                 echo '</div>';
                 echo '</div>';
@@ -154,13 +155,13 @@ $shouldOmitTitle = !empty($post->omit_title) || $hasHeroBlock;
             case 'accordion':
                 echo '<div class="block-accordion">';
                 if (!empty($block['title'])) {
-                    echo '<h3 style="color: var(--neon-cyan); margin-bottom: 1.25rem;">' . htmlspecialchars($block['title']) . '</h3>';
+                    echo '<h3 style="color: var(--neon-cyan); margin-bottom: 1.25rem;">' . Str::escape($block['title']) . '</h3>';
                 }
                 if (!empty($block['items'])) {
                     foreach ($block['items'] as $item) {
                         echo '<div class="accordion-item">';
                         echo '<button class="accordion-trigger">';
-                        echo '<span class="accordion-title">' . htmlspecialchars($item['title'] ?? '') . '</span>';
+                        echo '<span class="accordion-title">' . Str::escape($item['title'] ?? '') . '</span>';
                         echo '</button>';
                         echo '<div class="accordion-content">' . Security::sanitizeHtml($item['content'] ?? '') . '</div>';
                         echo '</div>';
@@ -171,7 +172,7 @@ $shouldOmitTitle = !empty($post->omit_title) || $hasHeroBlock;
             case 'testimonials':
                 echo '<div class="block-testimonials">';
                 if (!empty($block['title'])) {
-                    echo '<h3 style="color: var(--neon-pink); margin-bottom: 1.25rem;">' . htmlspecialchars($block['title']) . '</h3>';
+                    echo '<h3 style="color: var(--neon-pink); margin-bottom: 1.25rem;">' . Str::escape($block['title']) . '</h3>';
                 }
                 echo '<div class="testimonials-carousel-container">';
                 echo '<div class="testimonials-slides-wrapper">';
@@ -179,7 +180,7 @@ $shouldOmitTitle = !empty($post->omit_title) || $hasHeroBlock;
                     foreach ($block['items'] as $item) {
                         echo '<div class="testimonial-slide">';
                         echo '<div class="testimonial-quote">“' . Security::sanitizeHtml($item['content'] ?? '') . '”</div>';
-                        echo '<div class="testimonial-author">— ' . htmlspecialchars($item['person'] ?? '', ENT_QUOTES, 'UTF-8') . '</div>';
+                        echo '<div class="testimonial-author">— ' . Str::escape($item['person'] ?? '') . '</div>';
                         echo '</div>';
                     }
                 }
@@ -190,7 +191,7 @@ $shouldOmitTitle = !empty($post->omit_title) || $hasHeroBlock;
             case 'gallery':
                 echo '<div class="block-gallery">';
                 if (!empty($block['title'])) {
-                    echo '<h3 style="color: var(--neon-pink); margin-bottom: 1.25rem;">' . htmlspecialchars($block['title']) . '</h3>';
+                    echo '<h3 style="color: var(--neon-pink); margin-bottom: 1.25rem;">' . Str::escape($block['title']) . '</h3>';
                 }
                 // Support both 'images' and 'media_ids' keys cleanly
                 $galleryImages = $block['images'] ?? ($block['media_ids'] ?? []);
@@ -202,7 +203,7 @@ $shouldOmitTitle = !empty($post->omit_title) || $hasHeroBlock;
                         $titleText = $mediaIdMap[$imgId]['title'] ?? '';
                         
                         echo '<div class="gallery-item">';
-                        echo '<img src="' . htmlspecialchars($mediaUrl) . '" class="gallery-lightbox-trigger" data-src="' . htmlspecialchars($mediaUrl) . '" data-title="' . htmlspecialchars($titleText) . '" style="cursor: pointer; transition: transform 0.2s ease;" alt="" />';
+                        echo '<img src="' . Str::escape($mediaUrl) . '" class="gallery-lightbox-trigger" data-src="' . Str::escape($mediaUrl) . '" data-title="' . Str::escape($titleText) . '" style="cursor: pointer; transition: transform 0.2s ease;" alt="" />';
                         echo '</div>';
                     }
                     echo '</div>';
@@ -234,7 +235,7 @@ $shouldOmitTitle = !empty($post->omit_title) || $hasHeroBlock;
                 if (file_exists($blockPath)) {
                     $hideTitle = $block['hide_title'] ?? '0';
                     if ($hideTitle !== '1' && !empty($block['title'])) {
-                        echo '<h3 style="color: var(--neon-cyan); margin-bottom: 1.25rem;">' . htmlspecialchars($block['title']) . '</h3>';
+                        echo '<h3 style="color: var(--neon-cyan); margin-bottom: 1.25rem;">' . Str::escape($block['title']) . '</h3>';
                     }
                     echo Template::renderFile($blockPath, [
                         'block' => $block,

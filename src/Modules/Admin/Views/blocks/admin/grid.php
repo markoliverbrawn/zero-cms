@@ -4,6 +4,7 @@
 use Zero\Core\App;
 use Zero\Database\DB;
 use Zero\Models\Media;
+use Zero\Support\Str;
 
 $items = $block['items'] ?? [];
 
@@ -30,7 +31,7 @@ if (!empty($mediaIds)) {
 ?>
 <div class="field-group">
     <label>Block Section Title</label>
-    <input type="text" class="block-title-input" value="<?php echo htmlspecialchars($blockTitle, ENT_QUOTES, 'UTF-8'); ?>" placeholder="Enter grid section title...">
+    <input type="text" class="block-title-input" value="<?php echo Str::escape($blockTitle); ?>" placeholder="Enter grid section title...">
 </div>
 
 <div class="field-group">
@@ -60,7 +61,7 @@ if (!empty($mediaIds)) {
                         <span class="grid-item-row-collapse-icon">
                             <?php echo App::svg('chevron-right'); ?>
                         </span>
-                        <span class="grid-item-row-title-text"><?php echo !empty($iTitle) ? htmlspecialchars($iTitle, ENT_QUOTES, 'UTF-8') : 'Grid Card (Untitled)'; ?></span>
+                        <span class="grid-item-row-title-text"><?php echo !empty($iTitle) ? Str::escape($iTitle) : 'Grid Card (Untitled)'; ?></span>
                     </div>
                     <div class="grid-item-controls">
                         <button type="button" class="btn-sort-grid-item-up" title="Move Card Up">
@@ -76,23 +77,23 @@ if (!empty($mediaIds)) {
                 <div class="block-child-fields-col grid-item-fields-container" style="width: 100%;">
                     <div class="field-group block-child-field-group-8">
                         <label class="block-child-label-desc">Card Title</label>
-                        <input type="text" class="grid-item-title-input" value="<?php echo htmlspecialchars($iTitle, ENT_QUOTES, 'UTF-8'); ?>" placeholder="Enter card title...">
+                        <input type="text" class="grid-item-title-input" value="<?php echo Str::escape($iTitle); ?>" placeholder="Enter card title...">
                     </div>
                     <div class="field-group block-child-field-group-8">
                         <label class="block-child-label-desc">Card Image (Optional)</label>
                         <div class="block-child-image-select-row">
-                            <input type="hidden" class="grid-item-media_id-input" value="<?php echo htmlspecialchars($iMediaId, ENT_QUOTES, 'UTF-8'); ?>">
-                            <input type="text" class="grid-item-media-display-input" value="<?php echo htmlspecialchars($filename, ENT_QUOTES, 'UTF-8'); ?>" placeholder="No image selected" readonly style="flex: 1;">
+                            <input type="hidden" class="grid-item-media_id-input" value="<?php echo Str::escape($iMediaId); ?>">
+                            <input type="text" class="grid-item-media-display-input" value="<?php echo Str::escape($filename); ?>" placeholder="No image selected" readonly style="flex: 1;">
                             <button type="button" class="btn-select-grid-image">Select</button>
                         </div>
                     </div>
                     <div class="field-group block-child-field-group-0">
                         <label class="block-child-label-desc">Card Description</label>
-                        <textarea class="grid-item-desc-input" placeholder="Enter card description..." rows="2"><?php echo htmlspecialchars($iDesc, ENT_QUOTES, 'UTF-8'); ?></textarea>
+                        <textarea class="grid-item-desc-input" placeholder="Enter card description..." rows="2"><?php echo Str::escape($iDesc); ?></textarea>
                     </div>
                     <div class="field-group block-child-field-group-0" style="margin-top: 8px;">
                         <label class="block-child-label-desc">Card Click URL Link (e.g. /intro)</label>
-                        <input type="text" class="grid-item-link_url-input" value="<?php echo htmlspecialchars($iLinkUrl, ENT_QUOTES, 'UTF-8'); ?>" placeholder="Enter card target URL...">
+                        <input type="text" class="grid-item-link_url-input" value="<?php echo Str::escape($iLinkUrl); ?>" placeholder="Enter card target URL...">
                     </div>
                     <div class="block-flex-row" style="margin-top: 8px; display: flex; gap: 10px;">
                         <div class="field-group block-flex-col-1" style="flex: 1;">

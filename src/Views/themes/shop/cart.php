@@ -1,4 +1,5 @@
 <?php
+use Zero\Support\Str;
 // src/Views/themes/shop/cart.php
 
 // Apply promo code discount if entered in session
@@ -36,15 +37,15 @@ $total = $subtotal - $discount;
                 <div class="cart-item-card">
                     <!-- Image -->
                     <div class="cart-item-img-box">
-                        <img src="<?php echo htmlspecialchars($item['main_image']); ?>?v=1.2" class="cart-item-img">
+                        <img src="<?php echo Str::escape($item['main_image']); ?>?v=1.2" class="cart-item-img">
                     </div>
                     <!-- Details -->
                     <div class="cart-item-details">
-                        <h4 class="cart-item-title"><a href="/shop/product/<?php echo htmlspecialchars($item['slug']); ?>"><?php echo htmlspecialchars($item['title']); ?></a></h4>
+                        <h4 class="cart-item-title"><a href="/shop/product/<?php echo Str::escape($item['slug']); ?>"><?php echo Str::escape($item['title']); ?></a></h4>
                         <?php if (!empty($item['variant_title'])): ?>
-                            <span class="cart-item-variant"><?php echo htmlspecialchars($item['variant_title']); ?></span>
+                            <span class="cart-item-variant"><?php echo Str::escape($item['variant_title']); ?></span>
                         <?php endif; ?>
-                        <span class="cart-item-sku">SKU: <?php echo htmlspecialchars($item['sku']); ?></span>
+                        <span class="cart-item-sku">SKU: <?php echo Str::escape($item['sku']); ?></span>
                     </div>
                     <!-- Quantity & Price Form -->
                     <div class="cart-item-actions">
@@ -52,9 +53,9 @@ $total = $subtotal - $discount;
                         
                         <!-- Update Qty Form -->
                         <form method="post" action="/shop/cart" class="cart-qty-form">
-                            <input type="hidden" name="csrf" value="<?php echo htmlspecialchars($csrf ?? '', ENT_QUOTES, 'UTF-8'); ?>">
+                            <input type="hidden" name="csrf" value="<?php echo Str::escape($csrf ?? ''); ?>">
                             <input type="hidden" name="action" value="update">
-                            <input type="hidden" name="item_key" value="<?php echo htmlspecialchars($key); ?>">
+                            <input type="hidden" name="item_key" value="<?php echo Str::escape($key); ?>">
                             <button type="submit" name="quantity" value="<?php echo $item['quantity'] - 1; ?>" class="qty-btn">-</button>
                             <span class="cart-qty-val"><?php echo $item['quantity']; ?></span>
                             <button type="submit" name="quantity" value="<?php echo $item['quantity'] + 1; ?>" class="qty-btn">+</button>
@@ -62,9 +63,9 @@ $total = $subtotal - $discount;
 
                         <!-- Remove Form -->
                         <form method="post" action="/shop/cart">
-                            <input type="hidden" name="csrf" value="<?php echo htmlspecialchars($csrf ?? '', ENT_QUOTES, 'UTF-8'); ?>">
+                            <input type="hidden" name="csrf" value="<?php echo Str::escape($csrf ?? ''); ?>">
                             <input type="hidden" name="action" value="remove">
-                            <input type="hidden" name="item_key" value="<?php echo htmlspecialchars($key); ?>">
+                            <input type="hidden" name="item_key" value="<?php echo Str::escape($key); ?>">
                             <button type="submit" class="cart-remove-btn">
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <polyline points="3 6 5 6 21 6"></polyline>
@@ -100,13 +101,13 @@ $total = $subtotal - $discount;
 
             <!-- Coupon Code Entry Form -->
             <form method="get" action="/shop/cart" class="coupon-entry-form">
-                <input name="coupon" value="<?php echo htmlspecialchars($coupon); ?>" placeholder="Coupon Code" class="coupon-input">
+                <input name="coupon" value="<?php echo Str::escape($coupon); ?>" placeholder="Coupon Code" class="coupon-input">
                 <button type="submit" class="btn-apply-coupon">Apply</button>
             </form>
 
             <?php if (!empty($discountMsg)): ?>
                 <div class="coupon-msg <?php echo $discount > 0 ? 'coupon-success' : 'coupon-error'; ?>">
-                    <?php echo htmlspecialchars($discountMsg); ?>
+                    <?php echo Str::escape($discountMsg); ?>
                 </div>
             <?php endif; ?>
 

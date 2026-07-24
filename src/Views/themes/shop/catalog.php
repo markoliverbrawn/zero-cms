@@ -2,6 +2,7 @@
 // src/Views/themes/shop/catalog.php
 
 use Zero\Core\App;
+use Zero\Support\Str;
 ?>
 <div class="catalog-layout">
     
@@ -19,8 +20,8 @@ use Zero\Core\App;
                 </li>
                 <?php foreach ($categories as $cat): ?>
                     <li>
-                        <a href="/shop/catalog?category=<?php echo htmlspecialchars($cat->slug); ?>&search=<?php echo urlencode($search); ?>&min_price=<?php echo $minPrice ?: ''; ?>&max_price=<?php echo $maxPrice ?: ''; ?>&sort=<?php echo $sort; ?>" class="sidebar-link" style="color: <?php echo $categorySlug === $cat->slug ? 'var(--accent-color)' : 'var(--text-muted)'; ?>; font-weight: <?php echo $categorySlug === $cat->slug ? 'bold' : '500'; ?>;">
-                            <?php echo htmlspecialchars($cat->title); ?>
+                        <a href="/shop/catalog?category=<?php echo Str::escape($cat->slug); ?>&search=<?php echo urlencode($search); ?>&min_price=<?php echo $minPrice ?: ''; ?>&max_price=<?php echo $maxPrice ?: ''; ?>&sort=<?php echo $sort; ?>" class="sidebar-link" style="color: <?php echo $categorySlug === $cat->slug ? 'var(--accent-color)' : 'var(--text-muted)'; ?>; font-weight: <?php echo $categorySlug === $cat->slug ? 'bold' : '500'; ?>;">
+                            <?php echo Str::escape($cat->title); ?>
                         </a>
                     </li>
                 <?php endforeach; ?>
@@ -32,12 +33,12 @@ use Zero\Core\App;
             <h3 class="sidebar-section-title">Filter Studio</h3>
             
             <form method="get" action="/shop/catalog">
-                <input type="hidden" name="category" value="<?php echo htmlspecialchars($categorySlug); ?>">
+                <input type="hidden" name="category" value="<?php echo Str::escape($categorySlug); ?>">
                 
                 <!-- Search -->
                 <div class="filter-form-group">
                     <label class="checkout-label">Search</label>
-                    <input name="search" value="<?php echo htmlspecialchars($search); ?>" placeholder="Keywords..." class="filter-input-text">
+                    <input name="search" value="<?php echo Str::escape($search); ?>" placeholder="Keywords..." class="filter-input-text">
                 </div>
 
                 <!-- Price bounds -->
@@ -73,7 +74,7 @@ use Zero\Core\App;
                 Showing <strong style="color: #fff;"><?php echo $totalItems; ?></strong> dynamic high-contrast items
             </p>
             <?php if ($activeCategory): ?>
-                <span class="results-badge">Category: <?php echo htmlspecialchars($activeCategory->title); ?></span>
+                <span class="results-badge">Category: <?php echo Str::escape($activeCategory->title); ?></span>
             <?php endif; ?>
         </div>
 
@@ -89,12 +90,12 @@ use Zero\Core\App;
         <?php else: ?>
             <div class="products-grid">
                 <?php foreach ($products as $product): ?>
-                    <a href="/shop/product/<?php echo htmlspecialchars($product->slug); ?>" class="product-card">
+                    <a href="/shop/product/<?php echo Str::escape($product->slug); ?>" class="product-card">
                         <div class="product-card-image">
-                            <img src="<?php echo htmlspecialchars($product->main_image); ?>?v=1.2" alt="<?php echo htmlspecialchars($product->title); ?>">
+                            <img src="<?php echo Str::escape($product->main_image); ?>?v=1.2" alt="<?php echo Str::escape($product->title); ?>">
                         </div>
                         <div class="product-card-content">
-                            <h4 class="product-card-title"><?php echo htmlspecialchars($product->title); ?></h4>
+                            <h4 class="product-card-title"><?php echo Str::escape($product->title); ?></h4>
                             <div class="product-card-price-container">
                                 <span class="product-card-price">$<?php echo number_format($product->price, 2); ?></span>
                                 <?php if ($product->compare_at_price > 0): ?>

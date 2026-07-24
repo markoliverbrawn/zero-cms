@@ -2,6 +2,7 @@
 // src/Views/themes/portfolio/layout.php
 use Zero\Core\App;
 use Zero\Support\I18n;
+use Zero\Support\Str;
 ?>
 <!doctype html>
 <html>
@@ -23,11 +24,11 @@ use Zero\Support\I18n;
         $metaDescription = substr($metaDescription, 0, 157) . '...';
     }
     ?>
-    <meta name="description" content="<?php echo htmlspecialchars($metaDescription, ENT_QUOTES, 'UTF-8'); ?>"/>
+    <meta name="description" content="<?php echo Str::escape($metaDescription); ?>"/>
     <title>ZERO Portfolio - Dynamic Design Agency</title>
     <link rel="icon" type="image/svg+xml" href="/assets/favicons/portfolio.svg">
     <link rel="stylesheet" href="/assets/css/main-portfolio.css?v=1.0">
-    <meta name="csrf-token" content="<?php echo htmlspecialchars($csrf ?? '', ENT_QUOTES, "UTF-8"); ?>">
+    <meta name="csrf-token" content="<?php echo Str::escape($csrf ?? ''); ?>">
 </head>
 <body>
 

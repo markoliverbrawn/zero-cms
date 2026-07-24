@@ -2,6 +2,7 @@
 // src/Modules/Admin/Views/block_builder.php
 
 use Zero\Core\App;
+use Zero\Support\Str;
 
 $blockField = $blockBuilderField ?? 'content';
 $rawContent = $record->{$blockField} ?? '';
@@ -53,7 +54,7 @@ foreach (App::getRegisteredBlocks() as $type => $config) {
 <div class="block-builder-container">
     <div class="block-builder-header">
         <div>
-            <label style="display: block; font-weight: bold; margin: 0; font-size: 1rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-color, #0f172a);"><?php echo htmlspecialchars($fieldConfig['label'] ?? 'Content', ENT_QUOTES, "UTF-8"); ?></label>
+            <label style="display: block; font-weight: bold; margin: 0; font-size: 1rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-color, #0f172a);"><?php echo Str::escape($fieldConfig['label'] ?? 'Content'); ?></label>
         </div>
         <button type="button" class="btn-toggle-preview-inline" id="btn-toggle-inserter">
             <span class="icon-svg icon-svg-14">
@@ -64,7 +65,7 @@ foreach (App::getRegisteredBlocks() as $type => $config) {
     </div>
 
     <!-- Hidden serialized JSON payload output -->
-    <input type="hidden" name="<?php echo htmlspecialchars($blockField, ENT_QUOTES, 'UTF-8'); ?>" id="block-builder-output" value="<?php echo htmlspecialchars($rawContent, ENT_QUOTES, 'UTF-8'); ?>">
+    <input type="hidden" name="<?php echo Str::escape($blockField); ?>" id="block-builder-output" value="<?php echo Str::escape($rawContent); ?>">
 
     <!-- Interactive Page Builder Blocks List Container -->
     <div id="blocks-container" class="blocks-container">
@@ -94,8 +95,8 @@ foreach (App::getRegisteredBlocks() as $type => $config) {
                             <?php echo App::svg($icon); ?>
                         </div>
                         <div class="block-header-text-container">
-                            <h4 class="block-header-title"><?php echo htmlspecialchars($label, ENT_QUOTES, 'UTF-8'); ?></h4>
-                            <span class="block-preview-excerpt"><?php echo htmlspecialchars(strip_tags($block['title'] ?? 'Section ' . ($index + 1)), ENT_QUOTES, 'UTF-8'); ?></span>
+                            <h4 class="block-header-title"><?php echo Str::escape($label); ?></h4>
+                            <span class="block-preview-excerpt"><?php echo Str::escape(strip_tags($block['title'] ?? 'Section ' . ($index + 1))); ?></span>
                         </div>
                     </div>
                     <div class="block-actions">
@@ -174,7 +175,7 @@ foreach (App::getRegisteredBlocks() as $type => $config) {
                     </div>
                     <div class="block-fields-col">
                         <button type="button" class="btn-toggle-preview-inline btn-show-preview-trigger" style="display: none; margin-bottom: 15px;">Show Live Preview</button>
-                        <input type="hidden" class="block-id-input" value="<?php echo htmlspecialchars($randomId, ENT_QUOTES, 'UTF-8'); ?>">
+                        <input type="hidden" class="block-id-input" value="<?php echo Str::escape($randomId); ?>">
                         
                         <?php
                         if (file_exists($adminView)) {
@@ -226,8 +227,8 @@ foreach (App::getRegisteredBlocks() as $type => $config) {
                         <?php echo App::svg($config['icon']); ?>
                     </div>
                     <div class="block-select-card-meta">
-                        <h4 class="block-select-card-title"><?php echo htmlspecialchars($config['label'], ENT_QUOTES, 'UTF-8'); ?></h4>
-                        <p class="block-select-card-desc"><?php echo htmlspecialchars($config['description'], ENT_QUOTES, 'UTF-8'); ?></p>
+                        <h4 class="block-select-card-title"><?php echo Str::escape($config['label']); ?></h4>
+                        <p class="block-select-card-desc"><?php echo Str::escape($config['description']); ?></p>
                     </div>
                 </div>
             <?php endforeach; ?>

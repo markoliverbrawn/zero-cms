@@ -2,6 +2,7 @@
 // src/Modules/Admin/Views/fields/modules.php
 
 use Zero\Core\App;
+use Zero\Support\Str;
 
 $modules = json_decode($value ?? '[]', true);
 if (!is_array($modules)) {
@@ -33,7 +34,7 @@ $remainingCount = count($hiddenPills);
             <?php
             $moduleLower = strtolower($module);
             $icon = 'settings';
-            $label = htmlspecialchars($module);
+            $label = Str::escape($module);
             
             if ($moduleLower === 'blog') {
                 $icon = 'edit-3';
@@ -52,7 +53,7 @@ $remainingCount = count($hiddenPills);
                 $label = 'Security';
             }
             ?>
-            <span class="module-pill module-<?php echo htmlspecialchars($moduleLower); ?>" title="<?php echo $label; ?>">
+            <span class="module-pill module-<?php echo Str::escape($moduleLower); ?>" title="<?php echo $label; ?>">
                 <span class="icon-svg">
                     <?php echo App::svg($icon); ?>
                 </span>
@@ -64,7 +65,7 @@ $remainingCount = count($hiddenPills);
             <?php
             $moduleLower = strtolower($module);
             $icon = 'settings';
-            $label = htmlspecialchars($module);
+            $label = Str::escape($module);
             
             if ($moduleLower === 'blog') {
                 $icon = 'edit-3';
@@ -83,7 +84,7 @@ $remainingCount = count($hiddenPills);
                 $label = 'Security';
             }
             ?>
-            <span class="module-pill module-<?php echo htmlspecialchars($moduleLower); ?> is-hidden" data-hidden="true" title="<?php echo $label; ?>">
+            <span class="module-pill module-<?php echo Str::escape($moduleLower); ?> is-hidden" data-hidden="true" title="<?php echo $label; ?>">
                 <span class="icon-svg">
                     <?php echo App::svg($icon); ?>
                 </span>

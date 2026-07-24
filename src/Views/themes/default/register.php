@@ -1,4 +1,5 @@
 <?php
+use Zero\Support\Str;
 // src/Views/themes/default/register.php
 ?>
 <link rel="stylesheet" href="/assets/css/auth.css?v=1.3">
@@ -7,12 +8,12 @@
     
     <?php if (!empty($error)): ?>
         <div class="auth-error-box">
-            <?php echo htmlspecialchars($error); ?>
+            <?php echo Str::escape($error); ?>
         </div>
     <?php endif; ?>
 
     <form method="post" action="/register">
-        <input type="hidden" name="csrf" value="<?php echo htmlspecialchars($csrf ?? '', ENT_QUOTES, 'UTF-8'); ?>">
+        <input type="hidden" name="csrf" value="<?php echo Str::escape($csrf ?? ''); ?>">
         
         <div class="auth-form-group">
             <label class="auth-label">Username</label>

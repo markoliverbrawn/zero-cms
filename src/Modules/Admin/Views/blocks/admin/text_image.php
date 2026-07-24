@@ -1,11 +1,12 @@
 <?php
+use Zero\Support\Str;
 // src/Modules/Admin/Views/blocks/admin/text_image.php
 $mediaId = $block['media_id'] ?? '';
 $imagePosition = $block['image_position'] ?? 'right';
 ?>
 <div class="field-group">
     <label>Block Title</label>
-    <input type="text" class="block-title-input" value="<?php echo htmlspecialchars($blockTitle, ENT_QUOTES, 'UTF-8'); ?>" placeholder="Enter block title...">
+    <input type="text" class="block-title-input" value="<?php echo Str::escape($blockTitle); ?>" placeholder="Enter block title...">
 </div>
 <div class="field-group">
     <label>Content Description</label>
@@ -26,7 +27,7 @@ $imagePosition = $block['image_position'] ?? 'right';
     <div class="field-group block-flex-col-1-5">
         <label>Section Image</label>
         <div class="block-flex-align-center">
-            <input type="text" class="block-media_id-input flex-1" value="<?php echo htmlspecialchars($mediaId, ENT_QUOTES, 'UTF-8'); ?>" placeholder="No image selected" readonly>
+            <input type="text" class="block-media_id-input flex-1" value="<?php echo Str::escape($mediaId); ?>" placeholder="No image selected" readonly>
             <button type="button" class="btn-select-block-image width-auto">Select Image</button>
         </div>
     </div>

@@ -4,6 +4,7 @@ use Zero\Database\DB;
 use Zero\Models\User;
 use Zero\Support\I18n;
 use Zero\Support\Security;
+use Zero\Support\Str;
 
 $userId = $_SESSION['user_id'] ?? null;
 $userPrefs = [];
@@ -122,12 +123,12 @@ $recentMedia = DB::query("SELECT * FROM media WHERE site_id = ? AND deleted_at I
               <?php foreach ($recentPages as $page): ?>
                 <li>
                   <div>
-                    <a href="/admin/pages/edit?id=<?php echo $page['id']; ?>" title="<?php echo htmlspecialchars($page['title'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
-                      <?php echo htmlspecialchars($page['title'] ?? '', ENT_QUOTES, 'UTF-8'); ?>
+                    <a href="/admin/pages/edit?id=<?php echo $page['id']; ?>" title="<?php echo Str::escape($page['title'] ?? ''); ?>">
+                      <?php echo Str::escape($page['title'] ?? ''); ?>
                     </a>
                   </div>
                   <span class="text-muted">
-                    <?php echo htmlspecialchars(I18n::localizeDateTime($page['created_at'], 'Y-m-d'), ENT_QUOTES, 'UTF-8'); ?>
+                    <?php echo Str::escape(I18n::localizeDateTime($page['created_at'], 'Y-m-d')); ?>
                   </span>
                 </li>
               <?php endforeach; ?>
@@ -152,9 +153,9 @@ $recentMedia = DB::query("SELECT * FROM media WHERE site_id = ? AND deleted_at I
               <?php foreach ($recentMedia as $media):
                 $isImg = !empty($media['mime']) && str_starts_with($media['mime'], 'image/');
               ?>
-                <div class="dashboard-recent-media-item" title="<?php echo htmlspecialchars($media['filename'], ENT_QUOTES, 'UTF-8'); ?>">
+                <div class="dashboard-recent-media-item" title="<?php echo Str::escape($media['filename']); ?>">
                   <?php if ($isImg): ?>
-                    <img src="<?php echo htmlspecialchars($media['path'], ENT_QUOTES, 'UTF-8'); ?>" />
+                    <img src="<?php echo Str::escape($media['path']); ?>" />
                   <?php else: ?>
                     <div class="file-placeholder">
                       <span class="icon-svg">
@@ -209,6 +210,6 @@ $recentMedia = DB::query("SELECT * FROM media WHERE site_id = ? AND deleted_at I
 </div>
 
 <script nonce="<?php echo \Zero\Core\App::getNonce(); ?>">
-window.ADMIN_CSRF_TOKEN = "<?php echo htmlspecialchars($csrf ?? Security::csrfToken(), ENT_QUOTES, 'UTF-8'); ?>";
+window.ADMIN_CSRF_TOKEN = "<?php echo Str::escape($csrf ?? Security::csrfToken()); ?>";
 </script>
 <script src="/assets/js/admin/dashboard.js"></script>

@@ -2,6 +2,7 @@
 // src/Modules/Admin/Views/blocks/frontend/gallery.php
 
 use Zero\Models\Media;
+use Zero\Support\Str;
 
 $mediaIds = $block['media_ids'] ?? [];
 ?>
@@ -14,7 +15,7 @@ $mediaIds = $block['media_ids'] ?? [];
         $titleText = $mediaRec ? ($mediaRec->title ?: $mediaRec->filename) : '';
         ?>
         <div class="gallery-item">
-          <img src="<?php echo htmlspecialchars($mediaUrl, ENT_QUOTES, "UTF-8"); ?>" class="gallery-img gallery-lightbox-trigger" data-src="<?php echo htmlspecialchars($mediaUrl, ENT_QUOTES, "UTF-8"); ?>" data-title="<?php echo htmlspecialchars($titleText, ENT_QUOTES, "UTF-8"); ?>" />
+          <img src="<?php echo Str::escape($mediaUrl); ?>" class="gallery-img gallery-lightbox-trigger" data-src="<?php echo Str::escape($mediaUrl); ?>" data-title="<?php echo Str::escape($titleText); ?>" />
         </div>
       <?php endforeach; ?>
     <?php endif; ?>

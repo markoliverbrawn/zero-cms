@@ -1,6 +1,7 @@
 <?php
 // views/admin/preferences.php
 use Zero\Support\I18n;
+use Zero\Support\Str;
 ?>
 <div class="preferences-container">
   
@@ -14,13 +15,13 @@ use Zero\Support\I18n;
 
   <?php if (!empty($success)): ?>
     <div class="success-message" style="background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; padding: 12px; border-radius: 4px; margin-bottom: 25px; font-weight: bold;">
-      <?php echo htmlspecialchars($success, ENT_QUOTES, 'UTF-8'); ?>
+      <?php echo Str::escape($success); ?>
     </div>
   <?php endif; ?>
 
   <?php if (!empty($error)): ?>
     <div class="error-message" style="background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; padding: 12px; border-radius: 4px; margin-bottom: 25px; font-weight: bold;">
-      <?php echo htmlspecialchars($error, ENT_QUOTES, 'UTF-8'); ?>
+      <?php echo Str::escape($error); ?>
     </div>
   <?php endif; ?>
 
@@ -92,8 +93,8 @@ use Zero\Support\I18n;
           <label for="timezone" class="preferences-label"><?php echo I18n::t('user_timezone'); ?></label>
           <select name="timezone" id="timezone" class="preferences-select">
             <?php foreach ($timezones as $tz): ?>
-              <option value="<?php echo htmlspecialchars($tz, ENT_QUOTES, 'UTF-8'); ?>" <?php echo ($prefs['timezone'] ?? 'UTC') === $tz ? 'selected' : ''; ?>>
-                <?php echo htmlspecialchars($tz, ENT_QUOTES, 'UTF-8'); ?>
+              <option value="<?php echo Str::escape($tz); ?>" <?php echo ($prefs['timezone'] ?? 'UTC') === $tz ? 'selected' : ''; ?>>
+                <?php echo Str::escape($tz); ?>
               </option>
             <?php endforeach; ?>
           </select>
@@ -173,8 +174,8 @@ use Zero\Support\I18n;
               <div class="dashboard-widget-toggle-inner">
                 <input type="checkbox" name="dashboard_layout[]" value="<?php echo $key; ?>" <?php echo $isChecked ? 'checked' : ''; ?> class="dashboard-widget-toggle-checkbox">
                 <div>
-                  <strong class="dashboard-widget-toggle-title"><?php echo htmlspecialchars($meta['title'], ENT_QUOTES, 'UTF-8'); ?></strong>
-                  <span class="dashboard-widget-toggle-desc"><?php echo htmlspecialchars($meta['desc'], ENT_QUOTES, 'UTF-8'); ?></span>
+                  <strong class="dashboard-widget-toggle-title"><?php echo Str::escape($meta['title']); ?></strong>
+                  <span class="dashboard-widget-toggle-desc"><?php echo Str::escape($meta['desc']); ?></span>
                 </div>
               </div>
             </label>

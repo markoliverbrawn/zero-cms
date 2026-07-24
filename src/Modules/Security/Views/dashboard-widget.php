@@ -4,6 +4,7 @@
 use Zero\Core\App;
 use Zero\Database\DB;
 use Zero\Support\I18n;
+use Zero\Support\Str;
 
 $renderWidgetKey = $renderWidgetKey ?? '';
 $activeSiteId = App::getCurrentSiteId();
@@ -60,7 +61,7 @@ if ($renderWidgetKey === 'security_state' && in_array('security_state', $enabled
         <div class="security-widget-audit-date">
           <div class="audit-date-label">Last Audited</div>
           <div class="audit-date-value">
-            <?php echo htmlspecialchars(I18n::localizeDateTime($auditDate, 'Y-m-d H:i'), ENT_QUOTES, 'UTF-8'); ?>
+            <?php echo Str::escape(I18n::localizeDateTime($auditDate, 'Y-m-d H:i')); ?>
           </div>
         </div>
       </div>
@@ -79,7 +80,7 @@ if ($renderWidgetKey === 'security_state' && in_array('security_state', $enabled
           <span class="detail-label">Runtime Environment</span>
           <span class="detail-value">
             <span class="status-badge <?php echo ($environment === 'dev' ? 'badge-warn' : 'badge-info'); ?>">
-              <?php echo htmlspecialchars(strtoupper($environment), ENT_QUOTES, 'UTF-8'); ?>
+              <?php echo Str::escape(strtoupper($environment)); ?>
             </span>
           </span>
         </div>
@@ -156,10 +157,10 @@ if ($renderWidgetKey === 'security_logs' && in_array('security_logs', $enabledWi
           ?>
           <li class="<?php echo $logClass; ?>">
             <div>
-              <strong><?php echo htmlspecialchars($log['action'] ?? '', ENT_QUOTES, 'UTF-8'); ?></strong>
-              <span class="text-muted">by <?php echo htmlspecialchars($log['username'] ?? 'System', ENT_QUOTES, 'UTF-8'); ?></span>
+              <strong><?php echo Str::escape($log['action'] ?? ''); ?></strong>
+              <span class="text-muted">by <?php echo Str::escape($log['username'] ?? 'System'); ?></span>
             </div>
-            <span class="text-muted"><?php echo htmlspecialchars(I18n::localizeDateTime($log['created_at'], 'M d, H:i'), ENT_QUOTES, 'UTF-8'); ?></span>
+            <span class="text-muted"><?php echo Str::escape(I18n::localizeDateTime($log['created_at'], 'M d, H:i')); ?></span>
           </li>
         <?php endforeach; ?>
       </ul>

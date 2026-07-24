@@ -4,6 +4,7 @@ use Zero\Core\App;
 use Zero\Models\Site;
 use Zero\Models\User;
 use Zero\Support\I18n;
+use Zero\Support\Str;
 
 I18n::init();
 
@@ -37,14 +38,14 @@ if (!file_exists(APPLICATION_ROOT . '/public' . $adminFavicon)) {
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Zero</title>
-    <link rel="icon" type="image/svg+xml" href="<?php echo htmlspecialchars($adminFavicon, ENT_QUOTES, 'UTF-8'); ?>">
+    <link rel="icon" type="image/svg+xml" href="<?php echo Str::escape($adminFavicon); ?>">
     <link rel="stylesheet" href="/assets/css/admin.css?v=<?php echo time(); ?>">
     <?php if ($themePreset !== 'default' && file_exists(APPLICATION_ROOT . '/public/assets/css/admin-themes/admin-' . $themePreset . '.css')): ?>
-        <link rel="stylesheet" href="/assets/css/admin-themes/admin-<?php echo htmlspecialchars($themePreset, ENT_QUOTES, 'UTF-8'); ?>.css">
+        <link rel="stylesheet" href="/assets/css/admin-themes/admin-<?php echo Str::escape($themePreset); ?>.css">
     <?php endif; ?>
-    <meta name="csrf-token" content="<?php echo htmlspecialchars($csrf ?? '', ENT_QUOTES, "UTF-8"); ?>">
+    <meta name="csrf-token" content="<?php echo Str::escape($csrf ?? ''); ?>">
 </head>
-<body class="<?php echo empty($session['user_id']) ? 'public-layout' : 'admin-layout'; ?>" data-theme="<?php echo htmlspecialchars($themePref, ENT_QUOTES, 'UTF-8'); ?>" data-preset="<?php echo htmlspecialchars($themePreset, ENT_QUOTES, 'UTF-8'); ?>">
+<body class="<?php echo empty($session['user_id']) ? 'public-layout' : 'admin-layout'; ?>" data-theme="<?php echo Str::escape($themePref); ?>" data-preset="<?php echo Str::escape($themePreset); ?>">
     <header>
         <?php if (!empty($session['user_id'])): ?>
             <button type="button" id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle Sidebar">
@@ -57,11 +58,11 @@ if (!file_exists(APPLICATION_ROOT . '/public' . $adminFavicon)) {
             <?php if (!empty($session['user_id'])): ?>
                 <?php if ($user): ?>
                     <span class="header-username">
-                        <?php echo I18n::t('logged_in_as'); ?> <strong><?php echo htmlspecialchars($user->username, ENT_QUOTES, 'UTF-8'); ?></strong>
+                        <?php echo I18n::t('logged_in_as'); ?> <strong><?php echo Str::escape($user->username); ?></strong>
                     </span>
                 <?php endif; ?>
                 <form class="logout" method="post" action="/admin/logout" style="display:inline">
-                    <input type="hidden" name="csrf" value="<?php echo htmlspecialchars($csrf ?? '', ENT_QUOTES, "UTF-8"); ?>">
+                    <input type="hidden" name="csrf" value="<?php echo Str::escape($csrf ?? ''); ?>">
                     <button type="submit"><?php echo I18n::t('logout'); ?></button>
                 </form>
                 <?php include APPLICATION_ROOT . '/src/Modules/Admin/Views/theme-switcher.php'; ?>
@@ -99,7 +100,7 @@ if (!file_exists(APPLICATION_ROOT . '/public' . $adminFavicon)) {
     <aside>
         <ul class="sidebar-menu">
             <li class="sidebar-item">
-                <a href="/admin/dashboard"<?php echo isActiveLink('/admin/dashboard', $currentUri); ?> title="<?php echo htmlspecialchars(I18n::t('admin_dashboard'), ENT_QUOTES, 'UTF-8'); ?>">
+                <a href="/admin/dashboard"<?php echo isActiveLink('/admin/dashboard', $currentUri); ?> title="<?php echo Str::escape(I18n::t('admin_dashboard')); ?>">
                     <span class="icon-svg sidebar-link-icon"><?php echo App::svg('dashboard'); ?></span>
                     <span class="sidebar-link-text"><?php echo I18n::t('admin_dashboard'); ?></span>
                 </a>
@@ -107,7 +108,7 @@ if (!file_exists(APPLICATION_ROOT . '/public' . $adminFavicon)) {
             
             <!-- SECTION 1: Content Management -->
             <li class="sidebar-section<?php echo $isContentActive ? '' : ' collapsed'; ?>">
-                <button type="button" class="sidebar-section-toggle" title="<?php echo htmlspecialchars(I18n::t('content_management'), ENT_QUOTES, 'UTF-8'); ?>">
+                <button type="button" class="sidebar-section-toggle" title="<?php echo Str::escape(I18n::t('content_management')); ?>">
                     <span class="icon-svg sidebar-section-icon"><?php echo App::svg('book-open'); ?></span>
                     <span class="sidebar-section-title"><?php echo I18n::t('content_management'); ?></span>
                     <span class="icon-svg sidebar-section-arrow">
@@ -117,7 +118,7 @@ if (!file_exists(APPLICATION_ROOT . '/public' . $adminFavicon)) {
                 <ul class="sidebar-submenu no-transition">
                     <?php if ($site && $site->isModuleEnabled('blog')): ?>
                         <li>
-                            <a href="/admin/list/posts"<?php echo isActiveLink('/posts', $currentUri); ?> title="<?php echo htmlspecialchars(I18n::t('manage_posts'), ENT_QUOTES, 'UTF-8'); ?>">
+                            <a href="/admin/list/posts"<?php echo isActiveLink('/posts', $currentUri); ?> title="<?php echo Str::escape(I18n::t('manage_posts')); ?>">
                                 <span class="icon-svg sidebar-link-icon"><?php echo App::svg('edit-3'); ?></span>
                                 <span class="sidebar-link-text"><?php echo I18n::t('manage_posts'); ?></span>
                             </a>
@@ -136,13 +137,13 @@ if (!file_exists(APPLICATION_ROOT . '/public' . $adminFavicon)) {
                         </li>
                     <?php endif; ?>
                     <li>
-                        <a href="/admin/list/pages"<?php echo isActiveLink('/pages', $currentUri); ?> title="<?php echo htmlspecialchars(I18n::t('manage_pages'), ENT_QUOTES, 'UTF-8'); ?>">
+                        <a href="/admin/list/pages"<?php echo isActiveLink('/pages', $currentUri); ?> title="<?php echo Str::escape(I18n::t('manage_pages')); ?>">
                             <span class="icon-svg sidebar-link-icon"><?php echo App::svg('file'); ?></span>
                             <span class="sidebar-link-text"><?php echo I18n::t('manage_pages'); ?></span>
                         </a>
                     </li>
                     <li>
-                        <a href="/admin/list/files"<?php echo isActiveLink('/files', $currentUri); ?> title="<?php echo htmlspecialchars(I18n::t('media_library'), ENT_QUOTES, 'UTF-8'); ?>">
+                        <a href="/admin/list/files"<?php echo isActiveLink('/files', $currentUri); ?> title="<?php echo Str::escape(I18n::t('media_library')); ?>">
                             <span class="icon-svg sidebar-link-icon"><?php echo App::svg('image'); ?></span>
                             <span class="sidebar-link-text"><?php echo I18n::t('media_library'); ?></span>
                         </a>
@@ -244,7 +245,7 @@ if (!file_exists(APPLICATION_ROOT . '/public' . $adminFavicon)) {
             <!-- SECTION 2: Security -->
             <?php if (App::getCurrentUserRole() === 'super_admin'): ?>
             <li class="sidebar-section<?php echo $isSecurityActive ? '' : ' collapsed'; ?>">
-                <button type="button" class="sidebar-section-toggle" title="<?php echo htmlspecialchars(I18n::t('security'), ENT_QUOTES, 'UTF-8'); ?>">
+                <button type="button" class="sidebar-section-toggle" title="<?php echo Str::escape(I18n::t('security')); ?>">
                     <span class="icon-svg sidebar-section-icon"><?php echo App::svg('shield'); ?></span>
                     <span class="sidebar-section-title"><?php echo I18n::t('security'); ?></span>
                     <span class="icon-svg sidebar-section-arrow">
@@ -253,7 +254,7 @@ if (!file_exists(APPLICATION_ROOT . '/public' . $adminFavicon)) {
                 </button>
                 <ul class="sidebar-submenu no-transition">
                     <li>
-                        <a href="/admin/list/users"<?php echo isActiveLink('/users', $currentUri); ?> title="<?php echo htmlspecialchars(I18n::t('manage_users'), ENT_QUOTES, 'UTF-8'); ?>">
+                        <a href="/admin/list/users"<?php echo isActiveLink('/users', $currentUri); ?> title="<?php echo Str::escape(I18n::t('manage_users')); ?>">
                             <span class="icon-svg sidebar-link-icon"><?php echo App::svg('user'); ?></span>
                             <span class="sidebar-link-text"><?php echo I18n::t('manage_users'); ?></span>
                         </a>
@@ -301,7 +302,7 @@ if (!file_exists(APPLICATION_ROOT . '/public' . $adminFavicon)) {
             
             <li class="sidebar-divider"></li>
             <li class="sidebar-item">
-                <a href="/" title="<?php echo htmlspecialchars(I18n::t('view_site'), ENT_QUOTES, 'UTF-8'); ?>">
+                <a href="/" title="<?php echo Str::escape(I18n::t('view_site')); ?>">
                     <span class="icon-svg sidebar-link-icon"><?php echo App::svg('external-link'); ?></span>
                     <span class="sidebar-link-text"><?php echo I18n::t('view_site'); ?></span>
                 </a>
@@ -318,7 +319,7 @@ if (!file_exists(APPLICATION_ROOT . '/public' . $adminFavicon)) {
     <footer>
         <small>Zero-dependency CMS</small>
         <?php if (!empty($session['user_id'])): ?>
-            <a href="/admin/preferences" title="<?php echo htmlspecialchars(I18n::t('preferences'), ENT_QUOTES, 'UTF-8'); ?>" class="footer-preferences-link">
+            <a href="/admin/preferences" title="<?php echo Str::escape(I18n::t('preferences')); ?>" class="footer-preferences-link">
                 <span class="icon-svg" style="width: 16px; height: 16px;">
                     <?php echo App::svg('settings'); ?>
                 </span>

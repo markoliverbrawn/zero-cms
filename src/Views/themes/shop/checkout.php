@@ -1,11 +1,12 @@
 <?php
+use Zero\Support\Str;
 // src/Views/themes/shop/checkout.php
 ?>
 <h2 style="font-size: 1.8rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; border-bottom: 2px solid var(--border-color); padding-bottom: 12px; margin-top: 0; margin-bottom: 35px;">Secure Checkout</h2>
 
 <?php if (!empty($error)): ?>
     <div style="background-color: #2d1818; border: 1px solid #452222; color: #f87171; padding: 12px; border-radius: var(--border-radius); margin-bottom: 25px; font-size: 0.9rem; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em; text-align: center;">
-        <?php echo htmlspecialchars($error); ?>
+        <?php echo Str::escape($error); ?>
     </div>
 <?php endif; ?>
 
@@ -13,7 +14,7 @@
     
     <!-- Billing & Shipping Information Form -->
     <form method="post" action="/shop/checkout" class="checkout-form-box">
-        <input type="hidden" name="csrf" value="<?php echo htmlspecialchars($csrf ?? '', ENT_QUOTES, 'UTF-8'); ?>">
+        <input type="hidden" name="csrf" value="<?php echo Str::escape($csrf ?? ''); ?>">
         
         <h3 class="checkout-section-title">Shipping & Delivery Details</h3>
 
@@ -50,9 +51,9 @@
             <?php foreach ($cart as $item): ?>
                 <div class="checkout-summary-item">
                     <div style="display: flex; flex-direction: column;">
-                        <span class="checkout-summary-title"><?php echo htmlspecialchars($item['title']); ?></span>
+                        <span class="checkout-summary-title"><?php echo Str::escape($item['title']); ?></span>
                         <?php if (!empty($item['variant_title'])): ?>
-                            <span style="color: var(--accent-color); font-size: 0.7rem; font-weight: bold;"><?php echo htmlspecialchars($item['variant_title']); ?></span>
+                            <span style="color: var(--accent-color); font-size: 0.7rem; font-weight: bold;"><?php echo Str::escape($item['variant_title']); ?></span>
                         <?php endif; ?>
                         <span class="checkout-summary-qty">Qty: <?php echo $item['quantity']; ?></span>
                     </div>

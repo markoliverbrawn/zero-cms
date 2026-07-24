@@ -3,6 +3,7 @@
 
 use Zero\Core\App;
 use Zero\Support\I18n;
+use Zero\Support\Str;
 ?>
 <link rel="stylesheet" href="/assets/css/search.css?v=1.0">
 
@@ -11,7 +12,7 @@ use Zero\Support\I18n;
         <h2>Search Results</h2>
         <p class="search-meta">
             <?php if (!empty($q)): ?>
-                Showing matches for "<strong><?php echo htmlspecialchars($q); ?></strong>"
+                Showing matches for "<strong><?php echo Str::escape($q); ?></strong>"
             <?php else: ?>
                 Please enter a search query.
             <?php endif; ?>
@@ -19,18 +20,18 @@ use Zero\Support\I18n;
     </div>
 
     <form method="get" action="/search" class="search-form-inline">
-        <input type="text" name="q" placeholder="Search the site..." value="<?php echo htmlspecialchars($q ?? ''); ?>" required>
+        <input type="text" name="q" placeholder="Search the site..." value="<?php echo Str::escape($q ?? ''); ?>" required>
         <button type="submit">Search</button>
     </form>
 
     <?php if (!empty($results)): ?>
         <div class="search-results-list">
             <?php foreach ($results as $res): ?>
-                <div class="search-result-card" onclick="window.location.href='<?php echo htmlspecialchars($res['url']); ?>'">
-                    <span class="result-type-badge"><?php echo htmlspecialchars($res['type_label']); ?></span>
+                <div class="search-result-card" onclick="window.location.href='<?php echo Str::escape($res['url']); ?>'">
+                    <span class="result-type-badge"><?php echo Str::escape($res['type_label']); ?></span>
                     <h3>
-                        <a href="<?php echo htmlspecialchars($res['url']); ?>">
-                            <?php echo htmlspecialchars($res['title']); ?>
+                        <a href="<?php echo Str::escape($res['url']); ?>">
+                            <?php echo Str::escape($res['title']); ?>
                         </a>
                     </h3>
                     <p class="result-snippet">
@@ -49,10 +50,10 @@ use Zero\Support\I18n;
                         if (empty($preview)) {
                             $preview = 'Click to view this item and read the detailed specifications...';
                         }
-                        echo htmlspecialchars($preview, ENT_QUOTES, 'UTF-8');
+                        echo Str::escape($preview);
                         ?>
                     </p>
-                    <a href="<?php echo htmlspecialchars($res['url']); ?>" class="view-link">Read More ➔</a>
+                    <a href="<?php echo Str::escape($res['url']); ?>" class="view-link">Read More ➔</a>
                 </div>
             <?php endforeach; ?>
         </div>

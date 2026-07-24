@@ -1,9 +1,10 @@
 <?php
+use Zero\Support\Str;
 // src/Modules/Admin/Views/blocks/text.php
 ?>
 <div class="field-group">
     <label>Block Title</label>
-    <input type="text" class="block-title-input" value="<?php echo htmlspecialchars($blockTitle, ENT_QUOTES, 'UTF-8'); ?>" placeholder="Enter block title (optional)...">
+    <input type="text" class="block-title-input" value="<?php echo Str::escape($blockTitle); ?>" placeholder="Enter block title (optional)...">
 </div>
 <div class="field-group">
     <label>Content Description</label>

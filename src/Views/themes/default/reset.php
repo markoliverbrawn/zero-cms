@@ -1,4 +1,5 @@
 <?php
+use Zero\Support\Str;
 // src/Views/themes/default/reset.php
 ?>
 <link rel="stylesheet" href="/assets/css/auth.css?v=1.3">
@@ -7,12 +8,12 @@
     
     <?php if (!empty($error)): ?>
         <div class="auth-error-box">
-            <?php echo htmlspecialchars($error); ?>
+            <?php echo Str::escape($error); ?>
         </div>
     <?php else: ?>
         <form method="post" action="/reset">
-            <input type="hidden" name="csrf" value="<?php echo htmlspecialchars($csrf ?? '', ENT_QUOTES, 'UTF-8'); ?>">
-            <input type="hidden" name="token" value="<?php echo htmlspecialchars($token ?? ''); ?>">
+            <input type="hidden" name="csrf" value="<?php echo Str::escape($csrf ?? ''); ?>">
+            <input type="hidden" name="token" value="<?php echo Str::escape($token ?? ''); ?>">
             
             <div class="auth-form-group">
                 <label class="auth-label">New Password</label>

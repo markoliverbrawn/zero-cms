@@ -1,18 +1,19 @@
 <?php
+use Zero\Support\Str;
 // src/Views/themes/default/partials/pagination.php
 // Unified, highly-scalable sliding window pagination partial
 ?>
 <nav class="unified-pagination-wrapper">
     <!-- Prev Link -->
     <?php if ($currentPage > 1): ?>
-        <a href="<?php echo htmlspecialchars($buildUrl($currentPage - 1)); ?>" class="pagination-btn page-nav-prev">Prev</a>
+        <a href="<?php echo Str::escape($buildUrl($currentPage - 1)); ?>" class="pagination-btn page-nav-prev">Prev</a>
     <?php else: ?>
         <span class="pagination-btn page-nav-prev disabled">Prev</span>
     <?php endif; ?>
 
     <!-- First Page Anchor -->
     <?php if ($showFirst): ?>
-        <a href="<?php echo htmlspecialchars($buildUrl(1)); ?>" class="pagination-btn">1</a>
+        <a href="<?php echo Str::escape($buildUrl(1)); ?>" class="pagination-btn">1</a>
         <?php if ($startPage > 2): ?>
             <span class="pagination-ellipsis">...</span>
         <?php endif; ?>
@@ -23,7 +24,7 @@
         <?php if ($i === $currentPage): ?>
             <span class="pagination-btn active"><?php echo $i; ?></span>
         <?php else: ?>
-            <a href="<?php echo htmlspecialchars($buildUrl($i)); ?>" class="pagination-btn"><?php echo $i; ?></a>
+            <a href="<?php echo Str::escape($buildUrl($i)); ?>" class="pagination-btn"><?php echo $i; ?></a>
         <?php endif; ?>
     <?php endfor; ?>
 
@@ -32,12 +33,12 @@
         <?php if ($endPage < $totalPages - 1): ?>
             <span class="pagination-ellipsis">...</span>
         <?php endif; ?>
-        <a href="<?php echo htmlspecialchars($buildUrl($totalPages)); ?>" class="pagination-btn"><?php echo $totalPages; ?></a>
+        <a href="<?php echo Str::escape($buildUrl($totalPages)); ?>" class="pagination-btn"><?php echo $totalPages; ?></a>
     <?php endif; ?>
 
     <!-- Next Link -->
     <?php if ($currentPage < $totalPages): ?>
-        <a href="<?php echo htmlspecialchars($buildUrl($currentPage + 1)); ?>" class="pagination-btn page-nav-next">Next</a>
+        <a href="<?php echo Str::escape($buildUrl($currentPage + 1)); ?>" class="pagination-btn page-nav-next">Next</a>
     <?php else: ?>
         <span class="pagination-btn page-nav-next disabled">Next</span>
     <?php endif; ?>

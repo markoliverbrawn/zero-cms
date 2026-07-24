@@ -2,6 +2,7 @@
 // src/Modules/Admin/Views/files/list.php
 
 use Zero\Core\App;
+use Zero\Support\Str;
 
 $errorMessage = $_SESSION['error'] ?? null;
 unset($_SESSION['error']);
@@ -28,36 +29,36 @@ $currentFolder = $folder ?? '';
           $accumulated = !empty($accumulated) ? $accumulated . '/' . $part : $part;
       ?>
         <span style="margin: 0 8px; color: color-mix(in srgb, var(--text-color) 30%, transparent);">/</span>
-        <a href="?folder=<?php echo htmlspecialchars($accumulated, ENT_QUOTES, 'UTF-8'); ?>" style="text-decoration: none; color: var(--text-color);"><?php echo htmlspecialchars($part, ENT_QUOTES, 'UTF-8'); ?></a>
+        <a href="?folder=<?php echo Str::escape($accumulated); ?>" style="text-decoration: none; color: var(--text-color);"><?php echo Str::escape($part); ?></a>
       <?php endforeach; ?>
     <?php endif; ?>
   </div>
 
   <?php if ($errorMessage): ?>
     <div class="error-banner" style="background-color: #f8d7da; color: #721c24; padding: 12px; border: 1px solid #f5c6cb; margin-bottom: 20px;">
-      <?php echo htmlspecialchars($errorMessage, ENT_QUOTES, 'UTF-8'); ?>
+      <?php echo Str::escape($errorMessage); ?>
     </div>
   <?php endif; ?>
 
   <!-- Hidden folder creation form -->
   <form method="post" id="create-folder-form" style="display: none;">
-    <input type="hidden" name="csrf" value="<?php echo htmlspecialchars($csrf ?? '', ENT_QUOTES, "UTF-8"); ?>">
+    <input type="hidden" name="csrf" value="<?php echo Str::escape($csrf ?? ''); ?>">
     <input type="hidden" name="action" value="create_folder">
-    <input type="hidden" name="folder" value="<?php echo htmlspecialchars($currentFolder, ENT_QUOTES, "UTF-8"); ?>">
+    <input type="hidden" name="folder" value="<?php echo Str::escape($currentFolder); ?>">
     <input type="hidden" name="folder_name" id="folder-name-input">
   </form>
 
   <!-- Drag and drop modern upload area -->
   <form method="post" enctype="multipart/form-data" id="media-upload-form" style="margin-bottom: 30px; display: block;">
-    <input type="hidden" name="csrf" value="<?php echo htmlspecialchars($csrf ?? '', ENT_QUOTES, "UTF-8"); ?>">
-    <input type="hidden" name="folder" value="<?php echo htmlspecialchars($currentFolder, ENT_QUOTES, "UTF-8"); ?>">
+    <input type="hidden" name="csrf" value="<?php echo Str::escape($csrf ?? ''); ?>">
+    <input type="hidden" name="folder" value="<?php echo Str::escape($currentFolder); ?>">
     
     <div id="media-drag-drop-zone" class="media-upload-zone">
       <span class="icon-svg media-upload-icon">
         <?php echo App::svg('upload'); ?>
       </span>
       <strong style="display: block; margin-bottom: 5px;">Click to select or drag files here to upload</strong>
-      <span style="font-size: 0.85rem; color: color-mix(in srgb, var(--text-color) 60%, transparent);">Uploading into active folder: <strong><?php echo !empty($currentFolder) ? htmlspecialchars($currentFolder, ENT_QUOTES, 'UTF-8') : 'Root'; ?></strong></span>
+      <span style="font-size: 0.85rem; color: color-mix(in srgb, var(--text-color) 60%, transparent);">Uploading into active folder: <strong><?php echo !empty($currentFolder) ? Str::escape($currentFolder) : 'Root'; ?></strong></span>
       <input type="file" name="file" id="media-file-input" required style="display: none;">
     </div>
     <div id="media-upload-actions" style="display: none; margin-top: 15px; align-items: center; gap: 15px;">
@@ -69,9 +70,9 @@ $currentFolder = $folder ?? '';
 
   <?php if (empty($files) && empty($currentFolder)): ?>
     <p id="no-files-message">No files or folders found.</p>
-    <ul id="files-grid" style="display: none;" data-has-more="<?php echo ($hasMore ?? false) ? 'true' : 'false'; ?>" data-current-page="<?php echo $currentPage ?? 1; ?>" data-folder="<?php echo htmlspecialchars($currentFolder, ENT_QUOTES, 'UTF-8'); ?>"></ul>
+    <ul id="files-grid" style="display: none;" data-has-more="<?php echo ($hasMore ?? false) ? 'true' : 'false'; ?>" data-current-page="<?php echo $currentPage ?? 1; ?>" data-folder="<?php echo Str::escape($currentFolder); ?>"></ul>
   <?php else: ?>
-    <ul id="files-grid" data-has-more="<?php echo ($hasMore ?? false) ? 'true' : 'false'; ?>" data-current-page="<?php echo $currentPage ?? 1; ?>" data-folder="<?php echo htmlspecialchars($currentFolder, ENT_QUOTES, 'UTF-8'); ?>">
+    <ul id="files-grid" data-has-more="<?php echo ($hasMore ?? false) ? 'true' : 'false'; ?>" data-current-page="<?php echo $currentPage ?? 1; ?>" data-folder="<?php echo Str::escape($currentFolder); ?>">
     
     <!-- Render go-up folder tile if we are in a subfolder -->
     <?php if (!empty($currentFolder)): ?>
@@ -80,7 +81,7 @@ $currentFolder = $folder ?? '';
         array_pop($parts);
         $parentFolder = implode('/', $parts);
       ?>
-      <li class="file-card folder-card go-up-card" style="cursor: pointer;" data-folder="<?php echo htmlspecialchars($parentFolder, ENT_QUOTES, 'UTF-8'); ?>" data-fid="parent">
+      <li class="file-card folder-card go-up-card" style="cursor: pointer;" data-folder="<?php echo Str::escape($parentFolder); ?>" data-fid="parent">
         <div class="file-preview-container">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color: color-mix(in srgb, var(--text-color) 60%, transparent);">
             <path d="M19 12H5M12 19l-7-7 7-7"></path>

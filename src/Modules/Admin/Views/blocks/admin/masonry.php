@@ -2,12 +2,13 @@
 // src/Modules/Admin/Views/blocks/admin/masonry.php
 
 use Zero\Models\Media;
+use Zero\Support\Str;
 
 $items = $block['items'] ?? [];
 ?>
 <div class="field-group">
     <label>Block Title</label>
-    <input type="text" class="block-title-input" value="<?php echo htmlspecialchars($blockTitle, ENT_QUOTES, 'UTF-8'); ?>" placeholder="Enter lookbook section title...">
+    <input type="text" class="block-title-input" value="<?php echo Str::escape($blockTitle); ?>" placeholder="Enter lookbook section title...">
 </div>
 <div class="field-group">
     <label>Lookbook Grid Cards List</label>
@@ -25,19 +26,19 @@ $items = $block['items'] ?? [];
                 <div class="block-child-fields-col">
                     <div class="field-group block-child-field-group-8">
                         <label class="block-child-label-desc">Item Title</label>
-                        <input type="text" class="masonry-item-title-input" value="<?php echo htmlspecialchars($iTitle, ENT_QUOTES, 'UTF-8'); ?>" placeholder="Enter item title...">
+                        <input type="text" class="masonry-item-title-input" value="<?php echo Str::escape($iTitle); ?>" placeholder="Enter item title...">
                     </div>
                     <div class="field-group block-child-field-group-8">
                         <label class="block-child-label-desc">Item Image</label>
                         <div class="block-child-image-select-row">
-                            <input type="hidden" class="masonry-item-media_id-input" value="<?php echo htmlspecialchars($iImgId, ENT_QUOTES, 'UTF-8'); ?>">
-                            <input type="text" class="masonry-item-media-display-input" value="<?php echo htmlspecialchars($filename, ENT_QUOTES, 'UTF-8'); ?>" placeholder="No image selected" readonly style="flex: 1;">
+                            <input type="hidden" class="masonry-item-media_id-input" value="<?php echo Str::escape($iImgId); ?>">
+                            <input type="text" class="masonry-item-media-display-input" value="<?php echo Str::escape($filename); ?>" placeholder="No image selected" readonly style="flex: 1;">
                             <button type="button" class="btn-select-masonry-image">Select</button>
                         </div>
                     </div>
                     <div class="field-group block-child-field-group-0">
                         <label class="block-child-label-desc">Item Description</label>
-                        <textarea class="masonry-item-desc-input" placeholder="Enter item description..." rows="2"><?php echo htmlspecialchars($iDesc, ENT_QUOTES, 'UTF-8'); ?></textarea>
+                        <textarea class="masonry-item-desc-input" placeholder="Enter item description..." rows="2"><?php echo Str::escape($iDesc); ?></textarea>
                     </div>
                 </div>
             </div>

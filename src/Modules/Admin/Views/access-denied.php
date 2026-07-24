@@ -1,4 +1,5 @@
 <?php
+use Zero\Support\Str;
 // src/Modules/Admin/Views/access-denied.php
 ?>
 <div class="access-denied-container">
@@ -10,7 +11,7 @@
     </div>
     <h2 class="access-denied-title">Administrative Access Denied</h2>
     <p class="access-denied-desc">
-        Your active user profile is designated as <strong class="access-denied-role-strong">&ldquo;<?php echo htmlspecialchars($currentRole, ENT_QUOTES, 'UTF-8'); ?>&rdquo;</strong>. This resource requires elevated <strong class="access-denied-role-strong">&ldquo;<?php echo htmlspecialchars($requiredRole, ENT_QUOTES, 'UTF-8'); ?>&rdquo;</strong> administrative clearance.
+        Your active user profile is designated as <strong class="access-denied-role-strong">&ldquo;<?php echo Str::escape($currentRole); ?>&rdquo;</strong>. This resource requires elevated <strong class="access-denied-role-strong">&ldquo;<?php echo Str::escape($requiredRole); ?>&rdquo;</strong> administrative clearance.
     </p>
     <div class="access-denied-footer">
         <a href="/admin/dashboard" class="access-denied-back-btn">Return to Dashboard</a>

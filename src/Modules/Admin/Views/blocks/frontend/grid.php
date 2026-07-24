@@ -4,6 +4,7 @@
 use Zero\Core\App;
 use Zero\Database\DB;
 use Zero\Models\Media;
+use Zero\Support\Str;
 
 $gap = $block['gap'] ?? '16px';
 $colsDesktop = $block['cols_desktop'] ?? '4';
@@ -32,7 +33,7 @@ if (!empty($mediaIds)) {
     }
 }
 ?>
-<div class="block-grid" style="--gap: <?php echo htmlspecialchars($gap, ENT_QUOTES, 'UTF-8'); ?>; --cols-desktop: <?php echo htmlspecialchars($colsDesktop, ENT_QUOTES, 'UTF-8'); ?>; --cols-tablet: <?php echo htmlspecialchars($colsTablet, ENT_QUOTES, 'UTF-8'); ?>; --cols-mobile: <?php echo htmlspecialchars($colsMobile, ENT_QUOTES, 'UTF-8'); ?>;">
+<div class="block-grid" style="--gap: <?php echo Str::escape($gap); ?>; --cols-desktop: <?php echo Str::escape($colsDesktop); ?>; --cols-tablet: <?php echo Str::escape($colsTablet); ?>; --cols-mobile: <?php echo Str::escape($colsMobile); ?>;">
     <?php foreach ($items as $item): 
         $iTitle = $item['title'] ?? '';
         $iDesc = $item['desc'] ?? '';
@@ -62,25 +63,25 @@ if (!empty($mediaIds)) {
             $cardClasses .= ' has-svg-icon';
         }
         
-        $styleAttr = ' style="--col-span-desktop: ' . htmlspecialchars($iColSpanDesktop, ENT_QUOTES, 'UTF-8') . '; --col-span-tablet: ' . htmlspecialchars($iColSpanTablet, ENT_QUOTES, 'UTF-8') . ';"';
-        $wrapperAttrs = $hasLink ? ' href="' . htmlspecialchars($iLinkUrl, ENT_QUOTES, 'UTF-8') . '" class="' . $cardClasses . '"' . $styleAttr : ' class="' . $cardClasses . '"' . $styleAttr;
+        $styleAttr = ' style="--col-span-desktop: ' . Str::escape($iColSpanDesktop) . '; --col-span-tablet: ' . Str::escape($iColSpanTablet) . ';"';
+        $wrapperAttrs = $hasLink ? ' href="' . Str::escape($iLinkUrl) . '" class="' . $cardClasses . '"' . $styleAttr : ' class="' . $cardClasses . '"' . $styleAttr;
         ?>
         <<?php echo $wrapperTag; ?><?php echo $wrapperAttrs; ?>>
             <?php if (!empty($iMediaId)): ?>
                 <div class="grid-card-image-wrapper<?php echo $isSvg ? ' is-svg' : ($isVideo ? ' is-video' : ''); ?>">
                     <?php if ($isVideo): ?>
-                        <video src="<?php echo htmlspecialchars($resolveMedia($iMediaId), ENT_QUOTES, 'UTF-8'); ?>" autoplay loop muted playsinline class="grid-card-video"></video>
+                        <video src="<?php echo Str::escape($resolveMedia($iMediaId)); ?>" autoplay loop muted playsinline class="grid-card-video"></video>
                     <?php else: ?>
-                        <img src="<?php echo htmlspecialchars($resolveMedia($iMediaId), ENT_QUOTES, 'UTF-8'); ?>" class="grid-card-image" alt="" />
+                        <img src="<?php echo Str::escape($resolveMedia($iMediaId)); ?>" class="grid-card-image" alt="" />
                     <?php endif; ?>
                 </div>
             <?php endif; ?>
             <div class="grid-card-content">
                 <?php if (!empty($iTitle)): ?>
-                    <h4 class="grid-card-title"><?php echo htmlspecialchars($iTitle, ENT_QUOTES, 'UTF-8'); ?></h4>
+                    <h4 class="grid-card-title"><?php echo Str::escape($iTitle); ?></h4>
                 <?php endif; ?>
                 <?php if (!empty($iDesc)): ?>
-                    <p class="grid-card-desc"><?php echo htmlspecialchars($iDesc, ENT_QUOTES, 'UTF-8'); ?></p>
+                    <p class="grid-card-desc"><?php echo Str::escape($iDesc); ?></p>
                 <?php endif; ?>
             </div>
         </<?php echo $wrapperTag; ?>>

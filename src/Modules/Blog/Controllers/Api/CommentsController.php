@@ -8,6 +8,7 @@ use Zero\Database\DB;
 use Zero\Support\Security;
 use Zero\Interfaces\Controller;
 use Zero\Support\Emailer;
+use Zero\Support\Str;
 
 class CommentsController implements Controller
 {
@@ -113,12 +114,12 @@ class CommentsController implements Controller
                         $subject = "New Comment on your article: " . $post['title'];
                         $htmlBody = "
                             <h2>New Comment Submitted</h2>
-                            <p>A new comment has been posted on your blog article: <strong>" . htmlspecialchars($post['title'], ENT_QUOTES, 'UTF-8') . "</strong>.</p>
+                            <p>A new comment has been posted on your blog article: <strong>" . Str::escape($post['title']) . "</strong>.</p>
                             <hr style='border: none; border-top: 1px solid #ddd; margin: 15px 0;'>
-                            <p><strong>Author:</strong> " . htmlspecialchars($validated['author_name'], ENT_QUOTES, 'UTF-8') . " (" . htmlspecialchars($validated['author_email'], ENT_QUOTES, 'UTF-8') . ")</p>
+                            <p><strong>Author:</strong> " . Str::escape($validated['author_name']) . " (" . Str::escape($validated['author_email']) . ")</p>
                             <p><strong>Content:</strong></p>
                             <div style='background-color: #f7f9fa; border: 1px solid #e1e4e6; padding: 15px; border-radius: 6px;'>
-                                " . nl2br(htmlspecialchars($validated['content'], ENT_QUOTES, 'UTF-8')) . "
+                                " . nl2br(Str::escape($validated['content'])) . "
                             </div>
                         ";
                         
@@ -136,8 +137,8 @@ class CommentsController implements Controller
                 'success' => true,
                 'comment' => [
                     'id' => $commentId,
-                    'author_name' => htmlspecialchars($validated['author_name'], ENT_QUOTES, 'UTF-8'),
-                    'content' => nl2br(htmlspecialchars($validated['content'], ENT_QUOTES, 'UTF-8')),
+                    'author_name' => Str::escape($validated['author_name']),
+                    'content' => nl2br(Str::escape($validated['content'])),
                     'created_at' => date('F d, Y \a\t g:i A'),
                     'status' => 'pending'
                 ]

@@ -1,10 +1,11 @@
 <?php
+use Zero\Support\Str;
 // src/Modules/Admin/Views/blocks/admin/sub_pages.php
 // Sub-Pages List Admin template layout with zero inline styles
 ?>
 <div class="field-group">
     <label>List Title / Header</label>
-    <input type="text" class="block-title-input" value="<?php echo htmlspecialchars($blockTitle, ENT_QUOTES, 'UTF-8'); ?>" placeholder="Sub-Topic Guides">
+    <input type="text" class="block-title-input" value="<?php echo Str::escape($blockTitle); ?>" placeholder="Sub-Topic Guides">
 </div>
 
 <div class="field-group">

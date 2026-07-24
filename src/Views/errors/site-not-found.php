@@ -1,4 +1,5 @@
 <?php
+use Zero\Support\Str;
 /**
  * src/Views/errors/site-not-found.php
  * Polished diagnostic/error template for unconfigured multi-tenant site requests.
@@ -241,7 +242,7 @@
                     <line x1="2" y1="12" x2="22" y2="12"></line>
                     <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
                 </svg>
-                <span>Requested Host: <?= htmlspecialchars($host) ?></span>
+                <span>Requested Host: <?= Str::escape($host) ?></span>
             </div>
 
             <p class="description">
@@ -283,8 +284,8 @@
                 <div class="tenants-grid">
                     <?php foreach ($activeSites as $site): ?>
                         <div class="tenant-card">
-                            <div class="tenant-name"><?= htmlspecialchars($site['name']) ?></div>
-                            <a class="tenant-domain" href="http://<?= htmlspecialchars($site['domain']) . $portSuffix ?>"><?= htmlspecialchars($site['domain']) . $portSuffix ?></a>
+                            <div class="tenant-name"><?= Str::escape($site['name']) ?></div>
+                            <a class="tenant-domain" href="http://<?= Str::escape($site['domain']) . $portSuffix ?>"><?= Str::escape($site['domain']) . $portSuffix ?></a>
                         </div>
                     <?php endforeach; ?>
                 </div>

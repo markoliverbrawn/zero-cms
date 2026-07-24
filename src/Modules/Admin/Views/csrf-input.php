@@ -1,1 +1,2 @@
-<input type="hidden" name="csrf" value="<?php echo htmlspecialchars($csrf ?? '', ENT_QUOTES, "UTF-8"); ?>">
+<input type="hidden" name="csrf" value="<?php
+use Zero\Support\Str; echo Str::escape($csrf ?? ''); ?>">

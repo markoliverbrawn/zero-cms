@@ -8,6 +8,7 @@ use Zero\Interfaces\Model;
 use Zero\Models\Traits\HasSlug;
 use Zero\Models\Traits\IsModel;
 use Zero\Support\I18n;
+use Zero\Support\Str;
 
 class User implements Model
 {
@@ -101,7 +102,7 @@ class User implements Model
             return [];
         }
         
-        throw new \Exception("User preferences requested for non-existent or inactive user: " . htmlspecialchars($userId));
+        throw new \Exception("User preferences requested for non-existent or inactive user: " . Str::escape($userId));
     }
 
     public function save(): string

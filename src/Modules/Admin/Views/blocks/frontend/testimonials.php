@@ -1,4 +1,5 @@
-<?php 
+<?php
+use Zero\Support\Str; 
 $duration = $block['duration'] ?? 5000;
 $items = $block['items'] ?? [];
 ?>
@@ -9,7 +10,7 @@ $items = $block['items'] ?? [];
       <?php foreach ($items as $item): ?>
         <div class="testimonial-slide">
           <div class="quote">"<?php echo $item['content'] ?? ''; ?>"</div>
-          <p class="author">— <?php echo htmlspecialchars($item['person'] ?? '', ENT_QUOTES, "UTF-8"); ?></p>
+          <p class="author">— <?php echo Str::escape($item['person'] ?? ''); ?></p>
         </div>
       <?php endforeach; ?>
     </div>

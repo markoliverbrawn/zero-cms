@@ -3,6 +3,7 @@
 
 use Zero\Core\App;
 use Zero\Support\Security;
+use Zero\Support\Str;
 
 // Calculate total cart items count
 $cartCount = 0;
@@ -35,7 +36,7 @@ if (isset($_SESSION['cart'])) {
         $metaDescription = substr($metaDescription, 0, 157) . '...';
     }
     ?>
-    <meta name="description" content="<?php echo htmlspecialchars($metaDescription, ENT_QUOTES, 'UTF-8'); ?>"/>
+    <meta name="description" content="<?php echo Str::escape($metaDescription); ?>"/>
     <title>Luxe Emporium - Modern Design & Style</title>
     <link rel="icon" type="image/svg+xml" href="/assets/favicons/shop.svg">
     

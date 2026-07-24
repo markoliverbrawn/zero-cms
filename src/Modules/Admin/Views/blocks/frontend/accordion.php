@@ -2,6 +2,7 @@
 // src/Modules/Admin/Views/blocks/frontend/accordion.php
 
 use Zero\Support\Security;
+use Zero\Support\Str;
 
 $items = $block['items'] ?? [];
 ?>
@@ -11,7 +12,7 @@ $items = $block['items'] ?? [];
       <?php foreach ($items as $i => $item): ?>
         <div class="accordion-item <?php echo $i === 0 ? 'active' : ''; ?>">
           <button type="button" class="accordion-trigger">
-            <span class="accordion-title"><?php echo htmlspecialchars($item['title'] ?? '', ENT_QUOTES, "UTF-8"); ?></span>
+            <span class="accordion-title"><?php echo Str::escape($item['title'] ?? ''); ?></span>
             <span class="accordion-icon-wrapper">
               <span class="accordion-line-h"></span>
               <span class="accordion-line-v" style="<?php echo $i === 0 ? 'transform: rotate(90deg);' : ''; ?>"></span>

@@ -2,6 +2,8 @@
 
 namespace Zero\Support;
 
+use Zero\Support\Str;
+
 class BlockHelper
 {
     /**
@@ -46,7 +48,7 @@ class BlockHelper
     public static function getSpaceBeforeClass(array $block): string
     {
         $spaceBefore = $block['space_before'] ?? 'none';
-        return $spaceBefore !== 'none' ? 'space-before-' . htmlspecialchars($spaceBefore, ENT_QUOTES, 'UTF-8') : '';
+        return $spaceBefore !== 'none' ? 'space-before-' . Str::escape($spaceBefore) : '';
     }
 
     /**
@@ -58,6 +60,6 @@ class BlockHelper
     public static function getSpaceAfterClass(array $block): string
     {
         $spaceAfter = $block['space_after'] ?? 'none';
-        return $spaceAfter !== 'none' ? 'space-after-' . htmlspecialchars($spaceAfter, ENT_QUOTES, 'UTF-8') : '';
+        return $spaceAfter !== 'none' ? 'space-after-' . Str::escape($spaceAfter) : '';
     }
 }

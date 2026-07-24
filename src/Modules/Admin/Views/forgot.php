@@ -1,4 +1,5 @@
 <?php
+use Zero\Support\Str;
 // src/Modules/Admin/Views/forgot.php
 ?>
 <div class="auth-card">
@@ -6,17 +7,17 @@
 
   <?php if (!empty($error)): ?>
       <div class="auth-status-banner-error">
-          <?php echo htmlspecialchars($error ?? '', ENT_QUOTES, "UTF-8"); ?>
+          <?php echo Str::escape($error ?? ''); ?>
       </div>
   <?php endif; ?>
 
   <?php if (!empty($success)): ?>
       <div class="auth-status-banner-success">
-          <?php echo htmlspecialchars($success ?? '', ENT_QUOTES, "UTF-8"); ?>
+          <?php echo Str::escape($success ?? ''); ?>
       </div>
   <?php else: ?>
       <form method="post" class="forgot-form">
-          <input type="hidden" name="csrf" value="<?php echo htmlspecialchars($csrf ?? '', ENT_QUOTES, 'UTF-8'); ?>">
+          <input type="hidden" name="csrf" value="<?php echo Str::escape($csrf ?? ''); ?>">
           
           <div class="auth-form-group">
               <label for="username">Account Username</label>

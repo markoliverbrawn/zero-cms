@@ -1,4 +1,5 @@
 <?php
+use Zero\Support\Str;
 // src/Modules/Admin/Views/reset.php
 ?>
 <div class="auth-card">
@@ -6,7 +7,7 @@
   
   <?php if (!empty($error)): ?>
       <div class="auth-status-banner-error">
-          <?php echo htmlspecialchars($error ?? '', ENT_QUOTES, "UTF-8"); ?>
+          <?php echo Str::escape($error ?? ''); ?>
       </div>
   <?php endif; ?>
   
@@ -18,7 +19,7 @@
   
   <?php if (empty($success)): ?>
       <form method="post" class="reset-form">
-          <input type="hidden" name="token" value="<?php echo htmlspecialchars($token ?? '', ENT_QUOTES, "UTF-8"); ?>">
+          <input type="hidden" name="token" value="<?php echo Str::escape($token ?? ''); ?>">
           <?php echo \Zero\Support\Security::csrfInput(); ?>
           
           <div class="auth-form-group">

@@ -1,15 +1,16 @@
 <?php
+use Zero\Support\Str;
 // src/Modules/Admin/Views/blocks/testimonials.php
 $items = $block['items'] ?? [];
 $duration = $block['duration'] ?? 5000;
 ?>
 <div class="field-group">
     <label>Block Title</label>
-    <input type="text" class="block-title-input" value="<?php echo htmlspecialchars($blockTitle, ENT_QUOTES, 'UTF-8'); ?>" placeholder="Enter testimonials section title...">
+    <input type="text" class="block-title-input" value="<?php echo Str::escape($blockTitle); ?>" placeholder="Enter testimonials section title...">
 </div>
 <div class="field-group">
     <label>Carousel Slide Duration (ms)</label>
-    <input type="number" class="testimonials-duration-input" value="<?php echo htmlspecialchars($duration, ENT_QUOTES, 'UTF-8'); ?>" placeholder="e.g. 5000" min="1000" step="500">
+    <input type="number" class="testimonials-duration-input" value="<?php echo Str::escape($duration); ?>" placeholder="e.g. 5000" min="1000" step="500">
 </div>
 <div class="field-group">
     <label>Testimonials List</label>
@@ -39,7 +40,7 @@ $duration = $block['duration'] ?? 5000;
                     </div>
                     <div class="field-group block-child-field-group-0">
                         <label class="block-child-label-desc">Author / Person</label>
-                        <input type="text" class="testimonial-item-person-input" value="<?php echo htmlspecialchars($itemPerson, ENT_QUOTES, 'UTF-8'); ?>" placeholder="e.g. Jane Doe, CEO at Studio">
+                        <input type="text" class="testimonial-item-person-input" value="<?php echo Str::escape($itemPerson); ?>" placeholder="e.g. Jane Doe, CEO at Studio">
                     </div>
                 </div>
             </div>

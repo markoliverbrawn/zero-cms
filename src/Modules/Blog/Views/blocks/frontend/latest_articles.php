@@ -3,6 +3,7 @@
 
 use Zero\Core\App;
 use Zero\Modules\Blog\Models\Post;
+use Zero\Support\Str;
 
 $limit = isset($block['limit']) ? (int)$block['limit'] : 3;
 if ($limit < 1) $limit = 3;
@@ -23,7 +24,7 @@ if (class_exists(Post::class)) {
     <div class="latest-articles-container <?php echo $layout === 'list' ? 'layout-list' : 'layout-grid'; ?>">
         <?php if (!empty($posts)): ?>
             <?php foreach ($posts as $post): ?>
-                <div class="latest-article-card" style="cursor: pointer;" onclick="window.location.href='/post/<?php echo htmlspecialchars($post->slug, ENT_QUOTES, 'UTF-8'); ?>'">
+                <div class="latest-article-card" style="cursor: pointer;" onclick="window.location.href='/post/<?php echo Str::escape($post->slug); ?>'">
                     <div class="latest-article-meta">
                         <span class="latest-article-date">
                             <span class="icon-svg icon-svg-12"><?php echo App::svg('clock'); ?></span>
@@ -31,14 +32,14 @@ if (class_exists(Post::class)) {
                         </span>
                     </div>
                     <h4 class="latest-article-title">
-                        <a href="/post/<?php echo htmlspecialchars($post->slug, ENT_QUOTES, "UTF-8"); ?>">
-                            <?php echo htmlspecialchars($post->title, ENT_QUOTES, "UTF-8"); ?>
+                        <a href="/post/<?php echo Str::escape($post->slug); ?>">
+                            <?php echo Str::escape($post->title); ?>
                         </a>
                     </h4>
                     <?php if (!empty($post->summary)): ?>
-                        <p class="latest-article-summary"><?php echo htmlspecialchars($post->summary, ENT_QUOTES, "UTF-8"); ?></p>
+                        <p class="latest-article-summary"><?php echo Str::escape($post->summary); ?></p>
                     <?php endif; ?>
-                    <a href="/post/<?php echo htmlspecialchars($post->slug, ENT_QUOTES, "UTF-8"); ?>" class="latest-article-more">
+                    <a href="/post/<?php echo Str::escape($post->slug); ?>" class="latest-article-more">
                         <span>Read Article</span>
                         <span class="icon-svg icon-svg-12"><?php echo App::svg('chevron-right'); ?></span>
                     </a>

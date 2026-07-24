@@ -1,11 +1,12 @@
 <?php
+use Zero\Support\Str;
 // src/Modules/Admin/Views/blocks/code.php
 $language = $block['language'] ?? 'php';
 $code = $block['code'] ?? '';
 ?>
 <div class="field-group">
     <label>Block Label / File Name (Optional)</label>
-    <input type="text" class="block-title-input" value="<?php echo htmlspecialchars($blockTitle, ENT_QUOTES, 'UTF-8'); ?>" placeholder="e.g. src/Core/App.php...">
+    <input type="text" class="block-title-input" value="<?php echo Str::escape($blockTitle); ?>" placeholder="e.g. src/Core/App.php...">
 </div>
 <div class="field-group">
     <label>Programming Language</label>
@@ -21,5 +22,5 @@ $code = $block['code'] ?? '';
 </div>
 <div class="field-group">
     <label>Raw Source Code</label>
-    <textarea class="block-code-input" placeholder="Paste or write your source code here..." rows="12"><?php echo htmlspecialchars($code, ENT_QUOTES, 'UTF-8'); ?></textarea>
+    <textarea class="block-code-input" placeholder="Paste or write your source code here..." rows="12"><?php echo Str::escape($code); ?></textarea>
 </div>

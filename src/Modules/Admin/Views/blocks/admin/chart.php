@@ -1,12 +1,13 @@
 <?php
 // src/Modules/Admin/Views/blocks/admin/chart.php
 use Zero\Core\App;
+use Zero\Support\Str;
 
 $items = $block['items'] ?? [];
 ?>
 <div class="field-group">
     <label>Chart Title</label>
-    <input type="text" class="block-title-input" value="<?php echo htmlspecialchars($blockTitle, ENT_QUOTES, 'UTF-8'); ?>" placeholder="Enter chart title...">
+    <input type="text" class="block-title-input" value="<?php echo Str::escape($blockTitle); ?>" placeholder="Enter chart title...">
 </div>
 <div class="field-group">
     <label>Chart Data Points</label>
@@ -20,11 +21,11 @@ $items = $block['items'] ?? [];
                 <div class="block-child-fields-col">
                     <div class="field-group">
                         <label>Bar Label</label>
-                        <input type="text" class="chart-item-label-input" value="<?php echo htmlspecialchars($iLabel, ENT_QUOTES, 'UTF-8'); ?>" placeholder="e.g. Zero CMS">
+                        <input type="text" class="chart-item-label-input" value="<?php echo Str::escape($iLabel); ?>" placeholder="e.g. Zero CMS">
                     </div>
                     <div class="field-group">
                         <label>Numeric Value</label>
-                        <input type="number" step="any" class="chart-item-value-input" value="<?php echo htmlspecialchars($iValue, ENT_QUOTES, 'UTF-8'); ?>" placeholder="e.g. 30.31">
+                        <input type="number" step="any" class="chart-item-value-input" value="<?php echo Str::escape($iValue); ?>" placeholder="e.g. 30.31">
                     </div>
                 </div>
                 <button type="button" class="btn-delete-chart-item" title="Remove Data Point">

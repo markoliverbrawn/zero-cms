@@ -1,10 +1,11 @@
 <?php
+use Zero\Support\Str;
 // src/Modules/Admin/Views/blocks/accordion.php
 $items = $block['items'] ?? [];
 ?>
 <div class="field-group">
     <label>Block Title</label>
-    <input type="text" class="block-title-input" value="<?php echo htmlspecialchars($blockTitle, ENT_QUOTES, 'UTF-8'); ?>" placeholder="Enter accordion section title...">
+    <input type="text" class="block-title-input" value="<?php echo Str::escape($blockTitle); ?>" placeholder="Enter accordion section title...">
 </div>
 <div class="field-group">
     <label>Accordion Items</label>
@@ -19,7 +20,7 @@ $items = $block['items'] ?? [];
                 <div class="block-child-fields-col">
                     <div class="field-group block-child-field-group-8">
                         <label class="block-child-label-desc">Header / Question</label>
-                        <input type="text" class="accordion-item-title-input" value="<?php echo htmlspecialchars($itemHeader, ENT_QUOTES, 'UTF-8'); ?>" placeholder="Enter heading question...">
+                        <input type="text" class="accordion-item-title-input" value="<?php echo Str::escape($itemHeader); ?>" placeholder="Enter heading question...">
                     </div>
                     <div class="field-group block-child-field-group-0">
                         <label class="block-child-label-desc">Panel Content / Answer</label>

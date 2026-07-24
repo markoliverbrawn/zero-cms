@@ -3,6 +3,7 @@
 
 use Zero\Models\Media;
 use Zero\Support\Security;
+use Zero\Support\Str;
 
 $title = $block['title'] ?? '';
 $content = $block['content'] ?? '';
@@ -31,7 +32,7 @@ if (!empty($minHeight) && $minHeight !== 'default') {
     <?php if ($isVideo && !empty($resolvedUrl)): ?>
         <!-- Continually looping background video -->
         <video class="hero-video-bg" loop muted playsinline preload="none">
-            <source data-src="<?php echo htmlspecialchars($resolvedUrl, ENT_QUOTES, "UTF-8"); ?>" type="video/mp4">
+            <source data-src="<?php echo Str::escape($resolvedUrl); ?>" type="video/mp4">
         </video>
         <div class="hero-video-overlay"></div>
     <?php endif; ?>

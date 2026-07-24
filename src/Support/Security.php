@@ -4,6 +4,7 @@ namespace Zero\Support;
 
 use Zero\Core\App;
 use Zero\Database\DB;
+use Zero\Support\Str;
 
 class Security {
     /**
@@ -55,7 +56,7 @@ class Security {
     }
 
     public static function csrfInput() {
-        return '<input type="hidden" name="csrf" value="' . htmlspecialchars(self::csrfToken(), ENT_QUOTES, "UTF-8") . '">';
+        return '<input type="hidden" name="csrf" value="' . Str::escape(self::csrfToken()) . '">';
     }
 
     public static function csrfToken()

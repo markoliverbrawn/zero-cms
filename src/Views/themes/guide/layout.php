@@ -5,6 +5,7 @@ use Zero\Core\App;
 use Zero\Core\Env;
 use Zero\Database\DB;
 use Zero\Support\I18n;
+use Zero\Support\Str;
 
 // Fetch dynamic pages and posts for sidebar widgets
 $siteId = App::getCurrentSiteId();
@@ -35,13 +36,13 @@ $isHomepage = (isset($post) && property_exists($post, 'slug') && $post->slug ===
         $metaDescription = substr($metaDescription, 0, 157) . '...';
     }
     ?>
-    <meta name="description" content="<?php echo htmlspecialchars($metaDescription, ENT_QUOTES, 'UTF-8'); ?>"/>
-    <title><?php echo htmlspecialchars($isHomepage ? (App::getCurrentSite()->name . ' | Zero Dependencies. Infinite Speed.') : (($post->title ?? 'Docs') . ' | ' . App::getCurrentSite()->name), ENT_QUOTES, 'UTF-8'); ?></title>
+    <meta name="description" content="<?php echo Str::escape($metaDescription); ?>"/>
+    <title><?php echo Str::escape($isHomepage ? (App::getCurrentSite()->name . ' | Zero Dependencies. Infinite Speed.') : (($post->title ?? 'Docs') . ' | ' . App::getCurrentSite()->name)); ?></title>
     
     <!-- Combined & Optimized Asset-Bundled CSS (1 Request, 0% FOUC, Max Lighthouse Points) -->
     <link rel="stylesheet" href="/assets/css/main-guide.css?v=1.0">
     
-    <meta name="csrf-token" content="<?php echo htmlspecialchars($csrf ?? '', ENT_QUOTES, "UTF-8"); ?>">
+    <meta name="csrf-token" content="<?php echo Str::escape($csrf ?? ''); ?>">
 </head>
 <body>
 
@@ -51,14 +52,14 @@ $isHomepage = (isset($post) && property_exists($post, 'slug') && $post->slug ===
         <div style="display: flex; align-items: center; gap: 8px;">
             <a href="/" class="logo-group">
                 <div class="logo-minimal">Z</div>
-                <span><?php echo htmlspecialchars(App::getCurrentSite()->name, ENT_QUOTES, 'UTF-8'); ?></span>
+                <span><?php echo Str::escape(App::getCurrentSite()->name); ?></span>
             </a>
         </div>
         
         <div style="display: flex; align-items: center; gap: 24px;">
             <!-- Search bar -->
             <form method="get" action="/search" class="nav-search-form">
-                <input type="text" name="q" placeholder="Search docs..." class="nav-search-input" value="<?php echo htmlspecialchars($_GET['q'] ?? '', ENT_QUOTES, 'UTF-8'); ?>" required>
+                <input type="text" name="q" placeholder="Search docs..." class="nav-search-input" value="<?php echo Str::escape($_GET['q'] ?? ''); ?>" required>
                 <span class="material-symbols-outlined search-icon">search</span>
             </form>
             
@@ -139,7 +140,7 @@ $isHomepage = (isset($post) && property_exists($post, 'slug') && $post->slug ===
         <aside class="docs-sidebar">
             <!-- Search Widget (Mobile fallback) -->
             <form method="get" action="/search" class="mobile-search-form">
-                <input type="text" name="q" placeholder="Search..." class="nav-search-input" value="<?php echo htmlspecialchars($_GET['q'] ?? '', ENT_QUOTES, 'UTF-8'); ?>" required>
+                <input type="text" name="q" placeholder="Search..." class="nav-search-input" value="<?php echo Str::escape($_GET['q'] ?? ''); ?>" required>
                 <span class="material-symbols-outlined search-icon">search</span>
             </form>
 
@@ -180,14 +181,14 @@ $isHomepage = (isset($post) && property_exists($post, 'slug') && $post->slug ===
                         <?php foreach ($tree as $parentSlug => $node): ?>
                             <?php $parent = $node['page']; ?>
                             <li class="parent-topic">
-                                <a href="/<?php echo htmlspecialchars($parent['slug'], ENT_QUOTES, 'UTF-8'); ?>">
-                                    <?php echo htmlspecialchars($parent['title'], ENT_QUOTES, 'UTF-8'); ?>
+                                <a href="/<?php echo Str::escape($parent['slug']); ?>">
+                                    <?php echo Str::escape($parent['title']); ?>
                                 </a>
                             </li>
                             <?php foreach ($node['children'] as $child): ?>
                                 <li class="child-topic">
-                                    <a href="/<?php echo htmlspecialchars($child['slug'], ENT_QUOTES, 'UTF-8'); ?>">
-                                        <?php echo htmlspecialchars($child['title'], ENT_QUOTES, 'UTF-8'); ?>
+                                    <a href="/<?php echo Str::escape($child['slug']); ?>">
+                                        <?php echo Str::escape($child['title']); ?>
                                     </a>
                                 </li>
                             <?php endforeach; ?>
@@ -203,8 +204,8 @@ $isHomepage = (isset($post) && property_exists($post, 'slug') && $post->slug ===
                     <ul class="widget-list">
                         <?php foreach ($sidebarPosts as $p): ?>
                             <li class="publication-item">
-                                <a href="/post/<?php echo htmlspecialchars($p['slug'], ENT_QUOTES, 'UTF-8'); ?>">
-                                    <?php echo htmlspecialchars($p['title'], ENT_QUOTES, 'UTF-8'); ?>
+                                <a href="/post/<?php echo Str::escape($p['slug']); ?>">
+                                    <?php echo Str::escape($p['title']); ?>
                                 </a>
                                 <small><?php echo date('M d, Y', strtotime($p['created_at'])); ?></small>
                             </li>
@@ -230,7 +231,7 @@ $isHomepage = (isset($post) && property_exists($post, 'slug') && $post->slug ===
         <div class="brand-section">
             <div class="brand-logo-row">
                 <span class="brand-dot"></span>
-                <span><?php echo htmlspecialchars(App::getCurrentSite()->name, ENT_QUOTES, 'UTF-8'); ?></span>
+                <span><?php echo Str::escape(App::getCurrentSite()->name); ?></span>
             </div>
             <p>
                 A high-performance, zero-dependency, multi-tenant headless CMS and high-contrast e-commerce platform built natively for Serverless edge runtimes.

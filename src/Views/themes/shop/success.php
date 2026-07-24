@@ -1,4 +1,5 @@
 <?php
+use Zero\Support\Str;
 // src/Views/themes/shop/success.php
 ?>
 <div class="success-layout">
@@ -21,19 +22,19 @@
         <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 25px;">
             <div class="receipt-row">
                 <span class="receipt-label">Receipt ID (UUIDv7):</span>
-                <span class="receipt-val" style="color: var(--accent-color); font-family: monospace; font-size: 0.8rem;"><?php echo htmlspecialchars($order->id); ?></span>
+                <span class="receipt-val" style="color: var(--accent-color); font-family: monospace; font-size: 0.8rem;"><?php echo Str::escape($order->id); ?></span>
             </div>
             <div class="receipt-row">
                 <span class="receipt-label">Customer Name:</span>
-                <span class="receipt-val"><?php echo htmlspecialchars($order->customer_name); ?></span>
+                <span class="receipt-val"><?php echo Str::escape($order->customer_name); ?></span>
             </div>
             <div class="receipt-row">
                 <span class="receipt-label">Email Address:</span>
-                <span class="receipt-val"><?php echo htmlspecialchars($order->customer_email); ?></span>
+                <span class="receipt-val"><?php echo Str::escape($order->customer_email); ?></span>
             </div>
             <div class="receipt-row">
                 <span class="receipt-label">Transaction Time:</span>
-                <span class="receipt-val"><?php echo htmlspecialchars($order->created_at); ?></span>
+                <span class="receipt-val"><?php echo Str::escape($order->created_at); ?></span>
             </div>
         </div>
 
@@ -41,7 +42,7 @@
         <div class="receipt-cargo-box">
             <?php foreach ($items as $item): ?>
                 <div class="receipt-cargo-item">
-                    <span class="receipt-cargo-title"><?php echo htmlspecialchars($item->title); ?> (x<?php echo $item->quantity; ?>)</span>
+                    <span class="receipt-cargo-title"><?php echo Str::escape($item->title); ?> (x<?php echo $item->quantity; ?>)</span>
                     <span class="receipt-cargo-price">$<?php echo number_format($item->price * $item->quantity, 2); ?></span>
                 </div>
             <?php endforeach; ?>

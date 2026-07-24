@@ -9,6 +9,7 @@
     <button type="button" data-cmd="insertTable" title="Insert Table">Table</button>
     <button type="button" data-cmd="removeFormat">Clear</button>
   </div>
-  <div class="editor-area" contenteditable="true"><?php echo $record->{$field} ?? ''; ?></div>
-  <input type="hidden" name="<?php echo htmlspecialchars($field ?? 'content', ENT_QUOTES, "UTF-8"); ?>" class="content-input" value="<?php echo htmlspecialchars($record->{$field} ?? '', ENT_QUOTES, "UTF-8"); ?>">
+  <div class="editor-area" contenteditable="true"><?php
+use Zero\Support\Str; echo $record->{$field} ?? ''; ?></div>
+  <input type="hidden" name="<?php echo Str::escape($field ?? 'content'); ?>" class="content-input" value="<?php echo Str::escape($record->{$field} ?? ''); ?>">
 </div>

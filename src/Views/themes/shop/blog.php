@@ -2,6 +2,7 @@
 // src/Views/themes/shop/blog.php
 
 use Zero\Core\App;
+use Zero\Support\Str;
 ?>
 <style>
 .shop-blog-layout {
@@ -164,7 +165,7 @@ use Zero\Core\App;
     }
     $shouldOmitTitle = !empty($post->omit_title) || $hasHeroBlock;
     if (!$shouldOmitTitle): ?>
-      <h1><?php echo htmlspecialchars($post->title ?? 'Studio Journal', ENT_QUOTES, "UTF-8"); ?></h1>
+      <h1><?php echo Str::escape($post->title ?? 'Studio Journal'); ?></h1>
     <?php endif; ?>
     <p>Curated guidelines, material studies, and creative blueprints from our design studio.</p>
   </header>
@@ -173,16 +174,16 @@ use Zero\Core\App;
   <?php if (!empty($posts)): ?>
     <div class="journal-grid">
       <?php foreach ($posts as $p): ?>
-        <article class="journal-card" onclick="window.location.href='/post/<?php echo htmlspecialchars($p->slug, ENT_QUOTES, 'UTF-8'); ?>'">
+        <article class="journal-card" onclick="window.location.href='/post/<?php echo Str::escape($p->slug); ?>'">
           <div>
             <div class="journal-card-date"><?php echo date('F j, Y', strtotime($p->created_at)); ?></div>
             <h3>
-              <a href="/post/<?php echo htmlspecialchars($p->slug, ENT_QUOTES, 'UTF-8'); ?>">
-                <?php echo htmlspecialchars($p->title, ENT_QUOTES, 'UTF-8'); ?>
+              <a href="/post/<?php echo Str::escape($p->slug); ?>">
+                <?php echo Str::escape($p->title); ?>
               </a>
             </h3>
             <p class="journal-card-preview">
-              <?php echo htmlspecialchars($p->summary ?? '', ENT_QUOTES, 'UTF-8'); ?>
+              <?php echo Str::escape($p->summary ?? ''); ?>
             </p>
           </div>
           <div class="journal-card-btn-container">

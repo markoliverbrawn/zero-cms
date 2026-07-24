@@ -3,6 +3,7 @@
 
 use Zero\Modules\Forum\Models\ForumPost;
 use Zero\Support\Security;
+use Zero\Support\Str;
 
 $replyErrorMsg = $_SESSION['reply_error_msg'] ?? null;
 unset($_SESSION['reply_error_msg']);
@@ -31,11 +32,11 @@ if (!empty($replyParentId)) {
     <div class="forum-breadcrumb">
         <a href="/forum">Forums</a>
         <span>/</span>
-        <a href="/forum/board/<?php echo htmlspecialchars($board->slug, ENT_QUOTES, 'UTF-8'); ?>">
-            <?php echo htmlspecialchars($board->title, ENT_QUOTES, 'UTF-8'); ?>
+        <a href="/forum/board/<?php echo Str::escape($board->slug); ?>">
+            <?php echo Str::escape($board->title); ?>
         </a>
         <span>/</span>
-        <span class="active-crumb"><?php echo htmlspecialchars($thread->title, ENT_QUOTES, 'UTF-8'); ?></span>
+        <span class="active-crumb"><?php echo Str::escape($thread->title); ?></span>
     </div>
 
     <!-- Moderation Toolbar for Admin/Staff -->
@@ -45,14 +46,14 @@ if (!empty($replyParentId)) {
     ?>
         <div class="moderation-toolbar">
             <span>Moderation Panel:</span>
-            <form method="post" action="/forum/thread/<?php echo htmlspecialchars($thread->slug, ENT_QUOTES, 'UTF-8'); ?>/moderate">
+            <form method="post" action="/forum/thread/<?php echo Str::escape($thread->slug); ?>/moderate">
                 <?php echo Security::csrfInput(); ?>
                 <input type="hidden" name="action" value="pin">
                 <button type="submit" class="btn-mod-action">
                     <?php echo ($thread->status === 'pinned') ? 'Unpin Thread' : 'Pin Thread'; ?>
                 </button>
             </form>
-            <form method="post" action="/forum/thread/<?php echo htmlspecialchars($thread->slug, ENT_QUOTES, 'UTF-8'); ?>/moderate">
+            <form method="post" action="/forum/thread/<?php echo Str::escape($thread->slug); ?>/moderate">
                 <?php echo Security::csrfInput(); ?>
                 <input type="hidden" name="action" value="lock">
                 <button type="submit" class="btn-mod-action">
@@ -84,22 +85,22 @@ if (!empty($replyParentId)) {
             ?>
             <div class="post-card <?php echo $isNested ? 'post-nested' : ''; ?>" id="post-<?php echo $post->id; ?>">
                 <div class="post-sidebar">
-                    <span class="post-author"><?php echo htmlspecialchars($authorName, ENT_QUOTES, 'UTF-8'); ?></span>
+                    <span class="post-author"><?php echo Str::escape($authorName); ?></span>
                     <span class="post-author-role <?php echo $roleClass; ?>"><?php echo $roleLabel; ?></span>
                     <span class="post-date"><?php echo date('M d, Y \a\t g:i A', strtotime($post->created_at ?? 'now')); ?></span>
                 </div>
                 <div class="post-content-area">
-                    <p class="post-body"><?php echo htmlspecialchars($post->content, ENT_QUOTES, 'UTF-8'); ?></p>
+                    <p class="post-body"><?php echo Str::escape($post->content); ?></p>
                     
                     <div class="post-actions-toolbar">
                         <?php if ($thread->status !== 'locked' && !empty($user)): ?>
-                            <button type="button" onclick="openReplyModal('<?php echo $post->id; ?>', '<?php echo htmlspecialchars($authorName, ENT_QUOTES, 'UTF-8'); ?>')">
+                            <button type="button" onclick="openReplyModal('<?php echo $post->id; ?>', '<?php echo Str::escape($authorName); ?>')">
                                 Reply
                             </button>
                         <?php endif; ?>
                         
                         <?php if ($isModerator && $index > 0): // Only moderators can delete replies, and don't allow deleting original topic post here ?>
-                            <form method="post" action="/forum/thread/<?php echo htmlspecialchars($thread->slug, ENT_QUOTES, 'UTF-8'); ?>/moderate" class="moderator-delete-form">
+                            <form method="post" action="/forum/thread/<?php echo Str::escape($thread->slug); ?>/moderate" class="moderator-delete-form">
                                 <?php echo Security::csrfInput(); ?>
                                 <input type="hidden" name="action" value="delete_post">
                                 <input type="hidden" name="post_id" value="<?php echo $post->id; ?>">
@@ -128,11 +129,11 @@ if (!empty($replyParentId)) {
                 
                 <?php if (!empty($replyErrorMsg) && empty($replyParentId)): ?>
                     <div class="form-error">
-                        <?php echo htmlspecialchars($replyErrorMsg, ENT_QUOTES, 'UTF-8'); ?>
+                        <?php echo Str::escape($replyErrorMsg); ?>
                     </div>
                 <?php endif; ?>
 
-                <form method="post" action="/forum/thread/<?php echo htmlspecialchars($thread->slug, ENT_QUOTES, 'UTF-8'); ?>/reply" class="forum-form">
+                <form method="post" action="/forum/thread/<?php echo Str::escape($thread->slug); ?>/reply" class="forum-form">
                     <?php echo Security::csrfInput(); ?>
                     <input type="hidden" name="parent_id" value="">
                     
@@ -145,7 +146,7 @@ if (!empty($replyParentId)) {
                     </div>
 
                     <div class="form-group form-group-editor">
-                        <textarea name="content" rows="6" placeholder="Write your reply here..." required><?php echo htmlspecialchars($replyQuickContentDraft ?? '', ENT_QUOTES, 'UTF-8'); ?></textarea>
+                        <textarea name="content" rows="6" placeholder="Write your reply here..." required><?php echo Str::escape($replyQuickContentDraft ?? ''); ?></textarea>
                     </div>
                     
                     <button type="submit" class="btn-submit">Submit Reply</button>
@@ -158,17 +159,17 @@ if (!empty($replyParentId)) {
     <div class="thread-reply-overlay <?php if (!empty($replyParentId)) echo 'show-modal'; ?>" id="reply-modal" onclick="closeReplyModal(event)">
         <div class="reply-modal-content" onclick="event.stopPropagation()">
             <button class="btn-close-modal" onclick="closeReplyModal()">×</button>
-            <h2 class="modal-title">Reply to <span id="reply-author-placeholder"><?php echo htmlspecialchars($replyParentAuthorName, ENT_QUOTES, 'UTF-8'); ?></span></h2>
+            <h2 class="modal-title">Reply to <span id="reply-author-placeholder"><?php echo Str::escape($replyParentAuthorName); ?></span></h2>
             
             <?php if (!empty($replyErrorMsg) && !empty($replyParentId)): ?>
                 <div class="form-error">
-                    <?php echo htmlspecialchars($replyErrorMsg, ENT_QUOTES, 'UTF-8'); ?>
+                    <?php echo Str::escape($replyErrorMsg); ?>
                 </div>
             <?php endif; ?>
 
-            <form method="post" action="/forum/thread/<?php echo htmlspecialchars($thread->slug, ENT_QUOTES, 'UTF-8'); ?>/reply" class="forum-form">
+            <form method="post" action="/forum/thread/<?php echo Str::escape($thread->slug); ?>/reply" class="forum-form">
                 <?php echo Security::csrfInput(); ?>
-                <input type="hidden" name="parent_id" id="modal-parent-id" value="<?php echo htmlspecialchars($replyParentId ?? '', ENT_QUOTES, 'UTF-8'); ?>">
+                <input type="hidden" name="parent_id" id="modal-parent-id" value="<?php echo Str::escape($replyParentId ?? ''); ?>">
                 
                 <div class="editor-toolbar">
                     <span onclick="insertFormat(this.closest('.forum-form').querySelector('textarea'), 'bold')" class="btn-bold" title="Bold">B</span>
@@ -179,7 +180,7 @@ if (!empty($replyParentId)) {
                 </div>
 
                 <div class="form-group form-group-editor">
-                    <textarea name="content" rows="5" placeholder="Write your nested response..." required><?php echo htmlspecialchars($replyContentDraft ?? '', ENT_QUOTES, 'UTF-8'); ?></textarea>
+                    <textarea name="content" rows="5" placeholder="Write your nested response..." required><?php echo Str::escape($replyContentDraft ?? ''); ?></textarea>
                 </div>
                 
                 <button type="submit" class="btn-submit">Post Nested Reply</button>

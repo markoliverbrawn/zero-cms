@@ -4,6 +4,7 @@
 use Zero\Core\App;
 use Zero\Database\DB;
 use Zero\Support\I18n;
+use Zero\Support\Str;
 
 $renderWidgetKey = $renderWidgetKey ?? '';
 $activeSiteId = App::getCurrentSiteId();
@@ -65,7 +66,7 @@ if ($renderWidgetKey === 'shop_orders_chart'):
                     $barHeight = $pct * $chartHeight;
                     $x = 40 + $gap + ($idx * ($barWidth + $gap));
                     $y = 170 - $barHeight;
-                    $dateLabel = htmlspecialchars(I18n::localizeDateTime($day['order_date'], 'd M'), ENT_QUOTES, 'UTF-8');
+                    $dateLabel = Str::escape(I18n::localizeDateTime($day['order_date'], 'd M'));
                 ?>
                     <g class="chart-bar-group">
                         <rect x="<?php echo $x; ?>" y="<?php echo $y; ?>" width="<?php echo $barWidth; ?>" height="<?php echo $barHeight; ?>" class="chart-rect-bar" rx="4" />
@@ -152,7 +153,7 @@ if ($renderWidgetKey === 'shop_orders_chart'):
                     <div class="shop-pie-legend-item">
                         <div class="shop-pie-legend-label">
                             <span class="shop-pie-legend-dot <?php echo $dotClass; ?>"></span>
-                            <span><?php echo htmlspecialchars($name); ?></span>
+                            <span><?php echo Str::escape($name); ?></span>
                         </div>
                         <span class="shop-pie-legend-value"><?php echo number_format($pct, 1); ?>%</span>
                     </div>
@@ -185,13 +186,13 @@ if ($renderWidgetKey === 'shop_orders_chart'):
           <?php foreach ($recentOrders as $ord): ?>
             <li>
               <div>
-                <a href="/admin/edit/orders/<?php echo $ord['id']; ?>" class="dashboard-order-customer-link" title="Customer: <?php echo htmlspecialchars($ord['customer_name'] ?? ''); ?>">
-                  <?php echo htmlspecialchars($ord['customer_name'] ?? ''); ?>
+                <a href="/admin/edit/orders/<?php echo $ord['id']; ?>" class="dashboard-order-customer-link" title="Customer: <?php echo Str::escape($ord['customer_name'] ?? ''); ?>">
+                  <?php echo Str::escape($ord['customer_name'] ?? ''); ?>
                 </a>
                 <span class="dashboard-order-badge status-<?php echo strtolower($ord['status'] ?? ''); ?>">
-                    <?php echo htmlspecialchars($ord['status'] ?? ''); ?>
+                    <?php echo Str::escape($ord['status'] ?? ''); ?>
                 </span>
-                <div class="dashboard-order-date"><?php echo htmlspecialchars(I18n::localizeDateTime($ord['created_at'], 'M d, H:i'), ENT_QUOTES, 'UTF-8'); ?></div>
+                <div class="dashboard-order-date"><?php echo Str::escape(I18n::localizeDateTime($ord['created_at'], 'M d, H:i')); ?></div>
               </div>
               <span class="dashboard-order-price">
                 $<?php echo number_format($ord['total_price'], 2); ?>

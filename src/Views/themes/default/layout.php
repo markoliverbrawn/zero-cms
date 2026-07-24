@@ -4,6 +4,7 @@
 use Zero\Core\App;
 use Zero\Database\DB;
 use Zero\Support\I18n;
+use Zero\Support\Str;
 
 // Fetch dynamic pages and posts for corporate sidebar
 $siteId = App::getCurrentSiteId();
@@ -30,11 +31,11 @@ $sidebarPosts = DB::query("SELECT title, slug FROM blog_posts WHERE status = 'pu
         $metaDescription = substr($metaDescription, 0, 157) . '...';
     }
     ?>
-    <meta name="description" content="<?php echo htmlspecialchars($metaDescription, ENT_QUOTES, 'UTF-8'); ?>"/>
+    <meta name="description" content="<?php echo Str::escape($metaDescription); ?>"/>
     <title>Zero CMS Corporate Portal</title>
     <link rel="icon" type="image/svg+xml" href="/assets/favicons/corporate.svg">
     <link rel="stylesheet" href="/assets/css/main-default.css?v=1.0">
-    <meta name="csrf-token" content="<?php echo htmlspecialchars($csrf ?? '', ENT_QUOTES, "UTF-8"); ?>">
+    <meta name="csrf-token" content="<?php echo Str::escape($csrf ?? ''); ?>">
 </head>
 <body>
 
@@ -74,8 +75,8 @@ $sidebarPosts = DB::query("SELECT title, slug FROM blog_posts WHERE status = 'pu
                     <ul>
                         <?php foreach ($sidebarPages as $page): ?>
                             <li>
-                                <a href="/<?php echo htmlspecialchars($page['slug'], ENT_QUOTES, 'UTF-8'); ?>">
-                                    <?php echo htmlspecialchars($page['title'], ENT_QUOTES, 'UTF-8'); ?>
+                                <a href="/<?php echo Str::escape($page['slug']); ?>">
+                                    <?php echo Str::escape($page['title']); ?>
                                 </a>
                             </li>
                         <?php endforeach; ?>
@@ -90,8 +91,8 @@ $sidebarPosts = DB::query("SELECT title, slug FROM blog_posts WHERE status = 'pu
                     <ul>
                         <?php foreach ($sidebarPosts as $post): ?>
                             <li>
-                                <a href="/post/<?php echo htmlspecialchars($post['slug'], ENT_QUOTES, 'UTF-8'); ?>">
-                                    <?php echo htmlspecialchars($post['title'], ENT_QUOTES, 'UTF-8'); ?>
+                                <a href="/post/<?php echo Str::escape($post['slug']); ?>">
+                                    <?php echo Str::escape($post['title']); ?>
                                 </a>
                             </li>
                         <?php endforeach; ?>

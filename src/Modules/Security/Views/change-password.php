@@ -3,6 +3,7 @@
 
 use Zero\Core\App;
 use Zero\Support\Security;
+use Zero\Support\Str;
 
 ?>
 <div class="auth-wrapper" style="display: flex; align-items: center; justify-content: center; min-height: 70vh; padding: 2rem 1rem;">
@@ -25,7 +26,7 @@ use Zero\Support\Security;
         <!-- System Errors/Warnings -->
         <?php if (!empty($error)): ?>
             <div class="auth-status-banner-error" style="background-color: #fef2f2; border: 1px solid #fca5a5; border-radius: 6px; padding: 1rem; color: #991b1b; margin-bottom: 1.5rem; font-size: 0.9rem; font-weight: 600;">
-                <span style="color: #b91c1c; font-weight: bold; margin-right: 4px;">[ERROR]</span><?php echo htmlspecialchars($error, ENT_QUOTES, "UTF-8"); ?>
+                <span style="color: #b91c1c; font-weight: bold; margin-right: 4px;">[ERROR]</span><?php echo Str::escape($error); ?>
             </div>
         <?php endif; ?>
 

@@ -2,6 +2,7 @@
 // src/Modules/Admin/Views/fields/status.php
 
 use Zero\Core\App;
+use Zero\Support\Str;
 
 $val = strtolower($value ?? '');
 $icon = 'status-draft';
@@ -16,7 +17,7 @@ if ($val === 'published' || $val === 'completed' || $val === 'shipped' || $val =
 }
 ?>
 <span class="status-badge <?php echo $class; ?>">
-    <span class="icon-svg" title="<?php echo htmlspecialchars($val); ?>">
+    <span class="icon-svg" title="<?php echo Str::escape($val); ?>">
         <?php echo App::svg($icon); ?>
     </span>
     

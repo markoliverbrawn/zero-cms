@@ -3,6 +3,7 @@
 
 use Zero\Core\App;
 use Zero\Support\Security;
+use Zero\Support\Str;
 
 $hasHeroBlock = false;
 if (!empty($post->content)) {
@@ -22,7 +23,7 @@ $shouldOmitTitle = !empty($post->omit_title) || $hasHeroBlock;
   <!-- Blog Parent Page Title & Body -->
   <?php if (!$shouldOmitTitle): ?>
     <h1 class="blog-header-title">
-      <?php echo htmlspecialchars($post->title ?? '', ENT_QUOTES, "UTF-8"); ?>
+      <?php echo Str::escape($post->title ?? ''); ?>
     </h1>
   <?php endif; ?>
   
@@ -61,11 +62,11 @@ $shouldOmitTitle = !empty($post->omit_title) || $hasHeroBlock;
   <?php if (!empty($posts)): ?>
     <div class="blog-cards-list">
       <?php foreach ($posts as $p): ?>
-        <div class="blog-card" onclick="window.location.href='/post/<?php echo htmlspecialchars($p->slug, ENT_QUOTES, 'UTF-8'); ?>'">
+        <div class="blog-card" onclick="window.location.href='/post/<?php echo Str::escape($p->slug); ?>'">
           <div>
             <h3 class="blog-card-title">
-              <a href="/post/<?php echo htmlspecialchars($p->slug, ENT_QUOTES, 'UTF-8'); ?>" style="color: inherit; text-decoration: none;">
-                <?php echo htmlspecialchars($p->title, ENT_QUOTES, 'UTF-8'); ?>
+              <a href="/post/<?php echo Str::escape($p->slug); ?>" style="color: inherit; text-decoration: none;">
+                <?php echo Str::escape($p->title); ?>
               </a>
             </h3>
             <div class="blog-card-meta">
@@ -80,10 +81,10 @@ $shouldOmitTitle = !empty($post->omit_title) || $hasHeroBlock;
               <span><?php echo date('F j, Y', strtotime($p->created_at ?? 'now')); ?></span>
             </div>
             <p class="blog-card-summary">
-              <?php echo htmlspecialchars($p->summary ?? '', ENT_QUOTES, 'UTF-8'); ?>
+              <?php echo Str::escape($p->summary ?? ''); ?>
             </p>
           </div>
-          <a href="/post/<?php echo htmlspecialchars($p->slug, ENT_QUOTES, 'UTF-8'); ?>" class="blog-card-link">Read Publication ➔</a>
+          <a href="/post/<?php echo Str::escape($p->slug); ?>" class="blog-card-link">Read Publication ➔</a>
         </div>
       <?php endforeach; ?>
     </div>
