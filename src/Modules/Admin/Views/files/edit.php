@@ -91,13 +91,14 @@ $createdAt = $file['created_at'] ?? '';
           <label>Public Web Accessible Link</label>
           <div class="copy-input-wrapper">
             <input type="text" id="public-url-input" class="readonly-field-input" value="<?php echo htmlspecialchars($pathValue, ENT_QUOTES, 'UTF-8'); ?>" readonly>
-            <button type="button" class="btn-copy" onclick="navigator.clipboard.writeText(document.getElementById('public-url-input').value); alert('Public URL copied directly to clipboard!');">
+            <button type="button" id="copy-link-btn" class="btn-copy">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px; margin-right: 6px;">
                 <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
                 <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
               </svg>
               Copy Link
             </button>
+            <span id="copy-success-notice" class="copy-success-notice">Copied!</span>
           </div>
         </div>
 
@@ -113,7 +114,7 @@ $createdAt = $file['created_at'] ?? '';
               </svg>
               <strong>Choose a new file to replace this asset</strong>
               <span>Select another file from your computer (optional)</span>
-              <input type="file" name="file" id="reupload-file-input" onchange="document.getElementById('selected-file-notice').innerText = 'Selected file: ' + this.files[0].name; document.getElementById('selected-file-notice').style.display = 'block';">
+              <input type="file" name="file" id="reupload-file-input">
             </label>
             <div id="selected-file-notice" class="file-notice" style="display: none;"></div>
           </div>
@@ -177,7 +178,7 @@ $createdAt = $file['created_at'] ?? '';
 </div>
 
 <?php if (str_starts_with($mimeValue, 'image/')): ?>
-<script>
+<script nonce="<?php echo \Zero\Core\App::getNonce(); ?>">
 document.addEventListener('DOMContentLoaded', function() {
     const focalOverlay = document.getElementById('focal-overlay');
     const focalSquare = document.getElementById('focal-square');
@@ -371,7 +372,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 <?php endif; ?>
 
-<script>
+<script nonce="<?php echo \Zero\Core\App::getNonce(); ?>">
 document.addEventListener('DOMContentLoaded', function() {
     const editForm = document.querySelector('.modern-form');
     if (editForm) {

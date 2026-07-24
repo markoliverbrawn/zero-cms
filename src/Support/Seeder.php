@@ -124,7 +124,7 @@ class Seeder
         }
     }
 
-    public function run(bool $cleanUploads = true): bool
+    public function run(bool $cleanUploads = true, bool $generateZip = false): bool
     {
         echo "Parsing seeder definition JSON...\n";
         $data = $this->data;
@@ -351,11 +351,17 @@ class Seeder
             echo "Warning: Bulk-indexing failed: " . $e->getMessage() . "\n";
         }
 
-        // Generate distribution ZIP package generically
-        try {
-            $this->createDistributionZip();
-        } catch (\Exception $e) {
-            echo "Warning: Unable to compile distribution ZIP: " . $e->getMessage() . "\n";
+        // Generate distribution ZIP package generically (only if requested and ZipArchive is active)
+        if ($generateZip) {
+            if (class_exists('\\ZipArchive')) {
+                try {
+                    $this->createDistributionZip();
+                } catch (\Throwable $e) {
+                    echo "Warning: Unable to compile distribution ZIP: " . $e->getMessage() . "\n";
+                }
+            } else {
+                echo "Skipping system distribution ZIP compilation (ZipArchive extension not installed).\n";
+            }
         }
 
         echo "Data seeding finished successfully!\n";

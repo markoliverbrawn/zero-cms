@@ -26,17 +26,31 @@ class ModelController implements Controller
             $id = $_POST['id'] ?? null;
         } elseif ($isRestore) {
             $action = 'restore';
-            $id = $matches[2];
+            $id = $_POST['id'] ?? null;
         } elseif ($isForceDelete) {
             $action = 'force-delete';
-            $id = $matches[2];
+            $id = $_POST['id'] ?? null;
         } else {
             $id = $matches[2]; // Can be UUIDv7 or the literal word 'new'
             $action = ($id === 'new') ? 'new' : 'edit';
         }
 
         // Enforce Role-Based Access Control (RBAC) security checks
-        if ($modelName === 'users' || $modelName === 'sites') {
+        $restrictedModelsForEditor = [
+            'users', 
+            'sites', 
+            'audit_logs', 
+            'shop_orders', 
+            'password_resets', 
+            'security_audits'
+        ];
+        
+        if (in_array($modelName, $restrictedModelsForEditor)) {
+            App::applyRoleMiddleware('super_admin');
+        }
+
+        // Restrict destructive actions (restore and force-delete) on any model strictly to super_admin
+        if ($action === 'restore' || $action === 'force-delete') {
             App::applyRoleMiddleware('super_admin');
         }
 
@@ -72,6 +86,13 @@ class ModelController implements Controller
         }
 
         if ($action === 'restore') {
+            if ($method !== 'POST') {
+                http_response_code(405);
+                echo "Method not allowed";
+                exit;
+            }
+            App::applyCsrfMiddleware();
+
             if ($id) {
                 $record = $model::findTrashed($id);
                 if ($record) {
@@ -86,6 +107,13 @@ class ModelController implements Controller
         }
 
         if ($action === 'force-delete') {
+            if ($method !== 'POST') {
+                http_response_code(405);
+                echo "Method not allowed";
+                exit;
+            }
+            App::applyCsrfMiddleware();
+
             if ($id) {
                 $record = $model::findTrashed($id);
                 if ($record) {

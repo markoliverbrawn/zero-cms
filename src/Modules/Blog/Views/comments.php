@@ -77,7 +77,7 @@ $comments = Comment::getForPost($post->id);
   <?php endif; ?>
 </section>
 
-<script>
+<script nonce="<?php echo \Zero\Core\App::getNonce(); ?>">
 (function() {
   var section = document.querySelector('.comments-section');
   if (!section) return;

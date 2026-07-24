@@ -337,6 +337,7 @@
             .copy-input-wrapper {
                 display: flex;
                 gap: 10px;
+                align-items: center;
 
                 input {
                     flex: 1;
@@ -359,6 +360,15 @@
                     &:hover {
                         opacity: 0.9;
                     }
+                }
+
+                .copy-success-notice {
+                    display: none;
+                    color: #2ecc71;
+                    font-weight: bold;
+                    font-size: 0.9rem;
+                    margin-left: 10px;
+                    white-space: nowrap;
                 }
             }
 

@@ -16,12 +16,23 @@ class ResetController implements Controller
         $method = $_SERVER['REQUEST_METHOD'];
         $token = $_GET['token'] ?? ($_POST['token'] ?? '');
         if ($method === 'POST') {
+            App::applyCsrfMiddleware();
             $ip = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
 
             // Enforce centralized rate limiting and progressive lockout protection via Middleware
             AuthThrottlingMiddleware::handle('password_reset', 'admin/reset', ['token' => $token], function() {});
 
             $new = $_POST['password'] ?? '';
+            
+            // Security Hardening: Enforce strong password complexity policy
+            if (strlen($new) < 10 || !preg_match('/[A-Z]/', $new) || !preg_match('/[a-z]/', $new) || !preg_match('/[0-9]/', $new)) {
+                App::render('admin/reset', [
+                    'token' => $token,
+                    'error' => 'Password is too weak. It must be at least 10 characters long and contain uppercase, lowercase, and numeric characters.'
+                ]);
+                exit;
+            }
+
             $row = DB::query('SELECT * FROM password_resets WHERE token = ? LIMIT 1', [$token])->fetch();
             if (!$row || strtotime($row['expires_at']) < time()) {
                 // Log failed attempt to increment rate limit counter
@@ -34,7 +45,10 @@ class ResetController implements Controller
             }
             $hash = password_hash($new, PASSWORD_DEFAULT);
             DB::query('UPDATE users SET password_hash = ? WHERE id = ?', [$hash, $row['user_id']]);
-            DB::query('DELETE FROM password_resets WHERE id = ?', [$row['id']]);
+            
+            // Security Hardening: Invalidate and rotate ALL pending password resets for this user upon success
+            DB::query('DELETE FROM password_resets WHERE user_id = ?', [$row['user_id']]);
+            
             Logger::log($row['user_id'], 'password_reset_success', 'user', $row['user_id'], ['ip_address' => $_SERVER['REMOTE_ADDR']]);
             App::render('admin/reset', ['success' => true]);
             exit;

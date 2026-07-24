@@ -163,11 +163,19 @@
               $isHomepageRow = $record && method_exists($record, 'isHomepage') && $record->isHomepage();
               ?>
               <?php if ($status === 'trash'): ?>
-                <a href="/admin/restore/<?php echo htmlspecialchars($modelName ?? '', ENT_QUOTES, "UTF-8"); ?>/<?php echo htmlspecialchars($record->id ?? '', ENT_QUOTES, "UTF-8"); ?>" class="btn-restore">Restore</a>
+                <form method="post" action="/admin/restore/<?php echo htmlspecialchars($modelName ?? '', ENT_QUOTES, "UTF-8"); ?>" class="admin-restore-form">
+                  <input type="hidden" name="csrf" value="<?php echo htmlspecialchars($csrf ?? '', ENT_QUOTES, "UTF-8"); ?>">
+                  <input type="hidden" name="id" value="<?php echo htmlspecialchars($record->id ?? '', ENT_QUOTES, "UTF-8"); ?>">
+                  <button type="submit" class="btn-restore-link">Restore</button>
+                </form>
                 <?php if ($isHomepageRow): ?>
-                  <span class="btn-force-delete" style="opacity: 0.4; cursor: not-allowed;" title="The designated site homepage cannot be deleted.">Delete Permanently</span>
+                  <button type="button" class="btn-force-delete-link" disabled title="The designated site homepage cannot be deleted.">Delete Permanently</button>
                 <?php else: ?>
-                  <a href="/admin/force-delete/<?php echo htmlspecialchars($modelName ?? '', ENT_QUOTES, "UTF-8"); ?>/<?php echo htmlspecialchars($record->id ?? '', ENT_QUOTES, "UTF-8"); ?>" class="btn-force-delete" data-id="<?php echo htmlspecialchars($record->id ?? '', ENT_QUOTES, "UTF-8"); ?>" data-model="<?php echo htmlspecialchars($modelName ?? '', ENT_QUOTES, "UTF-8"); ?>">Delete Permanently</a>
+                  <form method="post" action="/admin/force-delete/<?php echo htmlspecialchars($modelName ?? '', ENT_QUOTES, "UTF-8"); ?>" class="admin-force-delete-form">
+                    <input type="hidden" name="csrf" value="<?php echo htmlspecialchars($csrf ?? '', ENT_QUOTES, "UTF-8"); ?>">
+                    <input type="hidden" name="id" value="<?php echo htmlspecialchars($record->id ?? '', ENT_QUOTES, "UTF-8"); ?>">
+                    <button type="submit" class="btn-force-delete-link">Delete Permanently</button>
+                  </form>
                 <?php endif; ?>
               <?php else: ?>
                 <a href="/admin/edit/<?php echo htmlspecialchars($modelName ?? '', ENT_QUOTES, "UTF-8"); ?>/<?php echo htmlspecialchars($record->id ?? '', ENT_QUOTES, "UTF-8"); ?>"><?php echo htmlspecialchars($editLabel, ENT_QUOTES, "UTF-8"); ?></a>
@@ -191,7 +199,7 @@
 </div>
 
 <?php if (($isOrderable ?? false) && $status === 'active'): ?>
-<script>
+<script nonce="<?php echo \Zero\Core\App::getNonce(); ?>">
 window.ADMIN_MODEL_NAME = "<?php echo htmlspecialchars($modelName ?? '', ENT_QUOTES, 'UTF-8'); ?>";
 </script>
 <?php endif; ?>

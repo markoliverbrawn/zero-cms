@@ -8,6 +8,7 @@ use Zero\Database\DB;
 use Zero\Models\Media;
 use Zero\Modules\Blog\Models\Post;
 use Zero\Support\BlockHelper;
+use Zero\Support\Security;
 
 $isBlogPost = $post instanceof Post;
 
@@ -121,7 +122,7 @@ $shouldOmitTitle = !empty($post->omit_title) || $hasHeroBlock;
             case 'baseline':
                 echo '<div class="block-baseline">';
                 echo '<h1>' . htmlspecialchars($block['title'] ?? '') . '</h1>';
-                echo '<p>' . ($block['content'] ?? '') . '</p>';
+                echo '<p>' . Security::sanitizeHtml($block['content'] ?? '') . '</p>';
                 echo '</div>';
                 break;
             case 'text':
@@ -129,7 +130,7 @@ $shouldOmitTitle = !empty($post->omit_title) || $hasHeroBlock;
                 if (!empty($block['title'])) {
                     echo '<h3 style="color: var(--neon-cyan); margin-bottom: 1.25rem;">' . htmlspecialchars($block['title']) . '</h3>';
                 }
-                echo '<div>' . ($block['content'] ?? '') . '</div>';
+                echo '<div>' . Security::sanitizeHtml($block['content'] ?? '') . '</div>';
                 echo '</div>';
                 break;
             case 'text_image':
@@ -141,7 +142,7 @@ $shouldOmitTitle = !empty($post->omit_title) || $hasHeroBlock;
                 if (!empty($block['title'])) {
                     echo '<h3 style="color: var(--neon-pink); margin-bottom: 1.25rem;">' . htmlspecialchars($block['title']) . '</h3>';
                 }
-                echo '<div>' . ($block['content'] ?? '') . '</div>';
+                echo '<div>' . Security::sanitizeHtml($block['content'] ?? '') . '</div>';
                 echo '</div>';
                 echo '<div class="block-image-col" style="flex: 1 1 35%; min-width: 250px; border-radius: var(--border-radius); overflow: hidden; border: 1px solid var(--border-color);">';
                 if (!empty($img)) {
@@ -161,7 +162,7 @@ $shouldOmitTitle = !empty($post->omit_title) || $hasHeroBlock;
                         echo '<button class="accordion-trigger">';
                         echo '<span class="accordion-title">' . htmlspecialchars($item['title'] ?? '') . '</span>';
                         echo '</button>';
-                        echo '<div class="accordion-content">' . ($item['content'] ?? '') . '</div>';
+                        echo '<div class="accordion-content">' . Security::sanitizeHtml($item['content'] ?? '') . '</div>';
                         echo '</div>';
                     }
                 }
@@ -177,7 +178,7 @@ $shouldOmitTitle = !empty($post->omit_title) || $hasHeroBlock;
                 if (!empty($block['items'])) {
                     foreach ($block['items'] as $item) {
                         echo '<div class="testimonial-slide">';
-                        echo '<div class="testimonial-quote">“' . ($item['content'] ?? '') . '”</div>';
+                        echo '<div class="testimonial-quote">“' . Security::sanitizeHtml($item['content'] ?? '') . '”</div>';
                         echo '<div class="testimonial-author">— ' . htmlspecialchars($item['person'] ?? '', ENT_QUOTES, 'UTF-8') . '</div>';
                         echo '</div>';
                     }

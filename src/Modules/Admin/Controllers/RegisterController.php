@@ -54,7 +54,7 @@ class RegisterController implements Controller
                         'username' => $username,
                         'email' => $email,
                         'password_hash' => password_hash($password, PASSWORD_DEFAULT),
-                        'role' => 'editor', // Register as 'editor' so they can update profiles and addresses
+                        'role' => 'member', // Register as standard customer 'member' (CSP & RBAC hardened)
                         'preferences' => json_encode(['theme' => 'light', 'addresses' => []]),
                         'created_at' => gmdate('Y-m-d H:i:s'),
                         'updated_at' => gmdate('Y-m-d H:i:s')

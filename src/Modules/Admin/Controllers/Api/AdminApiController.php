@@ -801,6 +801,11 @@ class AdminApiController extends ApiController
         }
 
         $mime = mime_content_type($file['tmp_name']);
+        if ($mime === 'image/svg+xml' || $ext === 'svg') {
+            if (!Security::sanitizeSvg($file['tmp_name'])) {
+                $this->respond(['success' => false, 'error' => 'Invalid SVG file or sanitization failed.'], 400);
+            }
+        }
         if (Storage::putFile($targetPath, $file['tmp_name'])) {
             $dbPath = Storage::getUrl($targetPath);
 

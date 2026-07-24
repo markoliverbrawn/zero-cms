@@ -13,7 +13,7 @@ class GoogleCloudStorageDriver implements StorageDriver
 
     public function __construct()
     {
-        $this->bucketName = Env::get('GCS_BUCKET_NAME', '');
+        $this->bucketName = Env::get('GCS_BUCKET_NAME', Env::get('GCS_BUCKET', ''));
     }
 
     /**
@@ -129,7 +129,7 @@ class GoogleCloudStorageDriver implements StorageDriver
     }
 
     /**
-     * Authenticates with Google API using JWT and fetches an OAuth2 Access Token.
+     * Authenticates with Google API using JWT or fetches from Metadata Server on Cloud Run.
      */
     protected function getAccessToken(): string
     {
@@ -139,7 +139,28 @@ class GoogleCloudStorageDriver implements StorageDriver
 
         $keyPath = Env::get('GCS_KEY_FILE');
         if (empty($keyPath) || !file_exists($keyPath)) {
-            throw new Exception("GCS Key File is missing or not configured inside .env.");
+            // Fallback: Fetch JWT-less OAuth2 Access Token from the Google Metadata Server natively on Cloud Run / GCP!
+            $metadataUrl = 'http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token';
+            $ch = curl_init($metadataUrl);
+            curl_setopt_array($ch, [
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_HTTPHEADER => ['Metadata-Flavor: Google'],
+                CURLOPT_TIMEOUT => 2
+            ]);
+            $response = curl_exec($ch);
+            $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+
+            if ($status === 200 && !empty($response)) {
+                $data = json_decode($response, true);
+                if (isset($data['access_token'])) {
+                    $this->accessToken = $data['access_token'];
+                    $this->tokenExpiresAt = time() + intval($data['expires_in'] ?? 3500) - 60; // 60s buffer
+                    return $this->accessToken;
+                }
+            }
+
+            throw new Exception("GCS Key File is missing/not found, and Google Metadata Server token resolution failed.");
         }
 
         $keyData = json_decode(file_get_contents($keyPath), true);

@@ -29,6 +29,17 @@ class AuthMiddleware
             exit();
         }
 
+        // Centralized RBAC Hardening: Restrict back-office access to administrative roles only
+        $currentRole = App::getCurrentUserRole();
+        if ($currentRole !== 'editor' && $currentRole !== 'super_admin') {
+            http_response_code(403);
+            App::render('admin/access_denied', [
+                'currentRole' => $currentRole,
+                'requiredRole' => 'editor'
+            ]);
+            exit();
+        }
+
         // User is logged in and valid, proceed to the next middleware or route handler
         return $next();
     }

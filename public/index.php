@@ -1,6 +1,6 @@
 <?php
 define('REQUEST_START_TIME', microtime(true));
-ini_set('display_errors', '1');
+// Error reporting is configured dynamically once the environment is loaded below.
 
 define('APPLICATION_ROOT', dirname(__DIR__));
 define('VIEWS_DIR', APPLICATION_ROOT . '/src/Views');
@@ -32,6 +32,15 @@ use Zero\Http\Router;
 use Zero\Http\Controllers\CssBundleController;
 
 Env::load(APPLICATION_ROOT);
+
+// Security Hardening: Disable error disclosures in production to prevent schema/path leaks
+if (Env::get('ENVIRONMENT') === 'production') {
+    ini_set('display_errors', '0');
+    error_reporting(0);
+} else {
+    ini_set('display_errors', '1');
+    error_reporting(E_ALL);
+}
 
 // Bootstrap Multi-Tenant CMS (Automatically discovers active modules, registers routes, and boots tenant)
 App::bootstrap();

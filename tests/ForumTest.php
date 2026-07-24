@@ -47,6 +47,10 @@ $propSite->setValue(null, null);
 $_SERVER['REQUEST_METHOD'] = 'POST';
 $_SERVER['HTTP_HOST'] = 'd6laptop.zero.kitchensink'; // active tenant
 
+// Pre-cleanup to ensure no leftover records from previous failed runs crash this test run
+DB::query("DELETE FROM users WHERE username = 'neo_test' OR email = 'neo@matrix.zero'");
+DB::query("DELETE FROM sites WHERE domain = 'd6laptop.zero.kitchensink'");
+
 // Insert mock site, board, user, and thread for integration testing
 $mockSiteId = \Zero\Support\Security::uuidv7();
 DB::query("
@@ -133,6 +137,7 @@ $foundThread = ForumThread::findBySlug('test-thread');
 assert_test($foundThread !== null, "findBySlug() successfully retrieves the forum thread by its slug");
 assert_test($foundThread->site_id === $siteId, "hydrated ForumThread has a non-empty site_id matching the active site");
 
+// 7. Verify post find and site_id hydration
 $foundPost = ForumPost::find($rootPostId);
 assert_test($foundPost !== null, "find() successfully retrieves the forum post by id");
 assert_test($foundPost->site_id === $siteId, "hydrated ForumPost has a non-empty site_id matching the active site");

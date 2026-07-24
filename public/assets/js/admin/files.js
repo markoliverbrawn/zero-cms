@@ -1,4 +1,51 @@
 document.addEventListener('DOMContentLoaded', function() {
+    // -------------------------------------------------------------------------
+    // CSP-COMPLIANT EVENT LISTENERS (No Inline Events)
+    // -------------------------------------------------------------------------
+    // 1. Parent Folder "Go Up" click handler
+    var goUpCard = document.querySelector('.go-up-card');
+    if (goUpCard) {
+        goUpCard.addEventListener('click', function() {
+            var parentFolder = goUpCard.getAttribute('data-folder');
+            if (parentFolder !== null) {
+                window.location.href = '?folder=' + encodeURIComponent(parentFolder);
+            }
+        });
+    }
+
+    // 2. Edit Page: Copy URL click handler
+    var copyBtn = document.getElementById('copy-link-btn');
+    var publicUrlInput = document.getElementById('public-url-input');
+    var copySuccessNotice = document.getElementById('copy-success-notice');
+    if (copyBtn && publicUrlInput) {
+        copyBtn.addEventListener('click', function() {
+            navigator.clipboard.writeText(publicUrlInput.value).then(function() {
+                if (copySuccessNotice) {
+                    copySuccessNotice.style.display = 'inline-block';
+                    setTimeout(function() {
+                        copySuccessNotice.style.display = 'none';
+                    }, 2500);
+                }
+            });
+        });
+    }
+
+    // 3. Edit Page: Re-upload File selection notice change handler
+    var reuploadInput = document.getElementById('reupload-file-input');
+    var selectedFileNotice = document.getElementById('selected-file-notice');
+    if (reuploadInput && selectedFileNotice) {
+        reuploadInput.addEventListener('change', function() {
+            if (reuploadInput.files && reuploadInput.files.length) {
+                selectedFileNotice.textContent = 'Selected file: ' + reuploadInput.files[0].name;
+                selectedFileNotice.style.display = 'block';
+            } else {
+                selectedFileNotice.textContent = '';
+                selectedFileNotice.style.display = 'none';
+            }
+        });
+    }
+    // -------------------------------------------------------------------------
+
     var searchInput = document.getElementById('files-search-input');
     var filesGrid = document.getElementById('files-grid');
     var noFilteredMessage = document.getElementById('no-filtered-files-message');

@@ -19,6 +19,7 @@
   <?php if (empty($success)): ?>
       <form method="post" class="reset-form">
           <input type="hidden" name="token" value="<?php echo htmlspecialchars($token ?? '', ENT_QUOTES, "UTF-8"); ?>">
+          <?php echo \Zero\Support\Security::csrfInput(); ?>
           
           <div class="auth-form-group">
               <label for="password">New Password</label>

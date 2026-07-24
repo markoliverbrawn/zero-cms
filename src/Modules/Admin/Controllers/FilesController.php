@@ -195,6 +195,13 @@ class FilesController implements Controller
             }
 
             $mime = mime_content_type($file['tmp_name']);
+            if ($mime === 'image/svg+xml' || $ext === 'svg') {
+                if (!Security::sanitizeSvg($file['tmp_name'])) {
+                    $_SESSION['error'] = 'Invalid SVG file or sanitization failed.';
+                    header('Location: /admin/list/files' . (!empty($currentFolder) ? '?folder=' . urlencode($currentFolder) : ''));
+                    exit;
+                }
+            }
             if (Storage::putFile($targetPath, $file['tmp_name'])) {
                 $dbPath = Storage::getUrl($targetPath);
 
@@ -447,6 +454,12 @@ class FilesController implements Controller
         }
 
         $mime = mime_content_type($file['tmp_name']);
+        if ($mime === 'image/svg+xml' || $ext === 'svg') {
+            if (!Security::sanitizeSvg($file['tmp_name'])) {
+                echo json_encode(['success' => false, 'error' => 'Invalid SVG file or sanitization failed.']);
+                exit;
+            }
+        }
         if (Storage::putFile($targetPath, $file['tmp_name'])) {
             $dbPath = '/storage/uploads' . (!empty($currentFolder) ? '/' . $currentFolder : '') . '/' . $filename;
 
@@ -551,6 +564,19 @@ class FilesController implements Controller
                     $counter++;
                 }
 
+                if ($detectedMime === 'image/svg+xml' || $ext === 'svg') {
+                    if (!Security::sanitizeSvg($file['tmp_name'])) {
+                        $errorMsg = 'Invalid SVG file or sanitization failed.';
+                        if ($isAjax) {
+                            header('Content-Type: application/json');
+                            echo json_encode(['success' => false, 'error' => $errorMsg]);
+                            exit;
+                        }
+                        $_SESSION['error'] = $errorMsg;
+                        header("Location: /admin/list/files/edit/{$fileId}");
+                        exit;
+                    }
+                }
                 if (Storage::putFile($targetPath, $file['tmp_name'])) {
                     $filename = $newFilename;
                     $dbPath = Storage::getUrl($targetPath);

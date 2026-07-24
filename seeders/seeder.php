@@ -32,11 +32,15 @@ Env::load(APPLICATION_ROOT);
 // Bootstrap multi-tenant framework to discover all active modules and capabilities
 App::bootstrap();
 
-// Parse command line arguments for selective seeding capabilities (e.g. php seeders/seeder.php --only=kitchensink)
+// Parse command line arguments for selective seeding capabilities and ZIP generation
 $onlySite = null;
+$generateZip = false;
 foreach ($argv as $arg) {
     if (strpos($arg, '--only=') === 0) {
         $onlySite = substr($arg, 7);
+    }
+    if ($arg === '--zip') {
+        $generateZip = true;
     }
 }
 
@@ -63,15 +67,52 @@ MigrationManager::up();
 
 // Initialize Central Database Tables Schemas & Super Admin from static JSON configuration
 $coreData = json_decode(file_get_contents(APPLICATION_ROOT . '/seeders/data/corporate.json'), true) ?? [];
-if ($onlySite !== null) {
-    // If selective seeding is enabled, we only want the core users (super admins) from corporate.json.
+
+if ($onlySite !== null && $onlySite !== 'corporate') {
+    // If selective seeding is enabled and NOT targeting corporate, we only want the core users (super admins) from corporate.json.
     // We remove "sites", "pages", and "media" keys to prevent seeding the corporate main site record and its pages/assets!
     unset($coreData['sites']);
     unset($coreData['pages']);
     unset($coreData['media']);
 }
+
+// If BASE_URL is set in environment (e.g. on Cloud Run), dynamically update the default site's domain and references to match it!
+$baseUrl = Env::get('BASE_URL');
+if (!empty($baseUrl)) {
+    $parsedUrl = parse_url($baseUrl);
+    $targetDomain = $parsedUrl['host'] ?? null;
+    if ($targetDomain) {
+        echo "--> Dynamically overriding corporate site domain to: {$targetDomain}\n";
+        
+        // 1. Override site domain
+        if (isset($coreData['sites'])) {
+            foreach ($coreData['sites'] as &$site) {
+                if ($site['domain'] === 'd6laptop.zero') {
+                    $site['domain'] = $targetDomain;
+                }
+            }
+        }
+        
+        // 2. Override media and page site_domain references
+        if (isset($coreData['media'])) {
+            foreach ($coreData['media'] as &$media) {
+                if ($media['site_domain'] === 'd6laptop.zero') {
+                    $media['site_domain'] = $targetDomain;
+                }
+            }
+        }
+        if (isset($coreData['pages'])) {
+            foreach ($coreData['pages'] as &$page) {
+                if ($page['site_domain'] === 'd6laptop.zero') {
+                    $page['site_domain'] = $targetDomain;
+                }
+            }
+        }
+    }
+}
+
 $coreSeeder = new Seeder($coreData);
-$coreSeeder->run(true); // First run cleans the uploads folder
+$coreSeeder->run(true, $generateZip); // First run cleans the uploads folder
 
 // Hydrate Stage 2 (Developer Docs)
 if ($runDocs) {
@@ -79,7 +120,7 @@ if ($runDocs) {
     echo "STAGE 2: Seeding Zero CMS Technical Developer Docs...\n";
     echo "--------------------------------------------------\n";
     $docsSeeder = new Seeder(APPLICATION_ROOT . '/seeders/data/documentation.json');
-    $docsSeeder->run(false); // Subsequent runs preserve existing files
+    $docsSeeder->run(false, $generateZip); // Subsequent runs preserve existing files
 }
 
 // Hydrate Stage 3 (Designer Portfolio)
@@ -88,7 +129,7 @@ if ($runPortfolio) {
     echo "STAGE 3: Seeding Zero CMS Designer Portfolio & Compiling Bundle...\n";
     echo "--------------------------------------------------\n";
     $portfolioSeeder = new Seeder(APPLICATION_ROOT . '/seeders/data/portfolio.json');
-    $portfolioSeeder->run(false); // Subsequent runs preserve existing files
+    $portfolioSeeder->run(false, $generateZip); // Subsequent runs preserve existing files
 }
 
 // Hydrate Stage 4 (Luxe E-Commerce Shop)
@@ -97,7 +138,7 @@ if ($runShop) {
     echo "STAGE 4: Seeding Zero CMS Luxe E-Commerce Shop...\n";
     echo "--------------------------------------------------\n";
     $shopSeeder = new Seeder(APPLICATION_ROOT . '/seeders/data/shop.json');
-    $shopSeeder->run(false); // Subsequent runs preserve existing files
+    $shopSeeder->run(false, $generateZip); // Subsequent runs preserve existing files
 }
 
 // Hydrate Stage 5 (Kitchen Sink Showroom)
@@ -106,7 +147,7 @@ if ($runKitchenSink) {
     echo "STAGE 5: Seeding Zero CMS Kitchen Sink Showroom...\n";
     echo "--------------------------------------------------\n";
     $kitchenSinkSeeder = new Seeder(APPLICATION_ROOT . '/seeders/data/kitchensink.json');
-    $kitchenSinkSeeder->run(false); // Subsequent runs preserve existing files
+    $kitchenSinkSeeder->run(false, $generateZip); // Subsequent runs preserve existing files
 
     echo "--> Running Kitchen Sink dynamic orders seeder...\n";
     $output = [];

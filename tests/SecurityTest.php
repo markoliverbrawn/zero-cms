@@ -138,4 +138,42 @@ assert_test(
     "Boundary helper rejects sibling paths that only share a prefix"
 );
 
+// 10. Test SVG Sanitization (Security::sanitizeSvg)
+echo "Testing SVG Sanitization...\n";
+$tempSvgFile = tempnam(sys_get_temp_dir(), 'test_svg_') . '.svg';
+$maliciousSvg = '<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 100 100">
+    <circle cx="50" cy="50" r="40" fill="red" onmouseover="alert(1)" style="stroke: blue; stroke-width: 5px;"/>
+    <script type="text/javascript">alert("XSS")</script>
+    <foreignObject x="20" y="20" width="50" height="50">
+        <div xmlns="http://www.w3.org/1999/xhtml">
+            <iframe src="javascript:alert(2)"></iframe>
+        </div>
+    </foreignObject>
+    <style>
+        circle { fill: expression(alert(3)); }
+    </style>
+    <a xlink:href="javascript:alert(4)">Click here</a>
+    <image xlink:href="data:image/png;base64,evil" x="0" y="0" height="10" width="10"/>
+    <text x="10" y="10" fill="black">Safe text</text>
+</svg>';
+
+file_put_contents($tempSvgFile, $maliciousSvg);
+
+$sanitizedResult = Security::sanitizeSvg($tempSvgFile);
+assert_test($sanitizedResult === true, "sanitizeSvg successfully processed and wrote the sanitized file");
+
+$sanitizedContent = file_get_contents($tempSvgFile);
+
+assert_test(strpos($sanitizedContent, '<script>') === false, "Strips script tags from SVG");
+assert_test(strpos($sanitizedContent, 'foreignObject') === false, "Strips foreignObject elements from SVG");
+assert_test(strpos($sanitizedContent, '<style>') === false, "Strips style tags from SVG");
+assert_test(strpos($sanitizedContent, 'style=') === false, "Strips style attributes from circle element");
+assert_test(strpos($sanitizedContent, 'onmouseover') === false, "Strips inline event handlers from SVG elements");
+assert_test(strpos($sanitizedContent, 'javascript:') === false, "Strips dangerous javascript: URI schemes from href");
+assert_test(strpos($sanitizedContent, 'data:') === false, "Strips dangerous data: URI schemes from image href");
+assert_test(strpos($sanitizedContent, 'Safe text') !== false, "Preserves safe elements and safe plain text");
+
+unlink($tempSvgFile);
+
 echo "Security component tests completed.\n\n";

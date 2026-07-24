@@ -208,7 +208,7 @@ $recentMedia = DB::query("SELECT * FROM media WHERE site_id = ? AND deleted_at I
   <?php endif; ?>
 </div>
 
-<script>
+<script nonce="<?php echo \Zero\Core\App::getNonce(); ?>">
 window.ADMIN_CSRF_TOKEN = "<?php echo htmlspecialchars($csrf ?? Security::csrfToken(), ENT_QUOTES, 'UTF-8'); ?>";
 </script>
 <script src="/assets/js/admin/dashboard.js"></script>

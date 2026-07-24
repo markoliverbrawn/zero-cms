@@ -21,6 +21,8 @@ class Security {
             $failedActions = ['login_failed', 'frontend_login_failed'];
         } elseif ($action === 'password_reset') {
             $failedActions = ['password_reset_failed', 'password_reset_request_failed'];
+        } elseif ($action === 'demo_creation') {
+            $failedActions = ['demo_creation_failed', 'demo_creation_success'];
         }
 
         if (empty($failedActions)) {
@@ -55,9 +57,7 @@ class Security {
     public static function csrfInput() {
         return '<input type="hidden" name="csrf" value="' . htmlspecialchars(self::csrfToken(), ENT_QUOTES, "UTF-8") . '">';
     }
-    
-    
-    
+
     public static function csrfToken()
     {
         App::ensureSession();
@@ -67,8 +67,6 @@ class Security {
         }
         return $_SESSION['_csrf_token'];
     }
-
-    
 
     public static function csrfVerify($token)
     {
@@ -135,9 +133,9 @@ class Security {
 
         // Recursive tag and attribute scrubber
         $stripTags = ['script', 'iframe', 'object', 'embed', 'style', 'meta', 'link', 'form', 'input', 'button', 'textarea'];
-        
+
         $xpath = new \DOMXPath($doc);
-        
+
         // Remove blacklisted elements
         foreach ($stripTags as $tag) {
             $elements = $xpath->query("//" . $tag);
@@ -176,7 +174,7 @@ class Security {
         $cleaned = $doc->saveHTML();
         // Remove the xml encoding header
         $cleaned = str_replace('<?xml encoding="utf-8" ?>', '', $cleaned);
-        
+
         $cleaned = trim($cleaned);
 
         // Automatically highlight any inline pre/code blocks!
@@ -200,10 +198,10 @@ class Security {
         if (is_string($data)) {
             // Prevent null-byte injection attacks (\0 / %00)
             $data = str_replace(chr(0), '', $data);
-            
+
             // Trim surrounding whitespace
             $data = trim($data);
-            
+
             if ($stripHtml) {
                 $data = strip_tags($data);
             }
@@ -243,5 +241,104 @@ class Security {
             substr($variant, 0, 4),
             substr($variant, 4, 12)
         );
+    }
+
+    /**
+     * Parse and sanitize XML/SVG files to strip active scripting vectors, dangerous elements, and CSS/style overrides (Stored XSS mitigation).
+     */
+    public static function sanitizeSvg(string $filePath): bool
+    {
+        if (!file_exists($filePath)) {
+            return false;
+        }
+
+        $content = file_get_contents($filePath);
+        if ($content === false) {
+            return false;
+        }
+
+        // Hardened: Reject SVGs containing DOCTYPE or Entity declarations to completely block XXE
+        if (preg_match('/<!DOCTYPE/i', $content) || preg_match('/<!ENTITY/i', $content)) {
+            return false;
+        }
+
+        $dom = new \DOMDocument();
+
+        // Disable external entities loading and DTD processing completely
+        $libxmlState = libxml_use_internal_errors(true);
+        $success = $dom->loadXML($content, LIBXML_NONET | LIBXML_NOCDATA);
+        libxml_use_internal_errors($libxmlState);
+
+        if (!$success) {
+            return false;
+        }
+
+        // 1. Permanently remove all <script> tags
+        $scripts = $dom->getElementsByTagName('script');
+        while ($scripts->length > 0) {
+            $script = $scripts->item(0);
+            if ($script && $script->parentNode) {
+                $script->parentNode->removeChild($script);
+            }
+        }
+
+        // 2. Permanently remove all <foreignObject> tags (can house nested HTML elements / script bypasses)
+        $foreignObjects = $dom->getElementsByTagName('foreignObject');
+        while ($foreignObjects->length > 0) {
+            $fo = $foreignObjects->item(0);
+            if ($fo && $fo->parentNode) {
+                $fo->parentNode->removeChild($fo);
+            }
+        }
+
+        // 3. Permanently remove all <style> tags (prevents CSS/style injection and external fonts/import tracking)
+        $styles = $dom->getElementsByTagName('style');
+        while ($styles->length > 0) {
+            $style = $styles->item(0);
+            if ($style && $style->parentNode) {
+                $style->parentNode->removeChild($style);
+            }
+        }
+
+        // 4. Recursively traverse all nodes and strip style attributes, event handlers, and dangerous URI schemes
+        $xpath = new \DOMXPath($dom);
+        $allNodes = $xpath->query('//*');
+        if ($allNodes) {
+            foreach ($allNodes as $node) {
+                if ($node instanceof \DOMElement && $node->hasAttributes()) {
+                    $attrsToRemove = [];
+                    foreach ($node->attributes as $attr) {
+                        $attrName = strtolower($attr->nodeName);
+
+                        // Strip inline event triggers (onload, onclick, etc.)
+                        if (strpos($attrName, 'on') === 0) {
+                            $attrsToRemove[] = $attr->nodeName;
+                            continue;
+                        }
+
+                        // Strip style attributes completely to remove any CSS/style content
+                        if ($attrName === 'style') {
+                            $attrsToRemove[] = $attr->nodeName;
+                            continue;
+                        }
+
+                        // Strip all dangerous URI schemes (javascript:, data:, vbscript:, file:, etc.) in any attribute
+                        // Safe schemes are http, https, or relative paths/fragment IDs (no scheme separator ':')
+                        if (preg_match('/^\s*([a-zA-Z0-9+.-]+):/i', $attr->nodeValue, $matches)) {
+                            $scheme = strtolower($matches[1]);
+                            if ($scheme !== 'http' && $scheme !== 'https') {
+                                $attrsToRemove[] = $attr->nodeName;
+                            }
+                        }
+                    }
+                    foreach ($attrsToRemove as $attrName) {
+                        $node->removeAttribute($attrName);
+                    }
+                }
+            }
+        }
+
+        $sanitizedContent = $dom->saveXML();
+        return file_put_contents($filePath, $sanitizedContent) !== false;
     }
 }

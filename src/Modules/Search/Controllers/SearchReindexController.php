@@ -28,6 +28,23 @@ class SearchReindexController implements Controller
             exit;
         }
 
+        // Security Hardening: Enforce POST-only requests & Validate CSRF Token
+        $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+        if ($method !== 'POST') {
+            header('Content-Type: application/json');
+            http_response_code(405);
+            echo json_encode(['error' => 'Method Not Allowed']);
+            exit;
+        }
+
+        $token = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+        if (empty($token) || !Security::csrfVerify($token)) {
+            header('Content-Type: application/json');
+            http_response_code(403);
+            echo json_encode(['error' => 'CSRF verification failed.']);
+            exit;
+        }
+
         // Parse path routing
         $uri = $_SERVER['REQUEST_URI'] ?? '';
         $path = parse_url($uri, PHP_URL_PATH);
@@ -60,6 +77,13 @@ class SearchReindexController implements Controller
 
         if (empty($modelClass) || empty($ids)) {
             echo json_encode(['success' => false, 'error' => 'Missing model class or IDs.']);
+            exit;
+        }
+
+        // Security Hardening: Restrict reindexing strictly to registered searchable models
+        $searchableModels = SearchService::getSearchables();
+        if (!isset($searchableModels[$modelClass])) {
+            echo json_encode(['success' => false, 'error' => 'Model class is not registered as searchable.']);
             exit;
         }
 

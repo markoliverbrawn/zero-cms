@@ -2,6 +2,7 @@
 // src/Views/themes/guide/blog.php
 
 use Zero\Core\App;
+use Zero\Support\Security;
 
 $hasHeroBlock = false;
 if (!empty($post->content)) {
@@ -44,10 +45,10 @@ $shouldOmitTitle = !empty($post->omit_title) || $hasHeroBlock;
     $decodedBlocks = json_decode($content, true);
     if (json_last_error() === JSON_ERROR_NONE && is_array($decodedBlocks)) {
         foreach ($decodedBlocks as $block) {
-            echo $block['content'] ?? '';
+            echo Security::sanitizeHtml($block['content'] ?? '');
         }
     } else {
-        echo $content;
+        echo Security::sanitizeHtml($content);
     }
     ?>
   </div>

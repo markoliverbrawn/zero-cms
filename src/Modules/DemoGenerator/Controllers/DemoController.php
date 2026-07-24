@@ -8,6 +8,7 @@ use Zero\Core\Template;
 use Zero\Database\DB;
 use Zero\Support\Emailer;
 use Zero\Support\Security;
+use Zero\Support\Logger;
 use Exception;
 
 class DemoController implements Controller
@@ -100,10 +101,21 @@ class DemoController implements Controller
     public function handle($matches): void
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            // Security Hardening: Enforce strict IP rate limiting (max 3 demos per 1 hour per IP)
+            $ip = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+            if (!Security::checkAuthRateLimit('demo_creation', $ip, 3, 3600)) {
+                Logger::log(null, 'demo_creation_failed', 'demo', null, ['ip_address' => $ip, 'error' => 'Rate limit exceeded']);
+                http_response_code(429);
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'error' => 'Rate limit exceeded. Please wait before creating another sandbox.']);
+                exit;
+            }
+
             $preset = $_POST['preset'] ?? 'kitchensink';
             $email = filter_var($_POST['email'] ?? '', FILTER_VALIDATE_EMAIL);
 
             if (!$email) {
+                Logger::log(null, 'demo_creation_failed', 'demo', null, ['ip_address' => $ip, 'error' => 'Invalid email']);
                 http_response_code(400);
                 header('Content-Type: application/json');
                 echo json_encode(['success' => false, 'error' => 'Please provide a valid email address.']);
@@ -111,6 +123,7 @@ class DemoController implements Controller
             }
 
             if ($preset !== 'kitchensink') {
+                Logger::log(null, 'demo_creation_failed', 'demo', null, ['ip_address' => $ip, 'error' => 'Invalid preset']);
                 http_response_code(400);
                 header('Content-Type: application/json');
                 echo json_encode(['success' => false, 'error' => 'Invalid preset template selected. Only the Kitchen Sink Showroom is available.']);
@@ -127,6 +140,7 @@ class DemoController implements Controller
             ", [$email])->fetch();
 
             if ($existing) {
+                Logger::log(null, 'demo_creation_failed', 'demo', null, ['ip_address' => $ip, 'error' => 'Active sandbox already exists', 'email' => $email]);
                 http_response_code(400);
                 header('Content-Type: application/json');
                 echo json_encode([
@@ -140,15 +154,18 @@ class DemoController implements Controller
                 $demo = $this->createDemoSite($email, $preset);
                 $this->dispatchCredentialsEmail($email, $demo['domain'], $demo['password']);
 
+                Logger::log(null, 'demo_creation_success', 'demo', null, ['ip_address' => $ip, 'domain' => $demo['domain']]);
+
                 header('Content-Type: application/json');
                 echo json_encode([
                     'success' => true,
                     'domain' => $demo['domain'],
-                    'password' => $demo['password'],
-                    'message' => 'Demo site generated successfully! Credentials sent to your email.'
+                    // Security Hardening: Do not disclose plain text passwords in public HTTP/API responses
+                    'message' => 'Demo site generated successfully! Credentials have been sent to your email.'
                 ]);
                 exit;
             } catch (Exception $e) {
+                Logger::log(null, 'demo_creation_failed', 'demo', null, ['ip_address' => $ip, 'error' => $e->getMessage()]);
                 http_response_code(500);
                 header('Content-Type: application/json');
                 echo json_encode(['success' => false, 'error' => 'Server Error: ' . $e->getMessage()]);

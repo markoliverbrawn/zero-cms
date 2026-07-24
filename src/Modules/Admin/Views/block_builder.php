@@ -235,7 +235,7 @@ foreach (App::getRegisteredBlocks() as $type => $config) {
     </div>
 </div>
 
-<script>
+<script nonce="<?php echo \Zero\Core\App::getNonce(); ?>">
 window.REGISTERED_BLOCK_TEMPLATES = <?php echo json_encode($preRenderedTemplates); ?>;
 window.REGISTERED_BLOCK_SETTINGS_TEMPLATES = <?php echo json_encode($preRenderedSettingsTemplates); ?>;
 window.SVG_CHEVRON_RIGHT = <?php echo json_encode(App::svg('chevron-right')); ?>;

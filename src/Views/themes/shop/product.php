@@ -42,7 +42,7 @@ use Zero\Support\Security;
         </div>
 
         <div class="prod-desc">
-            <?php echo $product->description; ?>
+            <?php echo Security::sanitizeHtml($product->description); ?>
         </div>
 
         <!-- Add to Cart Form -->
