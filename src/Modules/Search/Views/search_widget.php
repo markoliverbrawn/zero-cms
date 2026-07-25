@@ -27,7 +27,7 @@ if ($renderWidgetKey === 'site_search_summary' && in_array('site_search_summary'
   <div class="dashboard-card draggable-widget" draggable="true" data-widget="site_search_summary" id="site-search-widget-card">
     <h3>
       <span class="icon-svg">
-        <?php echo App::svg('zap'); ?>
+        <?php echo App::svg('search'); ?>
       </span>
       <span>Search Index Registry</span>
     </h3>

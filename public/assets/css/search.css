@@ -1,11 +1,13 @@
 /* Search Results Page Styles - Fully Theme-Adaptive */
 :root {
+    --site-search-accent: var(--neon-pink, #f43f5e); /* Futuristic Neon Pink site-search brand accent color */
+    --site-search-accent-hover: #e11d48;
     --search-card-bg: var(--card-bg, #ffffff);
     --search-border: var(--border-color, #cbd5e1);
     --search-text: var(--text-color, #0f172a);
     --search-text-muted: var(--text-muted, #64748b);
-    --search-accent: var(--accent-color, #2563eb);
-    --search-accent-hover: var(--neon-pink, #1d4ed8);
+    --search-accent: var(--site-search-accent);
+    --search-accent-hover: var(--site-search-accent-hover);
     --search-badge-bg: var(--border-color, #f1f5f9);
     --search-badge-text: var(--text-color, #475569);
     --search-font-sans: var(--font-sans, system-ui, -apple-system, sans-serif);

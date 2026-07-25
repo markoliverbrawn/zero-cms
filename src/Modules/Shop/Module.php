@@ -25,6 +25,10 @@ use Zero\Modules\Search\Services\SearchService;
 
 class Module implements ModuleInterface
 {
+    public function getAccentColor(): string
+    {
+        return '#f59e0b';
+    }
 
     public function getDashboardWidgetView(): ?string
     {

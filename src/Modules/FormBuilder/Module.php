@@ -9,6 +9,10 @@ use Zero\Modules\FormBuilder\Models\Submission;
 
 class Module implements ModuleInterface
 {
+    public function getAccentColor(): string
+    {
+        return '#10b981';
+    }
 
     public function getDashboardWidgetView(): ?string
     {

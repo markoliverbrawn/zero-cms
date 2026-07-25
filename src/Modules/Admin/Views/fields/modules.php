@@ -51,6 +51,12 @@ $remainingCount = count($hiddenPills);
             } elseif ($moduleLower === 'security') {
                 $icon = 'shield';
                 $label = 'Security';
+            } elseif ($moduleLower === 'site-search') {
+                $icon = 'search';
+                $label = 'Search';
+            } elseif ($moduleLower === 'demogenerator') {
+                $icon = 'zap';
+                $label = 'Demo Generator';
             }
             ?>
             <span class="module-pill module-<?php echo Str::escape($moduleLower); ?>" title="<?php echo $label; ?>">
@@ -82,6 +88,12 @@ $remainingCount = count($hiddenPills);
             } elseif ($moduleLower === 'security') {
                 $icon = 'shield';
                 $label = 'Security';
+            } elseif ($moduleLower === 'site-search') {
+                $icon = 'search';
+                $label = 'Search';
+            } elseif ($moduleLower === 'demogenerator') {
+                $icon = 'zap';
+                $label = 'Demo Generator';
             }
             ?>
             <span class="module-pill module-<?php echo Str::escape($moduleLower); ?> is-hidden" data-hidden="true" title="<?php echo $label; ?>">

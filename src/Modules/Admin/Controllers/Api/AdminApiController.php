@@ -280,6 +280,9 @@ class AdminApiController extends ApiController
         }
 
         $record = $model::find($id);
+        if (!$record && method_exists($model, 'findTrashed')) {
+            $record = $model::findTrashed($id);
+        }
         if (!$record) {
             $this->respond(['success' => false, 'error' => 'Record not found'], 404);
         }

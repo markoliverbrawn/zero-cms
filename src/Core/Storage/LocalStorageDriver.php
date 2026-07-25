@@ -145,8 +145,9 @@ class LocalStorageDriver implements StorageDriver
                 $subPathRest = substr($subPath, strlen('/storage/uploads'));
                 $subPathRest = ltrim($subPathRest, '/');
                 
-                // If it doesn't already start with the site_id, inject it dynamically!
-                if (!empty($siteId) && !empty($subPathRest) && strpos($subPathRest, $siteId) !== 0) {
+                // If it already starts with a UUIDv7, bypass dynamic site prefixing (e.g. during permanent cross-tenant purges)
+                $isAlreadyTenantScoped = preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/i', $subPathRest);
+                if (!$isAlreadyTenantScoped && !empty($siteId) && !empty($subPathRest) && strpos($subPathRest, $siteId) !== 0) {
                     return APPLICATION_ROOT . '/public/storage/uploads' . $prefix . '/' . $subPathRest;
                 }
             }
@@ -157,7 +158,10 @@ class LocalStorageDriver implements StorageDriver
         if (strpos($path, '/storage/uploads') === 0) {
             $subPathRest = substr($path, strlen('/storage/uploads'));
             $subPathRest = ltrim($subPathRest, '/');
-            if (!empty($siteId) && !empty($subPathRest) && strpos($subPathRest, $siteId) !== 0) {
+            
+            // If it already starts with a UUIDv7, bypass dynamic site prefixing (e.g. during permanent cross-tenant purges)
+            $isAlreadyTenantScoped = preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/i', $subPathRest);
+            if (!$isAlreadyTenantScoped && !empty($siteId) && !empty($subPathRest) && strpos($subPathRest, $siteId) !== 0) {
                 return APPLICATION_ROOT . '/public/storage/uploads' . $prefix . '/' . $subPathRest;
             }
             return APPLICATION_ROOT . '/public' . $path;
@@ -168,10 +172,19 @@ class LocalStorageDriver implements StorageDriver
         if (strpos($trimmed, 'storage/uploads') === 0) {
             $subPathRest = substr($trimmed, strlen('storage/uploads'));
             $subPathRest = ltrim($subPathRest, '/');
-            if (!empty($siteId) && !empty($subPathRest) && strpos($subPathRest, $siteId) !== 0) {
+            
+            // If it already starts with a UUIDv7, bypass dynamic site prefixing (e.g. during permanent cross-tenant purges)
+            $isAlreadyTenantScoped = preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/i', $subPathRest);
+            if (!$isAlreadyTenantScoped && !empty($siteId) && !empty($subPathRest) && strpos($subPathRest, $siteId) !== 0) {
                 return APPLICATION_ROOT . '/public/storage/uploads' . $prefix . '/' . $subPathRest;
             }
             return APPLICATION_ROOT . '/public/' . $trimmed;
+        }
+
+        // Default fallback
+        $isAlreadyTenantScoped = preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/i', $trimmed);
+        if ($isAlreadyTenantScoped) {
+            return APPLICATION_ROOT . '/public/storage/uploads/' . ltrim($trimmed, '/');
         }
 
         return APPLICATION_ROOT . '/public/storage/uploads' . $prefix . '/' . ltrim($trimmed, '/');

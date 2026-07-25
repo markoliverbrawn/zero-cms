@@ -7,6 +7,11 @@ use Zero\Core\App;
 
 class Module implements ModuleInterface
 {
+    public function getAccentColor(): string
+    {
+        return '#2563eb';
+    }
+
     public function getDashboardWidgetView(): ?string
     {
         return null;

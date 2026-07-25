@@ -39,6 +39,7 @@ To maintain the high-quality, professional, and scalable state of the Zero CMS w
   ]);
   ```
 * **Scalability & Hot-Plugging:** The system must compile and scale automatically. Adding a new module or theme fallback must only require registering it dynamically with the core on bootstrap and placing its assets on disk—ensuring modules can be safely enabled, disabled, or permanently deleted from the workspace without causing any core kernel compilation or routing failures.
+* **Module Accent Colors:** Every module class implementing `Zero\Interfaces\Module` MUST define a `getAccentColor(): string` method returning its brand-representative hex color code (e.g. `#ef4444` for security, `#9333ea` for demogenerator). This color is then used for rendering the module's administrative pills and widgets consistently under the active admin theme.
 
 ### 3. Strict Multi-Tenant Isolation
 * **Rule:** Under no circumstances should any tenant be capable of querying, leaking, or modifying data belonging to another tenant.

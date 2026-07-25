@@ -128,26 +128,48 @@ $renderField = function($field, $fieldConfig) use ($record, $modelName, $csrf, $
         if (!is_array($activeModules)) $activeModules = ['blog', 'shop'];
         ?>
         <div class="admin-modules-container">
-            <label class="admin-modules-label">
-                <input type="checkbox" name="enabled_modules[]" value="blog" <?php echo in_array('blog', $activeModules) ? 'checked' : ''; ?> class="admin-modules-input">
-                <span><strong>Blog Module</strong> (Articles, Posts, Feeds)</span>
-            </label>
-            <label class="admin-modules-label">
-                <input type="checkbox" name="enabled_modules[]" value="shop" <?php echo in_array('shop', $activeModules) ? 'checked' : ''; ?> class="admin-modules-input">
-                <span><strong>Luxe E-Commerce Store</strong> (Catalog, Products, Variants, Cart, Checkout)</span>
-            </label>
-            <label class="admin-modules-label">
-                <input type="checkbox" name="enabled_modules[]" value="formbuilder" <?php echo in_array('formbuilder', $activeModules) ? 'checked' : ''; ?> class="admin-modules-input">
-                <span><strong>Form Builder</strong> (Dynamic Custom Contact Forms)</span>
-            </label>
-            <label class="admin-modules-label">
-                <input type="checkbox" name="enabled_modules[]" value="forum" <?php echo in_array('forum', $activeModules) ? 'checked' : ''; ?> class="admin-modules-input">
-                <span><strong>Community Forum</strong> (Discussions, Boards, Threads, Replies)</span>
-            </label>
-            <label class="admin-modules-label">
-                <input type="checkbox" name="enabled_modules[]" value="site-search" <?php echo in_array('search', $activeModules) ? 'checked' : ''; ?> class="admin-modules-input">
-                <span><strong>Search</strong> (Page and Posts)</span>
-            </label>
+            <?php foreach (App::getModules() as $module): ?>
+                <?php
+                $id = $module->getId();
+                // Skip system modules from the site-level toggle checklist
+                if ($id === 'admin' || $id === 'queue') {
+                    continue;
+                }
+                
+                // Retrieve friendly name and brief description
+                $name = '';
+                $desc = '';
+                if ($id === 'blog') {
+                    $name = 'Blog Module';
+                    $desc = 'Articles, Posts, Feeds';
+                } elseif ($id === 'shop') {
+                    $name = 'Luxe E-Commerce Store';
+                    $desc = 'Catalog, Products, Variants, Cart, Checkout';
+                } elseif ($id === 'formbuilder') {
+                    $name = 'Form Builder';
+                    $desc = 'Dynamic Custom Contact Forms';
+                } elseif ($id === 'forum') {
+                    $name = 'Community Forum';
+                    $desc = 'Discussions, Boards, Threads, Replies';
+                } elseif ($id === 'site-search') {
+                    $name = 'Search';
+                    $desc = 'Page and Posts';
+                } elseif ($id === 'security') {
+                    $name = 'Security';
+                    $desc = 'Hardening & AI threat auditing';
+                } elseif ($id === 'demogenerator') {
+                    $name = 'Demo Generator';
+                    $desc = 'Sandbox site creator form block';
+                } else {
+                    $name = ucwords(str_replace('-', ' ', $id));
+                    $desc = 'Additional addon capability';
+                }
+                ?>
+                <label class="admin-modules-label">
+                    <input type="checkbox" name="enabled_modules[]" value="<?php echo Str::escape($id); ?>" <?php echo in_array($id, $activeModules) ? 'checked' : ''; ?> class="admin-modules-input">
+                    <span><strong><?php echo Str::escape($name); ?></strong> (<?php echo Str::escape($desc); ?>)</span>
+                </label>
+            <?php endforeach; ?>
         </div>
     <?php elseif ($fieldConfig['type'] == "textarea"): ?>
         <?php if ($usesBlockBuilder && $field === $blockBuilderField): ?>

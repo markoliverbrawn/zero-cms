@@ -1083,6 +1083,16 @@ button {
         color: #ef4444;
     }
 
+    &.module-site-search {
+        background-color: color-mix(in srgb, var(--neon-pink, #f43f5e) 12%, transparent);
+        color: var(--neon-pink, #f43f5e);
+    }
+
+    &.module-demogenerator {
+        background-color: color-mix(in srgb, #9333ea 12%, transparent);
+        color: #9333ea;
+    }
+
     &.module-empty {
         background-color: color-mix(in srgb, #94a3b8 15%, transparent);
         color: #64748b;
@@ -3153,6 +3163,11 @@ button:disabled,
 }
 
 /* Search Indexing & Reindex Widget Layout */
+#site-search-widget-card {
+    --accent-color: var(--neon-pink, #f43f5e); /* Futuristic Neon Pink site-search brand accent color */
+    --accent-hover: #e11d48;
+}
+
 .search-widget {
     display: flex;
     flex-direction: column;

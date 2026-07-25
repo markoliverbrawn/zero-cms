@@ -10,6 +10,16 @@ use Zero\Core\App;
 class Module implements ModuleInterface
 {
     /**
+     * Get the brand accent color associated with this module.
+     *
+     * @return string
+     */
+    public function getAccentColor(): string
+    {
+        return '#f43f5e';
+    }
+
+    /**
      * Get the relative view path of this module's dashboard widget.
      *
      * @return string|null

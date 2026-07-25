@@ -99,6 +99,59 @@ $mediaRecord->forceDelete();
 assert_test(Media::find($mediaRecordId) === null, "Media database active record successfully deleted");
 assert_test(!Storage::exists($mediaRelativePath), "Media physical file successfully deleted from storage");
 
+// 6b. Test Media model physical file deletion in a simulated multi-tenant environment (checking resolvePath prefix duplication bug)
+echo "  Testing Media model physical file deletion in simulated multi-tenant environment...\n";
+
+// Mock an active site ID
+$mockSiteId = \Zero\Support\Security::uuidv7();
+$refApp = new \ReflectionClass('Zero\Core\App');
+$propSite = $refApp->getProperty('currentSite');
+$propSite->setAccessible(true);
+$propSite->setValue(null, new \Zero\Models\Site([
+    'id' => $mockSiteId,
+    'name' => 'Active Site',
+    'domain' => 'active.zero',
+    'theme' => 'default'
+]));
+
+// Create a file scoped under a different site (cross-tenant)
+$otherSiteId = \Zero\Support\Security::uuidv7();
+$mediaFilename = 'media-delete-multitenant-' . bin2hex(random_bytes(4)) . '.txt';
+// Path stored in DB already contains the other site ID prefix
+$mediaRelativePath = $otherSiteId . '/' . $mediaFilename;
+$mediaPublicPath = '/storage/uploads/' . $mediaRelativePath;
+
+// Write physical file to disk using the specific path directly
+$physicalPath = APPLICATION_ROOT . '/public/storage/uploads/' . $mediaRelativePath;
+@mkdir(dirname($physicalPath), 0775, true);
+file_put_contents($physicalPath, "tenant test content");
+assert_test(file_exists($physicalPath), "Physical file successfully written to storage for other tenant: {$physicalPath}");
+
+// Save Media active record referencing this path
+$mediaRecord = new Media([
+    'filename' => $mediaFilename,
+    'path' => $mediaPublicPath,
+    'mime' => 'text/plain'
+]);
+$mediaRecord->save();
+$mediaRecordId = $mediaRecord->id;
+
+assert_test(!empty($mediaRecordId), "Media record saved successfully for other tenant");
+
+// Perform permanent forceDelete on Media record
+echo "    Force deleting Media record for other tenant while logged into active site...\n";
+$mediaRecord->forceDelete();
+
+// Verify that the database record is deleted AND physical file is physically deleted from disk (not hijacked by active site id)
+assert_test(Media::find($mediaRecordId) === null, "Media database record successfully deleted");
+assert_test(!file_exists($physicalPath), "Media physical file successfully deleted from disk (resolved without active site prefix duplication)");
+
+// Cleanup folder
+@rmdir(dirname($physicalPath));
+
+// Reset currentSite to null
+$propSite->setValue(null, null);
+
 // 7. Test automatic image optimization
 echo "  Testing automatic image optimization (resizing and compression)...\n";
 if (extension_loaded('gd')) {

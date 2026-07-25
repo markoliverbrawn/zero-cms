@@ -11,6 +11,11 @@ use Zero\Modules\Queue\Support\Scheduler;
 
 class Module implements ModuleInterface
 {
+    public function getAccentColor(): string
+    {
+        return '#475569';
+    }
+
     public function getDashboardWidgetView(): ?string
     {
         return 'dashboard-widget';

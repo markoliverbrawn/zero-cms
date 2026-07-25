@@ -17,6 +17,11 @@ use Zero\Modules\Admin\Controllers\FrontendResetController;
 
 class Module implements ModuleInterface
 {
+    public function getAccentColor(): string
+    {
+        return '#6366f1';
+    }
+
     public function getDashboardWidgetView(): ?string
     {
         return null;

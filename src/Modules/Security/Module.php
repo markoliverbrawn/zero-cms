@@ -11,6 +11,11 @@ use Zero\Modules\Security\Models\SecurityAudit;
 
 class Module implements ModuleInterface
 {
+    public function getAccentColor(): string
+    {
+        return '#ef4444';
+    }
+
     public function getDashboardWidgetView(): ?string
     {
         return 'dashboard-widget';
