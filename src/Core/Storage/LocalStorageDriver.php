@@ -14,6 +14,25 @@ class LocalStorageDriver implements StorageDriver
         return false;
     }
 
+    public function delete(string $path): bool
+    {
+        $resolved = $this->resolvePath($path);
+        if (file_exists($resolved) && is_file($resolved)) {
+            $dir = dirname($resolved);
+            if (!is_writable($dir)) {
+                throw new \Exception("Permission denied: The upload directory containing the file is not writable (" . basename($resolved) . ").");
+            }
+            if (!is_writable($resolved)) {
+                throw new \Exception("Permission denied: The file is not writable (" . basename($resolved) . ").");
+            }
+            if (!unlink($resolved)) {
+                throw new \Exception("Deletion failed: Could not delete the file (" . basename($resolved) . ").");
+            }
+            return true;
+        }
+        return false;
+    }
+
     protected function deleteDirectoryRecursive(string $dir, bool $removeSelf = true): void
     {
         if (is_dir($dir)) {
@@ -52,28 +71,14 @@ class LocalStorageDriver implements StorageDriver
         }
     }
 
-    public function delete(string $path): bool
-    {
-        $resolved = $this->resolvePath($path);
-        if (file_exists($resolved) && is_file($resolved)) {
-            $dir = dirname($resolved);
-            if (!is_writable($dir)) {
-                throw new \Exception("Permission denied: The upload directory containing the file is not writable (" . basename($resolved) . ").");
-            }
-            if (!is_writable($resolved)) {
-                throw new \Exception("Permission denied: The file is not writable (" . basename($resolved) . ").");
-            }
-            if (!unlink($resolved)) {
-                throw new \Exception("Deletion failed: Could not delete the file (" . basename($resolved) . ").");
-            }
-            return true;
-        }
-        return false;
-    }
-
     public function exists(string $path): bool
     {
         return file_exists($this->resolvePath($path));
+    }
+
+    public function getSignedUrl(string $path, int $expires = 3600): string
+    {
+        return $this->getUrl($path);
     }
 
     public function getUrl(string $path): string
@@ -81,46 +86,71 @@ class LocalStorageDriver implements StorageDriver
         $siteId = class_exists('\\Zero\\Core\\App') ? \Zero\Core\App::getCurrentSiteId() : null;
         $prefix = !empty($siteId) ? '/' . $siteId : '';
 
-        // If it's already a relative web path (starts with /storage/uploads)
-        if (strpos($path, '/storage/uploads') === 0) {
-            $subPathRest = substr($path, strlen('/storage/uploads'));
-            $subPathRest = ltrim($subPathRest, '/');
-            if (!empty($siteId) && strpos($subPathRest, $siteId) !== 0) {
-                return '/storage/uploads' . $prefix . '/' . $subPathRest;
-            }
-            return $path;
+        // Handle private storage
+        $trimmed = ltrim($path, '/');
+        if (strpos($trimmed, 'storage/private/') === 0) {
+            return '/' . $trimmed;
         }
-        
+
         // Strip APPLICATION_ROOT to make it relative to web root
         if (strpos($path, APPLICATION_ROOT) === 0) {
             $subPath = substr($path, strlen(APPLICATION_ROOT));
+            $subPathClean = ltrim($subPath, '/');
+            
+            // Handle private storage under APPLICATION_ROOT
+            if (strpos($subPathClean, 'storage/private/') === 0) {
+                return '/' . $subPathClean;
+            }
+            
             // Strip leading /public if present (since /public is the web document root)
             if (strpos($subPath, '/public') === 0) {
                 $subPath = substr($subPath, 7);
             }
-            if (strpos($subPath, '/storage/uploads') === 0) {
-                $subPathRest = substr($subPath, strlen('/storage/uploads'));
+            $subPathClean = '/' . ltrim($subPathClean, '/');
+            if (strpos($subPathClean, '/storage/uploads') === 0) {
+                $subPathRest = substr($subPathClean, strlen('/storage/uploads'));
                 $subPathRest = ltrim($subPathRest, '/');
-                if (!empty($siteId) && strpos($subPathRest, $siteId) !== 0) {
+                
+                $isAlreadyTenantScoped = preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}(\/|$)/i', $subPathRest);
+                if ($isAlreadyTenantScoped) {
+                    return $subPathClean;
+                }
+                
+                if (!empty($siteId) && strpos($subPathRest, $siteId . '/') !== 0 && $subPathRest !== $siteId) {
                     return '/storage/uploads' . $prefix . '/' . $subPathRest;
                 }
-                return $subPath;
+                return $subPathClean;
             }
             return $subPath;
         }
 
-        $trimmed = ltrim($path, '/');
-        if (!empty($siteId) && strpos($trimmed, $siteId) !== 0) {
+        // If it's already a relative web path (starts with /storage/uploads)
+        if (strpos($path, '/storage/uploads') === 0) {
+            $subPathRest = substr($path, strlen('/storage/uploads'));
+            $subPathRest = ltrim($subPathRest, '/');
+            
+            $isAlreadyTenantScoped = preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}(\/|$)/i', $subPathRest);
+            if ($isAlreadyTenantScoped) {
+                return $path;
+            }
+            
+            if (!empty($siteId) && strpos($subPathRest, $siteId . '/') !== 0 && $subPathRest !== $siteId) {
+                return '/storage/uploads' . $prefix . '/' . $subPathRest;
+            }
+            return $path;
+        }
+
+        // Generic relative paths
+        $isAlreadyTenantScoped = preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}(\/|$)/i', $trimmed);
+        if ($isAlreadyTenantScoped) {
+            return '/storage/uploads/' . $trimmed;
+        }
+
+        if (!empty($siteId) && strpos($trimmed, $siteId . '/') !== 0 && $trimmed !== $siteId) {
             return '/storage/uploads' . $prefix . '/' . $trimmed;
         }
 
         return '/storage/uploads/' . $trimmed;
-    }
-
-
-    public function getSignedUrl(string $path, int $expires = 3600): string
-    {
-        return $this->getUrl($path);
     }
 
     public function makeDirectory(string $path): bool
@@ -182,11 +212,17 @@ class LocalStorageDriver implements StorageDriver
         $siteId = class_exists('\\Zero\\Core\\App') ? \Zero\Core\App::getCurrentSiteId() : null;
         $prefix = !empty($siteId) ? '/' . $siteId : '';
 
-        // If the path starts with APPLICATION_ROOT, check if it already contains the site_id prefix.
+        // If the path starts with APPLICATION_ROOT
         if (strpos($path, APPLICATION_ROOT) === 0) {
             $subPath = substr($path, strlen(APPLICATION_ROOT));
-            // Strip leading public/ if present (since /public is the web document root)
             $subPathClean = ltrim($subPath, '/');
+            
+            // Handle private storage
+            if (strpos($subPathClean, 'storage/private/') === 0) {
+                return $path;
+            }
+            
+            // Strip leading public/ if present (since /public is the web document root)
             if (strpos($subPathClean, 'public/') === 0) {
                 $subPathClean = substr($subPathClean, 7);
             }
@@ -197,48 +233,56 @@ class LocalStorageDriver implements StorageDriver
                 $subPathRest = ltrim($subPathRest, '/');
                 
                 // If it already starts with a UUIDv7, bypass dynamic site prefixing (e.g. during permanent cross-tenant purges)
-                $isAlreadyTenantScoped = preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/i', $subPathRest);
-                if (!$isAlreadyTenantScoped && !empty($siteId) && !empty($subPathRest) && strpos($subPathRest, $siteId) !== 0) {
-                    return APPLICATION_ROOT . '/public/storage/uploads' . $prefix . '/' . $subPathRest;
+                $isAlreadyTenantScoped = preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}(\/|$)/i', $subPathRest);
+                if (!$isAlreadyTenantScoped && !empty($siteId) && !empty($subPathRest)) {
+                    // Check if it already starts with siteId/ or is exactly siteId
+                    if (strpos($subPathRest, $siteId . '/') !== 0 && $subPathRest !== $siteId) {
+                        return APPLICATION_ROOT . '/public/storage/uploads' . $prefix . '/' . $subPathRest;
+                    }
                 }
             }
             return $path;
         }
 
-        // If the path starts with /storage/uploads, map it relative to APPLICATION_ROOT
-        if (strpos($path, '/storage/uploads') === 0) {
-            $subPathRest = substr($path, strlen('/storage/uploads'));
-            $subPathRest = ltrim($subPathRest, '/');
-            
-            // If it already starts with a UUIDv7, bypass dynamic site prefixing (e.g. during permanent cross-tenant purges)
-            $isAlreadyTenantScoped = preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/i', $subPathRest);
-            if (!$isAlreadyTenantScoped && !empty($siteId) && !empty($subPathRest) && strpos($subPathRest, $siteId) !== 0) {
-                return APPLICATION_ROOT . '/public/storage/uploads' . $prefix . '/' . $subPathRest;
-            }
-            return APPLICATION_ROOT . '/public' . $path;
-        }
-        
-        // Handle generic relative storage/uploads paths
         $trimmed = ltrim($path, '/');
+        
+        // Handle private storage
+        if (strpos($trimmed, 'storage/private/') === 0) {
+            return APPLICATION_ROOT . '/' . $trimmed;
+        }
+
+        // If the path starts with /storage/uploads or storage/uploads
         if (strpos($trimmed, 'storage/uploads') === 0) {
             $subPathRest = substr($trimmed, strlen('storage/uploads'));
             $subPathRest = ltrim($subPathRest, '/');
             
             // If it already starts with a UUIDv7, bypass dynamic site prefixing (e.g. during permanent cross-tenant purges)
-            $isAlreadyTenantScoped = preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/i', $subPathRest);
-            if (!$isAlreadyTenantScoped && !empty($siteId) && !empty($subPathRest) && strpos($subPathRest, $siteId) !== 0) {
-                return APPLICATION_ROOT . '/public/storage/uploads' . $prefix . '/' . $subPathRest;
+            $isAlreadyTenantScoped = preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}(\/|$)/i', $subPathRest);
+            if (!$isAlreadyTenantScoped && !empty($siteId) && !empty($subPathRest)) {
+                if (strpos($subPathRest, $siteId . '/') !== 0 && $subPathRest !== $siteId) {
+                    return APPLICATION_ROOT . '/public/storage/uploads' . $prefix . '/' . $subPathRest;
+                }
             }
             return APPLICATION_ROOT . '/public/' . $trimmed;
         }
-
-        // Default fallback
-        $isAlreadyTenantScoped = preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/i', $trimmed);
+        
+        // Default fallback: generic relative paths inside the site-scoped uploads folder
+        $isAlreadyTenantScoped = preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}(\/|$)/i', $trimmed);
         if ($isAlreadyTenantScoped) {
-            return APPLICATION_ROOT . '/public/storage/uploads/' . ltrim($trimmed, '/');
+            return APPLICATION_ROOT . '/public/storage/uploads/' . $trimmed;
         }
 
-        return APPLICATION_ROOT . '/public/storage/uploads' . $prefix . '/' . ltrim($trimmed, '/');
+        if (!empty($siteId)) {
+            if (!empty($trimmed)) {
+                if (strpos($trimmed, $siteId . '/') !== 0 && $trimmed !== $siteId) {
+                    return APPLICATION_ROOT . '/public/storage/uploads' . $prefix . '/' . $trimmed;
+                }
+                return APPLICATION_ROOT . '/public/storage/uploads/' . $trimmed;
+            }
+            return APPLICATION_ROOT . '/public/storage/uploads/' . $siteId;
+        }
+
+        return APPLICATION_ROOT . '/public/storage/uploads/' . $trimmed;
     }
 
     public function write(string $path, string $content): bool

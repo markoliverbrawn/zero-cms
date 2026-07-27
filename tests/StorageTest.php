@@ -185,4 +185,87 @@ if (extension_loaded('gd')) {
     echo "    Skipping image optimization test (GD extension not loaded).\n";
 }
 
+// 8. Robust edge-case path and URL resolution checks for LocalStorageDriver
+echo "  Testing LocalStorageDriver edge cases...\n";
+if ($driverName === 'local') {
+    $driver = Storage::getDriver();
+    
+    // Prepare reflection helper to access protected resolvePath method
+    $refMethod = new \ReflectionMethod('Zero\Core\Storage\LocalStorageDriver', 'resolvePath');
+    $refMethod->setAccessible(true);
+    
+    // Set a known active site ID
+    $testSiteId = '019efb82-2280-7904-9b2c-8463500ac881';
+    $propSite->setValue(null, new \Zero\Models\Site([
+        'id' => $testSiteId,
+        'name' => 'Test Tenant',
+        'domain' => 'tenant.zero',
+        'theme' => 'default'
+    ]));
+    
+    // A. Relative path resolution under active tenant
+    $relativeResolved = $refMethod->invoke($driver, 'my-file.txt');
+    $expectedRelativeResolved = APPLICATION_ROOT . '/public/storage/uploads/' . $testSiteId . '/my-file.txt';
+    assert_test($relativeResolved === $expectedRelativeResolved, "Relative path correctly resolved with site ID prefix under active tenant");
+    
+    // B. Relative path starting with storage/uploads under active tenant
+    $relativeUploadsResolved = $refMethod->invoke($driver, 'storage/uploads/my-file.txt');
+    assert_test($relativeUploadsResolved === $expectedRelativeResolved, "Relative storage/uploads path correctly resolved with site ID prefix");
+    
+    // C. Already tenant-scoped path (e.g. starts with UUIDv7)
+    $alreadyTenantScopedPath = '019ec7cd-0d1b-71e2-8062-88c2f0e89a21/my-file.txt';
+    $resolvedScoped = $refMethod->invoke($driver, $alreadyTenantScopedPath);
+    $expectedScoped = APPLICATION_ROOT . '/public/storage/uploads/' . $alreadyTenantScopedPath;
+    assert_test($resolvedScoped === $expectedScoped, "Already tenant-scoped path bypassed dynamic prefixing in resolvePath()");
+    
+    // D. Cross-tenant path with different site ID prefix inside storage/uploads
+    $crossTenantPath = 'storage/uploads/019ec7cd-0d1b-71e2-8062-88c2f0e89a21/my-file.txt';
+    $resolvedCross = $refMethod->invoke($driver, $crossTenantPath);
+    assert_test($resolvedCross === $expectedScoped, "Cross-tenant path successfully bypassed active tenant prefixing in resolvePath()");
+    
+    // E. Absolute path starting with APPLICATION_ROOT and already containing the active site ID
+    $absoluteActivePath = APPLICATION_ROOT . '/public/storage/uploads/' . $testSiteId . '/my-file.txt';
+    $resolvedAbsoluteActive = $refMethod->invoke($driver, $absoluteActivePath);
+    assert_test($resolvedAbsoluteActive === $absoluteActivePath, "Absolute active tenant path resolved unmodified");
+    
+    // F. Absolute path starting with APPLICATION_ROOT and already containing a different site ID
+    $absoluteOtherPath = APPLICATION_ROOT . '/public/storage/uploads/019ec7cd-0d1b-71e2-8062-88c2f0e89a21/my-file.txt';
+    $resolvedAbsoluteOther = $refMethod->invoke($driver, $absoluteOtherPath);
+    assert_test($resolvedAbsoluteOther === $absoluteOtherPath, "Absolute other tenant path bypassed active prefixing in resolvePath()");
+    
+    // G. Private storage path resolution (should not be prefixed with site ID)
+    $privatePath = 'storage/private/secure-file.bin';
+    $resolvedPrivate = $refMethod->invoke($driver, $privatePath);
+    $expectedPrivate = APPLICATION_ROOT . '/' . $privatePath;
+    assert_test($resolvedPrivate === $expectedPrivate, "Private storage path resolved correctly without site ID prefix");
+    
+    // H. getUrl() of absolute active tenant path
+    $urlAbsoluteActive = $driver->getUrl($absoluteActivePath);
+    $expectedUrlActive = '/storage/uploads/' . $testSiteId . '/my-file.txt';
+    assert_test($urlAbsoluteActive === $expectedUrlActive, "getUrl() of absolute active tenant path resolved correctly: {$urlAbsoluteActive}");
+    
+    // I. getUrl() of absolute other tenant path
+    $urlAbsoluteOther = $driver->getUrl($absoluteOtherPath);
+    $expectedUrlOther = '/storage/uploads/019ec7cd-0d1b-71e2-8062-88c2f0e89a21/my-file.txt';
+    assert_test($urlAbsoluteOther === $expectedUrlOther, "getUrl() of absolute other tenant path resolved correctly without active prefixing: {$urlAbsoluteOther}");
+    
+    // J. getUrl() of relative path containing substring similar to site ID but not tenant-scoped
+    $similarPath = $testSiteId . '-not-actually-scoped.txt';
+    $resolvedSimilar = $refMethod->invoke($driver, $similarPath);
+    $expectedSimilarResolved = APPLICATION_ROOT . '/public/storage/uploads/' . $testSiteId . '/' . $similarPath;
+    assert_test($resolvedSimilar === $expectedSimilarResolved, "resolvePath() of similar prefix but non-scoped path correctly prefixed it with site ID");
+    
+    $urlSimilar = $driver->getUrl($similarPath);
+    $expectedUrlSimilar = '/storage/uploads/' . $testSiteId . '/' . $similarPath;
+    assert_test($urlSimilar === $expectedUrlSimilar, "getUrl() of similar prefix but non-scoped path correctly prefixed it with site ID");
+    
+    // K. getUrl() of private storage path
+    $urlPrivate = $driver->getUrl($privatePath);
+    $expectedUrlPrivate = '/storage/private/secure-file.bin';
+    assert_test($urlPrivate === $expectedUrlPrivate, "getUrl() of private file path resolved correctly: {$urlPrivate}");
+
+    // Reset currentSite to null
+    $propSite->setValue(null, null);
+}
+
 echo "Storage driver component tests completed.\n\n";
