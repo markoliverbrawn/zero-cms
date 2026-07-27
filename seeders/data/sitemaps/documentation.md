@@ -62,6 +62,7 @@ graph TD
     s3["🗄️ Configuring AWS S3 Storage<br/><i>(Slug: 'docs/how-tos/aws-s3-setup')</i>"]
     search_arch["🔍 Search Index & Driver Architecture<br/><i>(Slug: 'docs/how-tos/search-architecture')</i>"]
     deploy["☁️ Serverless Deployments & low-cost Cloud Run<br/><i>(Slug: 'docs/how-tos/deploy-cloud-run')</i>"]
+    standalone_projects["📦 Standalone Project Creation & Core Syncing<br/><i>(Slug: 'docs/how-tos/standalone-projects')</i>"]
     
     how_tos --> models
     how_tos --> views
@@ -80,6 +81,7 @@ graph TD
     how_tos --> s3
     how_tos --> search_arch
     how_tos --> deploy
+    how_tos --> standalone_projects
     
     %% Platform Modules Hub
     modules["📦 Platform Modules Directory<br/><i>(Slug: 'docs/modules')</i>"]
@@ -127,7 +129,7 @@ graph TD
     class home home;
     class contact,blog,docs nav;
     class benchmarks,intro,framework,limitations,getting_started,core_components,bootstrap page;
-    class how_tos,models,views,seeder,middleware,controllers,uuidv7,emailer,multitenancy,security_hard,custom_views,custom_blocks,supervisor,gcs,secure_uploads,s3,search_arch howto;
+    class how_tos,models,views,seeder,middleware,controllers,uuidv7,emailer,multitenancy,security_hard,custom_views,custom_blocks,supervisor,gcs,secure_uploads,s3,search_arch,standalone_projects howto;
     class modules,mod_create,mod_blog,mod_shop,mod_form,mod_forum,mod_jobs,mod_security,form_advanced module;
     class blog_triggers,jobs_tutorials,form_custom_fields,form_save_submissions tutorial;
 ```
@@ -168,6 +170,7 @@ The table below catalogs every page record compiled on seed bootstrap, capturing
 | **Configuring Google Cloud Storage (Zero Dependencies)** | `docs/how-tos/gcs-setup` | How-Tos | No (`0`) | `text` (Uniform vs ACL buckets, .env setup, Storage API) |
 | **Secure Frontend Uploads & Private Storage** | `docs/how-tos/secure-uploads` | How-Tos | No (`0`) | `text` (binaries obfuscation, secure download route stream) |
 | **Configuring AWS S3 Storage (Zero Dependencies)** | `docs/how-tos/aws-s3-setup` | How-Tos | No (`0`) | `text` (SigV4 cryptographic hmac signature generation) |
+| **Standalone Project Creation & Core Syncing** | `docs/how-tos/standalone-projects` | How-Tos | No (`0`) | `text`, `code` (git commands & best practices) |
 | **Search Index & Decoupled Driver Architecture** | `docs/how-tos/search-architecture` | How-Tos | No (`0`) | `text`, `code` (database search driver, block helpers, N+1 preventions) |
 | **Serverless Blueprints: Google Cloud Run & Cloud SQL Setup** | `docs/how-tos/deploy-cloud-run` | How-Tos | No (`0`) | `text`, `code` (Stateless architecture, low-cost db-f1-micro instance/bucket creation, DB_SOCKET connection) |
 | **Modules** | `docs/modules` | Docs / Sub-Hub | No (`0`) | `sub_pages` (Decoupled system modules list) |
