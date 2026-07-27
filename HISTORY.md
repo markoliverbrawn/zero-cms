@@ -228,6 +228,38 @@ This phase focused on implementing high-fidelity AI-generated featured images, b
 
 ---
 
+### 📅 Phase 8: Cloud Run Media Storage, Signed URLs, & Upload Paths Alignment
+*(Session: Monday, July 27, 2026)*
+
+This phase was focused on enabling fully stateless, persistent GCS-backed media storage for serverless environments (Cloud Run), developing secure Signed URLs for gated private files, and aligning all media upload directories under site-specific subfolders with 100% path consistency.
+
+#### 1. Google Cloud Storage (GCS) Dynamic Content-Type Resolution
+*   **The Bug**: Seeder images written to GCS were serving as broken images because the storage driver hardcoded a `"Content-Type: text/plain"` header, storing all binary uploads as text/plain.
+*   **The Resolution**: Refactored `GoogleCloudStorageDriver::write` to dynamically map file extensions to correct MIME content-type headers (e.g., `image/jpeg`, `image/png`, `video/mp4`, `image/svg+xml`) before uploading, resolving the broken images issue permanently.
+
+#### 2. Serverless Secure Uploads & Gated GCS V4 Signed URLs
+*   **GCS Private ACL Protection**: Updated `putFile()` and `write()` in `GoogleCloudStorageDriver` to automatically detect secure files (paths starting with `storage/private/`) and override the default bucket-level public ACLs, forcing `predefinedAcl=private` to lock out anonymous public callers.
+*   **Native GCS V4 Signed URL Generator**: Coded a zero-dependency, standard-conforming **Google V4 Signed URL** generator using raw PHP OpenSSL to cryptographically sign GCS Canonical Requests with the service account's private key via **RSA-SHA256** (and also implemented an **AWS S3 V4 Signed URL** HMAC-SHA256 generator in the S3 driver).
+*   **Secure Redirection Gate**: Upgraded `SecureDownloadController` to detect cloud-backed storage drivers (GCS/S3), authenticate callers, and automatically generate and redirect secure download requests to short-lived (60 seconds) Signed URLs, securing gated private assets in serverless environments.
+
+#### 3. Loose Coupling: Dynamic Themes Discovery
+*   **Dynamic Theme Discovery**: Removed the rigid, hardcoded theme title `match` blocks inside `Site::getThemeOptions()` in favor of fully automated formatting. It scans `/themes/` on-demand and dynamically converts kebab-case and snake_case folders into Title Case (e.g., `custom-preset` -> `Custom Preset Theme`), allowing new themes to be hot-plugged with 0% code modifications.
+
+#### 4. Dynamic Blank-Site Seeding
+*   **Minimalist Initialization**: Added support for a new `--only=blank` seeder option that cleanly rebuilds all database tables and seeds:
+    *   A **single, default blank site record** matching your local `BASE_URL`.
+    *   A **single, empty homepage welcome record** under your blank tenant domain.
+    *   Your default Super Admin user account, skipping 100% of all other demo sites, pages, and media bloat.
+
+#### 5. Local Storage Path and Prefix Alignment
+*   **Path Resolution Alignment**: Discovered that absolute paths containing `/public` bypassed local tenant-scoping in `LocalStorageDriver::resolvePath()`. We updated `resolvePath()` to clean absolute/relative `public/storage/uploads` paths to be absolute under `APPLICATION_ROOT`, and updated `LocalStorageDriver::getUrl()` to strip any leading `/public` prefix from relative disk paths before checking.
+*   **Result**: Resolves all path inconsistencies, ensuring local uploads land in `/public/storage/uploads/{siteId}/` and save cleanly in the database under `/storage/uploads/{siteId}/...`.
+
+#### 6. Multi-Controller Upload Folder Hardening
+*   **All Upload Paths Tenant-Aligned**: Updated all 5 distinct folder creation, file moving, and file uploading operations in the synchronous backend controller `FilesController.php` to dynamically append the `$siteId` subdirectory, bringing it in perfect, secure alignment with the REST API `AdminApiController.php` uploads. We cleared the OPcache by restarting the `php83` container to immediately load both updated controllers.
+
+---
+
 ## 🏆 Current Repository Performance & Standards Compliance
 *   **100% CI Pipeline Pass**: Re-executed our continuous integration automated test pipeline under maximum stress-testing data load—achieving a flawless **36 / 36 Passing Suites (100% GRAND SUCCESS)**!
 *   **Explicit Imports (Rule 13)**: Imported `use Zero\Support\Emailer;` and `use Zero\Core\Template;` explicitly at the top of our newly written files, utilizing standard class imports over fully namespaced inline references.
