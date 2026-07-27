@@ -9,6 +9,19 @@ use Zero\Models\Media;
 
 echo "=== Storage Driver Component Tests ===\n";
 
+// Bootstrap the App environment and set a mock site tenant context
+\Zero\Core\App::bootstrap();
+$testSiteId = \Zero\Support\Security::uuidv7();
+$refApp = new \ReflectionClass('Zero\Core\App');
+$propSite = $refApp->getProperty('currentSite');
+$propSite->setAccessible(true);
+$propSite->setValue(null, new \Zero\Models\Site([
+    'id' => $testSiteId,
+    'name' => 'Active Test Site',
+    'domain' => 'active-test.zero',
+    'theme' => 'default'
+]));
+
 $testFile = 'test-file-' . bin2hex(random_bytes(4)) . '.txt';
 $testContent = "Zero CMS storage driver test payload: " . bin2hex(random_bytes(16));
 
@@ -29,8 +42,8 @@ if ($driverName === 'gcs') {
     assert_test(Storage::exists($testFile), "File exists in the Google Cloud bucket");
 } else {
     assert_test(strpos($resolvedUrl, '/storage/uploads/') === 0, "Resolved URL matches correct local public layout: {$resolvedUrl}");
-    $physicalPath = APPLICATION_ROOT . '/public/storage/uploads/' . $testFile;
-    assert_test(file_exists($physicalPath), "Physical file exists on local disk");
+    $physicalPath = APPLICATION_ROOT . '/public/storage/uploads/' . $testSiteId . '/' . $testFile;
+    assert_test(file_exists($physicalPath), "Physical file exists on local disk inside site folder: {$physicalPath}");
     assert_test(file_get_contents($physicalPath) === $testContent, "Physical file content matches payload");
 }
 
@@ -66,13 +79,13 @@ assert_test(!Storage::exists($subFile1), "Subfile 1 was physically deleted");
 assert_test(!Storage::exists($subFile2), "Subfile 2 was physically deleted");
 
 // Clean up virtual folders
-@rmdir(APPLICATION_ROOT . '/public/storage/uploads/' . $testDir);
+@rmdir(APPLICATION_ROOT . '/public/storage/uploads/' . $testSiteId . '/' . $testDir);
 
 // 6. Test Media model physical file deletion on forceDelete
 echo "  Testing Media model physical file deletion on forceDelete...\n";
 
 $mediaFilename = 'media-delete-test-' . bin2hex(random_bytes(4)) . '.txt';
-$mediaRelativePath = 'default/' . $mediaFilename;
+$mediaRelativePath = $testSiteId . '/' . $mediaFilename;
 $mediaPublicPath = '/storage/uploads/' . $mediaRelativePath;
 
 // Write physical file matching media path first
@@ -102,11 +115,8 @@ assert_test(!Storage::exists($mediaRelativePath), "Media physical file successfu
 // 6b. Test Media model physical file deletion in a simulated multi-tenant environment (checking resolvePath prefix duplication bug)
 echo "  Testing Media model physical file deletion in simulated multi-tenant environment...\n";
 
-// Mock an active site ID
+// Set to another active site
 $mockSiteId = \Zero\Support\Security::uuidv7();
-$refApp = new \ReflectionClass('Zero\Core\App');
-$propSite = $refApp->getProperty('currentSite');
-$propSite->setAccessible(true);
 $propSite->setValue(null, new \Zero\Models\Site([
     'id' => $mockSiteId,
     'name' => 'Active Site',
@@ -149,8 +159,13 @@ assert_test(!file_exists($physicalPath), "Media physical file successfully delet
 // Cleanup folder
 @rmdir(dirname($physicalPath));
 
-// Reset currentSite to null
-$propSite->setValue(null, null);
+// Reset back to original test site
+$propSite->setValue(null, new \Zero\Models\Site([
+    'id' => $testSiteId,
+    'name' => 'Active Test Site',
+    'domain' => 'active-test.zero',
+    'theme' => 'default'
+]));
 
 // 7. Test automatic image optimization
 echo "  Testing automatic image optimization (resizing and compression)...\n";
@@ -172,7 +187,7 @@ if (extension_loaded('gd')) {
     assert_test($putResult, "Large image uploaded successfully");
     
     // Verify saved image dimensions
-    $physicalSavedPath = APPLICATION_ROOT . '/public/storage/uploads/' . $targetImgPath;
+    $physicalSavedPath = APPLICATION_ROOT . '/public/storage/uploads/' . $testSiteId . '/' . $targetImgPath;
     $savedInfo = @getimagesize($physicalSavedPath);
     assert_test($savedInfo !== false, "Saved file is a valid image");
     assert_test($savedInfo[0] <= 1200, "Width of saved image is resized to no larger than 1200px (Actual width: {$savedInfo[0]}px)");
@@ -195,9 +210,9 @@ if ($driverName === 'local') {
     $refMethod->setAccessible(true);
     
     // Set a known active site ID
-    $testSiteId = '019efb82-2280-7904-9b2c-8463500ac881';
+    $testSiteIdForEdgeCases = '019efb82-2280-7904-9b2c-8463500ac881';
     $propSite->setValue(null, new \Zero\Models\Site([
-        'id' => $testSiteId,
+        'id' => $testSiteIdForEdgeCases,
         'name' => 'Test Tenant',
         'domain' => 'tenant.zero',
         'theme' => 'default'
@@ -205,7 +220,7 @@ if ($driverName === 'local') {
     
     // A. Relative path resolution under active tenant
     $relativeResolved = $refMethod->invoke($driver, 'my-file.txt');
-    $expectedRelativeResolved = APPLICATION_ROOT . '/public/storage/uploads/' . $testSiteId . '/my-file.txt';
+    $expectedRelativeResolved = APPLICATION_ROOT . '/public/storage/uploads/' . $testSiteIdForEdgeCases . '/my-file.txt';
     assert_test($relativeResolved === $expectedRelativeResolved, "Relative path correctly resolved with site ID prefix under active tenant");
     
     // B. Relative path starting with storage/uploads under active tenant
@@ -224,7 +239,7 @@ if ($driverName === 'local') {
     assert_test($resolvedCross === $expectedScoped, "Cross-tenant path successfully bypassed active tenant prefixing in resolvePath()");
     
     // E. Absolute path starting with APPLICATION_ROOT and already containing the active site ID
-    $absoluteActivePath = APPLICATION_ROOT . '/public/storage/uploads/' . $testSiteId . '/my-file.txt';
+    $absoluteActivePath = APPLICATION_ROOT . '/public/storage/uploads/' . $testSiteIdForEdgeCases . '/my-file.txt';
     $resolvedAbsoluteActive = $refMethod->invoke($driver, $absoluteActivePath);
     assert_test($resolvedAbsoluteActive === $absoluteActivePath, "Absolute active tenant path resolved unmodified");
     
@@ -241,7 +256,7 @@ if ($driverName === 'local') {
     
     // H. getUrl() of absolute active tenant path
     $urlAbsoluteActive = $driver->getUrl($absoluteActivePath);
-    $expectedUrlActive = '/storage/uploads/' . $testSiteId . '/my-file.txt';
+    $expectedUrlActive = '/storage/uploads/' . $testSiteIdForEdgeCases . '/my-file.txt';
     assert_test($urlAbsoluteActive === $expectedUrlActive, "getUrl() of absolute active tenant path resolved correctly: {$urlAbsoluteActive}");
     
     // I. getUrl() of absolute other tenant path
@@ -250,13 +265,13 @@ if ($driverName === 'local') {
     assert_test($urlAbsoluteOther === $expectedUrlOther, "getUrl() of absolute other tenant path resolved correctly without active prefixing: {$urlAbsoluteOther}");
     
     // J. getUrl() of relative path containing substring similar to site ID but not tenant-scoped
-    $similarPath = $testSiteId . '-not-actually-scoped.txt';
+    $similarPath = $testSiteIdForEdgeCases . '-not-actually-scoped.txt';
     $resolvedSimilar = $refMethod->invoke($driver, $similarPath);
-    $expectedSimilarResolved = APPLICATION_ROOT . '/public/storage/uploads/' . $testSiteId . '/' . $similarPath;
+    $expectedSimilarResolved = APPLICATION_ROOT . '/public/storage/uploads/' . $testSiteIdForEdgeCases . '/' . $similarPath;
     assert_test($resolvedSimilar === $expectedSimilarResolved, "resolvePath() of similar prefix but non-scoped path correctly prefixed it with site ID");
     
     $urlSimilar = $driver->getUrl($similarPath);
-    $expectedUrlSimilar = '/storage/uploads/' . $testSiteId . '/' . $similarPath;
+    $expectedUrlSimilar = '/storage/uploads/' . $testSiteIdForEdgeCases . '/' . $similarPath;
     assert_test($urlSimilar === $expectedUrlSimilar, "getUrl() of similar prefix but non-scoped path correctly prefixed it with site ID");
     
     // K. getUrl() of private storage path
@@ -264,8 +279,27 @@ if ($driverName === 'local') {
     $expectedUrlPrivate = '/storage/private/secure-file.bin';
     assert_test($urlPrivate === $expectedUrlPrivate, "getUrl() of private file path resolved correctly: {$urlPrivate}");
 
-    // Reset currentSite to null
+    // L. Test throwing exception when no active site is booted
+    echo "  Testing RuntimeException thrown when no active site is booted...\n";
     $propSite->setValue(null, null);
+    
+    try {
+        $refMethod->invoke($driver, 'unresolvable-file.txt');
+        assert_test(false, "resolvePath() should have thrown an exception without an active site context");
+    } catch (\Exception $e) {
+        $actualException = ($e instanceof \ReflectionException) ? $e->getPrevious() : $e;
+        assert_test($actualException instanceof \RuntimeException && strpos($actualException->getMessage(), "Cannot resolve storage paths without an active site context") !== false, "Successfully caught RuntimeException in resolvePath()");
+    }
+    
+    try {
+        $driver->getUrl('unresolvable-file.txt');
+        assert_test(false, "getUrl() should have thrown an exception without an active site context");
+    } catch (\RuntimeException $e) {
+        assert_test(strpos($e->getMessage(), "Cannot resolve storage URL without an active site context") !== false, "Successfully caught RuntimeException in getUrl()");
+    }
 }
+
+// Ensure currentSite is completely clean
+$propSite->setValue(null, null);
 
 echo "Storage driver component tests completed.\n\n";

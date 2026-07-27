@@ -84,7 +84,10 @@ class LocalStorageDriver implements StorageDriver
     public function getUrl(string $path): string
     {
         $siteId = class_exists('\\Zero\\Core\\App') ? \Zero\Core\App::getCurrentSiteId() : null;
-        $prefix = !empty($siteId) ? '/' . $siteId : '';
+        if (empty($siteId)) {
+            throw new \RuntimeException("Security exception: Cannot resolve storage URL without an active site context.");
+        }
+        $prefix = '/' . $siteId;
 
         // Handle private storage
         $trimmed = ltrim($path, '/');
@@ -116,7 +119,7 @@ class LocalStorageDriver implements StorageDriver
                     return $subPathClean;
                 }
                 
-                if (!empty($siteId) && strpos($subPathRest, $siteId . '/') !== 0 && $subPathRest !== $siteId) {
+                if (strpos($subPathRest, $siteId . '/') !== 0 && $subPathRest !== $siteId) {
                     return '/storage/uploads' . $prefix . '/' . $subPathRest;
                 }
                 return $subPathClean;
@@ -134,7 +137,7 @@ class LocalStorageDriver implements StorageDriver
                 return $path;
             }
             
-            if (!empty($siteId) && strpos($subPathRest, $siteId . '/') !== 0 && $subPathRest !== $siteId) {
+            if (strpos($subPathRest, $siteId . '/') !== 0 && $subPathRest !== $siteId) {
                 return '/storage/uploads' . $prefix . '/' . $subPathRest;
             }
             return $path;
@@ -146,7 +149,7 @@ class LocalStorageDriver implements StorageDriver
             return '/storage/uploads/' . $trimmed;
         }
 
-        if (!empty($siteId) && strpos($trimmed, $siteId . '/') !== 0 && $trimmed !== $siteId) {
+        if (strpos($trimmed, $siteId . '/') !== 0 && $trimmed !== $siteId) {
             return '/storage/uploads' . $prefix . '/' . $trimmed;
         }
 
@@ -210,7 +213,10 @@ class LocalStorageDriver implements StorageDriver
 
         // Get active site_id dynamically
         $siteId = class_exists('\\Zero\\Core\\App') ? \Zero\Core\App::getCurrentSiteId() : null;
-        $prefix = !empty($siteId) ? '/' . $siteId : '';
+        if (empty($siteId)) {
+            throw new \RuntimeException("Security exception: Cannot resolve storage paths without an active site context.");
+        }
+        $prefix = '/' . $siteId;
 
         // If the path starts with APPLICATION_ROOT
         if (strpos($path, APPLICATION_ROOT) === 0) {
@@ -232,9 +238,9 @@ class LocalStorageDriver implements StorageDriver
                 $subPathRest = substr($subPathClean, strlen('/storage/uploads'));
                 $subPathRest = ltrim($subPathRest, '/');
                 
-                // If it already starts with a UUIDv7, bypass dynamic site prefixing (e.g. during permanent cross-tenant purges)
+                // If it already starts with a UUIDv7, bypass prefixing
                 $isAlreadyTenantScoped = preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}(\/|$)/i', $subPathRest);
-                if (!$isAlreadyTenantScoped && !empty($siteId) && !empty($subPathRest)) {
+                if (!$isAlreadyTenantScoped && !empty($subPathRest)) {
                     // Check if it already starts with siteId/ or is exactly siteId
                     if (strpos($subPathRest, $siteId . '/') !== 0 && $subPathRest !== $siteId) {
                         return APPLICATION_ROOT . '/public/storage/uploads' . $prefix . '/' . $subPathRest;
@@ -256,9 +262,9 @@ class LocalStorageDriver implements StorageDriver
             $subPathRest = substr($trimmed, strlen('storage/uploads'));
             $subPathRest = ltrim($subPathRest, '/');
             
-            // If it already starts with a UUIDv7, bypass dynamic site prefixing (e.g. during permanent cross-tenant purges)
+            // If it already starts with a UUIDv7, bypass prefixing
             $isAlreadyTenantScoped = preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}(\/|$)/i', $subPathRest);
-            if (!$isAlreadyTenantScoped && !empty($siteId) && !empty($subPathRest)) {
+            if (!$isAlreadyTenantScoped && !empty($subPathRest)) {
                 if (strpos($subPathRest, $siteId . '/') !== 0 && $subPathRest !== $siteId) {
                     return APPLICATION_ROOT . '/public/storage/uploads' . $prefix . '/' . $subPathRest;
                 }
@@ -272,17 +278,14 @@ class LocalStorageDriver implements StorageDriver
             return APPLICATION_ROOT . '/public/storage/uploads/' . $trimmed;
         }
 
-        if (!empty($siteId)) {
-            if (!empty($trimmed)) {
-                if (strpos($trimmed, $siteId . '/') !== 0 && $trimmed !== $siteId) {
-                    return APPLICATION_ROOT . '/public/storage/uploads' . $prefix . '/' . $trimmed;
-                }
-                return APPLICATION_ROOT . '/public/storage/uploads/' . $trimmed;
+        if (!empty($trimmed)) {
+            if (strpos($trimmed, $siteId . '/') !== 0 && $trimmed !== $siteId) {
+                return APPLICATION_ROOT . '/public/storage/uploads' . $prefix . '/' . $trimmed;
             }
-            return APPLICATION_ROOT . '/public/storage/uploads/' . $siteId;
+            return APPLICATION_ROOT . '/public/storage/uploads/' . $trimmed;
         }
 
-        return APPLICATION_ROOT . '/public/storage/uploads/' . $trimmed;
+        return APPLICATION_ROOT . '/public/storage/uploads/' . $siteId;
     }
 
     public function write(string $path, string $content): bool
