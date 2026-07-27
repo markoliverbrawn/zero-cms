@@ -52,8 +52,8 @@ class Module implements ModuleInterface
             '#^/admin/list/([a-zA-Z0-9_-]+)$#' => Controllers\ListController::class,
             '#^/admin/edit/([a-zA-Z0-9_-]+)/([a-zA-Z0-9\-]+)$#' => Controllers\ModelController::class,
             '#^/admin/delete/([a-zA-Z0-9_-]+)$#' => Controllers\ModelController::class,
-            '#^/admin/restore/([a-zA-Z0-9_-]+)/([a-zA-Z0-9\-]+)$#' => Controllers\ModelController::class,
-            '#^/admin/force-delete/([a-zA-Z0-9_-]+)/([a-zA-Z0-9\-]+)$#' => Controllers\ModelController::class,
+            '#^/admin/restore/([a-zA-Z0-9_-]+)$#' => Controllers\ModelController::class,
+            '#^/admin/force-delete/([a-zA-Z0-9_-]+)$#' => Controllers\ModelController::class,
             '#^/admin/export/([a-zA-Z0-9_-]+)$#' => Controllers\ExportController::class,
 
             // Admin REST API routes

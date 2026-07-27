@@ -98,8 +98,8 @@ class Site implements Model
             }
             return rmdir($dir);
         } catch (\Exception $e) {
-            // Gracefully catch and suppress filesystem/permission blockages to avoid premature header output
-            return false;
+            // Rethrow descriptive file deletion or other failures to bubble out to the controller/user
+            throw new \Exception("Deletion failed: Could not clean up tenant uploads folder. " . $e->getMessage());
         } finally {
             restore_error_handler();
         }

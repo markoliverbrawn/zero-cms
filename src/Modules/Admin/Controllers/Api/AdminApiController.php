@@ -403,18 +403,22 @@ class AdminApiController extends ApiController
 
         $record = $isForce ? $model::findTrashed($id) : $model::find($id);
         if ($record) {
-            if ($isForce) {
-                $record->forceDelete();
-                Logger::log($_SESSION['user_id'] ?? null, 'force_delete', $modelName, $id, [
-                    'title' => $record->title ?? ($record->filename ?? ($record->username ?? ''))
-                ]);
-            } else {
-                $record->delete();
-                Logger::log($_SESSION['user_id'] ?? null, 'delete', $modelName, $id, [
-                    'title' => $record->title ?? ($record->filename ?? ($record->username ?? ''))
-                ]);
+            try {
+                if ($isForce) {
+                    $record->forceDelete();
+                    Logger::log($_SESSION['user_id'] ?? null, 'force_delete', $modelName, $id, [
+                        'title' => $record->title ?? ($record->filename ?? ($record->username ?? ''))
+                    ]);
+                } else {
+                    $record->delete();
+                    Logger::log($_SESSION['user_id'] ?? null, 'delete', $modelName, $id, [
+                        'title' => $record->title ?? ($record->filename ?? ($record->username ?? ''))
+                    ]);
+                }
+                $this->respond(['success' => true]);
+            } catch (\Exception $e) {
+                $this->respond(['success' => false, 'error' => $e->getMessage()], 500);
             }
-            $this->respond(['success' => true]);
         }
 
         $this->respond(['success' => false, 'error' => 'Record not found or already deleted'], 404);

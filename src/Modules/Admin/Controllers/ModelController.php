@@ -93,6 +93,7 @@ class ModelController implements Controller
             }
             App::applyCsrfMiddleware();
 
+            $success = false;
             if ($id) {
                 $record = $model::findTrashed($id);
                 if ($record) {
@@ -100,8 +101,16 @@ class ModelController implements Controller
                     Logger::log($_SESSION['user_id'] ?? null, 'restore', $modelName, $id, [
                         'title' => $record->title ?? ($record->filename ?? ($record->username ?? ''))
                     ]);
+                    $success = true;
                 }
             }
+
+            if (strpos($_SERVER['HTTP_ACCEPT'] ?? '', 'application/json') !== false) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => $success]);
+                exit;
+            }
+
             header('Location: /admin/list/' . $modelName . '?status=trash');
             exit;
         }

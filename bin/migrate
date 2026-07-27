@@ -1,0 +1,47 @@
+#!/usr/bin/env php
+<?php
+// bin/migrate - Safe Database Migration Utility for Zero CMS
+
+define('APPLICATION_ROOT', dirname(__DIR__));
+
+// Register global PSR-4 Autoloader for Zero namespace mapping
+spl_autoload_register(function ($class) {
+    $prefix = 'Zero\\';
+    $base_dir = APPLICATION_ROOT . '/src/';
+
+    $len = strlen($prefix);
+    if (strncmp($prefix, $class, $len) !== 0) {
+        return;
+    }
+
+    $relative_class = substr($class, $len);
+    $file = $base_dir . str_replace('\\', '/', $relative_class) . '.php';
+
+    if (file_exists($file)) {
+        require_once $file;
+    }
+});
+
+use Zero\Core\App;
+use Zero\Core\Env;
+use Zero\Database\MigrationManager;
+
+// Load environment configuration
+Env::load(APPLICATION_ROOT);
+
+// Bootstrap Zero CMS kernel
+App::bootstrap();
+
+echo "====================================================================\n";
+echo "           ZERO CMS SAFE DATABASE MIGRATION ENGINE                  \n";
+echo "====================================================================\n";
+echo "--> Active Database: " . Env::get('DB_NAME') . "\n";
+echo "--> Handshaking dynamic sequential migrations...\n";
+echo "--------------------------------------------------------------------\n\n";
+
+try {
+    MigrationManager::up();
+} catch (\Exception $e) {
+    echo "❌ [ERROR] Migration failed: " . $e->getMessage() . "\n";
+    exit(1);
+}

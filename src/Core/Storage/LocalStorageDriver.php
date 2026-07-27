@@ -17,6 +17,9 @@ class LocalStorageDriver implements StorageDriver
     protected function deleteDirectoryRecursive(string $dir, bool $removeSelf = true): void
     {
         if (is_dir($dir)) {
+            if (!is_writable($dir)) {
+                throw new \Exception("Permission denied: The directory is not writable (" . basename($dir) . ").");
+            }
             $objects = scandir($dir);
             foreach ($objects as $object) {
                 if ($object !== "." && $object !== "..") {
@@ -24,12 +27,27 @@ class LocalStorageDriver implements StorageDriver
                     if (is_dir($item)) {
                         $this->deleteDirectoryRecursive($item, true);
                     } else {
-                        unlink($item);
+                        if (is_file($item)) {
+                            if (!is_writable($dir)) {
+                                throw new \Exception("Permission denied: The directory containing the file is not writable (" . $object . ").");
+                            }
+                            if (!is_writable($item)) {
+                                throw new \Exception("Permission denied: The file inside the directory is not writable (" . $object . ").");
+                            }
+                            if (!unlink($item)) {
+                                throw new \Exception("Deletion failed: Could not delete the file inside the directory (" . $object . ").");
+                            }
+                        }
                     }
                 }
             }
             if ($removeSelf) {
-                rmdir($dir);
+                if (!is_writable($dir)) {
+                    throw new \Exception("Permission denied: The directory is not writable (" . basename($dir) . ").");
+                }
+                if (!rmdir($dir)) {
+                    throw new \Exception("Deletion failed: Could not remove the directory (" . basename($dir) . ").");
+                }
             }
         }
     }
@@ -38,7 +56,17 @@ class LocalStorageDriver implements StorageDriver
     {
         $resolved = $this->resolvePath($path);
         if (file_exists($resolved) && is_file($resolved)) {
-            return unlink($resolved);
+            $dir = dirname($resolved);
+            if (!is_writable($dir)) {
+                throw new \Exception("Permission denied: The upload directory containing the file is not writable (" . basename($resolved) . ").");
+            }
+            if (!is_writable($resolved)) {
+                throw new \Exception("Permission denied: The file is not writable (" . basename($resolved) . ").");
+            }
+            if (!unlink($resolved)) {
+                throw new \Exception("Deletion failed: Could not delete the file (" . basename($resolved) . ").");
+            }
+            return true;
         }
         return false;
     }

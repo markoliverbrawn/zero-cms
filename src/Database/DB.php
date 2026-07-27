@@ -67,7 +67,13 @@ class DB
             self::$pdo = $pdo;
             return $pdo;
         } catch (PDOException $e) {
-            Logger::log(null, 'database_connection_failed', 'system', null, ['error_message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            // Write to local server error log instead of DB to prevent infinite recursion loop
+            error_log("Database connection failed: " . $e->getMessage() . "\n" . $e->getTraceAsString());
+            
+            if (php_sapi_name() === 'cli') {
+                throw $e; // In CLI, throw the exception so calling scripts can catch it and terminate with clean exit codes!
+            }
+            
             http_response_code(500);
             echo "A database error occurred. Please try again later.";
             exit;

@@ -66,7 +66,8 @@ trait CascadesDeletes
                         }
                     }
                 } catch (\Exception $e) {
-                    // Safe fallback if database operations fail during teardowns
+                    // Rethrow descriptive file deletion or other failures to bubble out to the controller/user
+                    throw $e;
                 }
             }
         }

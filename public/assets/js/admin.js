@@ -1109,6 +1109,76 @@ document.addEventListener('DOMContentLoaded', function(){
       });
   };
 
+  // Helper to execute AJAX-based model restores using the unified MVC controller
+  function executeAjaxRestore(form) {
+      var recordId = form.querySelector('input[name="id"]')?.value || '';
+      var csrfToken = form.querySelector('input[name="csrf"]')?.value || '';
+      var actionUrl = form.getAttribute('action') || '';
+      var submitBtn = form.querySelector('button[type="submit"]');
+      var originalText = submitBtn ? submitBtn.innerHTML : 'Restore';
+
+      if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.innerHTML = '...';
+      }
+
+      var formData = new FormData();
+      formData.append('id', recordId);
+      formData.append('csrf', csrfToken);
+
+      fetch(actionUrl, {
+          method: 'POST',
+          headers: {
+              'Accept': 'application/json',
+              'X-CSRF-Token': csrfToken
+          },
+          body: formData
+      })
+      .then(function(res) {
+          if (res.ok) return res.json();
+          return res.json().then(function(data) {
+              throw new Error(data.error || 'Restore failed');
+          }).catch(function() {
+              throw new Error('Restore failed');
+          });
+      })
+      .then(function(data) {
+          if (submitBtn) {
+              submitBtn.disabled = false;
+              submitBtn.innerHTML = originalText;
+          }
+          if (data.success) {
+              var row = form.closest('tr');
+              if (row) {
+                  row.style.transition = 'opacity 0.25s ease';
+                  row.style.opacity = '0';
+                  setTimeout(function() {
+                      row.parentNode.removeChild(row);
+                      // If the table is now completely empty, reload the page to display its empty state cleanly
+                      var tbody = document.querySelector('table tbody');
+                      if (tbody && tbody.querySelectorAll('tr').length === 0) {
+                          location.reload();
+                      }
+                  }, 250);
+              }
+          } else {
+              throw new Error(data.error || 'Restore failed');
+          }
+      })
+      .catch(function(err) {
+          if (submitBtn) {
+              submitBtn.disabled = false;
+              submitBtn.innerHTML = originalText;
+          }
+          window.adminConfirm({
+              title: 'Error',
+              message: err.message,
+              confirmText: 'OK',
+              confirmClass: 'btn-confirm-primary'
+          });
+      });
+  }
+
   // Helper to execute AJAX-based model deletions using the unified REST API
   function executeAjaxDelete(form) {
       var recordId = form.getAttribute('data-id');
@@ -1131,7 +1201,11 @@ document.addEventListener('DOMContentLoaded', function(){
       })
       .then(function(res) {
           if (res.ok) return res.json();
-          throw new Error('Delete failed');
+          return res.json().then(function(data) {
+              throw new Error(data.error || 'Delete failed');
+          }).catch(function() {
+              throw new Error('Delete failed');
+          });
       })
       .then(function(data) {
           if (submitBtn) {
@@ -1192,7 +1266,11 @@ document.addEventListener('DOMContentLoaded', function(){
       })
       .then(function(res) {
           if (res.ok) return res.json();
-          throw new Error('Permanent deletion failed');
+          return res.json().then(function(data) {
+              throw new Error(data.error || 'Permanent deletion failed');
+          }).catch(function() {
+              throw new Error('Permanent deletion failed');
+          });
       })
       .then(function(data) {
           if (submitBtn) {
@@ -1340,6 +1418,23 @@ document.addEventListener('DOMContentLoaded', function(){
           }).then(function(confirmed) {
               if (confirmed) {
                   executeAjaxForceDelete(form);
+              }
+          });
+      }
+
+      if (e.target.classList.contains('admin-restore-form')) {
+          var form = e.target;
+          e.preventDefault();
+
+          window.adminConfirm({
+              title: 'Restore Record',
+              message: 'Are you sure you want to restore this record?',
+              note: 'Note: Restoring this record will NOT automatically restore its cascade-deleted related child records.',
+              confirmText: 'Restore',
+              confirmClass: 'btn-confirm-primary'
+          }).then(function(confirmed) {
+              if (confirmed) {
+                  executeAjaxRestore(form);
               }
           });
       }
