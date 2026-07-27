@@ -801,7 +801,7 @@ class AdminApiController extends ApiController
         $currentFolder = preg_replace('/[^a-zA-Z0-9_\-\/]/', '_', $currentFolder);
         $currentFolder = trim($currentFolder, '/');
 
-        $uploadsDir = APPLICATION_ROOT . '/public/storage/uploads' . (!empty($currentFolder) ? '/' . $currentFolder : '');
+        $uploadsDir = APPLICATION_ROOT . '/public/storage/uploads/' . $siteId . (!empty($currentFolder) ? '/' . $currentFolder : '');
         if (!Storage::exists($uploadsDir)) {
             Storage::makeDirectory($uploadsDir);
         }
