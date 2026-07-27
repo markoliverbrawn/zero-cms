@@ -94,6 +94,10 @@ class LocalStorageDriver implements StorageDriver
         // Strip APPLICATION_ROOT to make it relative to web root
         if (strpos($path, APPLICATION_ROOT) === 0) {
             $subPath = substr($path, strlen(APPLICATION_ROOT));
+            // Strip leading /public if present (since /public is the web document root)
+            if (strpos($subPath, '/public') === 0) {
+                $subPath = substr($subPath, 7);
+            }
             if (strpos($subPath, '/storage/uploads') === 0) {
                 $subPathRest = substr($subPath, strlen('/storage/uploads'));
                 $subPathRest = ltrim($subPathRest, '/');
@@ -168,6 +172,12 @@ class LocalStorageDriver implements StorageDriver
             throw new \InvalidArgumentException("Security exception: Malformed path traversal detected.");
         }
 
+        // Clean relative or absolute public/storage/uploads paths to be absolute under APPLICATION_ROOT
+        $cleanInput = ltrim($path, '/');
+        if (strpos($cleanInput, 'public/storage/uploads') === 0) {
+            $path = APPLICATION_ROOT . '/' . $cleanInput;
+        }
+
         // Get active site_id dynamically
         $siteId = class_exists('\\Zero\\Core\\App') ? \Zero\Core\App::getCurrentSiteId() : null;
         $prefix = !empty($siteId) ? '/' . $siteId : '';
@@ -175,8 +185,15 @@ class LocalStorageDriver implements StorageDriver
         // If the path starts with APPLICATION_ROOT, check if it already contains the site_id prefix.
         if (strpos($path, APPLICATION_ROOT) === 0) {
             $subPath = substr($path, strlen(APPLICATION_ROOT));
-            if (strpos($subPath, '/storage/uploads') === 0) {
-                $subPathRest = substr($subPath, strlen('/storage/uploads'));
+            // Strip leading public/ if present (since /public is the web document root)
+            $subPathClean = ltrim($subPath, '/');
+            if (strpos($subPathClean, 'public/') === 0) {
+                $subPathClean = substr($subPathClean, 7);
+            }
+            $subPathClean = '/' . ltrim($subPathClean, '/');
+
+            if (strpos($subPathClean, '/storage/uploads') === 0) {
+                $subPathRest = substr($subPathClean, strlen('/storage/uploads'));
                 $subPathRest = ltrim($subPathRest, '/');
                 
                 // If it already starts with a UUIDv7, bypass dynamic site prefixing (e.g. during permanent cross-tenant purges)

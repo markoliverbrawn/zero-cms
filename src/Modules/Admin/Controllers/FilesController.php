@@ -139,7 +139,7 @@ class FilesController implements Controller
                         ]);
                         
                         // Physically create physical directory as well to keep filesystem organized
-                        $dirPath = APPLICATION_ROOT . '/public/storage/uploads' . (!empty($currentFolder) ? '/' . $currentFolder : '') . '/' . $newFolderName;
+                        $dirPath = APPLICATION_ROOT . '/public/storage/uploads/' . $siteId . (!empty($currentFolder) ? '/' . $currentFolder : '') . '/' . $newFolderName;
                         if (!Storage::exists($dirPath)) {
                             Storage::makeDirectory($dirPath);
                         }
@@ -179,7 +179,7 @@ class FilesController implements Controller
             $currentFolder = preg_replace('/[^a-zA-Z0-9_\-\/]/', '_', $currentFolder);
             $currentFolder = trim($currentFolder, '/');
 
-            $uploadsDir = APPLICATION_ROOT . '/public/storage/uploads' . (!empty($currentFolder) ? '/' . $currentFolder : '');
+            $uploadsDir = APPLICATION_ROOT . '/public/storage/uploads/' . $siteId . (!empty($currentFolder) ? '/' . $currentFolder : '');
             if (!Storage::exists($uploadsDir)) {
                 Storage::makeDirectory($uploadsDir);
             }
@@ -342,7 +342,7 @@ class FilesController implements Controller
             $oldPhysicalPath = APPLICATION_ROOT . $fileRecord['path'];
             $newFilename = $fileRecord['filename'];
             
-            $newPhysicalDir = APPLICATION_ROOT . '/public/storage/uploads' . (!empty($currentDestinationFolder) ? '/' . $currentDestinationFolder : '');
+            $newPhysicalDir = APPLICATION_ROOT . '/public/storage/uploads/' . $siteId . (!empty($currentDestinationFolder) ? '/' . $currentDestinationFolder : '');
             if (!Storage::exists($newPhysicalDir)) {
                 Storage::makeDirectory($newPhysicalDir);
             }
@@ -438,7 +438,7 @@ class FilesController implements Controller
         $currentFolder = preg_replace('/[^a-zA-Z0-9_\-\/]/', '_', $currentFolder);
         $currentFolder = trim($currentFolder, '/');
 
-        $uploadsDir = APPLICATION_ROOT . '/public/storage/uploads' . (!empty($currentFolder) ? '/' . $currentFolder : '');
+        $uploadsDir = APPLICATION_ROOT . '/public/storage/uploads/' . $siteId . (!empty($currentFolder) ? '/' . $currentFolder : '');
         if (!Storage::exists($uploadsDir)) {
             Storage::makeDirectory($uploadsDir);
         }
@@ -549,7 +549,7 @@ class FilesController implements Controller
                 }
 
                 $currentFolder = $fileRecord['folder'] ?? '';
-                $uploadsDir = APPLICATION_ROOT . '/public/storage/uploads' . (!empty($currentFolder) ? '/' . $currentFolder : '');
+                $uploadsDir = APPLICATION_ROOT . '/public/storage/uploads/' . $siteId . (!empty($currentFolder) ? '/' . $currentFolder : '');
                 if (!Storage::exists($uploadsDir)) {
                     Storage::makeDirectory($uploadsDir);
                 }
