@@ -69,11 +69,48 @@ MigrationManager::up();
 $coreData = json_decode(file_get_contents(APPLICATION_ROOT . '/seeders/data/corporate.json'), true) ?? [];
 
 if ($onlySite !== null && $onlySite !== 'corporate') {
-    // If selective seeding is enabled and NOT targeting corporate, we only want the core users (super admins) from corporate.json.
-    // We remove "sites", "pages", and "media" keys to prevent seeding the corporate main site record and its pages/assets!
-    unset($coreData['sites']);
-    unset($coreData['pages']);
-    unset($coreData['media']);
+    if ($onlySite === 'blank') {
+        // If blank, dynamically seed a single default site and a welcome homepage
+        $baseUrl = Env::get('BASE_URL', 'http://localhost');
+        $parsedUrl = parse_url($baseUrl);
+        $targetDomain = $parsedUrl['host'] ?? 'localhost';
+        
+        $coreData['sites'] = [
+            [
+                "id" => "019fa1f1-7800-7031-a269-fcc0aa1fe578",
+                "name" => "My New Standalone Site",
+                "domain" => $targetDomain,
+                "theme" => "default",
+                "enabled_modules" => ["blog", "security", "queue", "site-search", "formbuilder"]
+            ]
+        ];
+        
+        $coreData['pages'] = [
+            [
+                "id" => "019fa1f1-7bcc-72f0-8c3b-9732ab7f9e3a",
+                "site_domain" => $targetDomain,
+                "title" => "Welcome",
+                "slug" => "",
+                "status" => "published",
+                "content" => [
+                    [
+                        "type" => "text",
+                        "title" => "Welcome to your new Zero CMS website!",
+                        "content" => "<p>You have successfully initialized a blank standalone Zero CMS project. Log in to the <a href=\"/admin\">admin area</a> to start customizing your pages, blocks, and themes!</p>"
+                    ]
+                ],
+                "precedence" => 0
+            ]
+        ];
+        
+        unset($coreData['media']);
+    } else {
+        // If selective seeding is enabled and NOT targeting corporate, we only want the core users (super admins) from corporate.json.
+        // We remove "sites", "pages", and "media" keys to prevent seeding the corporate main site record and its pages/assets!
+        unset($coreData['sites']);
+        unset($coreData['pages']);
+        unset($coreData['media']);
+    }
 }
 
 // If BASE_URL is set in environment (e.g. on Cloud Run), dynamically update the default site's domain and references to match it!

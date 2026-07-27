@@ -270,13 +270,15 @@ class Site implements Model
                     continue;
                 }
                 if (is_dir($themesDir . '/' . $folder)) {
-                    $title = match ($folder) {
-                        'default' => 'Default Corporate Theme',
-                        'guide' => 'Technical Guide Theme',
-                        'portfolio' => 'Designer Portfolio Theme',
-                        'shop' => 'Luxe Shop Theme',
-                        default => ucfirst($folder) . ' Theme'
-                    };
+                    // Convert folder name dynamically (e.g., kebab-case or snake_case to Title Case)
+                    $friendlyName = ucwords(str_replace(['-', '_'], ' ', $folder));
+                    if ($folder === 'default') {
+                        $title = 'Default Corporate Theme';
+                    } elseif ($folder === 'guide') {
+                        $title = 'Technical Guide Theme';
+                    } else {
+                        $title = $friendlyName . ' Theme';
+                    }
                     $options[$folder] = $title;
                 }
             }
