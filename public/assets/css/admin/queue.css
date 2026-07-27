@@ -1,0 +1,144 @@
+/* admin/queue.css - Modern, High-Contrast Job Queue Widget Styling */
+
+.queue-widget {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  
+  .queue-metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+
+  .queue-stat-card {
+    background-color: var(--widget-card-bg, rgba(255, 255, 255, 0.03));
+    border: 1px solid var(--border-color, #cbd5e1);
+    border-radius: var(--border-radius, 6px);
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    
+    .queue-stat-value {
+      font-size: 2rem;
+      font-weight: 800;
+      line-height: 1;
+      margin-bottom: 0.25rem;
+      font-family: monospace;
+      
+      &.state-pending {
+        color: var(--warning-color, #eab308);
+      }
+      
+      &.state-failed {
+        color: var(--danger-color, #ef4444);
+        
+        &.has-errors {
+          animation: pulse-danger 2s infinite;
+        }
+      }
+    }
+    
+    .queue-stat-label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted, #64748b);
+      font-weight: 700;
+    }
+  }
+
+  .queue-telemetry-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    background-color: rgba(255, 255, 255, 0.01);
+    border-radius: var(--border-radius, 6px);
+    padding: 0.25rem 0;
+    
+    .queue-telemetry-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.85rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px dashed rgba(255, 255, 255, 0.05);
+      
+      &:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+      }
+      
+      .telemetry-label {
+        color: var(--text-color, #0f172a);
+        font-weight: 500;
+      }
+      
+      .telemetry-value {
+        font-weight: 600;
+        font-family: monospace;
+      }
+    }
+  }
+}
+
+.queue-status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+
+  .status-pulse {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+
+    &.active {
+      background-color: var(--success-color, #22c55e);
+      box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+      animation: pulse-active 1.5s infinite;
+    }
+
+    &.offline {
+      background-color: var(--text-muted, #64748b);
+    }
+  }
+
+  &.header-indicator {
+    margin-left: auto;
+    font-size: 0.75rem;
+    color: var(--text-muted, #64748b);
+    font-weight: 500;
+  }
+}
+
+@keyframes pulse-active {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 6px rgba(34, 197, 94, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+  }
+}
+
+@keyframes pulse-danger {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+  100% {
+    opacity: 1;
+  }
+}

@@ -1,0 +1,108 @@
+/* public/assets/css/blocks/chart.css */
+.block-chart-container {
+    margin-bottom: 35px;
+    padding: 0 24px;
+}
+
+.block-chart-title {
+    font-size: 1.6rem;
+    font-weight: 800;
+    margin-top: 0;
+    margin-bottom: 25px;
+}
+
+/* Beautiful Dashboard Window Header Widget */
+.block-chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--surface-container-low, #0d1c2d);
+    border: 1px solid var(--border-color);
+    border-bottom: none;
+    border-top-left-radius: var(--border-radius, 4px);
+    border-top-right-radius: var(--border-radius, 4px);
+    padding: 12px 18px;
+    box-sizing: border-box;
+}
+
+.header-mac-dots {
+    display: flex;
+    gap: 6px;
+
+    .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        display: inline-block;
+
+        &.red { background-color: #ef4444; }
+        &.yellow { background-color: #f59e0b; }
+        &.green { background-color: #10b981; }
+    }
+}
+
+.header-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    .status-label {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--primary-color, #00f0ff);
+        letter-spacing: 0.1em;
+    }
+
+    .status-pulse {
+        width: 6px;
+        height: 6px;
+        background-color: var(--primary-color, #00f0ff);
+        border-radius: 50%;
+        display: inline-block;
+        box-shadow: 0 0 8px var(--primary-color, #00f0ff);
+        animation: status-pulse-glow 2s infinite ease-in-out;
+    }
+}
+
+@keyframes status-pulse-glow {
+    0%, 100% { opacity: 0.4; transform: scale(0.9); }
+    50% { opacity: 1; transform: scale(1.1); box-shadow: 0 0 12px var(--primary-color, #00f0ff); }
+}
+
+.block-chart-svg-wrapper {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-bottom-left-radius: var(--border-radius, 4px);
+    border-bottom-right-radius: var(--border-radius, 4px);
+    padding: 24px;
+    box-sizing: border-box;
+}
+
+.block-chart-svg {
+    display: block;
+
+    .chart-label {
+        font-family: 'Inter', sans-serif;
+        font-size: 14px;
+        font-weight: 600;
+        dominant-baseline: middle;
+    }
+
+    .chart-value-text {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 14px;
+        font-weight: 700;
+        dominant-baseline: middle;
+    }
+
+    .chart-grid-text {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 10px;
+        font-weight: 600;
+    }
+
+    .chart-fill-bar {
+        transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+}

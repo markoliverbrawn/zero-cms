@@ -1,0 +1,201 @@
+/* assets/css/blocks/form_builder.css */
+.block-contact-form {
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+
+    h2 {
+        font-size: 1.75rem;
+        margin-bottom: 1.5rem;
+        letter-spacing: -0.02em;
+        border-left: 4px solid var(--neon-cyan, #06b6d4);
+        padding-left: 15px;
+        line-height: 1.2;
+    }
+
+    .block-content {
+        margin-bottom: 2rem;
+        color: var(--text-muted, #6c757d);
+        font-size: 1.05rem;
+    }
+
+    .contact-form-wrapper {
+        background-color: var(--card-bg, #ffffff);
+        border: 1px solid var(--border-color, #e9ecef);
+        border-radius: var(--border-radius, 12px);
+        padding: 2rem;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
+        position: relative;
+
+        .contact-success-msg {
+            display: none;
+            color: #10b981;
+            font-weight: bold;
+            font-size: 1.1rem;
+            text-align: center;
+            padding: 2rem 0;
+            background-color: rgba(16, 185, 129, 0.06);
+            border: 1px solid #10b981;
+            border-radius: 8px;
+
+            svg {
+                vertical-align: middle;
+                margin-right: 12px;
+                filter: drop-shadow(0 0 4px rgba(16, 185, 129, 0.2));
+            }
+        }
+
+        .ajax-contact-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+
+            .form-group {
+                display: flex;
+                flex-direction: column;
+                gap: 0.5rem;
+
+                label {
+                    font-weight: 700;
+                    font-size: 0.85rem;
+                    color: var(--text-muted, #6c757d);
+                    text-transform: uppercase;
+                    letter-spacing: 0.05em;
+                }
+
+                input, textarea, select {
+                    width: 100%;
+                    padding: 0.85rem 1.15rem;
+                    background-color: var(--bg-color, #f8f9fa);
+                    border: 1px solid var(--border-color, #e9ecef);
+                    border-radius: 8px;
+                    color: var(--text-color, #212529);
+                    font-family: inherit;
+                    font-size: 1rem;
+                    box-sizing: border-box;
+                    transition: all 0.25s ease;
+
+                    &:focus {
+                        border-color: var(--neon-cyan, #06b6d4);
+                        box-shadow: 0 0 10px rgba(6, 182, 212, 0.2);
+                        outline: none;
+                    }
+                }
+
+                select {
+                    appearance: none;
+                    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236c757d' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+                    background-repeat: no-repeat;
+                    background-position: right 1.15rem center;
+                    background-size: 1rem;
+                    padding-right: 3rem;
+                    cursor: pointer;
+                }
+
+                .field-error {
+                    color: #f43f5e;
+                    font-size: 0.85rem;
+                    display: none;
+                    font-weight: 600;
+                    margin-top: 4px;
+                }
+            }
+
+            .form-general-error {
+                color: #f43f5e;
+                font-weight: bold;
+                text-align: center;
+                display: none;
+                background-color: rgba(244, 63, 94, 0.06);
+                border: 1px solid #f43f5e;
+                padding: 1rem;
+                border-radius: 6px;
+                font-size: 0.95rem;
+            }
+
+            .submit-btn {
+                padding: 1rem 1.5rem;
+                background: linear-gradient(135deg, var(--accent-color, #0056b3), #06b6d4);
+                border: none;
+                border-radius: 8px;
+                color: #ffffff;
+                font-weight: 700;
+                font-size: 1.05rem;
+                cursor: pointer;
+                transition: all 0.25s ease;
+                box-shadow: 0 4px 15px rgba(0, 86, 179, 0.2);
+                outline: none;
+
+                &:hover {
+                    transform: translateY(-1px);
+                    box-shadow: 0 6px 20px rgba(6, 182, 212, 0.3);
+                }
+
+                &:disabled {
+                    opacity: 0.7;
+                    cursor: not-allowed;
+                    transform: none;
+                }
+            }
+        }
+    }
+}
+
+/* Global Hiding Utility for decoy Website Form Honeypots */
+.website-field-wrapper {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    position: absolute !important;
+    top: -9999px !important;
+    left: -9999px !important;
+    height: 0 !important;
+    width: 0 !important;
+    z-index: -1000 !important;
+}
+
+/* Comments Closed Box Notice */
+.comments-closed-box {
+    text-align: center;
+    background-color: rgba(148, 163, 184, 0.05);
+    border: 1px dashed var(--border-color, #e9ecef);
+    color: var(--text-muted, #6c757d);
+    padding: 2rem;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    font-style: italic;
+}
+
+/* Comment Moderation Pending Badge */
+.comment-moderation-badge {
+    font-size: 0.8rem;
+    color: var(--neon-pink, #f43f5e);
+    font-style: italic;
+    font-weight: normal;
+    margin-left: 8px;
+    vertical-align: middle;
+}
+
+/* Checkboxes and Radios list containers for Dynamic Form Builder */
+.checkboxes-group, .radios-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 5px;
+
+    label {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: normal !important;
+        text-transform: none !important;
+        cursor: pointer;
+        font-size: 0.95rem;
+
+        input {
+            width: auto !important;
+            margin: 0 !important;
+            cursor: pointer;
+        }
+    }
+}

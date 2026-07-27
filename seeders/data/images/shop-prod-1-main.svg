@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="100%" height="100%">
+  <defs>
+    <radialGradient id="bg-grad-1" cx="50%" cy="50%" r="70%">
+      <stop offset="0%" stop-color="#1c1917" />
+      <stop offset="100%" stop-color="#0c0a09" />
+    </radialGradient>
+    <linearGradient id="gold-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f59e0b" />
+      <stop offset="50%" stop-color="#d4af37" />
+      <stop offset="100%" stop-color="#b45309" />
+    </linearGradient>
+  </defs>
+  <rect width="500" height="500" fill="url(#bg-grad-1)" rx="8" />
+  <g opacity="0.05" stroke="#ffffff" stroke-width="1">
+    <line x1="50" y1="0" x2="50" y2="500" />
+    <line x1="150" y1="0" x2="150" y2="500" />
+    <line x1="350" y1="0" x2="350" y2="500" />
+    <line x1="450" y1="0" x2="450" y2="500" />
+    <line x1="0" y1="50" x2="500" y2="50" />
+    <line x1="0" y1="150" x2="500" y2="150" />
+    <line x1="0" y1="350" x2="500" y2="350" />
+    <line x1="0" y1="450" x2="500" y2="450" />
+  </g>
+  <circle cx="250" cy="250" r="190" stroke="url(#gold-grad)" stroke-width="1.5" fill="none" opacity="0.15" stroke-dasharray="8 4" />
+  <circle cx="250" cy="250" r="160" stroke="#ffffff" stroke-width="1" fill="none" opacity="0.05" />
+  <path d="M 250,110 C 250,90 265,90 265,100 C 265,115 250,115 250,125 L 210,145 L 290,145 Z" fill="none" stroke="url(#gold-grad)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M 210,145 L 160,175 L 175,250 L 195,410 L 305,410 L 325,250 L 340,175 L 290,145 Z" fill="#1e1b18" stroke="url(#gold-grad)" stroke-width="2" stroke-linejoin="round" />
+  <path d="M 250,145 L 215,190 L 250,260 L 285,190 Z" fill="#292524" stroke="url(#gold-grad)" stroke-width="1.5" />
+  <path d="M 250,145 L 250,410" stroke="url(#gold-grad)" stroke-width="1.5" stroke-dasharray="4 4" />
+  <rect x="188" y="275" width="124" height="15" fill="#1c1917" stroke="url(#gold-grad)" stroke-width="1.5" rx="2" />
+  <circle cx="250" cy="282.5" r="4" fill="url(#gold-grad)" />
+  <text x="50%" y="445" font-family="monospace" font-weight="900" font-size="14" fill="#ffffff" dominant-baseline="middle" text-anchor="middle" letter-spacing="3">OBSIDIAN CASHMERE</text>
+  <text x="50%" y="468" font-family="monospace" font-size="10" fill="url(#gold-grad)" dominant-baseline="middle" text-anchor="middle" letter-spacing="5">STUDIO COAT // 01</text>
+</svg>

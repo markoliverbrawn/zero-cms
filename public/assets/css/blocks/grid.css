@@ -1,0 +1,25 @@
+
+
+/* Responsive Grid Component Styles (Mobile-First CSS Var Layout) */
+.block-grid {
+    /* border: 10px solid red; */
+    display: grid;
+    gap: var(--gap, 16px);
+    width: 100%;
+    padding: 0 24px;
+    margin-bottom: 24px;
+    grid-template-columns: repeat(var(--cols-mobile, 1), 1fr);
+}
+
+/* Mobile-First Responsive Breakpoints (> 768px and > 1024px) */
+@media (min-width: 769px) {
+    .block-grid {
+        grid-template-columns: repeat(var(--cols-tablet, 2), 1fr);
+    }
+}
+
+@media (min-width: 1025px) {
+    .block-grid {
+        grid-template-columns: repeat(var(--cols-desktop, 3), 1fr);
+    }
+}

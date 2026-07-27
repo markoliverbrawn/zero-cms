@@ -1,0 +1,303 @@
+/* High-Impact Luxury Portfolio Theme Stylesheet */
+@import url('../../blocks/baseline.css');
+
+:root {
+    --bg-color: #050505;
+    --card-bg: #0d0d0d;
+    --text-color: #f8f8f2;
+    --text-muted: #8e9297;
+    --accent-color: #00ffcc; /* Cyan Neon */
+    --border-color: #1a1a1a;
+    --border-radius: 4px;
+    --font-family: "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-family: var(--font-family);
+    margin: 0;
+    padding: 0;
+    line-height: 1.6;
+}
+
+/* Luxury Header */
+header {
+    background-color: rgba(5,5,5,0.8);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border-color);
+    padding: 25px 50px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+
+    h1 {
+        margin: 0;
+        font-size: 1.25rem;
+        font-weight: 900;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+
+        a {
+            color: #ffffff;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+
+            .header-logo-bracket {
+                color: var(--accent-color);
+            }
+        }
+    }
+
+    nav {
+        display: flex;
+        gap: 30px;
+        align-items: center;
+
+        a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            transition: color 0.15s ease;
+
+            &:hover, &.active {
+                color: var(--accent-color);
+            }
+        }
+    }
+}
+
+/* Main Content Container (Full-bleed for high-impact) */
+.portfolio-wrapper {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 80px 20px;
+}
+
+main {
+    width: 100%;
+}
+
+/* Luxury Footer */
+footer {
+    border-top: 1px solid var(--border-color);
+    padding: 60px 40px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+}
+
+/* Article header & metadata styling */
+.post-article {
+    .post-title {
+        margin-top: 0;
+        margin-bottom: 20px;
+        font-size: 3rem;
+        font-weight: 900;
+        line-height: 1.1;
+        color: #ffffff;
+        text-transform: uppercase;
+        letter-spacing: -0.02em;
+    }
+    .post-meta {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        margin-bottom: 50px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid #1a1a1a;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        .icon-svg {
+            display: inline-flex;
+            align-items: center;
+            width: 14px;
+            height: 14px;
+        }
+    }
+    .post-back-btn {
+        margin-top: 60px;
+        border-top: 1px solid #1a1a1a;
+        padding-top: 30px;
+        a {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: var(--accent-color);
+            text-decoration: none;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            .icon-svg {
+                display: inline-flex;
+                align-items: center;
+                width: 14px;
+                height: 14px;
+            }
+            &:hover {
+                color: #ffffff;
+            }
+        }
+    }
+}
+
+/* Portfolio Hero Section */
+.portfolio-hero {
+    margin-bottom: 100px;
+    text-align: center;
+
+    .hero-title {
+        font-size: 4rem;
+        font-weight: 900;
+        line-height: 1.1;
+        letter-spacing: -0.04em;
+        color: #ffffff;
+        text-transform: uppercase;
+        margin: 0 0 25px 0;
+
+        .accent {
+            color: var(--accent-color);
+        }
+    }
+
+    .hero-subtitle {
+        color: var(--text-muted);
+        font-size: 1.25rem;
+        max-width: 600px;
+        margin: 0 auto;
+        font-weight: 500;
+        line-height: 1.5;
+    }
+}
+
+/* Homepage Testimonials Section Styling */
+.testimonials-section {
+    margin: 80px auto;
+    max-width: 800px;
+    text-align: center;
+    border: 1px solid var(--border-color);
+    padding: 40px 0;
+    border-radius: var(--border-radius);
+    background-color: var(--card-bg);
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+
+    h3 {
+        margin-top: 0;
+        margin-bottom: 25px;
+        font-size: 1.1rem;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        color: var(--accent-color);
+        font-weight: 700;
+    }
+
+    .testimonials-carousel-container {
+        overflow: hidden;
+        width: 100%;
+        position: relative;
+    }
+
+    .testimonials-slides-wrapper {
+        display: flex;
+        position: relative;
+        left: 0;
+        transition: left 0.5s ease-in-out;
+        width: auto;
+    }
+
+    .testimonial-slide {
+        flex: 0 0 100%;
+        width: 100%;
+        box-sizing: border-box;
+        padding: 0 40px;
+
+        p {
+            font-size: 1.4rem;
+            font-style: italic;
+            margin-bottom: 15px;
+            color: #ffffff;
+            line-height: 1.5;
+            margin-top: 0;
+
+            & + p {
+                font-size: 0.9rem;
+                font-weight: 700;
+                color: var(--text-muted);
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+                margin-bottom: 0;
+            }
+        }
+    }
+}
+
+/* Homepage posts summary listing style */
+.homepage-posts {
+    margin-top: 50px;
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+
+    .post-summary-card {
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 40px;
+
+        .post-title {
+            margin-top: 0;
+            margin-bottom: 12px;
+            font-size: 1.8rem;
+            font-weight: 800;
+            letter-spacing: -0.01em;
+            text-transform: uppercase;
+
+            a {
+                color: #ffffff;
+                text-decoration: none;
+                transition: color 0.15s ease;
+
+                &:hover {
+                    color: var(--accent-color);
+                }
+            }
+        }
+
+        .post-excerpt {
+            margin: 0 0 20px 0;
+            font-size: 1.05rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        .post-link {
+            color: var(--accent-color);
+            font-weight: bold;
+            text-decoration: none;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+
+            &:hover {
+                color: #ffffff;
+            }
+        }
+    }
+}

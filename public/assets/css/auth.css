@@ -1,0 +1,174 @@
+/* Public Account gateway layouts (login, register, forgot, reset) */
+
+.auth-container {
+    max-width: 440px;
+    margin: 60px auto;
+    padding: 40px;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+    color: #0f172a;
+
+    .auth-title {
+        margin-top: 0;
+        margin-bottom: 25px;
+        font-weight: 800;
+        font-size: 1.5rem;
+        text-align: center;
+        color: #0f172a;
+    }
+
+    .auth-form-group {
+        margin-bottom: 20px;
+    }
+
+    .auth-form-group-password {
+        margin-bottom: 25px;
+
+        .auth-form-group-password-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+    }
+
+    .auth-label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: #334155;
+    }
+
+    .auth-label-inline {
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: #334155;
+        margin: 0;
+    }
+
+    .auth-input {
+        width: 100%;
+        padding: 10px 14px;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        font-size: 0.95rem;
+        background: #ffffff;
+        color: #000000;
+    }
+
+    .auth-btn {
+        width: 100%;
+        padding: 12px;
+        background-color: var(--accent-color, #2563eb);
+        color: #ffffff;
+        border: none;
+        border-radius: 6px;
+        font-weight: bold;
+        font-size: 0.95rem;
+        cursor: pointer;
+        transition: background-color 0.15s ease;
+        text-transform: uppercase;
+
+        &:hover {
+            background-color: var(--accent-hover, #1d4ed8);
+        }
+    }
+
+    .auth-footer-link {
+        margin-top: 25px;
+        text-align: center;
+        font-size: 0.85rem;
+        color: #64748b;
+
+        a {
+            color: var(--accent-color, #2563eb);
+            text-decoration: none;
+            font-weight: bold;
+        }
+    }
+
+    .auth-error-box {
+        background-color: #fef2f2;
+        border: 1px solid #fee2e2;
+        color: #b91c1c;
+        padding: 12px;
+        border-radius: 6px;
+        margin-bottom: 20px;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+
+    .auth-success-box {
+        background-color: #f0fdf4;
+        border: 1px solid #dcfce7;
+        color: #166534;
+        padding: 15px;
+        border-radius: 6px;
+        margin-bottom: 25px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        line-height: 1.6;
+        text-align: center;
+    }
+
+    /* Google Login Button & Divider Styles */
+    .oauth-divider {
+        display: flex;
+        align-items: center;
+        text-align: center;
+        margin: 20px 0;
+        color: #94a3b8;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        font-weight: bold;
+
+        &::before, &::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid #cbd5e1;
+        }
+
+        &:not(:empty)::before {
+            margin-right: .5em;
+        }
+
+        &:not(:empty)::after {
+            margin-left: .5em;
+        }
+    }
+
+    .btn-google-login {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        width: 100%;
+        padding: 10px 16px;
+        background: #ffffff;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        color: #334155;
+        font-weight: 600;
+        font-size: 0.95rem;
+        text-decoration: none;
+        cursor: pointer;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        transition: all 0.15s ease;
+        box-sizing: border-box;
+
+        &:hover {
+            background: #f8fafc;
+            border-color: #94a3b8;
+            color: #0f172a;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+        }
+
+        .google-icon {
+            display: inline-block;
+            vertical-align: middle;
+        }
+    }
+}

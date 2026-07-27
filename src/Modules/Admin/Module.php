@@ -1,0 +1,148 @@
+<?php
+
+namespace Zero\Modules\Admin;
+
+use Zero\Interfaces\Module as ModuleInterface;
+use Zero\Core\App;
+
+class Module implements ModuleInterface
+{
+    public function getAccentColor(): string
+    {
+        return '#2563eb';
+    }
+
+    public function getDashboardWidgetView(): ?string
+    {
+        return null;
+    }
+
+    public function getId(): string
+    {
+        return 'admin';
+    }
+
+    public function getMigrationClass(): ?string
+    {
+        return null;
+    }
+
+    public function getRoutes(): array
+    {
+        return [
+            // Admin authentication routes
+            '#^/admin/?$#' => Controllers\LoginController::class,
+            '#^/admin/login$#' => Controllers\LoginController::class,
+            '#^/admin/logout$#' => Controllers\LogoutController::class,
+            '#^/admin/forgot$#' => Controllers\ForgotController::class,
+            '#^/admin/reset$#' => Controllers\ResetController::class,
+
+            // Admin back-office routes
+            '#^/admin/dashboard$#' => Controllers\DashboardController::class,
+            '#^/admin/list/files/edit/([a-zA-Z0-9\-]+)$#' => Controllers\FilesController::class,
+            '#^/admin/list/files$#' => Controllers\FilesController::class,
+            '#^/admin/files$#' => Controllers\FilesController::class,
+            '#^/admin/files/([a-zA-Z0-9_-]+)$#' => Controllers\FilesController::class,
+            '#^/admin/secure-download/([a-zA-Z0-9\-]+)$#' => Controllers\SecureDownloadController::class,
+            '#^/admin/preferences$#' => Controllers\PreferencesController::class,
+            '#^/admin/theme-switcher$#' => Controllers\ThemeSwitcherController::class,
+            '#^/admin/google-callback$#' => Controllers\GoogleAuthController::class,
+
+            // CRUD Model routes
+            '#^/admin/list/([a-zA-Z0-9_-]+)$#' => Controllers\ListController::class,
+            '#^/admin/edit/([a-zA-Z0-9_-]+)/([a-zA-Z0-9\-]+)$#' => Controllers\ModelController::class,
+            '#^/admin/delete/([a-zA-Z0-9_-]+)$#' => Controllers\ModelController::class,
+            '#^/admin/restore/([a-zA-Z0-9_-]+)$#' => Controllers\ModelController::class,
+            '#^/admin/force-delete/([a-zA-Z0-9_-]+)$#' => Controllers\ModelController::class,
+            '#^/admin/export/([a-zA-Z0-9_-]+)$#' => Controllers\ExportController::class,
+
+            // Admin REST API routes
+            '#^/api/v1/admin/([a-zA-Z0-9_/\-]+)$#' => Controllers\Api\AdminApiController::class,
+            '#^/api/v1/user/send-welcome$#' => Controllers\Api\SendWelcomeController::class,
+
+            // Redirect route for backward compatibility / back links
+            '#^/admin/([a-zA-Z0-9_-]+)$#' => Controllers\RedirectController::class,
+        ];
+    }
+
+    public function init()
+    {
+        App::registerBlock('baseline', [
+            'label' => 'Baseline Hero Block',
+            'description' => 'A bold headline hero block featuring an H1 title and content paragraphs.',
+            'icon' => 'home',
+            'admin_view' => dirname(__FILE__) . '/Views/blocks/admin/baseline.php',
+            'frontend_view' => dirname(__FILE__) . '/Views/blocks/frontend/baseline.php'
+        ]);
+        App::registerBlock('grid', [
+            'label' => 'Responsive Grid',
+            'description' => 'A fully responsive grid layout of stacked image and text cards supporting links and sorting.',
+            'icon' => 'grid',
+            'admin_view' => dirname(__FILE__) . '/Views/blocks/admin/grid.php',
+            'frontend_view' => dirname(__FILE__) . '/Views/blocks/frontend/grid.php'
+        ]);
+        App::registerBlock('text', [
+            'label' => 'Rich Text Block',
+            'description' => 'A standard content block with full-featured rich inline HTML editing capabilities.',
+            'icon' => 'file',
+            'admin_view' => dirname(__FILE__) . '/Views/blocks/admin/text.php',
+            'frontend_view' => dirname(__FILE__) . '/Views/blocks/frontend/text.php'
+        ]);
+        App::registerBlock('text_image', [
+            'label' => 'Rich Text Grid',
+            'description' => 'Two-column text-and-image container block, optimized for visual/metadata side layouts.',
+            'icon' => 'image',
+            'admin_view' => dirname(__FILE__) . '/Views/blocks/admin/text_image.php',
+            'frontend_view' => dirname(__FILE__) . '/Views/blocks/frontend/text_image.php'
+        ]);
+        App::registerBlock('gallery', [
+            'label' => 'Responsive Grid Gallery',
+            'description' => 'An elegant masonry style media gallery with interactive fullscreen asset selection previews.',
+            'icon' => 'image',
+            'admin_view' => dirname(__FILE__) . '/Views/blocks/admin/gallery.php',
+            'frontend_view' => dirname(__FILE__) . '/Views/blocks/frontend/gallery.php'
+        ]);
+        App::registerBlock('masonry', [
+            'label' => 'Pinterest Masonry Grid',
+            'description' => 'Asymmetrical multi-column masonry card grid, ideal for lookbooks or designer portfolio displays.',
+            'icon' => 'image',
+            'admin_view' => dirname(__FILE__) . '/Views/blocks/admin/masonry.php',
+            'frontend_view' => dirname(__FILE__) . '/Views/blocks/frontend/masonry.php'
+        ]);
+        App::registerBlock('testimonials', [
+            'label' => 'Testimonials Carousel',
+            'description' => 'An autoplaying client quote carousel slider with configurable slide duration and elegant transition states.',
+            'icon' => 'settings',
+            'admin_view' => dirname(__FILE__) . '/Views/blocks/admin/testimonials.php',
+            'frontend_view' => dirname(__FILE__) . '/Views/blocks/frontend/testimonials.php'
+        ]);
+        App::registerBlock('accordion', [
+            'label' => 'Accordion FAQ List',
+            'description' => 'A sleek list of expandable/collapsible questions and answers with smooth height transitions.',
+            'icon' => 'file',
+            'admin_view' => dirname(__FILE__) . '/Views/blocks/admin/accordion.php',
+            'frontend_view' => dirname(__FILE__) . '/Views/blocks/frontend/accordion.php'
+        ]);
+        App::registerBlock('sub_pages', [
+            'label' => 'Sub-Pages List',
+            'description' => 'A dynamic grid list of all sub-pages nested under the current page slug in the database.',
+            'icon' => 'book-open',
+            'admin_view' => dirname(__FILE__) . '/Views/blocks/admin/sub_pages.php',
+            'frontend_view' => dirname(__FILE__) . '/Views/blocks/frontend/sub_pages.php'
+        ]);
+        App::registerBlock('code', [
+            'label' => 'Source Code Block',
+            'description' => 'A clean source code block with high-contrast syntax highlighting.',
+            'icon' => 'file',
+            'admin_view' => dirname(__FILE__) . '/Views/blocks/admin/code.php',
+            'frontend_view' => dirname(__FILE__) . '/Views/blocks/frontend/code.php'
+        ]);
+        App::registerBlock('chart', [
+            'label' => 'Performance Chart',
+            'description' => 'A beautifully animated, zero-dependency SVG bar chart block to visualize comparative statistics.',
+            'icon' => 'zap',
+            'admin_view' => dirname(__FILE__) . '/Views/blocks/admin/chart.php',
+            'frontend_view' => dirname(__FILE__) . '/Views/blocks/frontend/chart.php'
+        ]);
+    }
+}

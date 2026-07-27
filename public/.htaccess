@@ -1,0 +1,79 @@
+RewriteEngine On
+RewriteBase /
+
+# Intercept and rewrite the dynamic theme-specific CSS bundlers directly to index.php
+RewriteRule ^assets/css/main-([a-zA-Z0-9_\-]+)\.css$ index.php [L,QSA]
+
+# 1. EXCLUSIVELY WHITELIST web-accessible public asset folders and entry gateways
+# (This allows Apache to serve styles, scripts, images, and public uploads directly)
+RewriteCond %{REQUEST_URI} !^/assets/ [NC]
+RewriteCond %{REQUEST_URI} !^/storage/ [NC]
+RewriteCond %{REQUEST_URI} !^/index\.php$ [NC]
+RewriteCond %{REQUEST_URI} !^/robots\.txt$ [NC]
+RewriteCond %{REQUEST_URI} !^/favicon\.ico$ [NC]
+
+# 2. DEFAULT DENY: Forcefully rewrite ALL other paths directly to index.php
+# (This shields /src/, /tests/, /etc/, /seeders/, and individual files completely,
+# letting index.php front-controller handle routing or return a secure 404)
+RewriteRule ^ index.php [L,QSA]
+
+# 3. LEVERAGE BROWSER CACHING (Optimized Cache-Control & Expires Headers for Lighthouse)
+<IfModule mod_expires.c>
+    ExpiresActive On
+    
+    # Fonts, CSS, and JS (1 Year Cache - highly static)
+    ExpiresByType font/woff2 "access plus 1 year"
+    ExpiresByType text/css "access plus 1 year"
+    ExpiresByType application/javascript "access plus 1 year"
+    ExpiresByType text/javascript "access plus 1 year"
+    
+    # Images, SVGs, and Favicons (1 Year Cache)
+    ExpiresByType image/svg+xml "access plus 1 year"
+    ExpiresByType image/png "access plus 1 year"
+    ExpiresByType image/jpeg "access plus 1 year"
+    ExpiresByType image/x-icon "access plus 1 year"
+    ExpiresByType image/vnd.microsoft.icon "access plus 1 year"
+    
+    # Videos (1 Year Cache)
+    ExpiresByType video/mp4 "access plus 1 year"
+    ExpiresByType video/webm "access plus 1 year"
+    ExpiresByType video/ogg "access plus 1 year"
+    
+    # Default fallback (1 Month)
+    ExpiresDefault "access plus 1 month"
+</IfModule>
+
+<IfModule mod_headers.c>
+    # Set Cache-Control header for static assets recursively
+    <FilesMatch "\.(css|js|woff2|png|jpg|jpeg|gif|ico|svg|mp4|webm|ogv)$">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </FilesMatch>
+</IfModule>
+
+# 4. GZIP COMPRESSION (Deflate text-compression for Lighthouse)
+<IfModule mod_deflate.c>
+    # Activate compression filter globally
+    SetOutputFilter DEFLATE
+    
+    # Exclusively compress high-leverage text, code, styling, and vector assets
+    AddOutputFilterByType DEFLATE text/html
+    AddOutputFilterByType DEFLATE text/plain
+    AddOutputFilterByType DEFLATE text/xml
+    AddOutputFilterByType DEFLATE text/css
+    AddOutputFilterByType DEFLATE application/javascript
+    AddOutputFilterByType DEFLATE text/javascript
+    AddOutputFilterByType DEFLATE application/x-javascript
+    AddOutputFilterByType DEFLATE application/json
+    AddOutputFilterByType DEFLATE image/svg+xml
+    AddOutputFilterByType DEFLATE font/woff2
+    
+    # Defensively protect legacy browsers that have known compression issues
+    BrowserMatch ^Mozilla/4 gzip-only-text/html
+    BrowserMatch ^Mozilla/4\.0[678] no-gzip
+    BrowserMatch \bMSIE !no-gzip !gzip-only-text/html
+    
+    # Ensure proxies and intermediate caches serve the correct asset formats
+    <IfModule mod_headers.c>
+        Header append Vary User-Agent
+    </IfModule>
+</IfModule>

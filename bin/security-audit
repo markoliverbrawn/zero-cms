@@ -1,0 +1,64 @@
+#!/usr/bin/env php
+<?php
+// bin/security-audit - Bare-Metal CLI System Security Audit Tool for Zero CMS
+
+define('APPLICATION_ROOT', dirname(__DIR__));
+
+// Register global PSR-4 Autoloader for Zero namespace mapping
+spl_autoload_register(function ($class) {
+    $prefix = 'Zero\\';
+    $base_dir = APPLICATION_ROOT . '/src/';
+
+    $len = strlen($prefix);
+    if (strncmp($prefix, $class, $len) !== 0) {
+        return;
+    }
+
+    $relative_class = substr($class, $len);
+    $file = $base_dir . str_replace('\\', '/', $relative_class) . '.php';
+
+    if (file_exists($file)) {
+        require_once $file;
+    }
+});
+
+use Zero\Core\App;
+use Zero\Core\Env;
+use Zero\Modules\Security\Controllers\SecurityAuditController;
+
+// Pre-hydrate environment configuration from correct root path
+Env::load(APPLICATION_ROOT);
+
+// Bootstrap Zero CMS kernel
+App::bootstrap();
+
+echo "====================================================================\n";
+echo "           ZERO CMS BARE-METAL SYSTEM SECURITY AUDIT              \n";
+echo "====================================================================\n";
+echo "--> Active Database: " . Env::get('DB_NAME') . "\n";
+echo "--> Target Tenant Site ID: " . App::getCurrentSiteId() . "\n";
+echo "--> Time of Audit: " . date('Y-m-d H:i:s') . "\n";
+echo "--> Collecting local telemetry indicators...\n";
+echo "--------------------------------------------------------------------\n\n";
+
+// Use reflection to invoke the controller's private collect and run methods cleanly
+$controller = new SecurityAuditController();
+$reflector = new ReflectionClass(SecurityAuditController::class);
+
+$collectMethod = $reflector->getMethod('collectTelemetry');
+$collectMethod->setAccessible(true);
+$telemetry = $collectMethod->invoke($controller);
+
+$runMethod = $reflector->getMethod('runAudit');
+$runMethod->setAccessible(true);
+
+echo "--> Executing secure cryptographic audit payload...\n";
+$report = $runMethod->invoke($controller, $telemetry);
+
+echo "\n--------------------------------------------------------------------\n";
+echo "                      SECURITY AUDIT REPORT                         \n";
+echo "--------------------------------------------------------------------\n\n";
+echo $report . "\n";
+echo "====================================================================\n";
+echo "Audit complete.\n";
+echo "====================================================================\n";

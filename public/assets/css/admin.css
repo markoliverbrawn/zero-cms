@@ -1,0 +1,8 @@
+/* Clean, modularized layout using standard CSS imports */
+@import url('admin/core.css');
+@import url('admin/components.css');
+@import url('admin/block-builder.css');
+@import url('admin/picker.css');
+@import url('admin/media.css');
+@import url('admin/preferences.css');
+@import url('admin/queue.css');

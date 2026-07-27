@@ -1,0 +1,38 @@
+/* Source Code Block Public Display Styles */
+.block-code-container {
+    margin-bottom: 30px;
+    border: 1px solid var(--border-color, #222);
+    border-radius: 4px;
+    overflow: hidden;
+    font-family: monospace;
+
+    .block-code-header {
+        background-color: var(--card-bg, #0b0f19);
+        border-bottom: 1px solid var(--border-color, #222);
+        padding: 8px 15px;
+        font-size: 0.8rem;
+        font-weight: bold;
+        color: var(--accent-color, #d4af37);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+
+        .block-code-lang-label {
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted, #64748b);
+        }
+    }
+
+    .block-code-pre {
+        margin: 0;
+        padding: 20px;
+        background-color: var(--card-bg, #05070f);
+        overflow-x: auto;
+        font-size: 0.85rem;
+        line-height: 1.5;
+        tab-size: 4;
+        color: #f8fafc;
+    }
+}

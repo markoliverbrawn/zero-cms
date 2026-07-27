@@ -1,0 +1,406 @@
+/* Global SVG Vector Icon Wrapper Style */
+.icon-svg {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    svg {
+        width: 100%;
+        height: 100%;
+        display: block;
+    }
+}
+
+/* Preferences Panel Classes */
+.preferences-container {
+    width: 100%;
+    padding: 20px;
+}
+.preferences-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 25px;
+    border-bottom: 2px solid color-mix(in srgb, var(--bg-color-inverse) 8%, var(--bg-color) 92%);
+    padding-bottom: 12px;
+}
+.preferences-header-icon {
+    width: 24px;
+    height: 24px;
+    color: var(--text-color);
+    display: inline-flex;
+}
+.preferences-header-title {
+    margin: 0;
+    font-size: 1.6rem;
+    font-weight: bold;
+    line-height: 1;
+}
+.preferences-form {
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+}
+.preferences-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 20px;
+    margin-bottom: 25px;
+}
+.preferences-card {
+    background: var(--bg-color);
+    border: 1px solid color-mix(in srgb, var(--bg-color-inverse) 10%, var(--bg-color) 90%);
+    padding: 25px;
+    border-radius: var(--border-radius);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+
+    &.full-width {
+        margin-bottom: 30px;
+    }
+}
+.preferences-card-title {
+    margin-top: 0;
+    margin-bottom: 20px;
+    border-bottom: 1px solid color-mix(in srgb, var(--bg-color-inverse) 8%, var(--bg-color) 92%);
+    padding-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.preferences-card-title-icon {
+    width: 20px;
+    height: 20px;
+    color: var(--text-color);
+}
+.preferences-form-group {
+    margin-bottom: 20px;
+
+    &.compact {
+        margin-bottom: 10px;
+    }
+}
+.preferences-label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 8px;
+    font-size: 0.95rem;
+}
+.preferences-select {
+    width: 100%;
+    padding: 10px;
+    border-radius: var(--border-radius);
+    border: 1px solid color-mix(in srgb, var(--bg-color-inverse) 20%, var(--bg-color) 80%);
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    cursor: pointer;
+
+    &:focus {
+        outline: none;
+        border-color: var(--text-color);
+    }
+}
+.preferences-help-text {
+    display: block;
+    margin-top: 5px;
+    color: color-mix(in srgb, var(--text-color) 60%, transparent);
+    font-size: 0.8rem;
+
+    &.spaced {
+        margin-top: 6px;
+    }
+}
+.preferences-radio-group {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    padding: 5px 0;
+}
+.preferences-radio-label {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+}
+.preferences-radio-input {
+    cursor: pointer;
+    width: 16px;
+    height: 16px;
+}
+.preferences-widgets-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 15px;
+}
+.preferences-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+    align-items: center;
+    border-top: 1px solid color-mix(in srgb, var(--bg-color-inverse) 10%, var(--bg-color) 90%);
+    padding-top: 20px;
+    padding-bottom: 10px;
+}
+.preferences-btn-secondary {
+    color: var(--text-color);
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: bold;
+    border: 1px solid color-mix(in srgb, var(--bg-color-inverse) 15%, var(--bg-color) 85%);
+    padding: 10px 20px;
+    border-radius: var(--border-radius);
+    display: inline-flex;
+    align-items: center;
+    transition: background-color 0.15s ease;
+
+    &:hover {
+        background-color: color-mix(in srgb, var(--bg-color-inverse) 4%, var(--bg-color) 96%);
+    }
+}
+.preferences-btn-primary {
+    padding: 11px 28px;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: var(--border-radius);
+    background-color: var(--bg-color-inverse);
+    color: var(--text-color-inverse);
+    border: none;
+    font-size: 0.9rem;
+    transition: opacity 0.15s ease;
+
+    &:hover {
+        opacity: 0.9;
+    }
+}
+
+/* Dashboard widget toggle cards inside Preferences */
+.dashboard-widget-toggle {
+    cursor: pointer;
+    display: block;
+    border: 1px solid color-mix(in srgb, var(--bg-color-inverse) 8%, var(--bg-color) 92%);
+    background: var(--bg-color);
+    padding: 15px;
+    border-radius: var(--border-radius);
+    transition: background 0.15s ease, border-color 0.15s ease;
+    height: 100%;
+
+    &.is-checked {
+        border-color: color-mix(in srgb, var(--bg-color-inverse) 15%, var(--bg-color) 85%) !important;
+        background: color-mix(in srgb, var(--bg-color-inverse) 2%, var(--bg-color) 98%) !important;
+    }
+}
+.dashboard-widget-toggle-inner {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+.dashboard-widget-toggle-checkbox {
+    margin-top: 3px;
+    cursor: pointer;
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+}
+.dashboard-widget-toggle-title {
+    display: block;
+    font-size: 0.95rem;
+    color: var(--text-color);
+}
+.dashboard-widget-toggle-desc {
+    display: block;
+    margin-top: 4px;
+    font-size: 0.75rem;
+    line-height: 1.4;
+    color: color-mix(in srgb, var(--text-color) 60%, transparent);
+}
+
+/* Footer Preferences link styling */
+.footer-preferences-link {
+    color: var(--text-color);
+    opacity: 0.65;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+
+    &:hover {
+        opacity: 1;
+        transform: rotate(30deg); /* Modern, subtle spring rotation on hover! */
+    }
+}
+
+/* Logged-in Username in Header */
+.header-username {
+    margin-right: 15px;
+    font-weight: 500;
+    font-size: 0.9rem;
+    color: var(--text-color-inverse);
+}
+
+/* Collapsible Left Sidebar styling */
+.sidebar-menu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.sidebar-item {
+    margin-bottom: calc(var(--layout-spacing)*0.5);
+    list-style: none;
+}
+.sidebar-section {
+    margin-top: 0;
+    margin-bottom: calc(var(--layout-spacing)*0.5);
+    list-style: none;
+
+    &.collapsed {
+        .sidebar-section-arrow {
+            transform: rotate(0deg); /* Collapsed pointing right */
+        }
+
+        .sidebar-submenu {
+            max-height: 0 !important;
+            opacity: 0 !important;
+            margin-top: 0 !important;
+        }
+    }
+}
+.sidebar-section-toggle {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    background: none;
+    border: none;
+    padding: 0.55rem 0.75rem;
+    color: var(--text-muted);
+    font-family: inherit;
+    font-size: var(--text-size);
+    font-weight: 600;
+    text-transform: none;
+    cursor: pointer;
+    text-align: left;
+    transition: color 0.15s ease, background-color 0.15s ease, padding-left 0.15s ease;
+    border-radius: var(--border-radius);
+    position: relative; /* Base positioning for absolute timeline line segment */
+
+    &:hover {
+        background-color: var(--hover-bg);
+        color: var(--text-color);
+        padding-left: 0.95rem;
+    }
+}
+
+/* Timeline segment extending down from the section header when expanded */
+.sidebar-section:not(.collapsed) .sidebar-section-toggle::before {
+    content: "";
+    position: absolute;
+    left: 21px; /* Centered exactly with the 21px track line */
+    top: calc(0.55rem + 18px); /* Starts exactly at the bottom edge of the parent section icon */
+    bottom: -4px; /* Extends to bridge the 4px gap and meet the submenu track */
+    width: 0;
+    border-left: 1.5px solid var(--border-color, #cbd5e1);
+    z-index: 1;
+}
+.sidebar-section-arrow {
+    width: 12px;
+    height: 12px;
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transform: rotate(90deg); /* Default open */
+    display: inline-flex;
+}
+.sidebar-submenu {
+    list-style: none;
+    padding: 0; /* Padding is reset to 0 so li/a spans the full container width */
+    margin: 4px 0 0 0; /* Removed container indentation completely */
+    position: relative; /* Base positioning for absolute child elements */
+    overflow: hidden;
+    transition: max-height 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.15), opacity 0.2s ease, margin 0.2s ease;
+    max-height: 500px; /* Increased to 500px to prevent vertical clipping on larger submenus */
+    opacity: 1;
+
+    &.no-transition {
+        transition: none !important;
+    }
+
+    li {
+        list-style: none;
+        position: relative;
+
+        /* Continuous vertical timeline track line segments on each item, aligned exactly at the 21px track mark */
+        &::before {
+            content: "";
+            position: absolute;
+            left: 21px; /* Aligns exactly under the parent section icons center */
+            top: -4px; /* Bridges the 4px vertical gap of the ul container gap */
+            bottom: 0;
+            width: 0;
+            border-left: 1.5px solid var(--border-color, #cbd5e1);
+            z-index: 1; /* Sits beneath the circular timeline nodes */
+        }
+
+        &:first-child::before {
+            top: 0; /* Does not extend above the first item */
+        }
+
+        /* Stops the line exactly at the center of the last item's timeline node icon */
+        &:last-child::before {
+            bottom: auto;
+            height: calc(0.55rem + 12px); /* 0.55rem top padding + 12px half-height of the 24px node icon */
+        }
+    }
+
+    li a {
+        padding-left: 21px !important; /* Indent the content area so highlights extend fully to the left edge (0) */
+        font-size: var(--text-size) !important;
+        font-weight: 500;
+        border-left: none !important; /* No left border needed since we have the timeline nodes! */
+        border-radius: var(--border-radius);
+        transition: background-color 0.15s ease, color 0.15s ease, padding-left 0.15s ease;
+        position: relative;
+        z-index: 2; /* Sits above the vertical track line segment */
+        
+        .icon-svg {
+            width: 24px !important;
+            height: 24px !important;
+            border: none !important; /* Removed circular outer border completely */
+            margin-left: -12px !important; /* Centers the 24px circle exactly over the 21px vertical track line to perfectly bisect it */
+            margin-right: 7px !important; /* Space between the timeline node and the link label - aligns labels with parent items at 40px */
+            opacity: 0.8;
+            padding: 3px !important; /* Shrinks the inner SVG to exactly 18px (24px - 6px), matching the parent icon's size */
+            box-sizing: border-box !important;
+            transition: opacity 0.15s ease;
+            position: relative;
+            z-index: 3; /* Sits above the vertical track line segment */
+            background: none !important; /* Transparent background */
+
+            svg {
+                width: 100% !important;
+                height: 100% !important;
+                display: block;
+            }
+        }
+
+        &:hover {
+            padding-left: 25px !important;
+            background-color: var(--hover-bg);
+            color: var(--text-color);
+            
+            .icon-svg {
+                opacity: 1;
+                background: none !important; /* Keep transparent on hover */
+            }
+        }
+
+        &.active {
+            padding-left: 21px !important;
+            background-color: var(--accent-color) !important; /* Restored solid accent (dark blue) background */
+            color: #ffffff !important; /* High-contrast white text */
+            font-weight: bold !important;
+            
+            .icon-svg {
+                opacity: 1;
+                background: none !important; /* Keep transparent on active */
+            }
+        }
+    }
+}

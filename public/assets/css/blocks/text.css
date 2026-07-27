@@ -1,0 +1,55 @@
+.block-text {
+    margin-bottom: 35px;
+    padding: 0 var(--gutter, 24px);
+
+    /* Reset padding when nested inside standard layout container panels that already have padding */
+    .docs-content-wrapper &,
+    main:not(.homepage-main) &,
+    .portfolio-wrapper &,
+    .container & {
+        padding: 0;
+    }
+
+    h3 {
+        font-size: 1.6rem;
+        font-weight: 800;
+        margin-top: 35px;
+        margin-bottom: 20px;
+        color: inherit;
+    }
+
+    .block-content {
+        font-size: 1.05rem;
+        line-height: 1.6;
+        color: inherit;
+
+        p {
+            margin-top: 0;
+            margin-bottom: 15px; /* Readable gap between paragraphs */
+
+            &:last-child {
+                margin-bottom: 0; /* Clean up trailing margin */
+            }
+        }
+
+        ul, ol {
+            margin-top: 15px;
+            margin-bottom: 15px;
+            padding-left: 30px; /* Standard visible list indentation */
+        }
+
+        ul {
+            list-style-type: disc; /* Ensure bullets are displayed */
+        }
+
+        ol {
+            list-style-type: decimal; /* Ensure decimal numbers are displayed */
+        }
+
+        li {
+            margin-bottom: 8px; /* Comfortable vertical spacing between adjacent list items */
+            color: inherit;
+            display: list-item; /* Ensure standard browser list item rendering */
+        }
+    }
+}
