@@ -73,6 +73,10 @@ class GoogleCloudStorageDriver implements StorageDriver
         if (strpos($path, APPLICATION_ROOT) === 0) {
             $path = substr($path, strlen(APPLICATION_ROOT));
         }
+        $path = ltrim($path, '/');
+        if (strpos($path, 'public/') === 0) {
+            $path = substr($path, 7);
+        }
         return ltrim($path, '/');
     }
 
@@ -230,6 +234,82 @@ class GoogleCloudStorageDriver implements StorageDriver
     }
 
     /**
+     * Get a secure, temporary signed URL for a private file in GCS.
+     *
+     * @param string $path The file path.
+     * @param int $expires The expiry time in seconds.
+     * @return string
+     */
+    public function getSignedUrl(string $path, int $expires = 3600): string
+    {
+        $cleanPath = $this->cleanPath($path);
+        
+        $keyPath = Env::get('GCS_KEY_FILE');
+        if (empty($keyPath) || !file_exists($keyPath)) {
+            throw new Exception("GCS Private Key file is required to generate Signed URLs.");
+        }
+
+        $keyData = json_decode(file_get_contents($keyPath), true);
+        $privateKey = $keyData['private_key'] ?? null;
+        $clientEmail = $keyData['client_email'] ?? null;
+
+        if (!$privateKey || !$clientEmail) {
+            throw new Exception("Malformed Google Service Account Key JSON.");
+        }
+
+        $now = time();
+        $datetime = gmdate('Ymd\THis\Z', $now);
+        $date = gmdate('Ymd', $now);
+        $scope = "{$date}/auto/storage/goog4_request";
+
+        $params = [
+            'X-Goog-Algorithm' => 'GOOG4-RSA-SHA256',
+            'X-Goog-Credential' => "{$clientEmail}/{$scope}",
+            'X-Goog-Date' => $datetime,
+            'X-Goog-Expires' => $expires,
+            'X-Goog-SignedHeaders' => 'host',
+        ];
+
+        ksort($params);
+        $queryParamsList = [];
+        foreach ($params as $k => $v) {
+            $queryParamsList[] = urlencode($k) . '=' . urlencode($v);
+        }
+        $canonicalQueryString = implode('&', $queryParamsList);
+
+        $escapedPath = '';
+        foreach (explode('/', $cleanPath) as $part) {
+            $escapedPath .= '/' . rawurlencode($part);
+        }
+        $escapedPath = ltrim($escapedPath, '/');
+        
+        $canonicalUri = "/{$this->bucketName}/{$escapedPath}";
+        $canonicalHeaders = "host:storage.googleapis.com\n";
+        $signedHeaders = "host";
+        $payloadHash = "UNSIGNED-PAYLOAD";
+
+        $canonicalRequest = "GET\n" .
+            $canonicalUri . "\n" .
+            $canonicalQueryString . "\n" .
+            $canonicalHeaders . "\n" .
+            $signedHeaders . "\n" .
+            $payloadHash;
+
+        $stringToSign = "GOOG4-RSA-SHA256\n" .
+            $datetime . "\n" .
+            $scope . "\n" .
+            hash('sha256', $canonicalRequest);
+
+        $signature = '';
+        if (!openssl_sign($stringToSign, $signature, $privateKey, 'SHA256')) {
+            throw new Exception("Signing failed.");
+        }
+
+        $hexSignature = bin2hex($signature);
+        return "https://storage.googleapis.com/{$this->bucketName}/{$escapedPath}?{$canonicalQueryString}&X-Goog-Signature={$hexSignature}";
+    }
+
+    /**
      * Create virtual directory.
      *
      * @param string $path The directory path.
@@ -253,7 +333,8 @@ class GoogleCloudStorageDriver implements StorageDriver
         $token = $this->getAccessToken();
         $mime = mime_content_type($tmpFilePath) ?: 'application/octet-stream';
 
-        $acl = Env::get('GCS_PREDEFINED_ACL', '');
+        $isPrivate = (strpos($cleanPath, 'storage/private/') === 0);
+        $acl = $isPrivate ? 'private' : Env::get('GCS_PREDEFINED_ACL', '');
         $aclParam = !empty($acl) ? '&predefinedAcl=' . urlencode($acl) : '';
 
         $url = "https://storage.googleapis.com/upload/storage/v1/b/{$this->bucketName}/o?uploadType=media{$aclParam}&name=" . urlencode($cleanPath);
@@ -319,13 +400,38 @@ class GoogleCloudStorageDriver implements StorageDriver
      * @param string $content The text content.
      * @return bool
      */
+    /**
+     * Write raw text or binary content to GCS with proper Content-Type.
+     *
+     * @param string $path The destination path.
+     * @param string $content The text or binary content.
+     * @return bool
+     */
     public function write(string $path, string $content): bool
     {
         $cleanPath = $this->cleanPath($path);
         $token = $this->getAccessToken();
 
-        $acl = Env::get('GCS_PREDEFINED_ACL', '');
+        $isPrivate = (strpos($cleanPath, 'storage/private/') === 0);
+        $acl = $isPrivate ? 'private' : Env::get('GCS_PREDEFINED_ACL', '');
         $aclParam = !empty($acl) ? '&predefinedAcl=' . urlencode($acl) : '';
+
+        $ext = strtolower(pathinfo($cleanPath, PATHINFO_EXTENSION));
+        $mimeTypes = [
+            'jpg' => 'image/jpeg',
+            'jpeg' => 'image/jpeg',
+            'png' => 'image/png',
+            'webp' => 'image/webp',
+            'gif' => 'image/gif',
+            'svg' => 'image/svg+xml',
+            'zip' => 'application/zip',
+            'json' => 'application/json',
+            'css' => 'text/css',
+            'js' => 'application/javascript',
+            'html' => 'text/html',
+            'mp4' => 'video/mp4',
+        ];
+        $mime = $mimeTypes[$ext] ?? 'text/plain';
 
         $url = "https://storage.googleapis.com/upload/storage/v1/b/{$this->bucketName}/o?uploadType=media{$aclParam}&name=" . urlencode($cleanPath);
         $ch = curl_init($url);
@@ -335,7 +441,7 @@ class GoogleCloudStorageDriver implements StorageDriver
             CURLOPT_POSTFIELDS => $content,
             CURLOPT_HTTPHEADER => [
                 "Authorization: Bearer {$token}",
-                "Content-Type: text/plain",
+                "Content-Type: {$mime}",
                 "Content-Length: " . strlen($content)
             ]
         ]);

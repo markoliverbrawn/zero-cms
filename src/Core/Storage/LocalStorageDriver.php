@@ -113,6 +113,12 @@ class LocalStorageDriver implements StorageDriver
         return '/storage/uploads/' . $trimmed;
     }
 
+
+    public function getSignedUrl(string $path, int $expires = 3600): string
+    {
+        return $this->getUrl($path);
+    }
+
     public function makeDirectory(string $path): bool
     {
         $resolved = $this->resolvePath($path);

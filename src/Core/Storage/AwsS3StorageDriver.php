@@ -59,6 +59,10 @@ class AwsS3StorageDriver implements StorageDriver
         if (strpos($path, APPLICATION_ROOT) === 0) {
             $path = substr($path, strlen(APPLICATION_ROOT));
         }
+        $path = ltrim($path, '/');
+        if (strpos($path, 'public/') === 0) {
+            $path = substr($path, 7);
+        }
         return ltrim($path, '/');
     }
 
@@ -122,6 +126,71 @@ class AwsS3StorageDriver implements StorageDriver
     {
         $cleanPath = $this->cleanPath($path);
         return "https://{$this->bucketName}.s3.{$this->region}.amazonaws.com/{$cleanPath}";
+    }
+
+    /**
+     * Get a secure, temporary signed URL for a private file in AWS S3.
+     *
+     * @param string $path The file path.
+     * @param int $expires The expiry time in seconds.
+     * @return string
+     */
+    public function getSignedUrl(string $path, int $expires = 3600): string
+    {
+        $cleanPath = $this->cleanPath($path);
+        
+        $now = time();
+        $amzDate = gmdate('Ymd\THis\Z', $now);
+        $date = gmdate('Ymd', $now);
+        $region = $this->region;
+        $scope = "{$date}/{$region}/s3/aws4_request";
+        
+        $params = [
+            'X-Amz-Algorithm' => 'AWS4-HMAC-SHA256',
+            'X-Amz-Credential' => "{$this->accessKey}/{$scope}",
+            'X-Amz-Date' => $amzDate,
+            'X-Amz-Expires' => $expires,
+            'X-Amz-SignedHeaders' => 'host',
+        ];
+        
+        ksort($params);
+        $queryParamsList = [];
+        foreach ($params as $k => $v) {
+            $queryParamsList[] = urlencode($k) . '=' . urlencode($v);
+        }
+        $canonicalQueryString = implode('&', $queryParamsList);
+        
+        $host = "{$this->bucketName}.s3.{$region}.amazonaws.com";
+        $escapedPath = '';
+        foreach (explode('/', $cleanPath) as $part) {
+            $escapedPath .= '/' . rawurlencode($part);
+        }
+        $escapedPath = ltrim($escapedPath, '/');
+        
+        $canonicalUri = "/{$escapedPath}";
+        $canonicalHeaders = "host:{$host}\n";
+        $signedHeaders = "host";
+        $payloadHash = "UNSIGNED-PAYLOAD";
+        
+        $canonicalRequest = "GET\n" .
+            $canonicalUri . "\n" .
+            $canonicalQueryString . "\n" .
+            $canonicalHeaders . "\n" .
+            $signedHeaders . "\n" .
+            $payloadHash;
+            
+        $stringToSign = "AWS4-HMAC-SHA256\n" .
+            $amzDate . "\n" .
+            $scope . "\n" .
+            hash('sha256', $canonicalRequest);
+            
+        $kDate = hash_hmac('sha256', $date, 'AWS4' . $this->secretKey, true);
+        $kRegion = hash_hmac('sha256', $region, $kDate, true);
+        $kService = hash_hmac('sha256', 's3', $kRegion, true);
+        $kSigning = hash_hmac('sha256', 'aws4_request', $kService, true);
+        $signature = hash_hmac('sha256', $stringToSign, $kSigning);
+        
+        return "https://{$host}/{$escapedPath}?{$canonicalQueryString}&X-Amz-Signature={$signature}";
     }
 
     /**

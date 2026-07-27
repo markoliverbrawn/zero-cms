@@ -52,6 +52,11 @@ class Storage
         return self::getDriver()->getUrl($path);
     }
 
+    public static function getSignedUrl(string $path, int $expires = 3600): string
+    {
+        return self::getDriver()->getSignedUrl($path, $expires);
+    }
+
     public static function makeDirectory(string $path): bool
     {
         return self::getDriver()->makeDirectory($path);

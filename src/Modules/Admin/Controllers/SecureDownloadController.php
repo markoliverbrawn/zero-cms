@@ -32,6 +32,19 @@ class SecureDownloadController implements Controller
 
         // 2.5 Delegate path traversal, containment, and symlink validation to Middleware
         SecurePathMiddleware::handle($fileId, $file['path'], function(string $physicalPath) use ($file) {
+            $driverName = \Zero\Core\Env::get('STORAGE_DRIVER', 'local');
+            if ($driverName !== 'local') {
+                try {
+                    $signedUrl = \Zero\Core\Storage\Storage::getSignedUrl($file['path'], 60);
+                    header("Location: " . $signedUrl);
+                    exit;
+                } catch (\Exception $e) {
+                    http_response_code(500);
+                    echo "Secure redirection failed: " . $e->getMessage();
+                    exit;
+                }
+            }
+
             if (!file_exists($physicalPath)) {
                 http_response_code(404);
                 echo "Physical file missing from secure disk storage.";

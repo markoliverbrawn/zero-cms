@@ -35,7 +35,17 @@ interface StorageDriver
      * @return string
      */
     public function getUrl(string $path): string;
-/**
+
+    /**
+     * Get a secure, temporary signed URL for a private file.
+     *
+     * @param string $path The file path.
+     * @param int $expires The expiry time in seconds.
+     * @return string
+     */
+    public function getSignedUrl(string $path, int $expires = 3600): string;
+
+    /**
      * Create a directory.
      *
      * @param string $path The directory path.
@@ -69,5 +79,4 @@ interface StorageDriver
      * @return bool
      */
     public function write(string $path, string $content): bool;
-
-    }
+}
