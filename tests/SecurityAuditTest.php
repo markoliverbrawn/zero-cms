@@ -29,6 +29,9 @@ assert_test(isset($telemetry['benchmarking_enabled']), "Telemetry contains 'benc
 assert_test(isset($telemetry['default_admin_password_in_use']), "Telemetry contains 'default_admin_password_in_use' key");
 assert_test(isset($telemetry['storage_directory_writable']), "Telemetry contains 'storage_directory_writable' key");
 assert_test(isset($telemetry['total_super_admins']), "Telemetry contains 'total_super_admins' key");
+assert_test(isset($telemetry['framework_cves']), "Telemetry contains 'framework_cves' key");
+assert_test(isset($telemetry['static_analysis_findings']), "Telemetry contains 'static_analysis_findings' key");
+assert_test(is_array($telemetry['static_analysis_findings']), "'static_analysis_findings' is a valid array");
 
 // 3. Test Fallback Report Compiler
 echo "Testing local fallback report compiler...\n";
@@ -41,6 +44,7 @@ assert_test(strpos($report, '#') !== false, "Report is formatted in beautiful Ma
 assert_test(strpos($report, 'EXECUTIVE SUMMARY') !== false, "Report correctly contains 'EXECUTIVE SUMMARY' section");
 assert_test(strpos($report, 'DISCOVERED VULNERABILITIES') !== false, "Report correctly contains 'DISCOVERED VULNERABILITIES' section");
 assert_test(strpos($report, 'ARCHITECTURAL STRENGTHS') !== false, "Report correctly contains 'ARCHITECTURAL STRENGTHS' section");
+assert_test(strpos($report, 'PHP FRAMEWORK CVE FEEDS') !== false, "Report correctly contains framework CVE comparative reference section");
 
 // 4. Test Router Integration and Handshake Routes Mapping
 echo "Testing router integration and audit routes mapping...\n";

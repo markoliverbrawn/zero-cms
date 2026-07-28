@@ -2,10 +2,14 @@
 
 namespace Zero\Modules\Security;
 
-use Zero\Interfaces\Module as ModuleInterface;
 use Zero\Core\App;
+use Zero\Core\Env;
+use Zero\Http\Router;
+use Zero\Interfaces\Module as ModuleInterface;
+use Zero\Modules\Queue\Support\Scheduler;
 use Zero\Modules\Security\Controllers\ChangePasswordController;
 use Zero\Modules\Security\Controllers\SecurityAuditController;
+use Zero\Modules\Security\Jobs\SecurityAuditJob;
 use Zero\Modules\Security\Models\AuditLog;
 use Zero\Modules\Security\Models\SecurityAudit;
 
@@ -45,10 +49,16 @@ class Module implements ModuleInterface
         App::registerModel('security_audits', SecurityAudit::class);
 
         // Explicitly register our security controllers under 'admin' context to bypass DB enabled_modules constraints
-        \Zero\Http\Router::register([
+        Router::register([
             '#^/admin/change-password$#' => ChangePasswordController::class,
             '#^/admin/list/security_audits$#' => SecurityAuditController::class,
             '#^/admin/security/audit$#' => SecurityAuditController::class,
         ], null, 'admin');
+
+        // Register dynamic automated security audit job if backend Scheduler is present
+        if (class_exists(Scheduler::class)) {
+            $schedule = Env::get('SECURITY_AUDIT_SCHEDULE', 'daily');
+            Scheduler::register(SecurityAuditJob::class, [], $schedule);
+        }
     }
 }
