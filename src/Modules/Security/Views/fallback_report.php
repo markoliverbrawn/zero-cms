@@ -14,12 +14,12 @@ $vulnerabilitiesSection = "";
 if ($telemetry['install_file_exists'] ?? false) {
     $filePath = $telemetry['install_file_path'] ?? 'install.php';
     if ($telemetry['install_file_cli_locked'] ?? false) {
-        $vulnerabilitiesSection .= "### [INFO] Severity: Persistent Installation File (CLI-Locked & Neutralized)
+        $vulnerabilitiesSection .= "### 🟢 [INFO] Severity: Persistent Installation File (CLI-Locked & Neutralized)
 * **Exploit Vector:** The `{$filePath}` file is still present on disk. However, it is strictly locked to CLI-only execution mode (`php_sapi_name() !== '\''cli'\''`), meaning any remote HTTP browser-based execution vectors have been 100% neutralized (returns HTTP 403 Forbidden).
 * **Remediation:** The file is completely secure and safe to remain on disk for CLI tasks. However, if you no longer require terminal installation commands, you can permanently delete it to clean the directory.\n\n";
     } else {
         $warningsCount++;
-        $vulnerabilitiesSection .= "### [CRITICAL] Severity: `{$filePath}` File Still Present on Disk
+        $vulnerabilitiesSection .= "### 🔴 [CRITICAL] Severity: `{$filePath}` File Still Present on Disk
 * **Exploit Vector:** An attacker can access `{$filePath}` directly via the browser and attempt to reinitialize the database schema or trigger installation configurations, wiping site content or creating unauthorized super admin accounts.
 * **Remediation:** Immediately delete or rename the `/data/misc/zero/{$filePath}` file on disk:
   ```bash
@@ -30,12 +30,12 @@ if ($telemetry['install_file_exists'] ?? false) {
 
 if ($telemetry['benchmarking_enabled'] ?? false) {
     if ($isDev) {
-        $vulnerabilitiesSection .= "### [INFO] Severity: Performance Benchmarking Enabled (Sandbox De-escalated)
+        $vulnerabilitiesSection .= "### 🟢 [INFO] Severity: Performance Benchmarking Enabled (Sandbox De-escalated)
 * **Exploit Vector:** Performance telemetry overlays are active. While this outputs database transaction paths and microsecond metrics, it is safe, highly useful, and expected in local sandbox development environments.
 * **Remediation:** No immediate action required in dev. Ensure `BENCHMARKING=false` inside the `.env` file prior to production deployment.\n\n";
     } else {
         $warningsCount++;
-        $vulnerabilitiesSection .= "### [MEDIUM] Severity: Performance Benchmarking Enabled in Production
+        $vulnerabilitiesSection .= "### 🟡 [MEDIUM] Severity: Performance Benchmarking Enabled in Production
 * **Exploit Vector:** Having `BENCHMARKING=true` outputs SQL transaction times, query execution logs, and timing metrics on public views. This leaks internal table schemas, performance bottlenecks, and provides timing side-channel attack vectors.
 * **Remediation:** Set `BENCHMARKING=false` inside the `.env` file for production environments.\n\n";
     }
@@ -45,12 +45,12 @@ if ($telemetry['default_admin_password_in_use'] ?? false) {
     $usernamesList = implode(', ', array_map(fn($u) => "`" . Str::escape($u) . "`", $telemetry['default_password_usernames'] ?? []));
     if ($isDev) {
         $warningsCount++;
-        $vulnerabilitiesSection .= "### [LOW] Severity: Default Password Active on Account(s): {$usernamesList} (Sandbox De-escalated)
+        $vulnerabilitiesSection .= "### 🔵 [LOW] Severity: Default Password Active on Account(s): {$usernamesList} (Sandbox De-escalated)
 * **Exploit Vector:** Default seed installation credentials are active on this dev sandbox. This is acceptable for ease of local testing, but must never be exposed publicly.
 * **Remediation:** Log into the administrative dashboard, navigate to **Manage Users**, and update the passwords for {$usernamesList} to strong, secure values, or delete any unused seed accounts prior to production deployment.\n\n";
     } else {
         $warningsCount++;
-        $vulnerabilitiesSection .= "### [HIGH] Severity: Default Password Active on Account(s): {$usernamesList}
+        $vulnerabilitiesSection .= "### 🔴 [HIGH] Severity: Default Password Active on Account(s): {$usernamesList}
 * **Exploit Vector:** The user account(s) {$usernamesList} are still configured with the default installation password (or default seed hash). Attackers can easily log in to the backend back-office dashboard and gain platform control.
 * **Remediation:** Log into the administrative dashboard, navigate to **Manage Users**, and update the passwords for {$usernamesList} to strong, secure values, or delete any unused seed accounts.\n\n";
     }
@@ -58,7 +58,7 @@ if ($telemetry['default_admin_password_in_use'] ?? false) {
 
 if ($telemetry['storage_directory_open_access'] ?? false) {
     $warningsCount++;
-    $vulnerabilitiesSection .= "### [MEDIUM] Severity: Storage Folder Permissions Hardening Recommended
+    $vulnerabilitiesSection .= "### 🟡 [MEDIUM] Severity: Storage Folder Permissions Hardening Recommended
 * **Exploit Vector:** The `/storage/uploads/` directory is writable and must be strictly protected to prevent execution of arbitrary uploaded scripts (e.g. `.php` file uploads executed by the web server).
 * **Remediation:** Ensure a protective `.htaccess` or server block resides in the `/storage/` folder, blocking execution of `.php` files inside the uploads directories:
   ```apache
@@ -72,7 +72,7 @@ if ($telemetry['storage_directory_open_access'] ?? false) {
 // Render static analysis findings in local report
 $findings = $telemetry['static_analysis_findings'] ?? [];
 if (count($findings) > 0) {
-    $vulnerabilitiesSection .= "### [LOW] Severity: Static Code Analysis Flags (" . count($findings) . " findings)\n";
+    $vulnerabilitiesSection .= "### 🔵 [LOW] Severity: Static Code Analysis Flags (" . count($findings) . " findings)\n";
     foreach ($findings as $finding) {
         $warningsCount++;
         $vulnerabilitiesSection .= "* **[" . Str::escape($finding['class']) . "]** in `" . Str::escape($finding['file']) . "` (Line " . $finding['line'] . "):\n";
