@@ -4,24 +4,25 @@ namespace Zero\Modules\Shop;
 
 use Zero\Core\App;
 use Zero\Interfaces\Module as ModuleInterface;
-use Zero\Modules\Admin\Controllers\FrontendLoginController;
 use Zero\Modules\Admin\Controllers\FrontendForgotController;
+use Zero\Modules\Admin\Controllers\FrontendLoginController;
 use Zero\Modules\Admin\Controllers\FrontendResetController;
 use Zero\Modules\Admin\Controllers\RegisterController;
+use Zero\Modules\Search\Services\SearchService;
 use Zero\Modules\Shop\Controllers\AccountController;
-use Zero\Modules\Shop\Controllers\CatalogController;
-use Zero\Modules\Shop\Controllers\ProductViewController;
-use Zero\Modules\Shop\Controllers\CartController;
-use Zero\Modules\Shop\Controllers\CheckoutController;
-use Zero\Modules\Shop\Controllers\SuccessController;
-use Zero\Modules\Shop\Controllers\Api\ProductsController;
 use Zero\Modules\Shop\Controllers\Api\CategoriesController;
+use Zero\Modules\Shop\Controllers\Api\ProductsController;
+use Zero\Modules\Shop\Controllers\CartController;
+use Zero\Modules\Shop\Controllers\CatalogController;
+use Zero\Modules\Shop\Controllers\CheckoutController;
+use Zero\Modules\Shop\Controllers\ProductViewController;
+use Zero\Modules\Shop\Controllers\SuccessController;
 use Zero\Modules\Shop\Database\Migration;
 use Zero\Modules\Shop\Models\Category;
 use Zero\Modules\Shop\Models\Order;
 use Zero\Modules\Shop\Models\Product;
 use Zero\Modules\Shop\Models\ProductVariant;
-use Zero\Modules\Search\Services\SearchService;
+use Zero\Support\Seeder;
 
 class Module implements ModuleInterface
 {
@@ -35,20 +36,15 @@ class Module implements ModuleInterface
         return 'dashboard-widget';
     }
 
-    
     public function getId(): string
     {
         return 'shop';
     }
 
-    
-
     public function getMigrationClass(): ?string
     {
         return Migration::class;
     }
-
-    
 
     public function getRoutes(): array
     {
@@ -67,8 +63,6 @@ class Module implements ModuleInterface
             '#^/api/v1/categories(?:/(.*))?$#' => CategoriesController::class
         ];
     }
-
-    
 
     public function init()
     {

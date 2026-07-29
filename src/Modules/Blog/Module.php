@@ -12,6 +12,7 @@ use Zero\Modules\Blog\Models\Comment;
 use Zero\Modules\Blog\Models\Post;
 use Zero\Modules\Queue\Support\Scheduler;
 use Zero\Modules\Search\Services\SearchService;
+use Zero\Support\Seeder;
 
 class Module implements ModuleInterface
 {
@@ -25,20 +26,15 @@ class Module implements ModuleInterface
         return 'dashboard-widget';
     }
 
-    
     public function getId(): string
     {
         return 'blog';
     }
 
-    
-
     public function getMigrationClass(): ?string
     {
         return Migration::class;
     }
-
-    
 
     public function getRoutes(): array
     {
@@ -48,8 +44,6 @@ class Module implements ModuleInterface
             '#^/api/v1/blog/comments/submit$#' => CommentsController::class
         ];
     }
-
-    
 
     public function init()
     {

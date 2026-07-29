@@ -2,18 +2,19 @@
 
 namespace Zero\Modules\Forum;
 
-use Zero\Interfaces\Module as ModuleInterface;
 use Zero\Core\App;
-use Zero\Modules\Forum\Controllers\ForumHomeController;
-use Zero\Modules\Forum\Controllers\BoardViewController;
-use Zero\Modules\Forum\Controllers\ThreadViewController;
-use Zero\Modules\Forum\Controllers\ThreadCreateController;
-use Zero\Modules\Forum\Controllers\ReplyCreateController;
-use Zero\Modules\Forum\Controllers\ModerateController;
-use Zero\Modules\Admin\Controllers\FrontendLoginController;
-use Zero\Modules\Admin\Controllers\RegisterController;
+use Zero\Interfaces\Module as ModuleInterface;
 use Zero\Modules\Admin\Controllers\FrontendForgotController;
+use Zero\Modules\Admin\Controllers\FrontendLoginController;
 use Zero\Modules\Admin\Controllers\FrontendResetController;
+use Zero\Modules\Admin\Controllers\RegisterController;
+use Zero\Modules\Forum\Controllers\BoardViewController;
+use Zero\Modules\Forum\Controllers\ForumHomeController;
+use Zero\Modules\Forum\Controllers\ModerateController;
+use Zero\Modules\Forum\Controllers\ReplyCreateController;
+use Zero\Modules\Forum\Controllers\ThreadCreateController;
+use Zero\Modules\Forum\Controllers\ThreadViewController;
+use Zero\Support\Seeder;
 
 class Module implements ModuleInterface
 {

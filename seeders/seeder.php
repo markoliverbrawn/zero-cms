@@ -44,171 +44,243 @@ foreach ($argv as $arg) {
     }
 }
 
-$runAll = ($onlySite === null);
-$runDocs = $runAll || $onlySite === 'docs' || $onlySite === 'documentation';
-$runPortfolio = $runAll || $onlySite === 'portfolio';
-$runShop = $runAll || $onlySite === 'shop';
-$runKitchenSink = $runAll || $onlySite === 'kitchensink';
-$runBlogGenerator = $runAll || $onlySite === 'docs' || $onlySite === 'documentation';
-
 echo "====================================================================\n";
-echo "ZERO CMS MULTI-TENANT SEEDER SYSTEM\n";
+echo "ZERO CMS MULTI-TENANT SEEDER SYSTEM (CLASS-BASED OOP)\n";
 echo "====================================================================\n";
 
 if ($onlySite) {
     echo "--> Mode: Selective seeding enabled for '{$onlySite}' only...\n\n";
 } else {
-    echo "\n--> Target: Sequentially initializing all four multi-tenant domains...\n\n";
+    echo "\n--> Target: Sequentially initializing all multi-tenant domains...\n\n";
 }
 
 // Run migrations Down then Up to reconstruct all database schemas cleanly (First core tables, then each module sequentially!)
 MigrationManager::down();
 MigrationManager::up();
 
-// Initialize Central Database Tables Schemas & Super Admin from static JSON configuration
-$coreData = json_decode(file_get_contents(APPLICATION_ROOT . '/seeders/data/corporate.json'), true) ?? [];
+// Dynamic Class Seeder Auto-Discovery Engine (OOP Seeders)
+$classSeeders = [];
+$modulesDir = APPLICATION_ROOT . '/src/Modules';
+if (is_dir($modulesDir)) {
+    $folders = scandir($modulesDir);
+    foreach ($folders as $folder) {
+        if ($folder === '.' || $folder === '..') {
+            continue;
+        }
+        $moduleSeederDir = "{$modulesDir}/{$folder}/Seeders";
+        if (is_dir($moduleSeederDir)) {
+            $files = scandir($moduleSeederDir);
+            foreach ($files as $file) {
+                if (str_ends_with($file, 'Seeder.php') && $file !== 'Seeder.php') {
+                    $className = "Zero\\Modules\\{$folder}\\Seeders\\" . basename($file, '.php');
+                    if (class_exists($className)) {
+                        $seederInstance = new $className();
+                        if ($seederInstance instanceof \Zero\Interfaces\SeederInterface) {
+                            $classSeeders[] = $seederInstance;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
 
-if ($onlySite !== null && $onlySite !== 'corporate') {
-    if ($onlySite === 'blank') {
-        // If blank, dynamically seed a single default site and a welcome homepage
-        $baseUrl = Env::get('BASE_URL', 'http://localhost');
+// Sort class seeders by execution priority
+usort($classSeeders, function ($a, $b) {
+    return $a->getPriority() <=> $b->getPriority();
+});
+
+// Dynamic Seeder Auto-Discovery Engine (JSON Datasets)
+$discoveredFiles = [];
+
+// 1. Scan global seeder directory
+$seederDataDir = APPLICATION_ROOT . '/seeders/data';
+if (is_dir($seederDataDir)) {
+    $files = scandir($seederDataDir);
+    foreach ($files as $file) {
+        if (str_ends_with($file, '.json') && $file !== 'handwritten_articles.json') {
+            $discoveredFiles[$file] = [
+                'filename' => $file,
+                'path' => $seederDataDir . '/' . $file
+            ];
+        }
+    }
+}
+
+// 2. Scan active modular directories dynamically for encapsulated datasets
+if (is_dir($modulesDir)) {
+    $folders = scandir($modulesDir);
+    foreach ($folders as $folder) {
+        if ($folder === '.' || $folder === '..') {
+            continue;
+        }
+        $moduleSeederDir = "{$modulesDir}/{$folder}/Seeders";
+        if (is_dir($moduleSeederDir)) {
+            $files = scandir($moduleSeederDir);
+            foreach ($files as $file) {
+                if (str_ends_with($file, '.json') && $file !== 'handwritten_articles.json') {
+                    $discoveredFiles[$file] = [
+                        'filename' => $file,
+                        'path' => $moduleSeederDir . '/' . $file
+                    ];
+                }
+            }
+        }
+    }
+}
+
+// Prioritize files based on system ordering requirements
+$priorityMap = [
+    'corporate.json' => 10,
+    'documentation.json' => 20,
+    'portfolio.json' => 30,
+    'shop.json' => 40,
+    'kitchensink.json' => 50,
+];
+
+// Convert maps to a list and sort by precedence priority
+$discoveredList = array_values($discoveredFiles);
+
+usort($discoveredList, function ($a, $b) use ($priorityMap) {
+    $pA = $priorityMap[$a['filename']] ?? 100;
+    $pB = $priorityMap[$b['filename']] ?? 100;
+    return $pA <=> $pB;
+});
+
+// Run each discovered dataset sequentially
+$cleanUploads = true;
+
+foreach ($discoveredList as $setInfo) {
+    $filename = $setInfo['filename'];
+    $filePath = $setInfo['path'];
+    $identifier = basename($filename, '.json');
+
+    // Selective filtering capability
+    if ($onlySite !== null && $onlySite !== 'blank') {
+        if ($identifier !== 'corporate' && $identifier !== $onlySite) {
+            continue; // Skip if not corporate/core and not targeted
+        }
+    }
+
+    echo "--------------------------------------------------\n";
+    echo "SEEDING DATASET: {$filename} (ID: {$identifier})\n";
+    echo "--------------------------------------------------\n";
+
+    $data = json_decode(file_get_contents($filePath), true) ?? [];
+
+    // Core processing for corporate.json selective overrides
+    if ($identifier === 'corporate' && $onlySite !== null && $onlySite !== 'corporate') {
+        if ($onlySite === 'blank') {
+            // Seed a clean standalone blank welcome site
+            $baseUrl = Env::get('BASE_URL', 'http://localhost');
+            $parsedUrl = parse_url($baseUrl);
+            $targetDomain = $parsedUrl['host'] ?? 'localhost';
+            
+            $data['sites'] = [
+                [
+                    "id" => "019fa1f1-7800-7031-a269-fcc0aa1fe578",
+                    "name" => "My New Standalone Site",
+                    "domain" => $targetDomain,
+                    "theme" => "default",
+                    "enabled_modules" => ["blog", "security", "queue", "site-search", "formbuilder"]
+                ]
+            ];
+            
+            $data['pages'] = [
+                [
+                    "id" => "019fa1f1-7bcc-72f0-8c3b-9732ab7f9e3a",
+                    "site_domain" => $targetDomain,
+                    "title" => "Welcome",
+                    "slug" => "",
+                    "status" => "published",
+                    "content" => [
+                        [
+                            "type" => "text",
+                            "title" => "Welcome to your new Zero CMS website!",
+                            "content" => "<p>You have successfully initialized a blank standalone Zero CMS project. Log in to the <a href=\"/admin\">admin area</a> to start customizing your pages, blocks, and themes!</p>"
+                        ]
+                    ],
+                    "precedence" => 0
+                ]
+            ];
+            
+            unset($data['media']);
+        } else {
+            // Strip out site structures to run core-only user generation (super admin)
+            unset($data['sites']);
+            unset($data['pages']);
+            unset($data['media']);
+        }
+    }
+
+    // Dynamically override default domains to match active BASE_URL if injected (Cloud Run deploy)
+    $baseUrl = Env::get('BASE_URL');
+    if (!empty($baseUrl)) {
         $parsedUrl = parse_url($baseUrl);
-        $targetDomain = $parsedUrl['host'] ?? 'localhost';
-        
-        $coreData['sites'] = [
-            [
-                "id" => "019fa1f1-7800-7031-a269-fcc0aa1fe578",
-                "name" => "My New Standalone Site",
-                "domain" => $targetDomain,
-                "theme" => "default",
-                "enabled_modules" => ["blog", "security", "queue", "site-search", "formbuilder"]
-            ]
-        ];
-        
-        $coreData['pages'] = [
-            [
-                "id" => "019fa1f1-7bcc-72f0-8c3b-9732ab7f9e3a",
-                "site_domain" => $targetDomain,
-                "title" => "Welcome",
-                "slug" => "",
-                "status" => "published",
-                "content" => [
-                    [
-                        "type" => "text",
-                        "title" => "Welcome to your new Zero CMS website!",
-                        "content" => "<p>You have successfully initialized a blank standalone Zero CMS project. Log in to the <a href=\"/admin\">admin area</a> to start customizing your pages, blocks, and themes!</p>"
-                    ]
-                ],
-                "precedence" => 0
-            ]
-        ];
-        
-        unset($coreData['media']);
-    } else {
-        // If selective seeding is enabled and NOT targeting corporate, we only want the core users (super admins) from corporate.json.
-        // We remove "sites", "pages", and "media" keys to prevent seeding the corporate main site record and its pages/assets!
-        unset($coreData['sites']);
-        unset($coreData['pages']);
-        unset($coreData['media']);
+        $targetDomain = $parsedUrl['host'] ?? null;
+        if ($targetDomain) {
+            echo "--> Dynamically overriding corporate site domain reference to: {$targetDomain}\n";
+            
+            if (isset($data['sites'])) {
+                foreach ($data['sites'] as &$site) {
+                    if ($site['domain'] === 'd6laptop.zero') {
+                        $site['domain'] = $targetDomain;
+                    }
+                }
+            }
+            if (isset($data['media'])) {
+                foreach ($data['media'] as &$media) {
+                    if ($media['site_domain'] === 'd6laptop.zero') {
+                        $media['site_domain'] = $targetDomain;
+                    }
+                }
+            }
+            if (isset($data['pages'])) {
+                foreach ($data['pages'] as &$page) {
+                    if ($page['site_domain'] === 'd6laptop.zero') {
+                        $page['site_domain'] = $targetDomain;
+                    }
+                }
+            }
+        }
     }
-}
 
-// If BASE_URL is set in environment (e.g. on Cloud Run), dynamically update the default site's domain and references to match it!
-$baseUrl = Env::get('BASE_URL');
-if (!empty($baseUrl)) {
-    $parsedUrl = parse_url($baseUrl);
-    $targetDomain = $parsedUrl['host'] ?? null;
-    if ($targetDomain) {
-        echo "--> Dynamically overriding corporate site domain to: {$targetDomain}\n";
-        
-        // 1. Override site domain
-        if (isset($coreData['sites'])) {
-            foreach ($coreData['sites'] as &$site) {
-                if ($site['domain'] === 'd6laptop.zero') {
-                    $site['domain'] = $targetDomain;
+    // Run core seeder
+    $seeder = new Seeder($data);
+    $seeder->run($cleanUploads, $generateZip);
+    $cleanUploads = false; // Preserve uploads directory on subsequent sets
+
+    // Run any discovered class seeders targeting ONLY the site IDs seeded in this dataset
+    $datasetSiteIds = $seeder->getSeededSiteIds();
+    foreach ($datasetSiteIds as $siteId) {
+        $siteRow = DB::query("SELECT name, enabled_modules FROM sites WHERE id = ?", [$siteId])->fetch();
+        if ($siteRow) {
+            $enabledModules = json_decode($siteRow['enabled_modules'] ?? '[]', true);
+            foreach ($classSeeders as $oopSeeder) {
+                $moduleId = $oopSeeder->getModuleId();
+
+                // Selective filtering capability for modular class seeders
+                if ($onlySite !== null && $onlySite !== 'blank' && $moduleId !== $onlySite) {
+                    continue; // Skip if targeting another module specifically
                 }
-            }
-        }
-        
-        // 2. Override media and page site_domain references
-        if (isset($coreData['media'])) {
-            foreach ($coreData['media'] as &$media) {
-                if ($media['site_domain'] === 'd6laptop.zero') {
-                    $media['site_domain'] = $targetDomain;
-                }
-            }
-        }
-        if (isset($coreData['pages'])) {
-            foreach ($coreData['pages'] as &$page) {
-                if ($page['site_domain'] === 'd6laptop.zero') {
-                    $page['site_domain'] = $targetDomain;
+
+                // Execute only if the module is active/enabled for this site
+                if (in_array($moduleId, $enabledModules)) {
+                    $oopSeeder->run($siteId, APPLICATION_ROOT . '/public/storage/uploads');
+
+                    // Scoped Garbage Collection to keep CLI footprint extremely light
+                    DB::clearIdentityMap();
+                    gc_collect_cycles();
                 }
             }
         }
     }
 }
 
-$coreSeeder = new Seeder($coreData);
-$coreSeeder->run(true, $generateZip); // First run cleans the uploads folder
+// Trigger all dynamically registered post-run Hooks (e.g. search indices)
+Seeder::triggerPostRunHooks();
 
-// Hydrate Stage 2 (Developer Docs)
-if ($runDocs) {
-    echo "--------------------------------------------------\n";
-    echo "STAGE 2: Seeding Zero CMS Technical Developer Docs...\n";
-    echo "--------------------------------------------------\n";
-    $docsSeeder = new Seeder(APPLICATION_ROOT . '/seeders/data/documentation.json');
-    $docsSeeder->run(false, $generateZip); // Subsequent runs preserve existing files
-}
-
-// Hydrate Stage 3 (Designer Portfolio)
-if ($runPortfolio) {
-    echo "--------------------------------------------------\n";
-    echo "STAGE 3: Seeding Zero CMS Designer Portfolio & Compiling Bundle...\n";
-    echo "--------------------------------------------------\n";
-    $portfolioSeeder = new Seeder(APPLICATION_ROOT . '/seeders/data/portfolio.json');
-    $portfolioSeeder->run(false, $generateZip); // Subsequent runs preserve existing files
-}
-
-// Hydrate Stage 4 (Luxe E-Commerce Shop)
-if ($runShop) {
-    echo "--------------------------------------------------\n";
-    echo "STAGE 4: Seeding Zero CMS Luxe E-Commerce Shop...\n";
-    echo "--------------------------------------------------\n";
-    $shopSeeder = new Seeder(APPLICATION_ROOT . '/seeders/data/shop.json');
-    $shopSeeder->run(false, $generateZip); // Subsequent runs preserve existing files
-}
-
-// Hydrate Stage 5 (Kitchen Sink Showroom)
-if ($runKitchenSink) {
-    echo "--------------------------------------------------\n";
-    echo "STAGE 5: Seeding Zero CMS Kitchen Sink Showroom...\n";
-    echo "--------------------------------------------------\n";
-    $kitchenSinkSeeder = new Seeder(APPLICATION_ROOT . '/seeders/data/kitchensink.json');
-    $kitchenSinkSeeder->run(false, $generateZip); // Subsequent runs preserve existing files
-
-    echo "--> Running Kitchen Sink dynamic orders seeder...\n";
-    $output = [];
-    $exitCode = 0;
-    exec("php " . APPLICATION_ROOT . "/seeders/seed_kitchensink_orders.php", $output, $exitCode);
-    foreach ($output as $line) {
-        echo "   " . $line . "\n";
-    }
-
-    echo "--> Running Kitchen Sink dynamic forum seeder...\n";
-    $outputForum = [];
-    $exitCodeForum = 0;
-    exec("php " . APPLICATION_ROOT . "/seeders/seed_kitchensink_forum.php", $outputForum, $exitCodeForum);
-    foreach ($outputForum as $line) {
-        echo "   " . $line . "\n";
-    }
-}
-
-// Dynamically generate and seed 50 premium long-form blog posts (at least 5000 words each) for the Guide site
-if ($runBlogGenerator) {
-    require_once APPLICATION_ROOT . '/seeders/generate_blog_articles.php';
-}
-
-// Securely adjust ownership of storage directories recursively to the web server user (www-data)
+// Securely adjust ownership of storage directories recursively to the web server user (www-data) on Linux
 if (function_exists('posix_getuid') && posix_getuid() === 0) {
     echo "--> Automatically adjusting ownership of storage folder recursively to 'www-data'...\n";
     @exec("chown -R www-data:www-data " . APPLICATION_ROOT . "/storage");
