@@ -93,10 +93,8 @@ usort($classSeeders, function ($a, $b) {
 // Dynamic Seeder Auto-Discovery Engine (JSON Datasets)
 // Prioritize files based on system ordering requirements
 $priorityMap = [
-    'corporate.php' => 10,
+    'default.php' => 10,
     'documentation.php' => 20,
-    'portfolio.php' => 30,
-    'shop.php' => 40,
     'kitchensink.php' => 50,
 ];
 
@@ -143,8 +141,8 @@ foreach ($discoveredList as $setInfo) {
 
     // Selective filtering capability
     if ($onlySite !== null && $onlySite !== 'blank') {
-        if ($identifier !== 'corporate' && $identifier !== $onlySite) {
-            continue; // Skip if not corporate/core and not targeted
+        if ($identifier !== 'default' && $identifier !== $onlySite) {
+            continue; // Skip if not default/core and not targeted
         }
     }
 
@@ -154,8 +152,8 @@ foreach ($discoveredList as $setInfo) {
 
     $data = require $filePath;
 
-    // Core processing for corporate.json selective overrides
-    if ($identifier === 'corporate' && $onlySite !== null && $onlySite !== 'corporate') {
+    // Core processing for default.php selective overrides
+    if ($identifier === 'default' && $onlySite !== null && $onlySite !== 'default') {
         if ($onlySite === 'blank') {
             // Seed a clean standalone blank welcome site
             $baseUrl = Env::get('BASE_URL', 'http://localhost');
@@ -205,7 +203,7 @@ foreach ($discoveredList as $setInfo) {
         $parsedUrl = parse_url($baseUrl);
         $targetDomain = $parsedUrl['host'] ?? null;
         if ($targetDomain) {
-            echo "--> Dynamically overriding corporate site domain reference to: {$targetDomain}\n";
+            echo "--> Dynamically overriding default site domain reference to: {$targetDomain}\n";
             
             if (isset($data['sites'])) {
                 foreach ($data['sites'] as &$site) {

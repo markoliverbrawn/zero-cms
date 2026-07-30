@@ -634,73 +634,91 @@ class Post implements Model {
                 [
                     'type' => 'text',
                     'title' => 'Understanding Zero Seeding Architecture',
-                    'content' => '<p>Zero CMS abstracts database seeding into an automated parsing helper class: <code>Zero\\Support\\Seeder</code> (located at <code>src/Support/Seeder.php</code>). This class reads a single structured JSON payload, sequentially creates Site Tenants, decodes base64-encoded Media Assets, and populates Page Builder Page blocks and blog post lists natively, writing time-ordered RFC-compliant UUIDv7 string keys.</p>',
+                    'content' => '<p>Zero CMS features a highly scalable, decoupled hybrid seeding system combining <strong>Declarative PHP Array Datasets</strong> (defining static content and configurations) and <strong>Procedural OOP Seeder Classes</strong> (running complex dynamic loops, generating fresh UUIDv7 keys, mapping file streams, and creating randomized e-commerce/community transaction histories).</p>',
                 ],
                 [
                     'type' => 'text',
-                    'title' => 'Defining your JSON Seeder Payload',
-                    'content' => '<p>Establish your custom database seeding payload in a JSON file. Ensure your JSON schema strictly defines <code>sites</code> (including <code>enabled_modules</code>!), <code>media</code>, and <code>pages</code> (with core page <code>blocks</code>):</p><pre><code class="language-json">{
-  "sites": [
-    {
-      "name": "My New Modular Showcase",
-      "domain": "newsite.zero",
-      "theme": "default",
-      "enabled_modules": ["blog", "shop"]
-    }
-  ],
-  "media": [
-    {
-      "filename": "logo-accent.svg",
-      "mime": "image/svg+xml",
-      "content_base64": "PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI0MCIgc3Ryb2tlPSIjZDRhZjM3IiBmaWxsPSJub25lIi8+PC9zdmc+"
-    }
-  ],
-  "pages": [
-    {
-      "title": "Dynamic Welcome Portal",
-      "slug": "welcome-portal",
-      "status": "published",
-      "blocks": [
-        {
-          "type": "text",
-          "title": "Active Record Core Release",
-          "content": "&lt;p&gt;This site has been successfully seeded with active Blog and Shop modular features.&lt;/p&gt;"
-        }
-      ]
-    }
-  ]
-}</code></pre>',
+                    'title' => '1. Declaring a PHP Blueprint Dataset',
+                    'content' => '<p>Instead of fragile and slow JSON templates, Zero CMS utilizes compiled, high-performance native PHP array files. These files live under the <code>DemoGenerator</code> presets directory (e.g. <code>src/Modules/DemoGenerator/Seeders/corporate.php</code>) and return a clean array configuration directly. Blueprints can embed dynamic environmental variables natively:</p>',
                 ],
                 [
-                    'type' => 'text',
-                    'title' => 'Writing and Running the Seeder Script',
-                    'content' => '<p>To execute the data import, create a bootstrap PHP script (e.g., <code>seeders/my-custom-seeder.php</code>). This script loads environmental variables, instantiates the Seeder helper, and triggers the automated transaction execution:</p><pre><code class="language-php">&lt;?php
-define(\'APPLICATION_ROOT\', dirname(__DIR__));
-
-spl_autoload_register(function ($class) {
-    $prefix = \'Zero\\\\\';
-    $base_dir = APPLICATION_ROOT . \'/src/\';
-    $len = strlen($prefix);
-    if (strncmp($prefix, $class, $len) !== 0) return;
-    $relative_class = substr($class, $len);
-    $file = $base_dir . str_replace(\'\\\\\', \'/\', $relative_class) . \'.php\';
-    if (file_exists($file)) require_once $file;
-});
-
+                    'type' => 'code',
+                    'title' => 'Sample PHP Seeder Preset Blueprint',
+                    'language' => 'php',
+                    'code' => '<?php
+// src/Modules/DemoGenerator/Seeders/my-preset.php
 use Zero\\Core\\Env;
-use Zero\\Support\\Seeder;
 
-Env::load(APPLICATION_ROOT);
+$domain = parse_url(Env::get(\'BASE_URL\', \'http://localhost\'), PHP_URL_HOST) ?: \'localhost\';
 
-try {
-    $seeder = new Seeder(APPLICATION_ROOT . \'/seeders/data/my-data.json\');
-    $seeder->run();
-    echo "Data Seeding Executed with 100% Success!\
-";
-} catch (Exception $e) {
-    echo "Fatal Seeding Error: " . $e->getMessage() . "\
-";
-}</code></pre>',
+return [
+    \'sites\' => [
+        [
+            \'id\' => \'019fb176-1f1e-7799-b829-c2c530a8840a\',
+            \'name\' => \'My New Showcase\',
+            \'domain\' => $domain,
+            \'theme\' => \'default\',
+            \'enabled_modules\' => [\'blog\']
+        ]
+    ],
+    \'pages\' => [
+        [
+            \'title\' => \'Home\',
+            \'slug\' => \'\',
+            \'status\' => \'published\',
+            \'site_domain\' => $domain,
+        ]
+    ]
+];',
+                ],
+                [
+                    'type' => 'text',
+                    'title' => '2. Creating a Dynamic OOP Seeder Class',
+                    'content' => '<p>For complex e-commerce catalogs, nested blog commenting grids, or forum communities, implement a dynamic seeder class implementing <code>Zero\\Interfaces\\SeederInterface</code> (located under <code>src/Modules/[ModuleName]/Seeders/</code>):</p>',
+                ],
+                [
+                    'type' => 'code',
+                    'title' => 'Sample OOP Modular Seeder Class',
+                    'language' => 'php',
+                    'code' => '<?php
+namespace Zero\\Modules\\MyModule\\Seeders;
+
+use Zero\\Interfaces\\SeederInterface;
+use Zero\\Database\\DB;
+use Zero\\Support\\Security;
+
+class MyCustomSeeder implements SeederInterface
+{
+    public function getModuleId(): string 
+    { 
+        return \'mymodule\'; 
+    }
+    
+    public function getPriority(): int 
+    { 
+        return 30; 
+    }
+
+    public function run(string $siteId, string $uploadsDir): void
+    {
+        echo "--> Running MyCustomSeeder for site ID $siteId...\\n";
+        
+        // Dynamic UUIDv7 key generation ensures zero primary-key database collisions!
+        $id = Security::uuidv7();
+        DB::query("INSERT INTO my_table (id, site_id, ...) VALUES (?, ?, ...)", [$id, $siteId]);
+    }
+}',
+                ],
+                [
+                    'type' => 'text',
+                    'title' => '3. Auto-Discovery and Execution',
+                    'content' => '<p>Zero CMS features an automatic discovery engine. On bootstrap, the master CLI runner (<code>seeders/seeder.php</code>) scans active modular directories for dataset blueprints and seeder classes. It priority-orders them (lower numbers running first, e.g. Blog priority 10, Forum priority 20, Shop priority 30) and sequentially compiles, migrates, and executes the entire system in under 3 seconds!</p><p>To run the database schemas handshake and re-seed all multi-tenant domains in development, execute:</p>',
+                ],
+                [
+                    'type' => 'code',
+                    'title' => 'CLI Command to Re-Seed All Tenants',
+                    'language' => 'bash',
+                    'code' => 'docker exec -w /data/misc/zero php83 php seeders/seeder.php',
                 ],
             ],
             'type' => 'page',
@@ -885,19 +903,19 @@ if ($moduleName !== null) {
                     'content' => '<p>The Emailer opens a raw network socket connection to the target mail server (e.g. Mailpit on port 1025) and handles the SMTP dialogue manually, reading server response codes strictly:</p><pre><code class="language-php">$socket = fsockopen(\'mailpit\', 1025, $errno, $errstr, 5);
 
 // Handshake steps:
-fputs($socket, "EHLO newsite.zero\\r\
+fputs($socket, "EHLO newsite.zero\\r\\
 ");
-fputs($socket, "MAIL FROM: &lt;sender@zero.org&gt;\\r\
+fputs($socket, "MAIL FROM: &lt;sender@zero.org&gt;\\r\\
 ");
-fputs($socket, "RCPT TO: &lt;buyer@zero.org&gt;\\r\
+fputs($socket, "RCPT TO: &lt;buyer@zero.org&gt;\\r\\
 ");
-fputs($socket, "DATA\\r\
+fputs($socket, "DATA\\r\\
 ");
 
 // Send headers and raw body envelope...
-fputs($socket, ".\\r\
+fputs($socket, ".\\r\\
 "); // Dot on a single line signals SMTP data completion
-fputs($socket, "QUIT\\r\
+fputs($socket, "QUIT\\r\\
 ");</code></pre>',
                 ],
                 [
@@ -2159,12 +2177,12 @@ class ProductShowcaseBlock implements BlockHelperInterface
                     'type' => 'code',
                     'title' => 'Create Low-Cost MySQL Instance',
                     'language' => 'bash',
-                    'code' => 'gcloud sql instances create YOUR_INSTANCE_NAME \
-  --database-version=MYSQL_8_0 \
-  --tier=db-f1-micro \
-  --region=YOUR_REGION \
-  --storage-size=10GB \
-  --storage-type=HDD \
+                    'code' => 'gcloud sql instances create YOUR_INSTANCE_NAME \\
+  --database-version=MYSQL_8_0 \\
+  --tier=db-f1-micro \\
+  --region=YOUR_REGION \\
+  --storage-size=10GB \\
+  --storage-type=HDD \\
   --availability-type=zonal',
                 ],
                 [
@@ -2220,11 +2238,11 @@ GCS_BUCKET=your-custom-gcs-bucket-name',
                     'type' => 'code',
                     'title' => 'Execute Cloud Run Migrations & Seeding Job',
                     'language' => 'bash',
-                    'code' => 'gcloud run jobs create zerocms-seed-job \
-  --image gcr.io/YOUR_PROJECT_ID/zerocms-app:v1 \
-  --command="php" \
-  --args="seeders/seeder.php" \
-  --set-env-vars="DB_SOCKET=/cloudsql/YOUR_PROJECT_ID:YOUR_REGION:YOUR_INSTANCE_NAME,DB_USER=...,DB_PASS=...,DB_NAME=..." \
+                    'code' => 'gcloud run jobs create zerocms-seed-job \\
+  --image gcr.io/YOUR_PROJECT_ID/zerocms-app:v1 \\
+  --command="php" \\
+  --args="seeders/seeder.php" \\
+  --set-env-vars="DB_SOCKET=/cloudsql/YOUR_PROJECT_ID:YOUR_REGION:YOUR_INSTANCE_NAME,DB_USER=...,DB_PASS=...,DB_NAME=..." \\
   --set-cloudsql-instances="YOUR_PROJECT_ID:YOUR_REGION:YOUR_INSTANCE_NAME"
 
 gcloud run jobs execute zerocms-seed-job',
@@ -2237,11 +2255,11 @@ gcloud run jobs execute zerocms-seed-job',
                     'type' => 'code',
                     'title' => 'Deploy Stateless Cloud Run Web Service',
                     'language' => 'bash',
-                    'code' => 'gcloud run deploy zerocms-service \
-  --image gcr.io/YOUR_PROJECT_ID/zerocms-app:v1 \
-  --min-instances=0 \
-  --max-instances=10 \
-  --set-cloudsql-instances="YOUR_PROJECT_ID:YOUR_REGION:YOUR_INSTANCE_NAME" \
+                    'code' => 'gcloud run deploy zerocms-service \\
+  --image gcr.io/YOUR_PROJECT_ID/zerocms-app:v1 \\
+  --min-instances=0 \\
+  --max-instances=10 \\
+  --set-cloudsql-instances="YOUR_PROJECT_ID:YOUR_REGION:YOUR_INSTANCE_NAME" \\
   --set-env-vars="DB_SOCKET=/cloudsql/YOUR_PROJECT_ID:YOUR_REGION:YOUR_INSTANCE_NAME,DB_USER=...,DB_PASS=...,DB_NAME=..."',
                 ],
             ],

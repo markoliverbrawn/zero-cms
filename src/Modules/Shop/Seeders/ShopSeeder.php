@@ -55,10 +55,10 @@ class ShopSeeder implements SeederInterface
         echo "ZERO CMS: DYNAMIC E-COMMERCE SEEDER FOR '{$site['name']}'\n";
         echo "====================================================================\n";
 
-        // Load the declarative blueprints from shop.php
-        $shopDataPath = dirname(dirname(dirname(__FILE__))) . '/DemoGenerator/Seeders/shop.php';
+        // Load the declarative blueprints from blueprints.php
+        $shopDataPath = __DIR__ . '/blueprints.php';
         if (!file_exists($shopDataPath)) {
-            throw new Exception("Seeding error: shop.php blueprint file not found.");
+            throw new Exception("Seeding error: blueprints.php file not found.");
         }
         $shopData = require $shopDataPath;
         $categoriesData = $shopData['shop_categories_blueprint'] ?? [];

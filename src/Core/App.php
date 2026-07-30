@@ -277,6 +277,45 @@ class App
         self::bootstrapInitialize();
         self::bootstrapSanitizeInputs();
 
+        // DEV MODE SETUP WIZARD INTERCEPT
+        if (Env::get('ENVIRONMENT') === 'dev') {
+            try {
+                $sitesTableExists = DB::query("SHOW TABLES LIKE 'sites'")->fetch();
+                $usersTableExists = DB::query("SHOW TABLES LIKE 'users'")->fetch();
+                
+                $siteCount = 0;
+                $userCount = 0;
+                
+                if ($sitesTableExists) {
+                    $siteCount = (int) DB::query("SELECT COUNT(*) FROM sites")->fetchColumn();
+                }
+                if ($usersTableExists) {
+                    $userCount = (int) DB::query("SELECT COUNT(*) FROM users")->fetchColumn();
+                }
+                
+                if (!$sitesTableExists || !$usersTableExists || ($siteCount === 0 && $userCount === 0)) {
+                    $uri = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
+                    $ext = strtolower(pathinfo($uri, PATHINFO_EXTENSION));
+                    $staticExts = ['css', 'js', 'svg', 'woff2', 'png', 'jpg', 'jpeg', 'gif', 'mp4', 'ico'];
+                    if (!in_array($ext, $staticExts)) {
+                        $setupWizard = new \Zero\Modules\Admin\Controllers\SetupWizardController();
+                        $setupWizard->handleRequest();
+                        exit;
+                    }
+                }
+            } catch (\Exception $e) {
+                // If tables don't exist yet, we also trigger the setup wizard!
+                $uri = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
+                $ext = strtolower(pathinfo($uri, PATHINFO_EXTENSION));
+                $staticExts = ['css', 'js', 'svg', 'woff2', 'png', 'jpg', 'jpeg', 'gif', 'mp4', 'ico'];
+                if (!in_array($ext, $staticExts)) {
+                    $setupWizard = new \Zero\Modules\Admin\Controllers\SetupWizardController();
+                    $setupWizard->handleRequest();
+                    exit;
+                }
+            }
+        }
+
         $host = explode(':', $_SERVER['HTTP_HOST'] ?? 'localhost')[0];
         $userId = $_SESSION['user_id'] ?? null;
 

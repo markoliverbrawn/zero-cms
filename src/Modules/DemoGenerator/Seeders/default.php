@@ -4,7 +4,7 @@
 return [
     'sites' => [
         [
-            'name' => 'Zero CMS Corporate Main Site (d6laptop.zero)',
+            'name' => 'Zero CMS Main Site (d6laptop.zero)',
             'domain' => 'd6laptop.zero',
             'theme' => 'default',
             'enabled_modules' => [

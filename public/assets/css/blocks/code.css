@@ -34,5 +34,33 @@
         line-height: 1.5;
         tab-size: 4;
         color: #f8fafc;
+
+        .tok-keyword {
+            color: #00f0ff; /* Neon cyan keywords */
+            font-weight: bold;
+        }
+        .tok-var {
+            color: #ef4444; /* Bright red variables */
+        }
+        .tok-str {
+            color: #10b981; /* Soft green strings */
+        }
+        .tok-func {
+            color: #f59e0b; /* Bright gold functions */
+        }
+        .tok-comment {
+            color: #64748b; /* Muted slate comments */
+            font-style: italic;
+        }
+        .tok-num {
+            color: #ec4899; /* Vibrant pink numbers */
+        }
+        .tok-tag {
+            color: #3b82f6; /* Bright blue HTML tags */
+        }
+        .tok-key {
+            color: #00f0ff; /* Neon cyan JSON keys */
+            font-weight: bold;
+        }
     }
 }
