@@ -56,16 +56,16 @@ class BlogArticleSeeder implements SeederInterface
         // Clean out any previous blog posts to prevent duplicate entries on re-run
         DB::query("DELETE FROM blog_posts WHERE site_id = ?", [$siteId]);
 
-        // Load the 10 hand-written articles from the JSON file on disk
-        $jsonPath = __DIR__ . '/handwritten_articles.json';
-        if (!file_exists($jsonPath)) {
-            echo "Error: Seeder data file not found at: {$jsonPath}\n";
+        // Load the 10 hand-written articles from the PHP array on disk
+        $phpPath = __DIR__ . '/handwritten_articles.php';
+        if (!file_exists($phpPath)) {
+            echo "Error: Seeder data file not found at: {$phpPath}\n";
             return;
         }
 
-        $postsData = json_decode(file_get_contents($jsonPath), true);
+        $postsData = require $phpPath;
         if (!is_array($postsData)) {
-            echo "Error: Failed to decode handwritten articles JSON.\n";
+            echo "Error: Failed to load handwritten articles array.\n";
             return;
         }
 

@@ -147,6 +147,9 @@ class Seeder
         self::registerFieldFilter('*', function ($value, $colName, $tableName, $row) {
             $siteId = $row['site_id'] ?? '';
             if (!empty($siteId) && is_string($value) && strpos($value, '/storage/uploads/') !== false) {
+                if (strpos($value, '/storage/uploads/' . $siteId . '/') !== false) {
+                    return $value;
+                }
                 return str_replace('/storage/uploads/', '/storage/uploads/' . $siteId . '/', $value);
             }
             return $value;
@@ -371,7 +374,7 @@ class Seeder
 
         // Loop through and seed all JSON tables dynamically and generically
         foreach ($data as $tableName => $rows) {
-            if ($tableName === 'sites' || !is_array($rows)) {
+            if ($tableName === 'sites' || str_ends_with($tableName, '_blueprint') || !is_array($rows)) {
                 continue;
             }
 

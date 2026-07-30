@@ -184,13 +184,12 @@ class DemoController implements Controller
      */
     protected function seedFromBlueprint(string $siteId, string $preset): void
     {
-        $blueprintPath = APPLICATION_ROOT . "/seeders/data/{$preset}.json";
+        $blueprintPath = APPLICATION_ROOT . "/seeders/data/{$preset}.php";
         if (!file_exists($blueprintPath)) {
             return;
         }
 
-        $raw = file_get_contents($blueprintPath);
-        $data = json_decode($raw, true);
+        $data = require $blueprintPath;
         if (!is_array($data)) {
             return;
         }

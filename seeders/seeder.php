@@ -98,7 +98,7 @@ $seederDataDir = APPLICATION_ROOT . '/seeders/data';
 if (is_dir($seederDataDir)) {
     $files = scandir($seederDataDir);
     foreach ($files as $file) {
-        if (str_ends_with($file, '.json') && $file !== 'handwritten_articles.json') {
+        if (str_ends_with($file, '.php') && $file !== 'handwritten_articles.json') {
             $discoveredFiles[$file] = [
                 'filename' => $file,
                 'path' => $seederDataDir . '/' . $file
@@ -118,7 +118,7 @@ if (is_dir($modulesDir)) {
         if (is_dir($moduleSeederDir)) {
             $files = scandir($moduleSeederDir);
             foreach ($files as $file) {
-                if (str_ends_with($file, '.json') && $file !== 'handwritten_articles.json') {
+                if (str_ends_with($file, '.php') && !str_ends_with($file, 'Seeder.php')) {
                     $discoveredFiles[$file] = [
                         'filename' => $file,
                         'path' => $moduleSeederDir . '/' . $file
@@ -131,11 +131,11 @@ if (is_dir($modulesDir)) {
 
 // Prioritize files based on system ordering requirements
 $priorityMap = [
-    'corporate.json' => 10,
-    'documentation.json' => 20,
-    'portfolio.json' => 30,
-    'shop.json' => 40,
-    'kitchensink.json' => 50,
+    'corporate.php' => 10,
+    'documentation.php' => 20,
+    'portfolio.php' => 30,
+    'shop.php' => 40,
+    'kitchensink.php' => 50,
 ];
 
 // Convert maps to a list and sort by precedence priority
@@ -153,7 +153,7 @@ $cleanUploads = true;
 foreach ($discoveredList as $setInfo) {
     $filename = $setInfo['filename'];
     $filePath = $setInfo['path'];
-    $identifier = basename($filename, '.json');
+    $identifier = basename($filename, '.php');
 
     // Selective filtering capability
     if ($onlySite !== null && $onlySite !== 'blank') {
@@ -166,7 +166,7 @@ foreach ($discoveredList as $setInfo) {
     echo "SEEDING DATASET: {$filename} (ID: {$identifier})\n";
     echo "--------------------------------------------------\n";
 
-    $data = json_decode(file_get_contents($filePath), true) ?? [];
+    $data = require $filePath;
 
     // Core processing for corporate.json selective overrides
     if ($identifier === 'corporate' && $onlySite !== null && $onlySite !== 'corporate') {
