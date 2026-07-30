@@ -1,5 +1,12 @@
 <?php
-// src/Modules/Blog/Seeders/BlogArticleSeeder.php
+/**
+ * Zero CMS Blog Module Publications Seeder
+ *
+ * This class handles importing high-quality developer and architectural articles
+ * into multi-tenant database records dynamically.
+ *
+ * @package Zero\Modules\Blog\Seeders
+ */
 
 namespace Zero\Modules\Blog\Seeders;
 
@@ -8,6 +15,12 @@ use Zero\Interfaces\SeederInterface;
 use Zero\Database\DB;
 use Zero\Support\Security;
 
+/**
+ * Class BlogArticleSeeder
+ *
+ * Implements SeederInterface to parse blog post payloads, associate media Cover images,
+ * and populate rich layout articles on bootstrap.
+ */
 class BlogArticleSeeder implements SeederInterface
 {
     /**

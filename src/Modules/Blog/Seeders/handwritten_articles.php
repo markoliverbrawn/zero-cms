@@ -1,5 +1,10 @@
 <?php
-// Generated from handwritten_articles.json
+/**
+ * Zero CMS Blog Publication Blueprints
+ *
+ * This file returns a collection of 10 hand-written, high-quality developer
+ * articles and publications used by the BlogArticleSeeder to populate sites.
+ */
 
 return [
     [

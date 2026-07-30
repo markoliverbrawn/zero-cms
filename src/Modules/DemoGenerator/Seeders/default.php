@@ -1,5 +1,10 @@
 <?php
-// Generated from corporate.json
+/**
+ * Zero CMS Default Base Tenant Blueprint
+ *
+ * This file returns the declarative multi-tenant structure, layouts, pages, and media
+ * metadata used to bootstrap the main default site (formerly corporate).
+ */
 
 return [
     'sites' => [

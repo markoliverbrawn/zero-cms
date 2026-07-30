@@ -1,4 +1,11 @@
 <?php
+/**
+ * Zero CMS E-Commerce Catalog Blueprints
+ *
+ * This file returns a declarative structure defining the categories, products,
+ * specs, and variation metrics used by the ShopSeeder to initialize tenant stores.
+ */
+
 return [
     'shop_categories_blueprint' => [
         'apparel' => [

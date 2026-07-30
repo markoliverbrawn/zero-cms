@@ -1,5 +1,13 @@
 <?php
-// src/Modules/Admin/Controllers/SetupWizardController.php
+/**
+ * Zero CMS System Setup Wizard Controller
+ *
+ * This controller intercepts incoming HTTP requests on empty/unconfigured development
+ * environments and guides the developer through initializing schemas and creating
+ * their super administrator account.
+ *
+ * @package Zero\Modules\Admin\Controllers
+ */
 
 namespace Zero\Modules\Admin\Controllers;
 
@@ -11,6 +19,12 @@ use Zero\Database\DB;
 use Zero\Database\MigrationManager;
 use Zero\Support\Security;
 
+/**
+ * Class SetupWizardController
+ *
+ * Manages the multi-tenant setup wizard logic, validating input schemas,
+ * executing database table migrations, and registering initial site and user records.
+ */
 class SetupWizardController
 {
     /**

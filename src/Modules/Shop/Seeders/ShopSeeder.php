@@ -1,5 +1,12 @@
 <?php
-// src/Modules/Shop/Seeders/ShopSeeder.php
+/**
+ * Zero CMS Shop Module Dynamic Seeder
+ *
+ * This class handles dynamic database seeding of the Shop module, executing both
+ * declarative category and product loading, and procedural e-commerce order generation.
+ *
+ * @package Zero\Modules\Shop\Seeders
+ */
 
 namespace Zero\Modules\Shop\Seeders;
 
@@ -8,6 +15,12 @@ use Zero\Interfaces\SeederInterface;
 use Zero\Database\DB;
 use Zero\Support\Security;
 
+/**
+ * Class ShopSeeder
+ *
+ * Implements SeederInterface to populate category layouts, products, variations,
+ * and randomized multi-tenant transaction history on bootstrap.
+ */
 class ShopSeeder implements SeederInterface
 {
     /**

@@ -1,5 +1,12 @@
 <?php
-// src/Modules/Forum/Seeders/ForumPostSeeder.php
+/**
+ * Zero CMS Forum Module Dynamic Post Seeder
+ *
+ * This class handles dynamic database seeding of the Forum module, executing both
+ * vocabulary templates loading, and combinatorial procedural community thread and reply generation.
+ *
+ * @package Zero\Modules\Forum\Seeders
+ */
 
 namespace Zero\Modules\Forum\Seeders;
 
@@ -8,6 +15,12 @@ use Zero\Interfaces\SeederInterface;
 use Zero\Database\DB;
 use Zero\Support\Security;
 
+/**
+ * Class ForumPostSeeder
+ *
+ * Implements SeederInterface to populate dynamic threaded discussions, community board
+ * channels, and user replies on bootstrap.
+ */
 class ForumPostSeeder implements SeederInterface
 {
     /**

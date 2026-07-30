@@ -179,6 +179,13 @@ To maintain the high-quality, professional, and scalable state of the Zero CMS w
     - To prevent class-loading and scoping errors, any file calling the escaping helper must declare `use Zero\Support\Str;` at the top of the file as mandated in Rule 13, referencing `Str::escape($value)` directly inside the logic or view templates (e.g. `<?= Str::escape($var) ?>`).
     - The low-level escaping and highlighting implementation files (e.g., `src/Support/Str.php`) are the sole exceptions permitted to execute raw `htmlspecialchars`.
 
+  ### 29. Mandatory File, Class, & Method Documentation (DocBlocks)
+  * **Rule:** Every newly created or modified PHP file, class, method, or function MUST carry extensive, detailed DocBlocks and structural comment headers. 
+  * **Convention:**
+    - **File Header**: Every file must carry a verbose file-level comment block describing its architectural purpose, package, and systemic role.
+    - **Class Block**: Every Class must carry a class-level DocBlock detailing its structural responsibilities and parent interfaces.
+    - **Method DocBlock**: Every Method and Function must carry a standard JSDoc/PHPDoc style block defining parameter types (`@param`), return types (`@return`), and exceptions thrown (`@throws`).
+
   ---
 
   ## Part 2: Folder Directory Map

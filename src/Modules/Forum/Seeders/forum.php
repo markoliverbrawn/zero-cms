@@ -1,5 +1,10 @@
 <?php
-// src/Modules/Forum/Seeders/forum.php
+/**
+ * Zero CMS Forum Content Blueprints
+ *
+ * This file returns the vocabulary dictionaries (openers, bodies, closers)
+ * used by the ForumPostSeeder to procedurally compile dynamic replies.
+ */
 
 return [
     'forum_themes_blueprint' => [
