@@ -91,23 +91,18 @@ usort($classSeeders, function ($a, $b) {
 });
 
 // Dynamic Seeder Auto-Discovery Engine (JSON Datasets)
+// Prioritize files based on system ordering requirements
+$priorityMap = [
+    'corporate.php' => 10,
+    'documentation.php' => 20,
+    'portfolio.php' => 30,
+    'shop.php' => 40,
+    'kitchensink.php' => 50,
+];
+
 $discoveredFiles = [];
 
-// 1. Scan global seeder directory
-$seederDataDir = APPLICATION_ROOT . '/seeders/data';
-if (is_dir($seederDataDir)) {
-    $files = scandir($seederDataDir);
-    foreach ($files as $file) {
-        if (str_ends_with($file, '.php') && $file !== 'handwritten_articles.json') {
-            $discoveredFiles[$file] = [
-                'filename' => $file,
-                'path' => $seederDataDir . '/' . $file
-            ];
-        }
-    }
-}
-
-// 2. Scan active modular directories dynamically for encapsulated datasets
+// 1. Scan active modular directories dynamically for encapsulated datasets
 if (is_dir($modulesDir)) {
     $folders = scandir($modulesDir);
     foreach ($folders as $folder) {
@@ -118,7 +113,7 @@ if (is_dir($modulesDir)) {
         if (is_dir($moduleSeederDir)) {
             $files = scandir($moduleSeederDir);
             foreach ($files as $file) {
-                if (str_ends_with($file, '.php') && !str_ends_with($file, 'Seeder.php')) {
+                if (str_ends_with($file, '.php') && isset($priorityMap[$file])) {
                     $discoveredFiles[$file] = [
                         'filename' => $file,
                         'path' => $moduleSeederDir . '/' . $file
@@ -128,15 +123,6 @@ if (is_dir($modulesDir)) {
         }
     }
 }
-
-// Prioritize files based on system ordering requirements
-$priorityMap = [
-    'corporate.php' => 10,
-    'documentation.php' => 20,
-    'portfolio.php' => 30,
-    'shop.php' => 40,
-    'kitchensink.php' => 50,
-];
 
 // Convert maps to a list and sort by precedence priority
 $discoveredList = array_values($discoveredFiles);

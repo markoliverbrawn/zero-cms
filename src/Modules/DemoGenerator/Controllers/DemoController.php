@@ -184,7 +184,7 @@ class DemoController implements Controller
      */
     protected function seedFromBlueprint(string $siteId, string $preset): void
     {
-        $blueprintPath = APPLICATION_ROOT . "/seeders/data/{$preset}.php";
+        $blueprintPath = APPLICATION_ROOT . "/src/Modules/DemoGenerator/Seeders/{$preset}.php";
         if (!file_exists($blueprintPath)) {
             return;
         }

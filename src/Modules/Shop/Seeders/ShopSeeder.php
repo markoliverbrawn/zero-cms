@@ -56,7 +56,7 @@ class ShopSeeder implements SeederInterface
         echo "====================================================================\n";
 
         // Load the declarative blueprints from shop.php
-        $shopDataPath = __DIR__ . '/shop.php';
+        $shopDataPath = dirname(dirname(dirname(__FILE__))) . '/DemoGenerator/Seeders/shop.php';
         if (!file_exists($shopDataPath)) {
             throw new Exception("Seeding error: shop.php blueprint file not found.");
         }
