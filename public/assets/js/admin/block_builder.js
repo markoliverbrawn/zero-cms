@@ -54,10 +54,12 @@ document.addEventListener('DOMContentLoaded', function() {
             
             container.appendChild(blockItem);
             
-            var editorContainer = blockItem.querySelector('.editor');
-            if (editorContainer && window.initEditor) {
-                window.initEditor(editorContainer);
-            }
+            var editorContainers = blockItem.querySelectorAll('.editor');
+            editorContainers.forEach(function(editorContainer) {
+                if (window.initEditor) {
+                    window.initEditor(editorContainer);
+                }
+            });
 
             toggleBlockInserter(); // Collapse drawer
             updateBlockExcerpts();

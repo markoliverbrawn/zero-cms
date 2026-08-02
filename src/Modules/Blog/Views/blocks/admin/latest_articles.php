@@ -1,13 +1,21 @@
 <?php
 use Zero\Support\Str;
-// src/Modules/Blog/Views/blocks/latest_articles.php
+// src/Modules/Blog/Views/blocks/admin/latest_articles.php
 $limit = $block['limit'] ?? 3;
 $layout = $block['layout'] ?? 'grid';
 ?>
 
 <div class="field-group">
-    <label>Block Title</label>
-    <input type="text" class="block-title-input" value="<?php echo Str::escape($blockTitle); ?>" placeholder="Enter block title...">
+    <label>Block Title (Rich Text)</label>
+    <div class="editor">
+        <div class="toolbar">
+            <button type="button" data-cmd="bold"><strong>B</strong></button>
+            <button type="button" data-cmd="italic"><em>I</em></button>
+            <button type="button" data-cmd="insertSmall">Small</button>
+            <button type="button" data-cmd="removeFormat">Clear</button>
+        </div>
+        <div class="editor-area block-editor-area block-title-rich-editor block-title-input" contenteditable="true"><?php echo $blockTitle; ?></div>
+    </div>
 </div>
 <div class="block-flex-row">
     <div class="field-group block-flex-col-1">

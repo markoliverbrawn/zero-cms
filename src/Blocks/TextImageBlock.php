@@ -27,7 +27,7 @@ class TextImageBlock implements BlockHelperInterface
     {
         $parts = [];
         if (!empty($this->data['title'])) {
-            $parts[] = $this->data['title'];
+            $parts[] = strip_tags($this->data['title']);
         }
         if (!empty($this->data['content'])) {
             $parts[] = strip_tags($this->data['content']);

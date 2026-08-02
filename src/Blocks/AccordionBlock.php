@@ -28,7 +28,7 @@ class AccordionBlock implements BlockHelperInterface
     {
         $parts = [];
         if (!empty($this->data['title'])) {
-            $parts[] = $this->data['title'];
+            $parts[] = strip_tags($this->data['title']);
         }
 
         if (!empty($this->data['items']) && is_array($this->data['items'])) {

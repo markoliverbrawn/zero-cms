@@ -4,8 +4,16 @@ use Zero\Support\Str;
 // Sub-Pages List Admin template layout with zero inline styles
 ?>
 <div class="field-group">
-    <label>List Title / Header</label>
-    <input type="text" class="block-title-input" value="<?php echo Str::escape($blockTitle); ?>" placeholder="Sub-Topic Guides">
+    <label>List Title / Header (Rich Text)</label>
+    <div class="editor">
+        <div class="toolbar">
+            <button type="button" data-cmd="bold"><strong>B</strong></button>
+            <button type="button" data-cmd="italic"><em>I</em></button>
+            <button type="button" data-cmd="insertSmall">Small</button>
+            <button type="button" data-cmd="removeFormat">Clear</button>
+        </div>
+        <div class="editor-area block-editor-area block-title-rich-editor block-title-input" contenteditable="true"><?php echo $blockTitle; ?></div>
+    </div>
 </div>
 
 <div class="field-group">

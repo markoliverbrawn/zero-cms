@@ -1,6 +1,7 @@
 <?php
 // src/Modules/Admin/Views/blocks/frontend/code.php
 
+use Zero\Support\Security;
 use Zero\Support\Str;
 
 $language = $block['language'] ?? 'php';
@@ -13,7 +14,7 @@ $highlightedCode = Str::highlightCode($code, $language);
 <div class="block-code-container">
     <?php if (!empty($title)): ?>
         <div class="block-code-header">
-            <span><?php echo Str::escape($title); ?></span>
+            <span><?php echo Security::sanitizeHtml($title); ?></span>
             <span class="block-code-lang-label"><?php echo Str::escape($language); ?></span>
         </div>
     <?php endif; ?>

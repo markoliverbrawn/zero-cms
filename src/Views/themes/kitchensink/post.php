@@ -122,14 +122,14 @@ $shouldOmitTitle = !empty($post->omit_title) || $hasHeroBlock;
         switch ($blockType) {
             case 'baseline':
                 echo '<div class="block-baseline">';
-                echo '<h1>' . Str::escape($block['title'] ?? '') . '</h1>';
+                echo '<h1>' . Security::sanitizeHtml($block['title'] ?? '') . '</h1>';
                 echo '<p>' . Security::sanitizeHtml($block['content'] ?? '') . '</p>';
                 echo '</div>';
                 break;
             case 'text':
                 echo '<div class="block-text">';
                 if (!empty($block['title'])) {
-                    echo '<h3 style="color: var(--neon-cyan); margin-bottom: 1.25rem;">' . Str::escape($block['title']) . '</h3>';
+                    echo '<h3 style="color: var(--neon-cyan); margin-bottom: 1.25rem;">' . Security::sanitizeHtml($block['title']) . '</h3>';
                 }
                 echo '<div>' . Security::sanitizeHtml($block['content'] ?? '') . '</div>';
                 echo '</div>';
@@ -141,7 +141,7 @@ $shouldOmitTitle = !empty($post->omit_title) || $hasHeroBlock;
                 echo '<div class="block-text-image" ' . $rowClass . '>';
                 echo '<div class="block-text-col" style="flex: 1 1 50%; min-width: 280px;">';
                 if (!empty($block['title'])) {
-                    echo '<h3 style="color: var(--neon-pink); margin-bottom: 1.25rem;">' . Str::escape($block['title']) . '</h3>';
+                    echo '<h3 style="color: var(--neon-pink); margin-bottom: 1.25rem;">' . Security::sanitizeHtml($block['title']) . '</h3>';
                 }
                 echo '<div>' . Security::sanitizeHtml($block['content'] ?? '') . '</div>';
                 echo '</div>';
@@ -155,7 +155,7 @@ $shouldOmitTitle = !empty($post->omit_title) || $hasHeroBlock;
             case 'accordion':
                 echo '<div class="block-accordion">';
                 if (!empty($block['title'])) {
-                    echo '<h3 style="color: var(--neon-cyan); margin-bottom: 1.25rem;">' . Str::escape($block['title']) . '</h3>';
+                    echo '<h3 style="color: var(--neon-cyan); margin-bottom: 1.25rem;">' . Security::sanitizeHtml($block['title']) . '</h3>';
                 }
                 if (!empty($block['items'])) {
                     foreach ($block['items'] as $item) {
@@ -172,7 +172,7 @@ $shouldOmitTitle = !empty($post->omit_title) || $hasHeroBlock;
             case 'testimonials':
                 echo '<div class="block-testimonials">';
                 if (!empty($block['title'])) {
-                    echo '<h3 style="color: var(--neon-pink); margin-bottom: 1.25rem;">' . Str::escape($block['title']) . '</h3>';
+                    echo '<h3 style="color: var(--neon-pink); margin-bottom: 1.25rem;">' . Security::sanitizeHtml($block['title']) . '</h3>';
                 }
                 echo '<div class="testimonials-carousel-container">';
                 echo '<div class="testimonials-slides-wrapper">';
@@ -191,7 +191,7 @@ $shouldOmitTitle = !empty($post->omit_title) || $hasHeroBlock;
             case 'gallery':
                 echo '<div class="block-gallery">';
                 if (!empty($block['title'])) {
-                    echo '<h3 style="color: var(--neon-pink); margin-bottom: 1.25rem;">' . Str::escape($block['title']) . '</h3>';
+                    echo '<h3 style="color: var(--neon-pink); margin-bottom: 1.25rem;">' . Security::sanitizeHtml($block['title']) . '</h3>';
                 }
                 // Support both 'images' and 'media_ids' keys cleanly
                 $galleryImages = $block['images'] ?? ($block['media_ids'] ?? []);
@@ -235,7 +235,7 @@ $shouldOmitTitle = !empty($post->omit_title) || $hasHeroBlock;
                 if (file_exists($blockPath)) {
                     $hideTitle = $block['hide_title'] ?? '0';
                     if ($hideTitle !== '1' && !empty($block['title'])) {
-                        echo '<h3 style="color: var(--neon-cyan); margin-bottom: 1.25rem;">' . Str::escape($block['title']) . '</h3>';
+                        echo '<h3 style="color: var(--neon-cyan); margin-bottom: 1.25rem;">' . Security::sanitizeHtml($block['title']) . '</h3>';
                     }
                     echo Template::renderFile($blockPath, [
                         'block' => $block,

@@ -27,7 +27,7 @@ class BaselineBlock implements BlockHelperInterface
     {
         $parts = [];
         if (!empty($this->data['title'])) {
-            $parts[] = $this->data['title'];
+            $parts[] = strip_tags($this->data['title']);
         }
         if (!empty($this->data['subtitle'])) {
             $parts[] = $this->data['subtitle'];

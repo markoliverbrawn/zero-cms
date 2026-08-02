@@ -7,8 +7,16 @@ use Zero\Support\Str;
 $items = $block['items'] ?? [];
 ?>
 <div class="field-group">
-    <label>Block Title</label>
-    <input type="text" class="block-title-input" value="<?php echo Str::escape($blockTitle); ?>" placeholder="Enter lookbook section title...">
+    <label>Block Title (Rich Text)</label>
+    <div class="editor">
+        <div class="toolbar">
+            <button type="button" data-cmd="bold"><strong>B</strong></button>
+            <button type="button" data-cmd="italic"><em>I</em></button>
+            <button type="button" data-cmd="insertSmall">Small</button>
+            <button type="button" data-cmd="removeFormat">Clear</button>
+        </div>
+        <div class="editor-area block-editor-area block-title-rich-editor block-title-input" contenteditable="true"><?php echo $blockTitle; ?></div>
+    </div>
 </div>
 <div class="field-group">
     <label>Lookbook Grid Cards List</label>

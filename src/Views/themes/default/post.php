@@ -7,6 +7,7 @@ use Zero\Core\Template;
 use Zero\Database\DB;
 use Zero\Modules\Blog\Models\Post;
 use Zero\Support\BlockHelper;
+use Zero\Support\Security;
 use Zero\Support\Str;
 
 $isBlogPost = $post instanceof Post;
@@ -96,7 +97,7 @@ $shouldOmitTitle = !empty($post->omit_title) || $hasHeroBlock;
             // If hide_title is not explicitly enabled, render the section title as a block-level H2
             $hideTitle = $block['hide_title'] ?? '0';
             if ($hideTitle !== '1' && !empty($block['title']) && $type !== 'baseline') {
-                echo '<h2 class="block-section-title">' . Str::escape($block['title']) . '</h2>';
+                echo '<h2 class="block-section-title">' . Security::sanitizeHtml($block['title']) . '</h2>';
             }
 
             echo Template::renderFile($blockPath, [
