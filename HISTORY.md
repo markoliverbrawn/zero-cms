@@ -260,8 +260,31 @@ This phase was focused on enabling fully stateless, persistent GCS-backed media 
 
 ---
 
+### 📅 Phase 9: Simple Rich Text Block Titles Support
+*(Session: Sunday, August 2, 2026)*
+
+This phase was focused on enabling simple rich-text editing (bold, italic, small) for all block-builder block titles, aligning their capabilities with the Hero/Baseline block, and ensuring safe HTML rendering across all visual themes.
+
+#### 1. WYSIWYG Admin Block Builders (14 blocks upgraded)
+*   **The Conversion**: Replaced flat text `<input>` title fields across all 14 block admin templates (including accordion, chart, code, gallery, grid, masonry, sub_pages, testimonials, text, text_image, latest_articles, demo_creator, form_builder, and categories) with custom-designed rich text editors (`.editor-area.block-title-rich-editor.block-title-input` with `contenteditable="true"`).
+*   **Consistent Formatting**: Restricted toolbar capabilities to a simple set of tags: bold (`<strong>`), italic (`<em>`), and small text (`<small>`), matching the Baseline Hero block exactly.
+
+#### 2. Frontend Safe Title Rendering (0% flat escape)
+*   **Dynamic Theme Post Handlers**: Upgraded the central block title renderers inside themes (default, guide, and kitchensink `post.php` view templates) to safely compile and output the formatted HTML tags using the core XSS-safe `Security::sanitizeHtml()` sanitization helper instead of escaping raw tags as plain text.
+*   **Imports Alignment**: Added explicit namespace imports (`use Zero\Support\Security;`) at the top of templates as mandated by Rule 13.
+*   **Self-Rendering Blocks**: Patched the frontend block views that render their own titles (e.g. `chart.php` and `code.php`) to safely compile their titles as rich text using `Security::sanitizeHtml()`.
+
+#### 3. Admin Assets and JS Helpers Synchronization
+*   **Multi-Editor Scaffolding**: Enhanced `block_builder.js` block insertion to locate and initialize multiple `.editor` containers sequentially, supporting blocks that feature both rich-text titles and rich-text body/description editors simultaneously.
+*   **AI Text Extractor Helper**: Patched `model_edit.js`'s `getPageContentText()` helper to support reading plain text contents from `contenteditable` block title fields, preserving complete AI helper compatibility.
+
+#### 4. Clean Search Indexing
+*   **Tag Stripping**: Updated the 5 block Active Record helper models in `src/Blocks/` (`AccordionBlock`, `BaselineBlock`, `TestimonialsBlock`, `TextBlock`, and `TextImageBlock`) to strip HTML tags via `strip_tags()` before writing search index contents, keeping the global search index fully clean of HTML tag noise.
+
+---
+
 ## 🏆 Current Repository Performance & Standards Compliance
-*   **100% CI Pipeline Pass**: Re-executed our continuous integration automated test pipeline under maximum stress-testing data load—achieving a flawless **36 / 36 Passing Suites (100% GRAND SUCCESS)**!
+*   **100% CI Pipeline Pass**: Re-executed our continuous integration automated test pipeline under maximum stress-testing data load—achieving a flawless **37 / 37 Passing Suites (100% GRAND SUCCESS)**!
 *   **Explicit Imports (Rule 13)**: Imported `use Zero\Support\Emailer;` and `use Zero\Core\Template;` explicitly at the top of our newly written files, utilizing standard class imports over fully namespaced inline references.
 *   **Mandatory Template Rendering (Rule 27)**: Added a new Core Convention inside `GEMINI.md` requiring that blocks of rendered HTML and email bodies always use the templating system instead of being hardcoded inside classes (such as `src/Views/emails/demo_credentials.php`).
 *   **No Inline Styles (Rule 1)**: Visual layouts, sidebars, and forms are completely managed by modular stylesheets.
