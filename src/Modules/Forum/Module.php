@@ -63,5 +63,36 @@ class Module implements ModuleInterface
         App::registerModel('forum_boards', Models\ForumBoard::class);
         App::registerModel('forum_threads', Models\ForumThread::class);
         App::registerModel('forum_posts', Models\ForumPost::class);
+
+        App::registerAdminSidebarSection('forum', [
+            'title' => 'Forum Management',
+            'icon' => 'users',
+            'module_dependency' => 'forum',
+            'precedence' => 300
+        ]);
+
+        App::registerAdminSidebarLink('forum', [
+            'title' => 'Manage Boards',
+            'url' => '/admin/list/forum_boards',
+            'icon' => 'layout',
+            'module_dependency' => 'forum',
+            'precedence' => 10
+        ]);
+
+        App::registerAdminSidebarLink('forum', [
+            'title' => 'Manage Threads',
+            'url' => '/admin/list/forum_threads',
+            'icon' => 'message-square',
+            'module_dependency' => 'forum',
+            'precedence' => 20
+        ]);
+
+        App::registerAdminSidebarLink('forum', [
+            'title' => 'Manage Posts',
+            'url' => '/admin/list/forum_posts',
+            'icon' => 'message-circle',
+            'module_dependency' => 'forum',
+            'precedence' => 30
+        ]);
     }
 }

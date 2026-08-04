@@ -44,5 +44,21 @@ class Module implements ModuleInterface
 
         // Register hourly scheduled task to automatically purge old tenant audit logs (older than 1 year)
         Scheduler::register(PurgeOldLogsJob::class, [], 'hourly');
+
+        App::registerAdminSidebarSection('queue', [
+            'title' => 'Job Queue',
+            'icon' => 'clock',
+            'module_dependency' => 'queue',
+            'is_system' => true,
+            'precedence' => 420
+        ]);
+
+        App::registerAdminSidebarLink('queue', [
+            'title' => 'Manage Queue',
+            'url' => '/admin/list/queue_jobs',
+            'icon' => 'clipboard',
+            'module_dependency' => 'queue',
+            'precedence' => 10
+        ]);
     }
 }

@@ -12,6 +12,7 @@ use Zero\Modules\Blog\Models\Comment;
 use Zero\Modules\Blog\Models\Post;
 use Zero\Modules\Queue\Support\Scheduler;
 use Zero\Modules\Search\Services\SearchService;
+use Zero\Support\I18n;
 use Zero\Support\Seeder;
 
 class Module implements ModuleInterface
@@ -52,6 +53,22 @@ class Module implements ModuleInterface
 
         // Register daily scheduled task to automatically purge rejected or spam comments (older than 7 days)
         Scheduler::register(Jobs\PurgeOldCommentsJob::class, [], 'daily');
+
+        App::registerAdminSidebarLink('content', [
+            'title' => I18n::t('manage_posts'),
+            'url' => '/admin/list/posts',
+            'icon' => 'edit-3',
+            'module_dependency' => 'blog',
+            'precedence' => 10
+        ]);
+
+        App::registerAdminSidebarLink('content', [
+            'title' => 'Manage Comments',
+            'url' => '/admin/list/comments',
+            'icon' => 'message-square',
+            'module_dependency' => 'blog',
+            'precedence' => 20
+        ]);
 
         App::registerBlock('latest_articles', [
             'label' => 'Latest Blog Articles',

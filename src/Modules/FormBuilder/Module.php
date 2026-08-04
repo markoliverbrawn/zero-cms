@@ -55,5 +55,13 @@ class Module implements ModuleInterface
         ]);
 
         App::registerModel('submissions', Submission::class);
+
+        App::registerAdminSidebarLink('content', [
+            'title' => 'Form Submissions',
+            'url' => '/admin/list/submissions',
+            'icon' => 'inbox',
+            'module_dependency' => 'formbuilder',
+            'precedence' => 60
+        ]);
     }
 }

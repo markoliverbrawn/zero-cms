@@ -73,6 +73,45 @@ class Module implements ModuleInterface
         App::registerModel('orders', Order::class);
         App::registerModel('categories', Category::class);
 
+        App::registerAdminSidebarSection('shop', [
+            'title' => 'Shop Management',
+            'icon' => 'shop',
+            'module_dependency' => 'shop',
+            'precedence' => 200
+        ]);
+
+        App::registerAdminSidebarLink('shop', [
+            'title' => 'Manage Products',
+            'url' => '/admin/list/products',
+            'icon' => 'package',
+            'module_dependency' => 'shop',
+            'precedence' => 10
+        ]);
+
+        App::registerAdminSidebarLink('shop', [
+            'title' => 'Manage Categories',
+            'url' => '/admin/list/categories',
+            'icon' => 'tag',
+            'module_dependency' => 'shop',
+            'precedence' => 20
+        ]);
+
+        App::registerAdminSidebarLink('shop', [
+            'title' => 'Manage Variants',
+            'url' => '/admin/list/productvariants',
+            'icon' => 'git-branch',
+            'module_dependency' => 'shop',
+            'precedence' => 30
+        ]);
+
+        App::registerAdminSidebarLink('shop', [
+            'title' => 'Manage Orders',
+            'url' => '/admin/list/orders',
+            'icon' => 'shopping-cart',
+            'module_dependency' => 'shop',
+            'precedence' => 40
+        ]);
+
         App::registerBlock('categories', [
             'label' => 'Product Categories Grid',
             'description' => 'Showcases all dynamic product categories with their respective imagery and collection links.',
