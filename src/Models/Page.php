@@ -114,7 +114,7 @@ class Page implements Model
         return [
             'id' => ['type' => 'int', 'label' => I18n::t('id'), 'editable' => false, 'listDisplay' => false],
             'title' => [
-                'type' => 'text', 
+                'type' => 'rich_text', 
                 'label' => I18n::t('title'), 
                 'editable' => true, 
                 'required' => true, 

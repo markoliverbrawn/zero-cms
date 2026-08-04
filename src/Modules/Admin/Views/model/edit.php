@@ -71,7 +71,7 @@ $renderField = function($field, $fieldConfig) use ($record, $modelName, $csrf, $
             <label><?php echo Str::escape($fieldConfig['label'] ?? ''); ?></label>
         <?php endif; ?>
     <?php endif; ?>
-    <?php if ($fieldConfig['type'] == "text"): ?>
+    <?php if ($fieldConfig['type'] == "text" || $fieldConfig['type'] === "rich_text"): ?>
         <?php if ($field === 'media_ids'): ?>
           <?php
           $secondaryImages = [];

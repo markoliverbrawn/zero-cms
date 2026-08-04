@@ -147,7 +147,11 @@ use Zero\Support\Str; use Zero\Support\I18n; ?>
                       if (($fieldConfig['type'] ?? '') === 'datetime' && !empty($record->{$field})) {
                           echo Str::escape(I18n::localizeDateTime($record->{$field}));
                       } else {
-                          echo Str::escape($record->{$field} ?? '');
+                          $val = $record->{$field} ?? '';
+                          if (($fieldConfig['type'] ?? '') === 'rich_text') {
+                              $val = strip_tags($val);
+                          }
+                          echo Str::escape($val);
                       }
                     ?>
                   <?php endif; ?>
