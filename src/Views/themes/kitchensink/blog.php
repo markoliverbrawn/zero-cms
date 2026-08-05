@@ -2,6 +2,7 @@
 // src/Views/themes/kitchensink/blog.php
 
 use Zero\Core\App;
+use Zero\Support\Security;
 use Zero\Support\Str;
 ?>
 <div class="post-list-container">
@@ -21,7 +22,7 @@ use Zero\Support\Str;
           <div style="flex-grow: 1;">
             <h3 style="margin-top: 0; margin-bottom: 0.5rem; font-size: 1.5rem;">
               <a href="/post/<?php echo Str::escape($post->slug); ?>" style="color: var(--neon-cyan); text-decoration: none;">
-                <?php echo Str::escape($post->title); ?>
+                <?php echo Security::sanitizeHtml($post->title); ?>
               </a>
             </h3>
             <div class="post-meta" style="font-family: var(--font-mono); font-size: 0.85rem; color: var(--neon-pink); margin-bottom: 1rem;">

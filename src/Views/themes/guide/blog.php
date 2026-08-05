@@ -23,7 +23,7 @@ $shouldOmitTitle = !empty($post->omit_title) || $hasHeroBlock;
   <!-- Blog Parent Page Title & Body -->
   <?php if (!$shouldOmitTitle): ?>
     <h1 class="blog-header-title">
-      <?php echo Str::escape($post->title ?? ''); ?>
+      <?php echo Security::sanitizeHtml($post->title ?? ''); ?>
     </h1>
   <?php endif; ?>
   
@@ -66,7 +66,7 @@ $shouldOmitTitle = !empty($post->omit_title) || $hasHeroBlock;
           <div>
             <h3 class="blog-card-title">
               <a href="/post/<?php echo Str::escape($p->slug); ?>" style="color: inherit; text-decoration: none;">
-                <?php echo Str::escape($p->title); ?>
+                <?php echo Security::sanitizeHtml($p->title); ?>
               </a>
             </h3>
             <div class="blog-card-meta">

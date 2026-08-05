@@ -71,7 +71,18 @@ $renderField = function($field, $fieldConfig) use ($record, $modelName, $csrf, $
             <label><?php echo Str::escape($fieldConfig['label'] ?? ''); ?></label>
         <?php endif; ?>
     <?php endif; ?>
-    <?php if ($fieldConfig['type'] == "text" || $fieldConfig['type'] === "rich_text"): ?>
+    <?php if ($fieldConfig['type'] === "rich_text"): ?>
+        <div class="editor">
+            <div class="toolbar">
+                <button type="button" data-cmd="bold"><strong>B</strong></button>
+                <button type="button" data-cmd="italic"><em>I</em></button>
+                <button type="button" data-cmd="insertSmall">Small</button>
+                <button type="button" data-cmd="removeFormat">Clear</button>
+            </div>
+            <div class="editor-area block-editor-area block-title-rich-editor" contenteditable="true"><?php echo $record->{$field} ?? ''; ?></div>
+            <input type="hidden" name="<?php echo Str::escape($field ?? ''); ?>" class="content-input" value="<?php echo Str::escape($record->{$field} ?? ''); ?>" />
+        </div>
+    <?php elseif ($fieldConfig['type'] === "text"): ?>
         <?php if ($field === 'media_ids'): ?>
           <?php
           $secondaryImages = [];

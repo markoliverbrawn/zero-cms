@@ -37,7 +37,7 @@ $isHomepage = (isset($post) && property_exists($post, 'slug') && $post->slug ===
     }
     ?>
     <meta name="description" content="<?php echo Str::escape($metaDescription); ?>"/>
-    <title><?php echo Str::escape($isHomepage ? (App::getCurrentSite()->name . ' | Zero Dependencies. Infinite Speed.') : (($post->title ?? 'Docs') . ' | ' . App::getCurrentSite()->name)); ?></title>
+    <title><?php echo Str::escape($isHomepage ? (App::getCurrentSite()->name . ' | Zero Dependencies. Infinite Speed.') : (strip_tags($post->title ?? 'Docs') . ' | ' . App::getCurrentSite()->name)); ?></title>
     
     <!-- Combined & Optimized Asset-Bundled CSS (1 Request, 0% FOUC, Max Lighthouse Points) -->
     <link rel="stylesheet" href="/assets/css/main-guide.css?v=1.0">

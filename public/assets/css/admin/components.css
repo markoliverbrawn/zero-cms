@@ -274,6 +274,12 @@ button {
             min-height: calc(var(--layout-spacing) * 64);
             overflow: auto;
             padding: calc(var(--layout-spacing) * 3);
+            &.block-title-rich-editor {
+                min-height: 64px;
+                max-height: 120px;
+                height: 64px;
+                padding: 10px 14px;
+            }
             ol, ul {
                 margin-left: calc(var(--layout-spacing) * 4);
             }
