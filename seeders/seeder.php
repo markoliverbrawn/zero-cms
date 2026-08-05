@@ -33,14 +33,27 @@ Env::load(APPLICATION_ROOT);
 App::bootstrap();
 
 // Parse command line arguments for selective seeding capabilities and ZIP generation
-$onlySite = null;
+$targetSites = [];
 $generateZip = false;
+
 foreach ($argv as $arg) {
     if (strpos($arg, '--only=') === 0) {
-        $onlySite = substr($arg, 7);
+        $rawSites = substr($arg, 7);
+        $targetSites = array_filter(array_map('trim', explode(',', $rawSites)));
+    } elseif (strpos($arg, '--sites=') === 0) {
+        $rawSites = substr($arg, 8);
+        $targetSites = array_filter(array_map('trim', explode(',', $rawSites)));
     }
     if ($arg === '--zip') {
         $generateZip = true;
+    }
+}
+
+// Fallback to .env configuration if no CLI target sites are defined
+if (empty($targetSites)) {
+    $envSites = Env::get('SEED_SITES');
+    if (!empty($envSites)) {
+        $targetSites = array_filter(array_map('trim', explode(',', $envSites)));
     }
 }
 
@@ -48,8 +61,9 @@ echo "====================================================================\n";
 echo "ZERO CMS MULTI-TENANT SEEDER SYSTEM (CLASS-BASED OOP)\n";
 echo "====================================================================\n";
 
-if ($onlySite) {
-    echo "--> Mode: Selective seeding enabled for '{$onlySite}' only...\n\n";
+if (!empty($targetSites)) {
+    $targetsStr = implode(', ', $targetSites);
+    echo "--> Mode: Selective seeding enabled for: [{$targetsStr}]...\n\n";
 } else {
     echo "\n--> Target: Sequentially initializing all multi-tenant domains...\n\n";
 }
@@ -140,9 +154,15 @@ foreach ($discoveredList as $setInfo) {
     $identifier = basename($filename, '.php');
 
     // Selective filtering capability
-    if ($onlySite !== null && $onlySite !== 'blank') {
-        if ($identifier !== 'default' && $identifier !== $onlySite) {
-            continue; // Skip if not default/core and not targeted
+    if (!empty($targetSites)) {
+        if (in_array('blank', $targetSites)) {
+            if ($identifier !== 'default') {
+                continue; // Skip all other datasets for blank/clean install
+            }
+        } else {
+            if ($identifier !== 'default' && !in_array($identifier, $targetSites)) {
+                continue; // Skip if not default/core and not targeted
+            }
         }
     }
 
@@ -153,8 +173,8 @@ foreach ($discoveredList as $setInfo) {
     $data = require $filePath;
 
     // Core processing for default.php selective overrides
-    if ($identifier === 'default' && $onlySite !== null && $onlySite !== 'default') {
-        if ($onlySite === 'blank') {
+    if ($identifier === 'default' && !empty($targetSites) && !in_array('default', $targetSites)) {
+        if (in_array('blank', $targetSites)) {
             // Seed a clean standalone blank welcome site
             $baseUrl = Env::get('BASE_URL', 'http://localhost');
             $parsedUrl = parse_url($baseUrl);
@@ -244,8 +264,12 @@ foreach ($discoveredList as $setInfo) {
                 $moduleId = $oopSeeder->getModuleId();
 
                 // Selective filtering capability for modular class seeders
-                if ($onlySite !== null && $onlySite !== 'blank' && $moduleId !== $onlySite) {
-                    continue; // Skip if targeting another module specifically
+                if (!empty($targetSites) && !in_array('blank', $targetSites)) {
+                    $isModuleTargeted = in_array($moduleId, $targetSites);
+                    $isDatasetTargeted = in_array($identifier, $targetSites);
+                    if (!$isModuleTargeted && !$isDatasetTargeted) {
+                        continue; // Skip if neither the specific module nor parent dataset is targeted
+                    }
                 }
 
                 // Execute only if the module is active/enabled for this site

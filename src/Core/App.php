@@ -279,7 +279,7 @@ class App
         self::bootstrapSanitizeInputs();
 
         // DEV MODE SETUP WIZARD INTERCEPT
-        if (Env::get('ENVIRONMENT') === 'dev') {
+        if (Env::get('ENVIRONMENT') === 'dev' && php_sapi_name() !== 'cli') {
             try {
                 $sitesTableExists = DB::query("SHOW TABLES LIKE 'sites'")->fetch();
                 $usersTableExists = DB::query("SHOW TABLES LIKE 'users'")->fetch();
