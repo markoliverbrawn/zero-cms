@@ -233,6 +233,24 @@ class AdminApiController extends ApiController
                 $html = Security::sanitizeHtml($html);
             }
 
+            // Construct block-level title preview based on the active theme so header settings affect the block preview
+            $titleHtml = '';
+            $hideTitle = $block['hide_title'] ?? '0';
+            $title = $block['title'] ?? '';
+
+            if ($hideTitle !== '1' && !empty($title) && $type !== 'baseline') {
+                if ($theme === 'kitchensink') {
+                    $tag = $hideTitle === '2' ? 'h1' : 'h3';
+                    $colorVar = in_array($type, ['text_image', 'testimonials', 'gallery']) ? '--neon-pink' : '--neon-cyan';
+                    $titleHtml = '<' . $tag . ' style="color: var(' . $colorVar . '); margin-bottom: 1.25rem;">' . Security::sanitizeHtml($title) . '</' . $tag . '>';
+                } else {
+                    $tag = $hideTitle === '2' ? 'h1' : 'h2';
+                    $titleHtml = '<' . $tag . ' class="block-section-title">' . Security::sanitizeHtml($title) . '</' . $tag . '>';
+                }
+            }
+
+            $html = $titleHtml . $html;
+
             // Determine appropriate theme stylesheets dynamically using App theme registry
             $themeStylesheets = [];
             $themeStylesheets[] = '/assets/css/blocks/baseline.css'; // Always load dynamic public block baseline styles!

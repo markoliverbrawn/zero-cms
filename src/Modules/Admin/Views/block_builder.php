@@ -168,6 +168,7 @@ foreach (App::getRegisteredBlocks() as $type => $config) {
                                 <select class="block-hide_title-select">
                                     <option value="0" <?php echo ($block['hide_title'] ?? '') === '0' ? 'selected' : ''; ?>>Show Title (H2)</option>
                                     <option value="1" <?php echo ($block['hide_title'] ?? '') === '1' ? 'selected' : ''; ?>>Hide Title</option>
+                                    <option value="2" <?php echo ($block['hide_title'] ?? '') === '2' ? 'selected' : ''; ?>>Show Title (H1)</option>
                                 </select>
                             </div>
                             <small>Note: Row spacing changes will not affect the preview panel.</small>

@@ -119,6 +119,15 @@ $shouldOmitTitle = !empty($post->omit_title) || $hasHeroBlock;
         $rowClass = BlockHelper::getRowClasses($block, $blockType, false);
         echo '<div class="' . $rowClass . '">';
         
+        $hideTitle = $block['hide_title'] ?? '0';
+        $renderKitchenSinkTitle = function($title, $colorVar = '--neon-cyan') use ($hideTitle) {
+            if ($hideTitle === '1' || empty($title)) {
+                return '';
+            }
+            $tag = $hideTitle === '2' ? 'h1' : 'h3';
+            return '<' . $tag . ' style="color: var(' . $colorVar . '); margin-bottom: 1.25rem;">' . Security::sanitizeHtml($title) . '</' . $tag . '>';
+        };
+
         switch ($blockType) {
             case 'baseline':
                 echo '<div class="block-baseline">';
@@ -128,9 +137,7 @@ $shouldOmitTitle = !empty($post->omit_title) || $hasHeroBlock;
                 break;
             case 'text':
                 echo '<div class="block-text">';
-                if (!empty($block['title'])) {
-                    echo '<h3 style="color: var(--neon-cyan); margin-bottom: 1.25rem;">' . Security::sanitizeHtml($block['title']) . '</h3>';
-                }
+                echo $renderKitchenSinkTitle($block['title'] ?? '', '--neon-cyan');
                 echo '<div>' . Security::sanitizeHtml($block['content'] ?? '') . '</div>';
                 echo '</div>';
                 break;
@@ -140,9 +147,7 @@ $shouldOmitTitle = !empty($post->omit_title) || $hasHeroBlock;
                 $rowClass = $pos === 'left' ? 'style="display: flex; flex-wrap: wrap; gap: 2.5rem; flex-direction: row-reverse;"' : 'style="display: flex; flex-wrap: wrap; gap: 2.5rem;"';
                 echo '<div class="block-text-image" ' . $rowClass . '>';
                 echo '<div class="block-text-col" style="flex: 1 1 50%; min-width: 280px;">';
-                if (!empty($block['title'])) {
-                    echo '<h3 style="color: var(--neon-pink); margin-bottom: 1.25rem;">' . Security::sanitizeHtml($block['title']) . '</h3>';
-                }
+                echo $renderKitchenSinkTitle($block['title'] ?? '', '--neon-pink');
                 echo '<div>' . Security::sanitizeHtml($block['content'] ?? '') . '</div>';
                 echo '</div>';
                 echo '<div class="block-image-col" style="flex: 1 1 35%; min-width: 250px; border-radius: var(--border-radius); overflow: hidden; border: 1px solid var(--border-color);">';
@@ -154,9 +159,7 @@ $shouldOmitTitle = !empty($post->omit_title) || $hasHeroBlock;
                 break;
             case 'accordion':
                 echo '<div class="block-accordion">';
-                if (!empty($block['title'])) {
-                    echo '<h3 style="color: var(--neon-cyan); margin-bottom: 1.25rem;">' . Security::sanitizeHtml($block['title']) . '</h3>';
-                }
+                echo $renderKitchenSinkTitle($block['title'] ?? '', '--neon-cyan');
                 if (!empty($block['items'])) {
                     foreach ($block['items'] as $item) {
                         echo '<div class="accordion-item">';
@@ -171,9 +174,7 @@ $shouldOmitTitle = !empty($post->omit_title) || $hasHeroBlock;
                 break;
             case 'testimonials':
                 echo '<div class="block-testimonials">';
-                if (!empty($block['title'])) {
-                    echo '<h3 style="color: var(--neon-pink); margin-bottom: 1.25rem;">' . Security::sanitizeHtml($block['title']) . '</h3>';
-                }
+                echo $renderKitchenSinkTitle($block['title'] ?? '', '--neon-pink');
                 echo '<div class="testimonials-carousel-container">';
                 echo '<div class="testimonials-slides-wrapper">';
                 if (!empty($block['items'])) {
@@ -190,9 +191,7 @@ $shouldOmitTitle = !empty($post->omit_title) || $hasHeroBlock;
                 break;
             case 'gallery':
                 echo '<div class="block-gallery">';
-                if (!empty($block['title'])) {
-                    echo '<h3 style="color: var(--neon-pink); margin-bottom: 1.25rem;">' . Security::sanitizeHtml($block['title']) . '</h3>';
-                }
+                echo $renderKitchenSinkTitle($block['title'] ?? '', '--neon-pink');
                 // Support both 'images' and 'media_ids' keys cleanly
                 $galleryImages = $block['images'] ?? ($block['media_ids'] ?? []);
                 if (!empty($galleryImages)) {
@@ -233,10 +232,7 @@ $shouldOmitTitle = !empty($post->omit_title) || $hasHeroBlock;
                     }
                 }
                 if (file_exists($blockPath)) {
-                    $hideTitle = $block['hide_title'] ?? '0';
-                    if ($hideTitle !== '1' && !empty($block['title'])) {
-                        echo '<h3 style="color: var(--neon-cyan); margin-bottom: 1.25rem;">' . Security::sanitizeHtml($block['title']) . '</h3>';
-                    }
+                    echo $renderKitchenSinkTitle($block['title'] ?? '', '--neon-cyan');
                     echo Template::renderFile($blockPath, [
                         'block' => $block,
                         'resolveMedia' => $resolveMedia

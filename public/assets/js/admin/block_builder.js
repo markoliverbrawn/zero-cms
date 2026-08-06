@@ -138,6 +138,14 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <option value="xlarge">Extra Large (120px)</option>
                             </select>
                         </div>
+                        <div class="form-group">
+                            <label>Title Display:</label>
+                            <select class="block-hide_title-select">
+                                <option value="0">Show Title (H2)</option>
+                                <option value="1">Hide Title</option>
+                                <option value="2">Show Title (H1)</option>
+                            </select>
+                        </div>
                         <small>Note: Row spacing changes will not affect the preview panel.</small>
                     </div>
                 </div>
