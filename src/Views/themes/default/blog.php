@@ -23,7 +23,7 @@ $shouldOmitTitle = !empty($post->omit_title) || $hasHeroBlock;
   <!-- Blog Parent Page Title & Body -->
   <?php if (!$shouldOmitTitle): ?>
     <h1 style="margin-top: 0; margin-bottom: 10px; font-size: 2.2rem; font-weight: 800; line-height: 1.2; color: #0f172a; letter-spacing: -0.02em;">
-      <?php echo Security::sanitizeHtml($post->title ?? ''); ?>
+      <?php echo Str::escape($post->title ?? ''); ?>
     </h1>
   <?php endif; ?>
   
@@ -70,7 +70,7 @@ $shouldOmitTitle = !empty($post->omit_title) || $hasHeroBlock;
             <div>
               <h3 style="margin-top: 0; margin-bottom: 8px; font-size: 1.25rem; font-weight: 800;">
                 <a href="/post/<?php echo Str::escape($p->slug); ?>" style="color: #2563eb; text-decoration: none;">
-                  <?php echo Security::sanitizeHtml($p->title); ?>
+                  <?php echo Str::escape($p->title); ?>
                 </a>
               </h3>
               <div style="font-size: 0.8rem; color: #64748b; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; font-weight: 500;">

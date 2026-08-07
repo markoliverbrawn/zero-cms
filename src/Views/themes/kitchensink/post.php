@@ -30,7 +30,7 @@ $shouldOmitTitle = !empty($post->omit_title) || $hasHeroBlock;
 <article class="post-detail-container" style="background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--border-radius); padding: 3rem; box-shadow: 0 4px 20px rgba(0,0,0,0.2);">
   <?php if (!$shouldOmitTitle): ?>
     <h1 style="font-size: 2.5rem; margin-bottom: 0.5rem; background: linear-gradient(90deg, var(--text-color), var(--neon-cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
-      <?php echo Security::sanitizeHtml($post->title ?? ''); ?>
+      <?php echo Str::escape($post->title ?? ''); ?>
     </h1>
   <?php endif; ?>
   

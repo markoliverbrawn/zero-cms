@@ -29,7 +29,7 @@ $shouldOmitTitle = !empty($post->omit_title) || $hasHeroBlock;
 <div class="article-container">
   <?php if (!$shouldOmitTitle): ?>
     <h1 class="article-title">
-      <?php echo Security::sanitizeHtml($post->title ?? ''); ?>
+      <?php echo Str::escape($post->title ?? ''); ?>
     </h1>
   <?php endif; ?>
 
