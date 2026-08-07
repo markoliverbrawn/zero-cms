@@ -372,8 +372,13 @@ class Page implements Model
     {
         // Decoupled capability check: If a custom controller is assigned, check if it declares support for page builder blocks
         if (!empty($this->controller)) {
-            if (class_exists($this->controller) && method_exists($this->controller, 'supportsBlocks')) {
-                return (bool) $this->controller::supportsBlocks();
+            if (class_exists($this->controller)) {
+                if (method_exists($this->controller, 'supportsBlocks')) {
+                    return (bool) $this->controller::supportsBlocks();
+                }
+                if (method_exists($this->controller, 'isBlockBuilderEnabled')) {
+                    return (bool) $this->controller::isBlockBuilderEnabled();
+                }
             }
             return false;
         }

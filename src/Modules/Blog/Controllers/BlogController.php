@@ -17,6 +17,7 @@ namespace Zero\Modules\Blog\Controllers;
 use Zero\Core\App;
 use Zero\Modules\Blog\Models\Post;
 use Zero\Interfaces\Controller;
+use Zero\Models\Traits\SupportsBlocks;
 
 /**
  * Class BlogController
@@ -25,6 +26,8 @@ use Zero\Interfaces\Controller;
  */
 class BlogController implements Controller
 {
+    use SupportsBlocks;
+
     /**
      * Handle the incoming request action to display the blog posts listing page.
      *
@@ -48,15 +51,5 @@ class BlogController implements Controller
             'posts' => $pagination['data'],
             'pagination' => $pagination
         ]);
-    }
-
-    /**
-     * Determines dynamically if pages handled by this controller support the Page Builder block editor.
-     *
-     * @return bool Returns true as Blog landing page supports page builder blocks.
-     */
-    public static function supportsBlocks(): bool
-    {
-        return true;
     }
 }
