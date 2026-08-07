@@ -56,50 +56,6 @@ try {
     echo "Warning setting up test database override: " . $e->getMessage() . "\n";
 }
 
-// Ensure the isolated test database exists in MySQL
-$host = Env::get('DB_HOST', '127.0.0.1');
-$port = Env::get('DB_PORT', '3306');
-$user = Env::get('DB_USER', 'root');
-$pass = Env::get('DB_PASS', '');
-$testDb = Env::get('DB_NAME');
-
-try {
-    $rawPdo = new PDO("mysql:host={$host};port={$port};charset=utf8mb4", $user, $pass, [
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
-    ]);
-    $rawPdo->exec("CREATE DATABASE IF NOT EXISTS `" . str_replace("`", "``", $testDb) . "`");
-} catch (PDOException $e) {
-    echo "Fatal Error ensuring test database exists: " . $e->getMessage() . "\n";
-    exit(1);
-}
-
-// Keep the test database schema 100% synchronized and cleanly truncated for total test isolation
-try {
-    $pdo = DB::getPDO();
-    
-    // Always run pending migrations to ensure all core & module schemas are present and up-to-date
-    ob_start();
-    MigrationManager::up();
-    ob_end_clean();
-
-    // Rapid truncate to guarantee 100% clean test isolation on every run
-    DB::query("SET FOREIGN_KEY_CHECKS = 0;");
-
-    $tables = ['pages', 'blog_posts', 'audit_logs', 'password_resets', 'sites', 'blog_comments', 'form_submissions', 'queue_jobs', 'queue_scheduled_tasks'];
-    foreach ($tables as $t) {
-        // Double-check existence to prevent truncation failures if tables are dropped or modified
-        $hasTable = DB::query("SHOW TABLES LIKE '{$t}'")->fetch();
-        if ($hasTable) {
-            DB::query("TRUNCATE TABLE `{$t}`");
-        }
-    }
-
-    DB::query("SET FOREIGN_KEY_CHECKS = 1;");
-} catch (Exception $e) {
-    echo "Fatal Error initializing test database schemas: " . $e->getMessage() . "\n";
-    exit(1);
-}
-
 /**
  * Custom light-weight test assertion helper.
  * Exits with status code 1 on failure to signal the test runner.

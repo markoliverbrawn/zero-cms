@@ -113,4 +113,20 @@ assert_test(strpos($output, "SEEDING DATASET: kitchensink.php") !== false, "Kitc
 $siteCount = (int) DB::query("SELECT COUNT(*) FROM sites")->fetchColumn();
 assert_test($siteCount === 2, "Both selected sites (Documentation and Kitchen Sink) were successfully seeded");
 
+
+// 6. Test ADMIN_PASSWORD post-run seeder hook override from .env
+echo "  Testing ADMIN_PASSWORD custom override post-run seeder hook...\n";
+
+// Run the seeder with a custom admin password env variable
+$output = run_seeder_test_proc('--sites=documentation', ['ADMIN_PASSWORD' => 'CustomTestAdminPassword555']);
+
+assert_test(strpos($output, "Applying custom ADMIN_PASSWORD override from .env") !== false, "Seeder log correctly reported ADMIN_PASSWORD override being applied");
+assert_test(strpos($output, "[Seeder-Hook] Successfully updated administrator account passwords to ADMIN_PASSWORD from .env") !== false, "Seeder-Hook success message was outputted");
+
+// Query the database to verify the admin password was updated and verify its hash
+$adminHash = DB::query("SELECT password_hash FROM users WHERE username = 'admin'")->fetchColumn();
+assert_test(!empty($adminHash), "Admin user is present in the database after seeding");
+assert_test(password_verify('CustomTestAdminPassword555', $adminHash) === true, "Admin user password hash matches CustomTestAdminPassword555");
+
+
 echo "\n✅ Seeder Script CLI & Fallback Option Integration Tests Passed Successfully!\n";

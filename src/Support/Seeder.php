@@ -5,6 +5,7 @@ namespace Zero\Support;
 
 use Exception;
 use Zero\Core\App;
+use Zero\Core\Env;
 use Zero\Core\Storage\Storage;
 use Zero\Database\DB;
 use Zero\Support\Security;
@@ -239,6 +240,24 @@ class Seeder
                 }
             } catch (\Exception $e) {
                 echo "Warning: Bulk-indexing failed: " . $e->getMessage() . "\n";
+            }
+        });
+
+        // 7. Post-Run Hook: Admin Password Override from .env
+        self::registerPostRunHook(function () {
+            $adminPassword = Env::get('ADMIN_PASSWORD');
+            if (!empty($adminPassword)) {
+                echo "Applying custom ADMIN_PASSWORD override from .env...\n";
+                try {
+                    $hashedPassword = password_hash($adminPassword, PASSWORD_DEFAULT);
+                    DB::query(
+                        "UPDATE users SET password_hash = ? WHERE (role = 'super_admin' OR username = 'admin') AND deleted_at IS NULL",
+                        [$hashedPassword]
+                    );
+                    echo "      [Seeder-Hook] Successfully updated administrator account passwords to ADMIN_PASSWORD from .env!\n";
+                } catch (\Exception $e) {
+                    echo "      [Seeder-Hook-Warning] Failed to apply ADMIN_PASSWORD override: " . $e->getMessage() . "\n";
+                }
             }
         });
     }
