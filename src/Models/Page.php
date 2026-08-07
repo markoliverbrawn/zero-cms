@@ -370,8 +370,11 @@ class Page implements Model
      */
     public function usesBlockBuilder(): bool
     {
-        // If a custom routing controller is assigned to power this page record, completely hide the block builder
+        // Decoupled capability check: If a custom controller is assigned, check if it declares support for page builder blocks
         if (!empty($this->controller)) {
+            if (class_exists($this->controller) && method_exists($this->controller, 'supportsBlocks')) {
+                return (bool) $this->controller::supportsBlocks();
+            }
             return false;
         }
         return true;

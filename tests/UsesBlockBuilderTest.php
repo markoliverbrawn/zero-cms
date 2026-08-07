@@ -39,4 +39,18 @@ class CustomBlockModel
 assert_test(CustomBlockModel::getBlockBuilderField() === 'custom_layout_payload', "Custom model successfully overrides block builder storage field name");
 assert_test(CustomBlockModel::getAllowedBlocks() === ['text', 'gallery', 'accordion'], "Custom model successfully filters and whitelists allowed block types");
 
+
+// 3. Test dynamic Controller capability check
+echo "  Testing dynamic controller supportsBlocks capability verification...\n";
+
+$normalPage = new Page(['title' => 'Standard page', 'controller' => '']);
+assert_test($normalPage->usesBlockBuilder() === true, "Standard page with empty controller uses block builder by default");
+
+$blogPage = new Page(['title' => 'Blog landing page', 'controller' => 'Zero\\Modules\\Blog\\Controllers\\BlogController']);
+assert_test($blogPage->usesBlockBuilder() === true, "Blog page using BlogController with supportsBlocks returns true for block builder compatibility");
+
+$shopPage = new Page(['title' => 'Shop landing page', 'controller' => 'Zero\\Modules\\Shop\\Controllers\\CatalogController']);
+assert_test($shopPage->usesBlockBuilder() === false, "Shop page using CatalogController without supportsBlocks returns false for block builder compatibility");
+
+
 echo "UsesBlockBuilder trait tests completed successfully.\n\n";

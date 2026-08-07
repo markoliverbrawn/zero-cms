@@ -1,4 +1,16 @@
 <?php
+/**
+ * Zero CMS - Blog Landing Page Controller
+ *
+ * This controller manages loading, paginating, and rendering blog publication posts
+ * on the main blog index page, supporting dynamic page builder block layout structures.
+ *
+ * PHP version 8.3
+ *
+ * @package    Zero\Modules\Blog\Controllers
+ * @author     Zero CMS Team
+ * @copyright  2026 Zero CMS
+ */
 
 namespace Zero\Modules\Blog\Controllers;
 
@@ -6,8 +18,19 @@ use Zero\Core\App;
 use Zero\Modules\Blog\Models\Post;
 use Zero\Interfaces\Controller;
 
+/**
+ * Class BlogController
+ *
+ * Handles rendering the multi-tenant paginated blog posts index grid view.
+ */
 class BlogController implements Controller
 {
+    /**
+     * Handle the incoming request action to display the blog posts listing page.
+     *
+     * @param mixed $param The parent Page model record representing this blog index.
+     * @return void
+     */
     public function handle($param)
     {
         $pageRecord = $param;
@@ -25,5 +48,15 @@ class BlogController implements Controller
             'posts' => $pagination['data'],
             'pagination' => $pagination
         ]);
+    }
+
+    /**
+     * Determines dynamically if pages handled by this controller support the Page Builder block editor.
+     *
+     * @return bool Returns true as Blog landing page supports page builder blocks.
+     */
+    public static function supportsBlocks(): bool
+    {
+        return true;
     }
 }
