@@ -6,7 +6,6 @@
  * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
  */
 
-
 // src/Modules/Security/Middleware/ContentSecurityPolicyMiddleware.php
 
 namespace Zero\Modules\Security\Middleware;

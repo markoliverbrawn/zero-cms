@@ -6,7 +6,6 @@
  * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
  */
 
-
 // src/Database/Migrations/0020_CreateSecurityAuditsTable.php
 
 namespace Zero\Database\Migrations;

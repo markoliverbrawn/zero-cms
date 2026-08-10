@@ -6,8 +6,6 @@
  * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
  */
 
-
-
 namespace Zero\Modules\Shop\Database\Migrations;
 
 use Zero\Database\DB;

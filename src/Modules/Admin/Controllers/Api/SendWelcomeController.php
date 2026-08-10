@@ -6,8 +6,6 @@
  * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
  */
 
-
-
 namespace Zero\Modules\Admin\Controllers\Api;
 
 use Zero\Core\App;

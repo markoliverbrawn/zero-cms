@@ -6,8 +6,6 @@
  * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
  */
 
-
-
 namespace Zero\Modules\FormBuilder\Models;
 
 use Zero\Interfaces\Model;
@@ -67,8 +65,6 @@ class Submission implements Model
             }
         }
     }
-
-    
 
     /**
      * Retrieves the config attribute value.

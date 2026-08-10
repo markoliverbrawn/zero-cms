@@ -6,8 +6,6 @@
  * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
  */
 
-
-
 namespace Zero\Modules\Blog\Models;
 
 use Zero\Interfaces\Model;
@@ -61,8 +59,6 @@ class Comment implements Model
             }
         }
     }
-
-    
 
     /**
      * Retrieves the config attribute value.

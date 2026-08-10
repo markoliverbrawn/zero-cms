@@ -6,7 +6,6 @@
  * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
  */
 
-
 namespace Zero\Core;
 
 use Zero\Models\Site;

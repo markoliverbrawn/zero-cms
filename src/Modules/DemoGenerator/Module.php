@@ -6,7 +6,6 @@
  * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
  */
 
-
 // src/Modules/DemoGenerator/Module.php
 
 namespace Zero\Modules\DemoGenerator;

@@ -6,8 +6,6 @@
  * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
  */
 
-
-
 namespace Zero\Http\Middleware;
 
 use Zero\Core\App;
@@ -63,7 +61,6 @@ class AuthMiddleware
         return $next();
     }
 
-
     /**
      * Sets the default redirect attribute configuration value.
      *
@@ -74,8 +71,6 @@ class AuthMiddleware
     {
         self::$defaultRedirect = $url;
     }
-
-    
 
     /**
      * Sets the login url attribute configuration value.

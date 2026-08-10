@@ -6,7 +6,6 @@
  * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
  */
 
-
 // src/Interfaces/SeederInterface.php
 
 namespace Zero\Interfaces;

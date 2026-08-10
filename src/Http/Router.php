@@ -6,8 +6,6 @@
  * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
  */
 
-
-
 namespace Zero\Http;
 
 use Zero\Core\App;
@@ -41,8 +39,6 @@ class Router
 
         return null;
     }
-
-    
 
     /**
      * Handles the incoming HTTP action request context and dispatches response frames.

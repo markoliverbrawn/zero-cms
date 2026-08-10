@@ -6,8 +6,6 @@
  * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
  */
 
-
-
 namespace Zero\Modules\FormBuilder;
 
 use Zero\Interfaces\Module as ModuleInterface;
@@ -42,7 +40,6 @@ class Module implements ModuleInterface
         return null;
     }
 
-    
     /**
      * Retrieves the id attribute value.
      *
@@ -52,8 +49,6 @@ class Module implements ModuleInterface
     {
         return 'formbuilder';
     }
-
-    
 
     /**
      * Retrieves the migration class attribute value.
@@ -69,8 +64,6 @@ class Module implements ModuleInterface
  */
 class;
     }
-
-    
 
     /**
      * Retrieves the routes attribute value.
@@ -88,8 +81,6 @@ class;
 class
         ];
     }
-
-    
 
     /**
      * Init processing implementation helper.

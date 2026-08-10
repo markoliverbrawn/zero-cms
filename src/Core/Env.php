@@ -6,7 +6,6 @@
  * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
  */
 
-
 namespace Zero\Core;
 
 /**
@@ -37,7 +36,6 @@ class Env
         
         return isset(self::$data[$key]) ? self::$data[$key] : $default;
     }
-
 
     /**
      * Load processing implementation helper.

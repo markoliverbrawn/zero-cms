@@ -6,8 +6,6 @@
  * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
  */
 
-
-
 namespace Zero\Modules\Admin\Controllers;
 
 use Zero\Core\App;
@@ -48,7 +46,6 @@ class FilesController implements Controller
             $this->handleEdit($matches[1]);
         }
     }
-    
 
     /**
      * Handle delete processing implementation helper.
@@ -104,8 +101,6 @@ class FilesController implements Controller
         exit;
     }
 
-    
-
     /**
      * Handle json processing implementation helper.
      *
@@ -125,7 +120,6 @@ class FilesController implements Controller
         exit;
     }
 
-    
     /**
      * Handle list processing implementation helper.
      *
@@ -311,8 +305,6 @@ class FilesController implements Controller
         exit;
     }
 
-    
-
     /**
      * Handle move processing implementation helper.
      *
@@ -440,7 +432,6 @@ class FilesController implements Controller
         }
         exit;
     }
-
 
     /**
      * Handle upload processing implementation helper.
