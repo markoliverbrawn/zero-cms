@@ -1,4 +1,12 @@
 <?php
+/**
+ * File: src/Modules/Admin/Controllers/Api/SendWelcomeController.php
+ * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
+ * Package: Zero\Modules\Admin\Controllers\Api
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 
 namespace Zero\Modules\Admin\Controllers\Api;
 
@@ -11,6 +19,11 @@ use Zero\Support\Emailer;
 use Zero\Support\Security;
 use Zero\Support\Str;
 
+/**
+ * Class SendWelcomeController
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class SendWelcomeController implements Controller
 {
     /**

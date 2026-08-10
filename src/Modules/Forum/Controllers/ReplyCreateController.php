@@ -1,4 +1,12 @@
 <?php
+/**
+ * File: src/Modules/Forum/Controllers/ReplyCreateController.php
+ * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
+ * Package: Zero\Modules\Forum\Controllers
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 
 namespace Zero\Modules\Forum\Controllers;
 
@@ -9,8 +17,19 @@ use Zero\Support\Security;
 use Zero\Modules\Forum\Models\ForumThread;
 use Zero\Modules\Forum\Models\ForumPost;
 
+/**
+ * Class ReplyCreateController
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class ReplyCreateController implements Controller
 {
+    /**
+     * Handles the incoming HTTP action request context and dispatches response frames.
+     *
+     * @param mixed $param Argument descriptor.
+     * @return mixed Response output.
+     */
     public function handle($param)
     {
         App::ensureSession();

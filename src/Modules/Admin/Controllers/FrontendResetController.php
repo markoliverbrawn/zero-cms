@@ -1,4 +1,12 @@
 <?php
+/**
+ * File: src/Modules/Admin/Controllers/FrontendResetController.php
+ * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
+ * Package: Zero\Modules\Admin\Controllers
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 
 namespace Zero\Modules\Admin\Controllers;
 
@@ -8,8 +16,19 @@ use Zero\Support\Logger;
 use Zero\Interfaces\Controller;
 use Zero\Models\User;
 
+/**
+ * Class FrontendResetController
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class FrontendResetController implements Controller
 {
+    /**
+     * Handles the incoming HTTP action request context and dispatches response frames.
+     *
+     * @param mixed $param Argument descriptor.
+     * @return mixed Response output.
+     */
     public function handle($param)
     {
         App::ensureSession();

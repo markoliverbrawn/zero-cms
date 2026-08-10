@@ -1,4 +1,12 @@
 <?php
+/**
+ * File: src/Modules/Forum/Models/ForumPost.php
+ * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
+ * Package: Zero\Modules\Forum\Models
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 
 namespace Zero\Modules\Forum\Models;
 
@@ -6,6 +14,11 @@ use Zero\Interfaces\Model as ModelInterface;
 use Zero\Models\Traits\IsModel;
 use Zero\Models\User;
 
+/**
+ * Class ForumPost
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class ForumPost implements ModelInterface
 {
     use IsModel;
@@ -24,6 +37,11 @@ class ForumPost implements ModelInterface
     public $created_at;
     public $updated_at;
 
+    /**
+     * Retrieves the config attribute value.
+     *
+     * @return mixed Response output.
+     */
     public static function getConfig(): array
     {
         return [
@@ -68,6 +86,11 @@ class ForumPost implements ModelInterface
         ];
     }
 
+    /**
+     * Retrieves the user attribute value.
+     *
+     * @return User Response output.
+     */
     public function getUser(): ?User
     {
         if (empty($this->user_id)) {

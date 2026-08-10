@@ -1,11 +1,29 @@
 <?php
+/**
+ * File: src/Database/Migrations/0016_AddTitleToMedia.php
+ * Architectural Purpose: Database schema definition, transactional migration tracking, or seed data loader.
+ * Package: Zero\Database\Migrations
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 
 namespace Zero\Database\Migrations;
 
 use Zero\Database\DB;
 
+/**
+ * Class AddTitleToMedia
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class AddTitleToMedia extends \Zero\Database\Migration
 {
+    /**
+     * Runs the database transactional migrations to compile schemas.
+     *
+     * @return void Response output.
+     */
     public function up(): void
     {
         echo "Adding title column to media table...\n";
@@ -16,6 +34,11 @@ class AddTitleToMedia extends \Zero\Database\Migration
         }
     }
 
+    /**
+     * Reverses database schema migrations, rolling back table columns cleanly.
+     *
+     * @return void Response output.
+     */
     public function down(): void
     {
         echo "Removing title column from media table...\n";

@@ -1,4 +1,12 @@
 <?php
+/**
+ * File: src/Core/App.php
+ * Architectural Purpose: Core bootstrapping, system environment configuration, and utility class of the framework.
+ * Package: Zero\Core
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 
 namespace Zero\Core;
 
@@ -22,6 +30,11 @@ use Zero\Modules\Security\Models\SecurityAudit;
 use Zero\Core\Template;
 use Zero\Core\Storage\Storage;
 
+/**
+ * Class App
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class App
 {
     protected static $currentSite = null;
@@ -38,6 +51,11 @@ class App
     protected static $themeStylesheets = [];
     protected static $nonce = '';
 
+    /**
+     * Appends database query benchmarking and page load time telemetry widgets.
+     *
+     * @return mixed Response output.
+     */
     public static function appendBenchmarkWidget()
     {
         if (Env::get('BENCHMARKING') !== 'true') {
@@ -190,6 +208,11 @@ class App
 
     
 
+    /**
+     * Applies authentication and role authorization check middleware filters onto routes.
+     *
+     * @return mixed Response output.
+     */
     public static function applyAuthMiddleware()
     {
         self::ensureSession();
@@ -202,6 +225,11 @@ class App
 
     
 
+    /**
+     * Applies content security policy (CSP) headers middleware to prevent script injections.
+     *
+     * @return mixed Response output.
+     */
     public static function applyContentSecurityPolicyMiddleware()
     {
         $cspMiddleware = new ContentSecurityPolicyMiddleware();
@@ -212,6 +240,11 @@ class App
 
     
 
+    /**
+     * Applies cross-site request forgery (CSRF) token verification middleware for form submissions.
+     *
+     * @return mixed Response output.
+     */
     public static function applyCsrfMiddleware()
     {
         self::ensureSession();
@@ -223,6 +256,11 @@ class App
 
     
 
+    /**
+     * Applies force password change middleware checking if user must change password.
+     *
+     * @return mixed Response output.
+     */
     public static function applyForcePasswordChangeMiddleware()
     {
         self::ensureSession();
@@ -234,6 +272,13 @@ class App
 
     
 
+    /**
+     * Applies rate limiting middleware throttling requests from a single client IP.
+     *
+     * @param string $key Argument descriptor.
+     * @param int $limitSeconds Argument descriptor.
+     * @return mixed Response output.
+     */
     public static function applyRateLimitMiddleware(string $key, int $limitSeconds)
     {
         self::ensureSession();
@@ -475,12 +520,42 @@ class App
         self::applyContentSecurityPolicyMiddleware();
 
         // Register core models dynamically in the core on bootstrap!
-        self::registerModel('audit_logs', AuditLog::class);
-        self::registerModel('files', Media::class);
-        self::registerModel('pages', Page::class);
-        self::registerModel('security_audits', SecurityAudit::class);
-        self::registerModel('sites', Site::class);
-        self::registerModel('users', User::class);
+        self::registerModel('audit_logs', AuditLog::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class);
+        self::registerModel('files', Media::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class);
+        self::registerModel('pages', Page::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class);
+        self::registerModel('security_audits', SecurityAudit::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class);
+        self::registerModel('sites', Site::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class);
+        self::registerModel('users', User::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class);
 
         // Populate standard core dashboard, content, and security sidebar items
         self::initializeDefaultSidebar();
@@ -549,6 +624,11 @@ class App
 
     
 
+    /**
+     * Discover modules processing implementation helper.
+     *
+     * @return mixed Response output.
+     */
     public static function discoverModules()
     {
         if (!empty(self::$modules)) {
@@ -629,6 +709,11 @@ class App
         return $mediaIdMap;
     }
 
+    /**
+     * Ensure session processing implementation helper.
+     *
+     * @return mixed Response output.
+     */
     public static function ensureSession()
     {
         if (session_status() === PHP_SESSION_NONE) {
@@ -720,6 +805,11 @@ class App
 
     
 
+    /**
+     * Retrieves the migration classes attribute value.
+     *
+     * @return mixed Response output.
+     */
     public static function getMigrationClasses(): array
     {
         $classes = [];
@@ -734,6 +824,12 @@ class App
 
     
 
+    /**
+     * Retrieves the model class attribute value.
+     *
+     * @param string $name Argument descriptor.
+     * @return string Response output.
+     */
     public static function getModelClass(string $name): ?string
     {
         return self::$registeredModels[$name] ?? null;
@@ -741,6 +837,11 @@ class App
 
     
 
+    /**
+     * Retrieves the modules attribute value.
+     *
+     * @return mixed Response output.
+     */
     public static function getModules(): array
     {
         self::discoverModules();
@@ -759,6 +860,11 @@ class App
 
     
 
+    /**
+     * Retrieves the registered blocks attribute value.
+     *
+     * @return mixed Response output.
+     */
     public static function getRegisteredBlocks(): array
     {
         return self::$registeredBlocks;
@@ -766,6 +872,11 @@ class App
 
     
 
+    /**
+     * Retrieves the registered models attribute value.
+     *
+     * @return mixed Response output.
+     */
     public static function getRegisteredModels(): array
     {
         return self::$registeredModels;
@@ -907,6 +1018,12 @@ class App
 
     
 
+    /**
+     * Login user processing implementation helper.
+     *
+     * @param mixed $userId Argument descriptor.
+     * @return mixed Response output.
+     */
     public static function loginUser($userId)
     {
         self::ensureSession();
@@ -922,6 +1039,11 @@ class App
 
     
 
+    /**
+     * Logout user processing implementation helper.
+     *
+     * @return mixed Response output.
+     */
     public static function logoutUser()
     {
         self::ensureSession();
@@ -984,6 +1106,13 @@ class App
 
     
 
+    /**
+     * Registers the block component definition dynamically.
+     *
+     * @param string $type Argument descriptor.
+     * @param array $config Argument descriptor.
+     * @return mixed Response output.
+     */
     public static function registerBlock(string $type, array $config)
     {
         self::$registeredBlocks[$type] = $config;
@@ -991,6 +1120,13 @@ class App
 
     
 
+    /**
+     * Registers the model component definition dynamically.
+     *
+     * @param string $name Argument descriptor.
+     * @param string $class Argument descriptor.
+     * @return mixed Response output.
+     */
     public static function registerModel(string $name, string $class)
     {
         self::$registeredModels[$name] = $class;
@@ -998,6 +1134,12 @@ class App
 
     
 
+    /**
+     * Registers the theme fallback component definition dynamically.
+     *
+     * @param string $themeName Argument descriptor.
+     * @return mixed Response output.
+     */
     public static function registerThemeFallback(string $themeName)
     {
         self::$themeFallbacks[] = $themeName;
@@ -1017,6 +1159,13 @@ class App
 
     
 
+    /**
+     * Registers the view dir component definition dynamically.
+     *
+     * @param string $prefix Argument descriptor.
+     * @param string $dirPath Argument descriptor.
+     * @return mixed Response output.
+     */
     public static function registerViewDir(string $prefix, string $dirPath)
     {
         self::$viewDirs[$prefix] = rtrim($dirPath, '/');
@@ -1024,6 +1173,13 @@ class App
 
     
 
+    /**
+     * Render processing implementation helper.
+     *
+     * @param mixed $view Argument descriptor.
+     * @param mixed $data Argument descriptor.
+     * @return mixed Response output.
+     */
     public static function render($view, $data = [])
     {
         $phpFile = null;
@@ -1202,6 +1358,12 @@ class App
 
     
 
+    /**
+     * Sets the access denied view attribute configuration value.
+     *
+     * @param string $view Argument descriptor.
+     * @return mixed Response output.
+     */
     public static function setAccessDeniedView(string $view)
     {
         self::$accessDeniedView = $view;
@@ -1209,6 +1371,12 @@ class App
 
     
 
+    /**
+     * Sets the current site attribute configuration value.
+     *
+     * @param mixed $site Argument descriptor.
+     * @return void Response output.
+     */
     public static function setCurrentSite($site): void
     {
         self::$currentSite = $site;
@@ -1218,6 +1386,12 @@ class App
 
     
 
+    /**
+     * Sets the current user attribute configuration value.
+     *
+     * @param mixed $user Argument descriptor.
+     * @return void Response output.
+     */
     public static function setCurrentUser($user): void
     {
         self::$currentUser = $user;
@@ -1236,6 +1410,12 @@ class App
 
     
 
+    /**
+     * Slugify processing implementation helper.
+     *
+     * @param mixed $text Argument descriptor.
+     * @return mixed Response output.
+     */
     public static function slugify($text)
     {
         return Str::slug($text);

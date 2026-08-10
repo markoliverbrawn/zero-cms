@@ -1,4 +1,12 @@
 <?php
+/**
+ * File: src/Http/Controllers/ApiController.php
+ * Architectural Purpose: HTTP request routing, request filtering middleware, or dynamic content-security controllers.
+ * Package: Zero\Http\Controllers
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 
 namespace Zero\Http\Controllers;
 
@@ -7,6 +15,11 @@ use Zero\Database\DB;
 use Zero\Support\Logger;
 use Zero\Support\Security;
 
+/**
+ * Class ApiController
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 abstract class ApiController
 {
     /**

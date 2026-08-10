@@ -1,4 +1,12 @@
 <?php
+/**
+ * File: src/Modules/Security/Jobs/SecurityAuditJob.php
+ * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
+ * Package: Zero\Modules\Security\Jobs
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 
 namespace Zero\Modules\Security\Jobs;
 
@@ -11,6 +19,11 @@ use Zero\Modules\Security\Controllers\SecurityAuditController;
 use Zero\Modules\Security\Models\SecurityAudit;
 use Zero\Support\Emailer;
 
+/**
+ * Class SecurityAuditJob
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class SecurityAuditJob implements Job
 {
     /**
@@ -28,7 +41,12 @@ class SecurityAuditJob implements Job
 
         // 1. Core audit orchestration via reflection on SecurityAuditController
         $controller = new SecurityAuditController();
-        $reflector = new ReflectionClass(SecurityAuditController::class);
+        $reflector = new ReflectionClass(SecurityAuditController::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class);
 
         $collectMethod = $reflector->getMethod('collectTelemetry');
         $collectMethod->setAccessible(true);

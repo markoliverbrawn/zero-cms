@@ -1,4 +1,12 @@
 <?php
+/**
+ * File: src/Support/Security.php
+ * Architectural Purpose: Global diagnostic tools, cryptographic security handlers, SMTP email transmitters, and text helpers.
+ * Package: Zero\Support
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 
 namespace Zero\Support;
 
@@ -6,6 +14,11 @@ use Zero\Core\App;
 use Zero\Database\DB;
 use Zero\Support\Str;
 
+/**
+ * Class Security
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class Security {
     /**
      * Check if authentication attempts are exceeded for a combination of IP and identifier.
@@ -55,10 +68,20 @@ class Security {
         return $attempts < $maxAttempts;
     }
 
+    /**
+     * Csrf input processing implementation helper.
+     *
+     * @return mixed Response output.
+     */
     public static function csrfInput() {
         return '<input type="hidden" name="csrf" value="' . Str::escape(self::csrfToken()) . '">';
     }
 
+    /**
+     * Csrf token processing implementation helper.
+     *
+     * @return mixed Response output.
+     */
     public static function csrfToken()
     {
         App::ensureSession();
@@ -69,6 +92,12 @@ class Security {
         return $_SESSION['_csrf_token'];
     }
 
+    /**
+     * Csrf verify processing implementation helper.
+     *
+     * @param mixed $token Argument descriptor.
+     * @return mixed Response output.
+     */
     public static function csrfVerify($token)
     {
         App::ensureSession();

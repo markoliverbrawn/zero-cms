@@ -1,4 +1,12 @@
 <?php
+/**
+ * File: src/Modules/DemoGenerator/Jobs/TeardownExpiredDemosJob.php
+ * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
+ * Package: Zero\Modules\DemoGenerator\Jobs
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 // src/Modules/DemoGenerator/Jobs/TeardownExpiredDemosJob.php
 
 namespace Zero\Modules\DemoGenerator\Jobs;
@@ -7,6 +15,11 @@ use Zero\Interfaces\Job;
 use Zero\Database\DB;
 use Zero\Models\Site;
 
+/**
+ * Class TeardownExpiredDemosJob
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class TeardownExpiredDemosJob implements Job
 {
     /**

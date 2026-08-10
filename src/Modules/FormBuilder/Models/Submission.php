@@ -1,10 +1,23 @@
 <?php
+/**
+ * File: src/Modules/FormBuilder/Models/Submission.php
+ * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
+ * Package: Zero\Modules\FormBuilder\Models
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 
 namespace Zero\Modules\FormBuilder\Models;
 
 use Zero\Interfaces\Model;
 use Zero\Models\Traits\IsModel;
 
+/**
+ * Class Submission
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class Submission implements Model
 {
     use IsModel;
@@ -22,6 +35,12 @@ class Submission implements Model
     public $formatted_fields = [];
     public $created_at;
 
+    /**
+     * __construct processing implementation helper.
+     *
+     * @param array $data Argument descriptor.
+     * @return mixed Response output.
+     */
     public function __construct(array $data = [])
     {
         foreach ($data as $key => $value) {
@@ -51,6 +70,11 @@ class Submission implements Model
 
     
 
+    /**
+     * Retrieves the config attribute value.
+     *
+     * @return mixed Response output.
+     */
     public static function getConfig(): array
     {
         return [
@@ -65,6 +89,11 @@ class Submission implements Model
         ];
     }
 
+    /**
+     * Retrieves the edit label attribute value.
+     *
+     * @return string Response output.
+     */
     public static function getEditLabel(): string
     {
         return 'View';

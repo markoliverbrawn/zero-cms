@@ -1,10 +1,23 @@
 <?php
+/**
+ * File: src/Http/Router.php
+ * Architectural Purpose: HTTP request routing, request filtering middleware, or dynamic content-security controllers.
+ * Package: Zero\Http
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 
 namespace Zero\Http;
 
 use Zero\Core\App;
 use Zero\Models\Page;
 
+/**
+ * Class Router
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class Router
 {
     protected static $routes = [];
@@ -31,6 +44,12 @@ class Router
 
     
 
+    /**
+     * Handles the incoming HTTP action request context and dispatches response frames.
+     *
+     * @param string $uri Argument descriptor.
+     * @return bool Response output.
+     */
     public function handle(string $uri): bool
     {
         // 0. Process dynamically registered static module and core admin routes first!

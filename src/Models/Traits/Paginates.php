@@ -1,10 +1,23 @@
 <?php
+/**
+ * File: src/Models/Traits/Paginates.php
+ * Architectural Purpose: Active Record data model or behavioral trait wrapping database schema representation with tenant-scoping.
+ * Package: Zero\Models\Traits
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 
 namespace Zero\Models\Traits;
 
 use Zero\Database\DB;
 use Zero\Core\App;
 
+/**
+ * Trait Paginates
+ *
+ * Defines systemic behavioral interface contract mechanisms.
+ */
 trait Paginates
 {
     /**
@@ -41,7 +54,12 @@ trait Paginates
         $params = [];
 
         // Multi-tenant isolation filter (exclude sites table)
-        $tableName = static::$tableName ?? strtolower((new \ReflectionClass(static::class))->getShortName()) . 's';
+        $tableName = static::$tableName ?? strtolower((new \ReflectionClass(static::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class))->getShortName()) . 's';
         if ($tableName !== 'sites') {
             if ($tableName === 'users') {
                 // Show users belonging to this site AND global super-admins (site_id IS NULL)
@@ -67,7 +85,12 @@ trait Paginates
         }
 
         if (isset($filters['q']) && !empty($filters['q'])) {
-            $config = method_exists(static::class, 'getConfig') ? static::getConfig() : [];
+            $config = method_exists(static::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class, 'getConfig') ? static::getConfig() : [];
             $searchWhere = [];
             foreach ($config as $fieldname => $value) {
                 if ($value['searchable'] ?? false) {

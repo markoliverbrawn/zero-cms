@@ -1,4 +1,12 @@
 <?php
+/**
+ * File: src/Modules/Security/Controllers/ChangePasswordController.php
+ * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
+ * Package: Zero\Modules\Security\Controllers
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 
 namespace Zero\Modules\Security\Controllers;
 
@@ -7,8 +15,19 @@ use Zero\Database\DB;
 use Zero\Interfaces\Controller;
 use Zero\Support\Logger;
 
+/**
+ * Class ChangePasswordController
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class ChangePasswordController implements Controller
 {
+    /**
+     * Handles the incoming HTTP action request context and dispatches response frames.
+     *
+     * @param mixed $param Argument descriptor.
+     * @return mixed Response output.
+     */
     public function handle($param)
     {
         // Enforce active session and baseline authentication

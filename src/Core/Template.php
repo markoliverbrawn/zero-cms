@@ -1,10 +1,30 @@
 <?php
+/**
+ * File: src/Core/Template.php
+ * Architectural Purpose: Core bootstrapping, system environment configuration, and utility class of the framework.
+ * Package: Zero\Core
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 namespace Zero\Core;
 
 use Zero\Models\Site;
 
+/**
+ * Class Template
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class Template
 {
+    /**
+     * Render file processing implementation helper.
+     *
+     * @param mixed $templatePath Argument descriptor.
+     * @param mixed $data Argument descriptor.
+     * @return mixed Response output.
+     */
     public static function renderFile($templatePath, $data = [])
     {
         // Ensure $templatePath is an absolute path from VIEWS_DIR

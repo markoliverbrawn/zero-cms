@@ -1,4 +1,12 @@
 <?php
+/**
+ * File: src/Modules/Admin/Controllers/FilesController.php
+ * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
+ * Package: Zero\Modules\Admin\Controllers
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 
 namespace Zero\Modules\Admin\Controllers;
 
@@ -9,8 +17,19 @@ use Zero\Core\Storage\Storage;
 use Zero\Support\Security;
 use Zero\Interfaces\Controller;
 
+/**
+ * Class FilesController
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class FilesController implements Controller
 {
+    /**
+     * Handles the incoming HTTP action request context and dispatches response frames.
+     *
+     * @param mixed $param Argument descriptor.
+     * @return mixed Response output.
+     */
     public function handle($param)
     {
         // Route multi-action files manager requests based on URI
@@ -31,6 +50,11 @@ class FilesController implements Controller
     }
     
 
+    /**
+     * Handle delete processing implementation helper.
+     *
+     * @return mixed Response output.
+     */
     public function handleDelete()
     {
         App::applyAuthMiddleware();
@@ -82,6 +106,11 @@ class FilesController implements Controller
 
     
 
+    /**
+     * Handle json processing implementation helper.
+     *
+     * @return mixed Response output.
+     */
     public function handleJson()
     {
         App::applyAuthMiddleware();
@@ -97,6 +126,11 @@ class FilesController implements Controller
     }
 
     
+    /**
+     * Handle list processing implementation helper.
+     *
+     * @return mixed Response output.
+     */
     public function handleList()
     {
         App::applyAuthMiddleware();
@@ -279,6 +313,11 @@ class FilesController implements Controller
 
     
 
+    /**
+     * Handle move processing implementation helper.
+     *
+     * @return mixed Response output.
+     */
     public function handleMove()
     {
         App::applyAuthMiddleware();
@@ -403,6 +442,11 @@ class FilesController implements Controller
     }
 
 
+    /**
+     * Handle upload processing implementation helper.
+     *
+     * @return mixed Response output.
+     */
     public function handleUpload()
     {
         App::applyAuthMiddleware();
@@ -491,6 +535,12 @@ class FilesController implements Controller
         }
         }
 
+        /**
+         * Handle edit processing implementation helper.
+         *
+         * @param mixed $fileId Argument descriptor.
+         * @return mixed Response output.
+         */
         public function handleEdit($fileId)
         {
         App::applyAuthMiddleware();

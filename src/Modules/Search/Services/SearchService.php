@@ -1,4 +1,12 @@
 <?php
+/**
+ * File: src/Modules/Search/Services/SearchService.php
+ * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
+ * Package: Zero\Modules\Search\Services
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 
 namespace Zero\Modules\Search\Services;
 
@@ -8,6 +16,11 @@ use Zero\Database\DB;
 use Zero\Modules\Search\Interfaces\SearchDriverInterface;
 use Zero\Modules\Search\Drivers\DatabaseSearchDriver;
 
+/**
+ * Class SearchService
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class SearchService
 {
     protected static ?SearchDriverInterface $driver = null;

@@ -1,10 +1,23 @@
 <?php
+/**
+ * File: src/Core/Storage/AwsS3StorageDriver.php
+ * Architectural Purpose: Core bootstrapping, system environment configuration, and utility class of the framework.
+ * Package: Zero\Core\Storage
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 
 namespace Zero\Core\Storage;
 
 use Zero\Core\Env;
 use Exception;
 
+/**
+ * Class AwsS3StorageDriver
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class AwsS3StorageDriver implements StorageDriver
 {
     protected string $bucketName;
@@ -12,6 +25,12 @@ class AwsS3StorageDriver implements StorageDriver
     protected string $secretKey;
     protected string $region;
 
+    /**
+     * __construct processing implementation helper.
+     *
+     * @param ?array $config Argument descriptor.
+     * @return mixed Response output.
+     */
     public function __construct(?array $config = null)
     {
         $this->bucketName = $config['bucket'] ?? Env::get('AWS_S3_BUCKET', '');

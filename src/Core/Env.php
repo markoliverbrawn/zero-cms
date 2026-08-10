@@ -1,10 +1,30 @@
 <?php
+/**
+ * File: src/Core/Env.php
+ * Architectural Purpose: Core bootstrapping, system environment configuration, and utility class of the framework.
+ * Package: Zero\Core
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 namespace Zero\Core;
 
+/**
+ * Class Env
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class Env
 {
     protected static $data = null;
 
+    /**
+     * Retrieves the  attribute value.
+     *
+     * @param mixed $key Argument descriptor.
+     * @param mixed $default Argument descriptor.
+     * @return mixed Response output.
+     */
     public static function get($key, $default = null)
     {
         if (self::$data === null) self::load(getcwd());
@@ -19,6 +39,12 @@ class Env
     }
 
 
+    /**
+     * Load processing implementation helper.
+     *
+     * @param mixed $path Argument descriptor.
+     * @return mixed Response output.
+     */
     public static function load($path)
     {
         if (self::$data !== null) return self::$data;

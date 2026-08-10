@@ -1,9 +1,22 @@
 <?php
+/**
+ * File: src/Database/MigrationManager.php
+ * Architectural Purpose: Database schema definition, transactional migration tracking, or seed data loader.
+ * Package: Zero\Database
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 
 namespace Zero\Database;
 
 use Zero\Database\DB;
 
+/**
+ * Class MigrationManager
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class MigrationManager
 {
     /**

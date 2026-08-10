@@ -1,12 +1,30 @@
 <?php
+/**
+ * File: src/Database/Migrations/0024_AddPrivateStorageFieldsToMediaTable.php
+ * Architectural Purpose: Database schema definition, transactional migration tracking, or seed data loader.
+ * Package: Zero\Database\Migrations
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 
 namespace Zero\Database\Migrations;
 
 use Zero\Database\DB;
 use Zero\Database\Migration;
 
+/**
+ * Class AddPrivateStorageFieldsToMediaTable
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class AddPrivateStorageFieldsToMediaTable extends Migration
 {
+    /**
+     * Runs the database transactional migrations to compile schemas.
+     *
+     * @return void Response output.
+     */
     public function up(): void
     {
         echo "Adding Private Storage and Secure Upload columns to 'media' table...\n";
@@ -22,6 +40,11 @@ class AddPrivateStorageFieldsToMediaTable extends Migration
         ");
     }
 
+    /**
+     * Reverses database schema migrations, rolling back table columns cleanly.
+     *
+     * @return void Response output.
+     */
     public function down(): void
     {
         echo "Removing Private Storage columns from 'media' table...\n";

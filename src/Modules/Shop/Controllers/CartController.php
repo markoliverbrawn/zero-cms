@@ -1,4 +1,12 @@
 <?php
+/**
+ * File: src/Modules/Shop/Controllers/CartController.php
+ * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
+ * Package: Zero\Modules\Shop\Controllers
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 
 namespace Zero\Modules\Shop\Controllers;
 
@@ -7,8 +15,19 @@ use Zero\Core\App;
 use Zero\Modules\Shop\Models\Product;
 use Zero\Modules\Shop\Models\ProductVariant;
 
+/**
+ * Class CartController
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class CartController implements Controller
 {
+    /**
+     * Handles the incoming HTTP action request context and dispatches response frames.
+     *
+     * @param mixed $param Argument descriptor.
+     * @return mixed Response output.
+     */
     public function handle($param)
     {
         App::ensureSession();

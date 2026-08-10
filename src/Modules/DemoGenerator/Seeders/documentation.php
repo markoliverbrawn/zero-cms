@@ -1,4 +1,12 @@
 <?php
+/**
+ * File: src/Modules/DemoGenerator/Seeders/documentation.php
+ * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
+ * Package: <code>src/Models/</code> or decoupled module namespaces <code>src/Modules/[ModuleName]/Models/</code>.</p><p>Extend the <code>Zero\Interfaces\Model</code> interface, and include <code>IsModel</code> for CRUD and <code>HasSlug</code> for slugs:</p><pre><code class="language-php">&lt
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 // Generated from documentation.json
 
 return [

@@ -1,4 +1,12 @@
 <?php
+/**
+ * File: src/Support/Seeder.php
+ * Architectural Purpose: Global diagnostic tools, cryptographic security handlers, SMTP email transmitters, and text helpers.
+ * Package: Zero\Support
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 // src/Support/Seeder.php
 
 namespace Zero\Support;
@@ -10,6 +18,11 @@ use Zero\Core\Storage\Storage;
 use Zero\Database\DB;
 use Zero\Support\Security;
 
+/**
+ * Class Seeder
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class Seeder
 {
     protected static array $columnCache = [];

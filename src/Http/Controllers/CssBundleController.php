@@ -1,4 +1,12 @@
 <?php
+/**
+ * File: src/Http/Controllers/CssBundleController.php
+ * Architectural Purpose: HTTP request routing, request filtering middleware, or dynamic content-security controllers.
+ * Package: Zero\Http\Controllers
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 
 namespace Zero\Http\Controllers;
 
@@ -6,6 +14,11 @@ use Zero\Interfaces\Controller;
 use Zero\Core\App;
 use Zero\Core\Env;
 
+/**
+ * Class CssBundleController
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class CssBundleController implements Controller
 {
     /**

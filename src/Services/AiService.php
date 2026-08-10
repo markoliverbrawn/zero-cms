@@ -1,4 +1,12 @@
 <?php
+/**
+ * File: src/Services/AiService.php
+ * Architectural Purpose: Handles operations and business logic within the system.
+ * Package: Zero\Services
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 
 namespace Zero\Services;
 
@@ -6,6 +14,11 @@ use Zero\Core\Env;
 use Zero\Interfaces\AiProvider;
 use Exception;
 
+/**
+ * Class AiService
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class AiService
 {
     /**

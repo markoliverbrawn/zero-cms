@@ -1,9 +1,22 @@
 <?php
+/**
+ * File: src/Blocks/TextBlock.php
+ * Architectural Purpose: Handles operations and business logic within the system.
+ * Package: Zero\Blocks
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 
 namespace Zero\Blocks;
 
 use Zero\Interfaces\BlockHelperInterface;
 
+/**
+ * Class TextBlock
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class TextBlock implements BlockHelperInterface
 {
     protected array $data;

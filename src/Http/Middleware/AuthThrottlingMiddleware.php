@@ -1,4 +1,12 @@
 <?php
+/**
+ * File: src/Http/Middleware/AuthThrottlingMiddleware.php
+ * Architectural Purpose: HTTP request routing, request filtering middleware, or dynamic content-security controllers.
+ * Package: Zero\Http\Middleware
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 
 namespace Zero\Http\Middleware;
 
@@ -6,6 +14,11 @@ use Zero\Core\App;
 use Zero\Support\Security;
 use Zero\Support\Logger;
 
+/**
+ * Class AuthThrottlingMiddleware
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class AuthThrottlingMiddleware
 {
     /**

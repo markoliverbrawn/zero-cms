@@ -1,4 +1,12 @@
 <?php
+/**
+ * File: src/Modules/Blog/Models/Comment.php
+ * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
+ * Package: Zero\Modules\Blog\Models
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 
 namespace Zero\Modules\Blog\Models;
 
@@ -7,6 +15,11 @@ use Zero\Models\Traits\IsModel;
 use Zero\Core\App;
 use Zero\Database\DB;
 
+/**
+ * Class Comment
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class Comment implements Model
 {
     use IsModel;
@@ -25,6 +38,12 @@ class Comment implements Model
     protected static string $tableName = 'blog_comments';
     protected static array $fillable = ['post_id', 'author_name', 'author_email', 'content', 'status'];
 
+    /**
+     * __construct processing implementation helper.
+     *
+     * @param array $data Argument descriptor.
+     * @return mixed Response output.
+     */
     public function __construct(array $data = [])
     {
         foreach ($data as $key => $value) {
@@ -45,6 +64,11 @@ class Comment implements Model
 
     
 
+    /**
+     * Retrieves the config attribute value.
+     *
+     * @return mixed Response output.
+     */
     public static function getConfig(): array
     {
         return [
@@ -83,7 +107,12 @@ class Comment implements Model
             WHERE site_id = ? AND post_id = ? AND status = 'approved' AND deleted_at IS NULL 
             ORDER BY created_at ASC
         ";
-        return DB::query($query, [$siteId, $postId])->fetchAll(\PDO::FETCH_CLASS, self::class);
+        return DB::query($query, [$siteId, $postId])->fetchAll(\PDO::FETCH_CLASS, self::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class);
     }
 /**
      * Custom pagination for Comments to support left-joins and searching by dynamic Post Title.

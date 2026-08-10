@@ -1,9 +1,28 @@
 <?php
+/**
+ * File: src/Core/Storage/LocalStorageDriver.php
+ * Architectural Purpose: Core bootstrapping, system environment configuration, and utility class of the framework.
+ * Package: Zero\Core\Storage
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 
 namespace Zero\Core\Storage;
 
+/**
+ * Class LocalStorageDriver
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class LocalStorageDriver implements StorageDriver
 {
+    /**
+     * Clears all contents of the target directory recursively, preserving the root folder.
+     *
+     * @param string $path Argument descriptor.
+     * @return bool Response output.
+     */
     public function cleanDirectory(string $path): bool
     {
         $resolved = $this->resolvePath($path);
@@ -14,6 +33,12 @@ class LocalStorageDriver implements StorageDriver
         return false;
     }
 
+    /**
+     * Deletes a specific file path from local storage.
+     *
+     * @param string $path Argument descriptor.
+     * @return bool Response output.
+     */
     public function delete(string $path): bool
     {
         $resolved = $this->resolvePath($path);
@@ -33,6 +58,13 @@ class LocalStorageDriver implements StorageDriver
         return false;
     }
 
+    /**
+     * Deletes a folder and all of its nested contents recursively.
+     *
+     * @param string $dir Argument descriptor.
+     * @param bool $removeSelf Argument descriptor.
+     * @return void Response output.
+     */
     protected function deleteDirectoryRecursive(string $dir, bool $removeSelf = true): void
     {
         if (is_dir($dir)) {
@@ -71,16 +103,35 @@ class LocalStorageDriver implements StorageDriver
         }
     }
 
+    /**
+     * Checks if a specific file exists on disk.
+     *
+     * @param string $path Argument descriptor.
+     * @return bool Response output.
+     */
     public function exists(string $path): bool
     {
         return file_exists($this->resolvePath($path));
     }
 
+    /**
+     * Generates a secure, temporary signed URL for public file downloads.
+     *
+     * @param string $path Argument descriptor.
+     * @param int $expires Argument descriptor.
+     * @return string Response output.
+     */
     public function getSignedUrl(string $path, int $expires = 3600): string
     {
         return $this->getUrl($path);
     }
 
+    /**
+     * Resolves the public URL path for a stored asset.
+     *
+     * @param string $path Argument descriptor.
+     * @return string Response output.
+     */
     public function getUrl(string $path): string
     {
         $siteId = class_exists('\\Zero\\Core\\App') ? \Zero\Core\App::getCurrentSiteId() : null;
@@ -156,6 +207,12 @@ class LocalStorageDriver implements StorageDriver
         return '/storage/uploads/' . $trimmed;
     }
 
+    /**
+     * Creates a directory pathway on disk recursively with appropriate permissions.
+     *
+     * @param string $path Argument descriptor.
+     * @return bool Response output.
+     */
     public function makeDirectory(string $path): bool
     {
         $resolved = $this->resolvePath($path);
@@ -169,6 +226,13 @@ class LocalStorageDriver implements StorageDriver
         return true;
     }
 
+    /**
+     * Saves an HTTP uploaded file payload to local disk storage.
+     *
+     * @param string $path Argument descriptor.
+     * @param string $tmpFilePath Argument descriptor.
+     * @return bool Response output.
+     */
     public function putFile(string $path, string $tmpFilePath): bool
     {
         $resolved = $this->resolvePath($path);
@@ -183,6 +247,13 @@ class LocalStorageDriver implements StorageDriver
         return copy($tmpFilePath, $resolved);
     }
 
+    /**
+     * Renames or moves a file to a new target path on local disk.
+     *
+     * @param string $oldPath Argument descriptor.
+     * @param string $newPath Argument descriptor.
+     * @return bool Response output.
+     */
     public function rename(string $oldPath, string $newPath): bool
     {
         $oldResolved = $this->resolvePath($oldPath);
@@ -288,6 +359,13 @@ class LocalStorageDriver implements StorageDriver
         return APPLICATION_ROOT . '/public/storage/uploads/' . $siteId;
     }
 
+    /**
+     * Writes raw string content into a storage file.
+     *
+     * @param string $path Argument descriptor.
+     * @param string $content Argument descriptor.
+     * @return bool Response output.
+     */
     public function write(string $path, string $content): bool
     {
         $resolved = $this->resolvePath($path);

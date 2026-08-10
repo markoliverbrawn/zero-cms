@@ -1,4 +1,12 @@
 <?php
+/**
+ * File: src/Models/Page.php
+ * Architectural Purpose: Active Record data model or behavioral trait wrapping database schema representation with tenant-scoping.
+ * Package: Zero\Models
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 // src/Models/Page.php
 
 namespace Zero\Models;
@@ -13,6 +21,11 @@ use Zero\Database\DB;
 use Zero\Support\I18n;
 use Zero\Core\App;
 
+/**
+ * Class Page
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class Page implements Model
 {
     use IsModel, HasSlug, IsOrderable, UsesBlockBuilder, Searchable {
@@ -94,6 +107,11 @@ class Page implements Model
         return $this->traitForceDelete();
     }
 
+    /**
+     * Retrieves the config attribute value.
+     *
+     * @return mixed Response output.
+     */
     public static function getConfig(): array
     {
         // Dynamically compile active parent slugs list inside current site tenant boundaries

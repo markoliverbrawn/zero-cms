@@ -1,12 +1,31 @@
 <?php
+/**
+ * File: src/Http/Middleware/CsrfMiddleware.php
+ * Architectural Purpose: HTTP request routing, request filtering middleware, or dynamic content-security controllers.
+ * Package: Zero\Http\Middleware
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 
 namespace Zero\Http\Middleware;
 
 use Zero\Core\App;
 use Zero\Support\Security;
 
+/**
+ * Class CsrfMiddleware
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class CsrfMiddleware
 {
+    /**
+     * Handles the incoming HTTP action request context and dispatches response frames.
+     *
+     * @param callable $next Argument descriptor.
+     * @return mixed Response output.
+     */
     public function handle(callable $next)
     {
         App::ensureSession();

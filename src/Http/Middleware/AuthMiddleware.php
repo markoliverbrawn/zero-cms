@@ -1,14 +1,33 @@
 <?php
+/**
+ * File: src/Http/Middleware/AuthMiddleware.php
+ * Architectural Purpose: HTTP request routing, request filtering middleware, or dynamic content-security controllers.
+ * Package: Zero\Http\Middleware
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 
 namespace Zero\Http\Middleware;
 
 use Zero\Core\App;
 
+/**
+ * Class AuthMiddleware
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class AuthMiddleware
 {
     protected static $loginUrl = '/admin/login';
     protected static $defaultRedirect = '/admin/dashboard';
 
+    /**
+     * Handles the incoming HTTP action request context and dispatches response frames.
+     *
+     * @param callable $next Argument descriptor.
+     * @return mixed Response output.
+     */
     public function handle(callable $next)
     {
         // Start session if not already started
@@ -45,6 +64,12 @@ class AuthMiddleware
     }
 
 
+    /**
+     * Sets the default redirect attribute configuration value.
+     *
+     * @param string $url Argument descriptor.
+     * @return mixed Response output.
+     */
     public static function setDefaultRedirect(string $url)
     {
         self::$defaultRedirect = $url;
@@ -52,6 +77,12 @@ class AuthMiddleware
 
     
 
+    /**
+     * Sets the login url attribute configuration value.
+     *
+     * @param string $url Argument descriptor.
+     * @return mixed Response output.
+     */
     public static function setLoginUrl(string $url)
     {
         self::$loginUrl = $url;

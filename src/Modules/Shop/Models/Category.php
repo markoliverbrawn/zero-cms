@@ -1,4 +1,12 @@
 <?php
+/**
+ * File: src/Modules/Shop/Models/Category.php
+ * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
+ * Package: Zero\Modules\Shop\Models
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 
 namespace Zero\Modules\Shop\Models;
 
@@ -9,6 +17,11 @@ use Zero\Models\Media;
 use Zero\Models\Traits\HasSlug;
 use Zero\Models\Traits\IsModel;
 
+/**
+ * Class Category
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class Category implements Model
 {
     use IsModel, HasSlug;
@@ -28,6 +41,12 @@ class Category implements Model
     public $created_at;
     public $updated_at;
 
+    /**
+     * __construct processing implementation helper.
+     *
+     * @param mixed $data Argument descriptor.
+     * @return mixed Response output.
+     */
     public function __construct($data = [])
     {
         // Hydrate all matching DB fields
@@ -94,6 +113,11 @@ class Category implements Model
         return null;
     }
 
+    /**
+     * Retrieves the config attribute value.
+     *
+     * @return mixed Response output.
+     */
     public static function getConfig(): array
     {
         return [

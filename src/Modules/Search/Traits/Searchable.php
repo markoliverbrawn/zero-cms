@@ -1,10 +1,23 @@
 <?php
+/**
+ * File: src/Modules/Search/Traits/Searchable.php
+ * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
+ * Package: Zero\Modules\Search\Traits
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 
 namespace Zero\Modules\Search\Traits;
 
 use Zero\Core\App;
 use Zero\Modules\Search\Services\SearchService;
 
+/**
+ * Trait Searchable
+ *
+ * Defines systemic behavioral interface contract mechanisms.
+ */
 trait Searchable
 {
     /**
@@ -123,9 +136,19 @@ trait Searchable
             return;
         }
 
-        $modelType = property_exists(static::class, 'modelType') ? static::$modelType : null;
+        $modelType = property_exists(static::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class, 'modelType') ? static::$modelType : null;
         if (empty($modelType)) {
-            $parts = explode('\\', static::class);
+            $parts = explode('\\', static::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class);
             $modelType = strtolower(end($parts));
         }
 
@@ -147,9 +170,19 @@ trait Searchable
             return;
         }
 
-        $modelType = property_exists(static::class, 'modelType') ? static::$modelType : null;
+        $modelType = property_exists(static::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class, 'modelType') ? static::$modelType : null;
         if (empty($modelType)) {
-            $parts = explode('\\', static::class);
+            $parts = explode('\\', static::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class);
             $modelType = strtolower(end($parts));
         }
 

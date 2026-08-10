@@ -1,9 +1,22 @@
 <?php
+/**
+ * File: src/Models/Traits/HasFeaturedImage.php
+ * Architectural Purpose: Active Record data model or behavioral trait wrapping database schema representation with tenant-scoping.
+ * Package: Zero\Models\Traits
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 
 namespace Zero\Models\Traits;
 
 use Zero\Models\Media;
 
+/**
+ * Trait HasFeaturedImage
+ *
+ * Defines systemic behavioral interface contract mechanisms.
+ */
 trait HasFeaturedImage
 {
     public $featured_image_path;

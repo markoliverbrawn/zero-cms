@@ -1,9 +1,22 @@
 <?php
+/**
+ * File: src/Http/Middleware/SecurePathMiddleware.php
+ * Architectural Purpose: HTTP request routing, request filtering middleware, or dynamic content-security controllers.
+ * Package: Zero\Http\Middleware
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 
 namespace Zero\Http\Middleware;
 
 use Zero\Support\Logger;
 
+/**
+ * Class SecurePathMiddleware
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class SecurePathMiddleware
 {
     /**
@@ -60,6 +73,13 @@ class SecurePathMiddleware
         return $next($physicalPath);
     }
 
+    /**
+     * Is path within storage root processing implementation helper.
+     *
+     * @param string $candidatePath Argument descriptor.
+     * @param ?string $storageRoot Argument descriptor.
+     * @return bool Response output.
+     */
     public static function isPathWithinStorageRoot(string $candidatePath, ?string $storageRoot): bool
     {
         if (empty($candidatePath) || empty($storageRoot)) {

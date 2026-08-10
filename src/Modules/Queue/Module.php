@@ -1,4 +1,12 @@
 <?php
+/**
+ * File: src/Modules/Queue/Module.php
+ * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
+ * Package: Zero\Modules\Queue
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 
 namespace Zero\Modules\Queue;
 
@@ -9,41 +17,91 @@ use Zero\Modules\Queue\Jobs\PurgeOldLogsJob;
 use Zero\Modules\Queue\Models\QueueJob;
 use Zero\Modules\Queue\Support\Scheduler;
 
+/**
+ * Class Module
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class Module implements ModuleInterface
 {
+    /**
+     * Retrieves the accent color attribute value.
+     *
+     * @return string Response output.
+     */
     public function getAccentColor(): string
     {
         return '#475569';
     }
 
+    /**
+     * Retrieves the dashboard widget view attribute value.
+     *
+     * @return string Response output.
+     */
     public function getDashboardWidgetView(): ?string
     {
         return 'dashboard-widget';
     }
 
+    /**
+     * Retrieves the id attribute value.
+     *
+     * @return string Response output.
+     */
     public function getId(): string
     {
         return 'queue';
     }
 
+    /**
+     * Retrieves the migration class attribute value.
+     *
+     * @return string Response output.
+     */
     public function getMigrationClass(): ?string
     {
         return null;
     }
 
+    /**
+     * Retrieves the routes attribute value.
+     *
+     * @return mixed Response output.
+     */
     public function getRoutes(): array
     {
         return [
-            '#^/api/v1/queue/process$#' => QueueApiController::class
+            '#^/api/v1/queue/process$#' => QueueApiController::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class
         ];
     }
 
+    /**
+     * Init processing implementation helper.
+     *
+     * @return mixed Response output.
+     */
     public function init()
     {
-        App::registerModel('queue_jobs', QueueJob::class);
+        App::registerModel('queue_jobs', QueueJob::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class);
 
         // Register hourly scheduled task to automatically purge old tenant audit logs (older than 1 year)
-        Scheduler::register(PurgeOldLogsJob::class, [], 'hourly');
+        Scheduler::register(PurgeOldLogsJob::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class, [], 'hourly');
 
         App::registerAdminSidebarSection('queue', [
             'title' => 'Job Queue',

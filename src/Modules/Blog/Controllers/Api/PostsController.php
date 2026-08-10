@@ -1,12 +1,31 @@
 <?php
+/**
+ * File: src/Modules/Blog/Controllers/Api/PostsController.php
+ * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
+ * Package: Zero\Modules\Blog\Controllers\Api
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 
 namespace Zero\Modules\Blog\Controllers\Api;
 
 use Zero\Http\Controllers\ApiController;
 use Zero\Modules\Blog\Models\Post;
 
+/**
+ * Class PostsController
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class PostsController extends ApiController
 {
+    /**
+     * Handles the incoming HTTP action request context and dispatches response frames.
+     *
+     * @param mixed $matches Argument descriptor.
+     * @return mixed Response output.
+     */
     public function handle($matches)
     {
         // 1. Authenticate Request

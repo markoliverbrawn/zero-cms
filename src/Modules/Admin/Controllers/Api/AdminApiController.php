@@ -1,4 +1,12 @@
 <?php
+/**
+ * File: src/Modules/Admin/Controllers/Api/AdminApiController.php
+ * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
+ * Package: Zero\Modules\Admin\Controllers\Api
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 
 namespace Zero\Modules\Admin\Controllers\Api;
 
@@ -15,6 +23,11 @@ use Zero\Support\I18n;
 use Zero\Support\Logger;
 use Zero\Support\Security;
 
+/**
+ * Class AdminApiController
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class AdminApiController extends ApiController
 {
     /**
@@ -65,6 +78,12 @@ class AdminApiController extends ApiController
         return $user;
     }
 
+    /**
+     * Handles the incoming HTTP action request context and dispatches response frames.
+     *
+     * @param mixed $matches Argument descriptor.
+     * @return mixed Response output.
+     */
     public function handle($matches)
     {
         // 1. Authenticate using session and CSRF checks
@@ -159,6 +178,12 @@ class AdminApiController extends ApiController
         $this->respond(['success' => false, 'error' => 'Endpoint not found or method not allowed'], 404);
     }
 
+    /**
+     * Handle ai generate summary processing implementation helper.
+     *
+     * @param mixed $body Argument descriptor.
+     * @return mixed Response output.
+     */
     protected function handleAiGenerateSummary($body)
     {
         $content = $body['content'] ?? '';
@@ -188,6 +213,12 @@ class AdminApiController extends ApiController
         }
     }
 
+    /**
+     * Handle block preview processing implementation helper.
+     *
+     * @param mixed $body Argument descriptor.
+     * @return mixed Response output.
+     */
     protected function handleBlockPreview($body)
     {
         $block = $body['block'] ?? [];
@@ -361,6 +392,13 @@ class AdminApiController extends ApiController
         ]);
     }
 
+    /**
+     * Handle delete files processing implementation helper.
+     *
+     * @param mixed $siteId Argument descriptor.
+     * @param mixed $body Argument descriptor.
+     * @return mixed Response output.
+     */
     protected function handleDeleteFiles($siteId, $body)
     {
         $idsInput = $body['id'] ?? null;
@@ -405,6 +443,13 @@ class AdminApiController extends ApiController
         ]);
     }
 
+    /**
+     * Handle delete model processing implementation helper.
+     *
+     * @param mixed $modelName Argument descriptor.
+     * @param mixed $id Argument descriptor.
+     * @return mixed Response output.
+     */
     protected function handleDeleteModel($modelName, $id)
     {
         $model = App::getModelClass($modelName);
@@ -442,6 +487,12 @@ class AdminApiController extends ApiController
         $this->respond(['success' => false, 'error' => 'Record not found or already deleted'], 404);
     }
 
+    /**
+     * Handle get files processing implementation helper.
+     *
+     * @param mixed $siteId Argument descriptor.
+     * @return mixed Response output.
+     */
     protected function handleGetFiles($siteId)
     {
         $folder = $_GET['folder'] ?? '';
@@ -496,6 +547,13 @@ class AdminApiController extends ApiController
         $this->respond($files);
     }
 
+    /**
+     * Handle move files processing implementation helper.
+     *
+     * @param mixed $siteId Argument descriptor.
+     * @param mixed $body Argument descriptor.
+     * @return mixed Response output.
+     */
     protected function handleMoveFiles($siteId, $body)
     {
         $fileIdInput = $body['file_id'] ?? null;
@@ -591,6 +649,14 @@ class AdminApiController extends ApiController
         ]);
     }
 
+    /**
+     * Handle purge audit logs processing implementation helper.
+     *
+     * @param string $siteId Argument descriptor.
+     * @param array $user Argument descriptor.
+     * @param array $body Argument descriptor.
+     * @return mixed Response output.
+     */
     protected function handlePurgeAuditLogs(string $siteId, array $user, array $body)
     {
         $purgeAll = !empty($body['purge_all_sites']);
@@ -634,6 +700,13 @@ class AdminApiController extends ApiController
         }
     }
 
+    /**
+     * Handle reorder model processing implementation helper.
+     *
+     * @param mixed $modelName Argument descriptor.
+     * @param mixed $body Argument descriptor.
+     * @return mixed Response output.
+     */
     protected function handleReorderModel($modelName, $body)
     {
         $model = App::getModelClass($modelName);
@@ -649,7 +722,12 @@ class AdminApiController extends ApiController
 
         // Check if model has IsOrderable trait or supports reordering
         $traits = class_uses($model);
-        $isOrderable = isset($traits[IsOrderable::class]) || (method_exists($model, 'isOrderable') && $model::isOrderable());
+        $isOrderable = isset($traits[IsOrderable::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class]) || (method_exists($model, 'isOrderable') && $model::isOrderable());
 
         if (!$isOrderable) {
             $this->respond(['success' => false, 'error' => 'Model is not orderable'], 400);
@@ -670,6 +748,14 @@ class AdminApiController extends ApiController
         $this->respond(['success' => true]);
     }
 
+    /**
+     * Handle save model processing implementation helper.
+     *
+     * @param mixed $modelName Argument descriptor.
+     * @param mixed $id Argument descriptor.
+     * @param mixed $body Argument descriptor.
+     * @return mixed Response output.
+     */
     protected function handleSaveModel($modelName, $id, $body)
     {
         $model = App::getModelClass($modelName);
@@ -740,6 +826,13 @@ class AdminApiController extends ApiController
         }
     }
 
+    /**
+     * Handle save preferences processing implementation helper.
+     *
+     * @param mixed $userId Argument descriptor.
+     * @param mixed $body Argument descriptor.
+     * @return mixed Response output.
+     */
     protected function handleSavePreferences($userId, $body)
     {
         $action = $_GET['action'] ?? $body['action'] ?? '';
@@ -795,6 +888,12 @@ class AdminApiController extends ApiController
         $this->respond(['success' => true]);
     }
 
+    /**
+     * Handle upload file processing implementation helper.
+     *
+     * @param mixed $siteId Argument descriptor.
+     * @return mixed Response output.
+     */
     protected function handleUploadFile($siteId)
     {
         if (!isset($_FILES['file']) || $_FILES['file']['error'] !== UPLOAD_ERR_OK) {

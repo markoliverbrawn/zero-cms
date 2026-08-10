@@ -1,4 +1,12 @@
 <?php
+/**
+ * File: src/Modules/Search/Module.php
+ * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
+ * Package: Zero\Modules\Search
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 
 namespace Zero\Modules\Search;
 
@@ -7,6 +15,11 @@ use Zero\Modules\Search\Controllers\SearchController;
 use Zero\Modules\Search\Services\SearchService;
 use Zero\Core\App;
 
+/**
+ * Class Module
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class Module implements ModuleInterface
 {
     /**
@@ -57,9 +70,24 @@ class Module implements ModuleInterface
     public function getRoutes(): array
     {
         return [
-            '#^/search$#' => SearchController::class,
-            '#^/api/v1/admin/search/reindex/start$#' => \Zero\Modules\Search\Controllers\SearchReindexController::class,
-            '#^/api/v1/admin/search/reindex/batch$#' => \Zero\Modules\Search\Controllers\SearchReindexController::class,
+            '#^/search$#' => SearchController::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class,
+            '#^/api/v1/admin/search/reindex/start$#' => \Zero\Modules\Search\Controllers\SearchReindexController::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class,
+            '#^/api/v1/admin/search/reindex/batch$#' => \Zero\Modules\Search\Controllers\SearchReindexController::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class,
         ];
     }
 
@@ -72,7 +100,12 @@ class Module implements ModuleInterface
     public function init()
     {
         // Register core Pages searchable
-        SearchService::register(\Zero\Models\Page::class, [
+        SearchService::register(\Zero\Models\Page::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class, [
             'type_label' => 'Page',
             'search_fields' => ['title', 'content', 'summary'],
             'title_field' => 'title',

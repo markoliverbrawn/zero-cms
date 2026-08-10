@@ -1,9 +1,22 @@
 <?php
+/**
+ * File: src/Http/Middleware/RateLimitMiddleware.php
+ * Architectural Purpose: HTTP request routing, request filtering middleware, or dynamic content-security controllers.
+ * Package: Zero\Http\Middleware
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 
 namespace Zero\Http\Middleware;
 
 use Zero\Support\Security;
 
+/**
+ * Class RateLimitMiddleware
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class RateLimitMiddleware
 {
     /**

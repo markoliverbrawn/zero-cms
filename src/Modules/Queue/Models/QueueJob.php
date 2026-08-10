@@ -1,4 +1,12 @@
 <?php
+/**
+ * File: src/Modules/Queue/Models/QueueJob.php
+ * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
+ * Package: Zero\Modules\Queue\Models
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 
 namespace Zero\Modules\Queue\Models;
 
@@ -6,6 +14,11 @@ use Zero\Database\DB;
 use Zero\Interfaces\Model as ModelInterface;
 use Zero\Models\Traits\IsModel;
 
+/**
+ * Class QueueJob
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class QueueJob implements ModelInterface
 {
     use IsModel {
@@ -38,6 +51,11 @@ class QueueJob implements ModelInterface
     public $updated_at;
     public $deleted_at;
 
+    /**
+     * Save processing implementation helper.
+     *
+     * @return mixed Response output.
+     */
     public function save()
     {
         // When status is manually reset to pending, clear error trace, attempts, and locks
@@ -50,6 +68,11 @@ class QueueJob implements ModelInterface
         return $this->traitSave();
     }
 
+    /**
+     * Update processing implementation helper.
+     *
+     * @return mixed Response output.
+     */
     protected function update()
     {
         $set = [];
@@ -71,6 +94,11 @@ class QueueJob implements ModelInterface
         return true;
     }
 
+    /**
+     * Retrieves the config attribute value.
+     *
+     * @return mixed Response output.
+     */
     public static function getConfig(): array
     {
         return [
@@ -130,6 +158,11 @@ class QueueJob implements ModelInterface
         ];
     }
 
+    /**
+     * Retrieves the edit label attribute value.
+     *
+     * @return string Response output.
+     */
     public static function getEditLabel(): string
     {
         return 'View';

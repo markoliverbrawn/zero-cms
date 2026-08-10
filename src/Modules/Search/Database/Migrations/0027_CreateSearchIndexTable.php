@@ -1,10 +1,23 @@
 <?php
+/**
+ * File: src/Modules/Search/Database/Migrations/0027_CreateSearchIndexTable.php
+ * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
+ * Package: Zero\Modules\Search\Database\Migrations
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 
 namespace Zero\Modules\Search\Database\Migrations;
 
 use Zero\Database\DB;
 use Zero\Database\Migration;
 
+/**
+ * Class CreateSearchIndexTable
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class CreateSearchIndexTable extends Migration
 {
     /**

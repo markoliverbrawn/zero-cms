@@ -1,4 +1,12 @@
 <?php
+/**
+ * File: src/Modules/Security/Controllers/SecurityAuditController.php
+ * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
+ * Package: Zero\Modules\Security\Controllers
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 
 namespace Zero\Modules\Security\Controllers;
 
@@ -13,8 +21,19 @@ use Zero\Modules\Security\Services\ExploitScanner;
 use Zero\Services\AiService;
 use Zero\Support\Str;
 
+/**
+ * Class SecurityAuditController
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class SecurityAuditController implements Controller
 {
+    /**
+     * Calculate score processing implementation helper.
+     *
+     * @param array $telemetry Argument descriptor.
+     * @return int Response output.
+     */
     private function calculateScore(array $telemetry): int
     {
         $score = 100;
@@ -51,6 +70,11 @@ class SecurityAuditController implements Controller
         return max($score, 0);
     }
 
+    /**
+     * Collect telemetry processing implementation helper.
+     *
+     * @return mixed Response output.
+     */
     private function collectTelemetry(): array
     {
         $telemetry = [];
@@ -180,6 +204,12 @@ class SecurityAuditController implements Controller
         return $telemetry;
     }
 
+    /**
+     * Retrieves the fallback report attribute value.
+     *
+     * @param array $telemetry Argument descriptor.
+     * @return string Response output.
+     */
     private function getFallbackReport(array $telemetry): string
     {
         return Template::renderFile(
@@ -188,6 +218,12 @@ class SecurityAuditController implements Controller
         );
     }
 
+    /**
+     * Handles the incoming HTTP action request context and dispatches response frames.
+     *
+     * @param mixed $param Argument descriptor.
+     * @return mixed Response output.
+     */
     public function handle($param)
     {
         App::applyAuthMiddleware();
@@ -256,6 +292,12 @@ class SecurityAuditController implements Controller
         exit;
     }
 
+    /**
+     * Run audit processing implementation helper.
+     *
+     * @param array $telemetry Argument descriptor.
+     * @return string Response output.
+     */
     private function runAudit(array $telemetry): string
     {
         $score = $telemetry['calculated_score'] ?? $this->calculateScore($telemetry);

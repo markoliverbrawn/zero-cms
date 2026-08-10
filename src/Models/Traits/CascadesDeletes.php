@@ -1,9 +1,22 @@
 <?php
+/**
+ * File: src/Models/Traits/CascadesDeletes.php
+ * Architectural Purpose: Active Record data model or behavioral trait wrapping database schema representation with tenant-scoping.
+ * Package: Zero\Models\Traits
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 
 namespace Zero\Models\Traits;
 
 use Zero\Database\DB;
 
+/**
+ * Trait CascadesDeletes
+ *
+ * Defines systemic behavioral interface contract mechanisms.
+ */
 trait CascadesDeletes
 {
     /**

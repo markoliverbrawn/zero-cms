@@ -1,70 +1,228 @@
 <?php
+/**
+ * File: src/Modules/Admin/Module.php
+ * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
+ * Package: Zero\Modules\Admin
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 
 namespace Zero\Modules\Admin;
 
 use Zero\Interfaces\Module as ModuleInterface;
 use Zero\Core\App;
 
+/**
+ * Class Module
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class Module implements ModuleInterface
 {
+    /**
+     * Retrieves the accent color attribute value.
+     *
+     * @return string Response output.
+     */
     public function getAccentColor(): string
     {
         return '#2563eb';
     }
 
+    /**
+     * Retrieves the dashboard widget view attribute value.
+     *
+     * @return string Response output.
+     */
     public function getDashboardWidgetView(): ?string
     {
         return null;
     }
 
+    /**
+     * Retrieves the id attribute value.
+     *
+     * @return string Response output.
+     */
     public function getId(): string
     {
         return 'admin';
     }
 
+    /**
+     * Retrieves the migration class attribute value.
+     *
+     * @return string Response output.
+     */
     public function getMigrationClass(): ?string
     {
         return null;
     }
 
+    /**
+     * Retrieves the routes attribute value.
+     *
+     * @return mixed Response output.
+     */
     public function getRoutes(): array
     {
         return [
             // Admin authentication routes
-            '#^/admin/?$#' => Controllers\LoginController::class,
-            '#^/admin/login$#' => Controllers\LoginController::class,
-            '#^/admin/logout$#' => Controllers\LogoutController::class,
-            '#^/admin/forgot$#' => Controllers\ForgotController::class,
-            '#^/admin/reset$#' => Controllers\ResetController::class,
+            '#^/admin/?$#' => Controllers\LoginController::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class,
+            '#^/admin/login$#' => Controllers\LoginController::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class,
+            '#^/admin/logout$#' => Controllers\LogoutController::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class,
+            '#^/admin/forgot$#' => Controllers\ForgotController::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class,
+            '#^/admin/reset$#' => Controllers\ResetController::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class,
 
             // Admin back-office routes
-            '#^/admin/dashboard$#' => Controllers\DashboardController::class,
-            '#^/admin/list/files/edit/([a-zA-Z0-9\-]+)$#' => Controllers\FilesController::class,
-            '#^/admin/list/files$#' => Controllers\FilesController::class,
-            '#^/admin/files$#' => Controllers\FilesController::class,
-            '#^/admin/files/([a-zA-Z0-9_-]+)$#' => Controllers\FilesController::class,
-            '#^/admin/secure-download/([a-zA-Z0-9\-]+)$#' => Controllers\SecureDownloadController::class,
-            '#^/admin/preferences$#' => Controllers\PreferencesController::class,
-            '#^/admin/theme-switcher$#' => Controllers\ThemeSwitcherController::class,
-            '#^/admin/google-callback$#' => Controllers\GoogleAuthController::class,
+            '#^/admin/dashboard$#' => Controllers\DashboardController::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class,
+            '#^/admin/list/files/edit/([a-zA-Z0-9\-]+)$#' => Controllers\FilesController::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class,
+            '#^/admin/list/files$#' => Controllers\FilesController::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class,
+            '#^/admin/files$#' => Controllers\FilesController::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class,
+            '#^/admin/files/([a-zA-Z0-9_-]+)$#' => Controllers\FilesController::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class,
+            '#^/admin/secure-download/([a-zA-Z0-9\-]+)$#' => Controllers\SecureDownloadController::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class,
+            '#^/admin/preferences$#' => Controllers\PreferencesController::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class,
+            '#^/admin/theme-switcher$#' => Controllers\ThemeSwitcherController::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class,
+            '#^/admin/google-callback$#' => Controllers\GoogleAuthController::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class,
 
             // CRUD Model routes
-            '#^/admin/list/([a-zA-Z0-9_-]+)$#' => Controllers\ListController::class,
-            '#^/admin/edit/([a-zA-Z0-9_-]+)/([a-zA-Z0-9\-]+)$#' => Controllers\ModelController::class,
-            '#^/admin/delete/([a-zA-Z0-9_-]+)$#' => Controllers\ModelController::class,
-            '#^/admin/restore/([a-zA-Z0-9_-]+)$#' => Controllers\ModelController::class,
-            '#^/admin/force-delete/([a-zA-Z0-9_-]+)$#' => Controllers\ModelController::class,
-            '#^/admin/export/([a-zA-Z0-9_-]+)$#' => Controllers\ExportController::class,
+            '#^/admin/list/([a-zA-Z0-9_-]+)$#' => Controllers\ListController::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class,
+            '#^/admin/edit/([a-zA-Z0-9_-]+)/([a-zA-Z0-9\-]+)$#' => Controllers\ModelController::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class,
+            '#^/admin/delete/([a-zA-Z0-9_-]+)$#' => Controllers\ModelController::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class,
+            '#^/admin/restore/([a-zA-Z0-9_-]+)$#' => Controllers\ModelController::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class,
+            '#^/admin/force-delete/([a-zA-Z0-9_-]+)$#' => Controllers\ModelController::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class,
+            '#^/admin/export/([a-zA-Z0-9_-]+)$#' => Controllers\ExportController::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class,
 
             // Admin REST API routes
-            '#^/api/v1/admin/([a-zA-Z0-9_/\-]+)$#' => Controllers\Api\AdminApiController::class,
-            '#^/api/v1/user/send-welcome$#' => Controllers\Api\SendWelcomeController::class,
+            '#^/api/v1/admin/([a-zA-Z0-9_/\-]+)$#' => Controllers\Api\AdminApiController::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class,
+            '#^/api/v1/user/send-welcome$#' => Controllers\Api\SendWelcomeController::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class,
 
             // Redirect route for backward compatibility / back links
-            '#^/admin/([a-zA-Z0-9_-]+)$#' => Controllers\RedirectController::class,
+            '#^/admin/([a-zA-Z0-9_-]+)$#' => Controllers\RedirectController::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class,
         ];
     }
 
+    /**
+     * Init processing implementation helper.
+     *
+     * @return mixed Response output.
+     */
     public function init()
     {
         App::registerBlock('baseline', [

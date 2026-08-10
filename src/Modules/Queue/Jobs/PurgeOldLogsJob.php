@@ -1,4 +1,12 @@
 <?php
+/**
+ * File: src/Modules/Queue/Jobs/PurgeOldLogsJob.php
+ * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
+ * Package: Zero\Modules\Queue\Jobs
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 
 namespace Zero\Modules\Queue\Jobs;
 
@@ -6,6 +14,11 @@ use Zero\Core\App;
 use Zero\Database\DB;
 use Zero\Interfaces\Job;
 
+/**
+ * Class PurgeOldLogsJob
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class PurgeOldLogsJob implements Job
 {
     /**

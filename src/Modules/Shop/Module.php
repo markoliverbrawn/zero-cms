@@ -1,4 +1,12 @@
 <?php
+/**
+ * File: src/Modules/Shop/Module.php
+ * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
+ * Package: Zero\Modules\Shop
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 
 namespace Zero\Modules\Shop;
 
@@ -24,54 +32,174 @@ use Zero\Modules\Shop\Models\Product;
 use Zero\Modules\Shop\Models\ProductVariant;
 use Zero\Support\Seeder;
 
+/**
+ * Class Module
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class Module implements ModuleInterface
 {
+    /**
+     * Retrieves the accent color attribute value.
+     *
+     * @return string Response output.
+     */
     public function getAccentColor(): string
     {
         return '#f59e0b';
     }
 
+    /**
+     * Retrieves the dashboard widget view attribute value.
+     *
+     * @return string Response output.
+     */
     public function getDashboardWidgetView(): ?string
     {
         return 'dashboard-widget';
     }
 
+    /**
+     * Retrieves the id attribute value.
+     *
+     * @return string Response output.
+     */
     public function getId(): string
     {
         return 'shop';
     }
 
+    /**
+     * Retrieves the migration class attribute value.
+     *
+     * @return string Response output.
+     */
     public function getMigrationClass(): ?string
     {
-        return Migration::class;
+        return Migration::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class;
     }
 
+    /**
+     * Retrieves the routes attribute value.
+     *
+     * @return mixed Response output.
+     */
     public function getRoutes(): array
     {
         return [
-            '#^/login$#' => FrontendLoginController::class,
-            '#^/register$#' => RegisterController::class,
-            '#^/forgot$#' => FrontendForgotController::class,
-            '#^/reset$#' => FrontendResetController::class,
-            '#^/shop/account$#' => AccountController::class,
-            '#^/shop/catalog$#' => CatalogController::class,
-            '#^/shop/product/([a-zA-Z0-9\-]+)$#' => ProductViewController::class,
-            '#^/shop/cart$#' => CartController::class,
-            '#^/shop/checkout$#' => CheckoutController::class,
-            '#^/shop/success$#' => SuccessController::class,
-            '#^/api/v1/products(?:/(.*))?$#' => ProductsController::class,
-            '#^/api/v1/categories(?:/(.*))?$#' => CategoriesController::class
+            '#^/login$#' => FrontendLoginController::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class,
+            '#^/register$#' => RegisterController::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class,
+            '#^/forgot$#' => FrontendForgotController::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class,
+            '#^/reset$#' => FrontendResetController::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class,
+            '#^/shop/account$#' => AccountController::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class,
+            '#^/shop/catalog$#' => CatalogController::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class,
+            '#^/shop/product/([a-zA-Z0-9\-]+)$#' => ProductViewController::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class,
+            '#^/shop/cart$#' => CartController::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class,
+            '#^/shop/checkout$#' => CheckoutController::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class,
+            '#^/shop/success$#' => SuccessController::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class,
+            '#^/api/v1/products(?:/(.*))?$#' => ProductsController::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class,
+            '#^/api/v1/categories(?:/(.*))?$#' => CategoriesController::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class
         ];
     }
 
+    /**
+     * Init processing implementation helper.
+     *
+     * @return mixed Response output.
+     */
     public function init()
     {
         App::registerThemeFallback('shop');
 
-        App::registerModel('products', Product::class);
-        App::registerModel('productvariants', ProductVariant::class);
-        App::registerModel('orders', Order::class);
-        App::registerModel('categories', Category::class);
+        App::registerModel('products', Product::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class);
+        App::registerModel('productvariants', ProductVariant::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class);
+        App::registerModel('orders', Order::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class);
+        App::registerModel('categories', Category::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class);
 
         App::registerAdminSidebarSection('shop', [
             'title' => 'Shop Management',
@@ -120,8 +248,18 @@ class Module implements ModuleInterface
             'frontend_view' => dirname(__FILE__) . '/Views/blocks/frontend/categories.php'
         ]);
 
-        if (class_exists(SearchService::class)) {
-            SearchService::register(Product::class, [
+        if (class_exists(SearchService::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class)) {
+            SearchService::register(Product::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class, [
                 'type_label' => 'Product',
                 'search_fields' => ['title', 'description', 'sku'],
                 'title_field' => 'title',

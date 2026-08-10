@@ -1,11 +1,29 @@
 <?php
+/**
+ * File: src/Modules/Blog/Database/Migrations/0006_CreateBlogCommentsTable.php
+ * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
+ * Package: Zero\Modules\Blog\Database\Migrations
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 
 namespace Zero\Modules\Blog\Database\Migrations;
 
 use Zero\Database\DB;
 
+/**
+ * Class CreateBlogCommentsTable
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class CreateBlogCommentsTable extends \Zero\Database\Migration
 {
+    /**
+     * Runs the database transactional migrations to compile schemas.
+     *
+     * @return void Response output.
+     */
     public function up(): void
     {
         echo "Creating Blog Comments Database Tables...\n";
@@ -28,6 +46,11 @@ class CreateBlogCommentsTable extends \Zero\Database\Migration
         ");
     }
 
+    /**
+     * Reverses database schema migrations, rolling back table columns cleanly.
+     *
+     * @return void Response output.
+     */
     public function down(): void
     {
         echo "Dropping Blog Comments Database Tables...\n";

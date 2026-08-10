@@ -1,4 +1,12 @@
 <?php
+/**
+ * File: src/Modules/Queue/Controllers/QueueApiController.php
+ * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
+ * Package: Zero\Modules\Queue\Controllers
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 
 namespace Zero\Modules\Queue\Controllers;
 
@@ -6,8 +14,19 @@ use Zero\Interfaces\Controller;
 use Zero\Modules\Queue\Support\QueueManager;
 use Zero\Core\Env;
 
+/**
+ * Class QueueApiController
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class QueueApiController implements Controller
 {
+    /**
+     * Handles the incoming HTTP action request context and dispatches response frames.
+     *
+     * @param mixed $param Argument descriptor.
+     * @return mixed Response output.
+     */
     public function handle($param)
     {
         // Enforce Content-Type header

@@ -1,4 +1,12 @@
 <?php
+/**
+ * File: src/Modules/Forum/Models/ForumThread.php
+ * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
+ * Package: Zero\Modules\Forum\Models
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 
 namespace Zero\Modules\Forum\Models;
 
@@ -12,6 +20,11 @@ use Zero\Models\User;
 use Zero\Modules\Forum\Models\ForumBoard;
 use Zero\Modules\Forum\Models\ForumPost;
 
+/**
+ * Class ForumThread
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class ForumThread implements ModelInterface
 {
     use IsModel, HasSlug, CascadesDeletes {
@@ -26,7 +39,12 @@ class ForumThread implements ModelInterface
     protected static $modelType = null;
     protected static $fillable = ['board_id', 'user_id', 'title', 'slug', 'status', 'views_count'];
     protected static array $cascadeDeletes = [
-        ForumPost::class => 'thread_id'
+        ForumPost::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class => 'thread_id'
     ];
 
     public $id;
@@ -43,6 +61,12 @@ class ForumThread implements ModelInterface
     public $replies_count;
     public $author_username;
 
+    /**
+     * __construct processing implementation helper.
+     *
+     * @param mixed $data Argument descriptor.
+     * @return mixed Response output.
+     */
     public function __construct($data = [])
     {
         foreach ($data as $key => $value) {
@@ -60,6 +84,11 @@ class ForumThread implements ModelInterface
         }
     }
 
+    /**
+     * Retrieves the author username attribute value.
+     *
+     * @return string Response output.
+     */
     public function getAuthorUsername(): string
     {
         if (!empty($this->author_username)) {
@@ -70,6 +99,12 @@ class ForumThread implements ModelInterface
         return $this->author_username;
     }
 
+    /**
+     * Retrieves the board threads attribute value.
+     *
+     * @param string $boardId Argument descriptor.
+     * @return mixed Response output.
+     */
     public static function getBoardThreads(string $boardId): array
     {
         $sql = "
@@ -118,6 +153,11 @@ class ForumThread implements ModelInterface
         return $results;
     }
 
+    /**
+     * Retrieves the config attribute value.
+     *
+     * @return mixed Response output.
+     */
     public static function getConfig(): array
     {
         return [
@@ -156,6 +196,11 @@ class ForumThread implements ModelInterface
         ];
     }
 
+    /**
+     * Retrieves the posts attribute value.
+     *
+     * @return mixed Response output.
+     */
     public function getPosts(): array
     {
         $postsData = DB::query(
@@ -190,6 +235,11 @@ class ForumThread implements ModelInterface
         return $posts;
     }
 
+    /**
+     * Retrieves the replies count attribute value.
+     *
+     * @return int Response output.
+     */
     public function getRepliesCount(): int
     {
         if (isset($this->replies_count)) {
@@ -203,6 +253,15 @@ class ForumThread implements ModelInterface
         return $this->replies_count;
     }
 
+    /**
+     * Paginate processing implementation helper.
+     *
+     * @param mixed $page Argument descriptor.
+     * @param mixed $perPage Argument descriptor.
+     * @param mixed $filters Argument descriptor.
+     * @param mixed $orderBy Argument descriptor.
+     * @return mixed Response output.
+     */
     public static function paginate($page = 1, $perPage = 10, $filters = [], $orderBy = 'created_at DESC')
     {
         $pagination = self::traitPaginate($page, $perPage, $filters, $orderBy);

@@ -1,4 +1,12 @@
 <?php
+/**
+ * File: src/Modules/Admin/Controllers/ListController.php
+ * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
+ * Package: Zero\Modules\Admin\Controllers
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 
 namespace Zero\Modules\Admin\Controllers;
 
@@ -8,8 +16,19 @@ use Exception;
 use Zero\Models\Traits\IsOrderable;
 use Zero\Models\User;
 
+/**
+ * Class ListController
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class ListController implements Controller
 {
+    /**
+     * Handles the incoming HTTP action request context and dispatches response frames.
+     *
+     * @param mixed $param Argument descriptor.
+     * @return mixed Response output.
+     */
     public function handle($param)
     {
         $matches = $param;
@@ -38,7 +57,12 @@ class ListController implements Controller
 
         // Check if model has IsOrderable trait or supports reordering
         $traits = class_uses($model);
-        $isOrderable = isset($traits[IsOrderable::class]) || (method_exists($model, 'isOrderable') && $model::isOrderable());
+        $isOrderable = isset($traits[IsOrderable::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class]) || (method_exists($model, 'isOrderable') && $model::isOrderable());
         
         $sort = $_GET['sort'] ?? '';
         $defaultOrder = $isOrderable ? 'asc' : 'desc';

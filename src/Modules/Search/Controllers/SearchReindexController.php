@@ -1,4 +1,12 @@
 <?php
+/**
+ * File: src/Modules/Search/Controllers/SearchReindexController.php
+ * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
+ * Package: Zero\Modules\Search\Controllers
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 
 namespace Zero\Modules\Search\Controllers;
 
@@ -8,6 +16,11 @@ use Zero\Database\DB;
 use Zero\Modules\Search\Services\SearchService;
 use Zero\Support\Security;
 
+/**
+ * Class SearchReindexController
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class SearchReindexController implements Controller
 {
     /**

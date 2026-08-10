@@ -1,4 +1,12 @@
 <?php
+/**
+ * File: src/Modules/Search/Controllers/SearchController.php
+ * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
+ * Package: Zero\Modules\Search\Controllers
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 
 namespace Zero\Modules\Search\Controllers;
 
@@ -6,6 +14,11 @@ use Zero\Interfaces\Controller;
 use Zero\Core\App;
 use Zero\Modules\Search\Services\SearchService;
 
+/**
+ * Class SearchController
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class SearchController implements Controller
 {
     /**

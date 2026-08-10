@@ -1,4 +1,12 @@
 <?php
+/**
+ * File: src/Modules/DemoGenerator/Module.php
+ * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
+ * Package: Zero\Modules\DemoGenerator
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 // src/Modules/DemoGenerator/Module.php
 
 namespace Zero\Modules\DemoGenerator;
@@ -7,6 +15,11 @@ use Zero\Interfaces\Module as ModuleInterface;
 use Zero\Modules\DemoGenerator\Controllers\DemoController;
 use Zero\Core\App;
 
+/**
+ * Class Module
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class Module implements ModuleInterface
 {
     /**
@@ -47,7 +60,12 @@ class Module implements ModuleInterface
     public function getRoutes(): array
     {
         return [
-            '#^/api/v1/demo/create$#' => DemoController::class
+            '#^/api/v1/demo/create$#' => DemoController::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class
         ];
     }
 

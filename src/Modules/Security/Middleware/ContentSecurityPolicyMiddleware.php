@@ -1,4 +1,12 @@
 <?php
+/**
+ * File: src/Modules/Security/Middleware/ContentSecurityPolicyMiddleware.php
+ * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
+ * Package: Zero\Modules\Security\Middleware
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 // src/Modules/Security/Middleware/ContentSecurityPolicyMiddleware.php
 
 namespace Zero\Modules\Security\Middleware;
@@ -7,8 +15,19 @@ use Exception;
 use Zero\Core\App;
 use Zero\Core\Env;
 
+/**
+ * Class ContentSecurityPolicyMiddleware
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class ContentSecurityPolicyMiddleware
 {
+    /**
+     * Handles the incoming HTTP action request context and dispatches response frames.
+     *
+     * @param callable $next Argument descriptor.
+     * @return mixed Response output.
+     */
     public function handle(callable $next)
     {
         // Generate a dynamic secure CSP cryptographic nonce

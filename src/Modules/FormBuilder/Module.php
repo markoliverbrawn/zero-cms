@@ -1,4 +1,12 @@
 <?php
+/**
+ * File: src/Modules/FormBuilder/Module.php
+ * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
+ * Package: Zero\Modules\FormBuilder
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 
 namespace Zero\Modules\FormBuilder;
 
@@ -7,19 +15,39 @@ use Zero\Modules\FormBuilder\Controllers\FormApiController;
 use Zero\Core\App;
 use Zero\Modules\FormBuilder\Models\Submission;
 
+/**
+ * Class Module
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class Module implements ModuleInterface
 {
+    /**
+     * Retrieves the accent color attribute value.
+     *
+     * @return string Response output.
+     */
     public function getAccentColor(): string
     {
         return '#10b981';
     }
 
+    /**
+     * Retrieves the dashboard widget view attribute value.
+     *
+     * @return string Response output.
+     */
     public function getDashboardWidgetView(): ?string
     {
         return null;
     }
 
     
+    /**
+     * Retrieves the id attribute value.
+     *
+     * @return string Response output.
+     */
     public function getId(): string
     {
         return 'formbuilder';
@@ -27,22 +55,47 @@ class Module implements ModuleInterface
 
     
 
+    /**
+     * Retrieves the migration class attribute value.
+     *
+     * @return string Response output.
+     */
     public function getMigrationClass(): ?string
     {
-        return Database\Migrations\CreateFormBuilderTables::class;
+        return Database\Migrations\CreateFormBuilderTables::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class;
     }
 
     
 
+    /**
+     * Retrieves the routes attribute value.
+     *
+     * @return mixed Response output.
+     */
     public function getRoutes(): array
     {
         return [
-            '#^/api/v1/contact/submit$#' => FormApiController::class
+            '#^/api/v1/contact/submit$#' => FormApiController::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class
         ];
     }
 
     
 
+    /**
+     * Init processing implementation helper.
+     *
+     * @return mixed Response output.
+     */
     public function init()
     {
         App::registerBlock('form_builder', [
@@ -54,7 +107,12 @@ class Module implements ModuleInterface
             'bypass_preview_sanitizer' => true
         ]);
 
-        App::registerModel('submissions', Submission::class);
+        App::registerModel('submissions', Submission::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class);
 
         App::registerAdminSidebarLink('content', [
             'title' => 'Form Submissions',

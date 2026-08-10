@@ -1,7 +1,20 @@
 <?php
+/**
+ * File: src/Core/CSVExporter.php
+ * Architectural Purpose: Core bootstrapping, system environment configuration, and utility class of the framework.
+ * Package: Zero\Core
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 
 namespace Zero\Core;
 
+/**
+ * Class CSVExporter
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class CSVExporter
 {
     /**

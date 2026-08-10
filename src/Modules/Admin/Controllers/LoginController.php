@@ -1,4 +1,12 @@
 <?php
+/**
+ * File: src/Modules/Admin/Controllers/LoginController.php
+ * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
+ * Package: Zero\Modules\Admin\Controllers
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 
 namespace Zero\Modules\Admin\Controllers;
 
@@ -9,8 +17,19 @@ use Zero\Interfaces\Controller;
 use Zero\Support\Security;
 use Zero\Http\Middleware\AuthThrottlingMiddleware;
 
+/**
+ * Class LoginController
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class LoginController implements Controller
 {
+    /**
+     * Handles the incoming HTTP action request context and dispatches response frames.
+     *
+     * @param mixed $param Argument descriptor.
+     * @return mixed Response output.
+     */
     public function handle($param)
     {
         // If landing on the login page with an error parameter (such as a CSRF verification failure)

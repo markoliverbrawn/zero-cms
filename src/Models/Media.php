@@ -1,4 +1,12 @@
 <?php
+/**
+ * File: src/Models/Media.php
+ * Architectural Purpose: Active Record data model or behavioral trait wrapping database schema representation with tenant-scoping.
+ * Package: Zero\Models
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 
 namespace Zero\Models;
 
@@ -7,6 +15,11 @@ use Zero\Interfaces\Model;
 use Zero\Models\Traits\HasSlug;
 use Zero\Models\Traits\IsModel;
 
+/**
+ * Class Media
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class Media implements Model
 {
     use IsModel, HasSlug {
@@ -64,6 +77,11 @@ class Media implements Model
         return $this->traitForceDelete();
     }
 
+    /**
+     * Retrieves the config attribute value.
+     *
+     * @return mixed Response output.
+     */
     public static function getConfig(): array
     {
         return [

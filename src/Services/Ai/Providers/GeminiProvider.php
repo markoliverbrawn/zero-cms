@@ -1,4 +1,12 @@
 <?php
+/**
+ * File: src/Services/Ai/Providers/GeminiProvider.php
+ * Architectural Purpose: Handles operations and business logic within the system.
+ * Package: Zero\Services\Ai\Providers
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 
 namespace Zero\Services\Ai\Providers;
 
@@ -6,6 +14,11 @@ use Zero\Interfaces\AiProvider;
 use Zero\Core\Env;
 use Exception;
 
+/**
+ * Class GeminiProvider
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class GeminiProvider implements AiProvider
 {
     /**

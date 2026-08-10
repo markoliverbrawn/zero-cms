@@ -1,4 +1,12 @@
 <?php
+/**
+ * File: src/Modules/Shop/Models/Product.php
+ * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
+ * Package: Zero\Modules\Shop\Models
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 
 namespace Zero\Modules\Shop\Models;
 
@@ -15,6 +23,11 @@ use Zero\Modules\Shop\Models\ProductVariant;
 use Zero\Support\I18n;
 use Zero\Support\Security;
 
+/**
+ * Class Product
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class Product implements Model
 {
     use IsModel, HasSlug, Paginates, CascadesDeletes, Searchable {
@@ -28,7 +41,12 @@ class Product implements Model
     protected static $modelType = 'product';
     protected static $fillable = ['category_id', 'title', 'slug', 'sku', 'description', 'price', 'compare_at_price', 'main_image', 'media_ids', 'status', 'exclude_from_search'];
     protected static array $cascadeDeletes = [
-        ProductVariant::class => 'product_id'
+        ProductVariant::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class => 'product_id'
     ];
 
     public $id;
@@ -51,6 +69,12 @@ class Product implements Model
     public $main_image_path;
     public $main_image_id;
 
+    /**
+     * __construct processing implementation helper.
+     *
+     * @param mixed $data Argument descriptor.
+     * @return mixed Response output.
+     */
     public function __construct($data = [])
     {
         // Hydrate all matching DB fields
@@ -101,6 +125,11 @@ class Product implements Model
         return $results;
     }
 
+    /**
+     * Create record processing implementation helper.
+     *
+     * @return mixed Response output.
+     */
     protected function createRecord()
     {
         if (empty($this->id)) {
@@ -139,6 +168,12 @@ class Product implements Model
         return $this->id;
     }
 
+    /**
+     * Find processing implementation helper.
+     *
+     * @param mixed $id Argument descriptor.
+     * @return mixed Response output.
+     */
     public static function find($id)
     {
         $stmt = DB::query("
@@ -155,6 +190,12 @@ class Product implements Model
         return null;
     }
 
+    /**
+     * Find by slug processing implementation helper.
+     *
+     * @param mixed $slug Argument descriptor.
+     * @return mixed Response output.
+     */
     public static function findBySlug($slug)
     {
         $siteId = App::getCurrentSiteId();
@@ -180,10 +221,20 @@ class Product implements Model
         return $this->category_id ? Category::find($this->category_id) : null;
     }
 
+    /**
+     * Retrieves the config attribute value.
+     *
+     * @return mixed Response output.
+     */
     public static function getConfig(): array
     {
         $categories = [];
-        if (class_exists(Category::class)) {
+        if (class_exists(Category::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class)) {
             $allCats = Category::all();
             foreach ($allCats as $cat) {
                 $categories[$cat->id] = $cat->title;
@@ -349,6 +400,11 @@ class Product implements Model
         ];
     }
 
+    /**
+     * Save processing implementation helper.
+     *
+     * @return mixed Response output.
+     */
     public function save()
     {
         // Swap main_image path with media ID for DB storage
@@ -373,6 +429,11 @@ class Product implements Model
         return $result;
     }
 
+    /**
+     * Update record processing implementation helper.
+     *
+     * @return mixed Response output.
+     */
     protected function updateRecord()
     {
         $set = [];

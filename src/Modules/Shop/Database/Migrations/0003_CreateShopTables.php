@@ -1,11 +1,29 @@
 <?php
+/**
+ * File: src/Modules/Shop/Database/Migrations/0003_CreateShopTables.php
+ * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
+ * Package: Zero\Modules\Shop\Database\Migrations
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 
 namespace Zero\Modules\Shop\Database\Migrations;
 
 use Zero\Database\DB;
 
+/**
+ * Class CreateShopTables
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class CreateShopTables extends \Zero\Database\Migration
 {
+    /**
+     * Runs the database transactional migrations to compile schemas.
+     *
+     * @return void Response output.
+     */
     public function up(): void
     {
         echo "Creating Shop Module Database Tables...\n";
@@ -101,6 +119,11 @@ class CreateShopTables extends \Zero\Database\Migration
         ");
     }
 
+    /**
+     * Reverses database schema migrations, rolling back table columns cleanly.
+     *
+     * @return void Response output.
+     */
     public function down(): void
     {
         echo "Dropping Shop Module Database Tables...\n";

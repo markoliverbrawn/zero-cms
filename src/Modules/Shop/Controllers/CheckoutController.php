@@ -1,4 +1,12 @@
 <?php
+/**
+ * File: src/Modules/Shop/Controllers/CheckoutController.php
+ * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
+ * Package: Zero\Modules\Shop\Controllers
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 
 namespace Zero\Modules\Shop\Controllers;
 
@@ -10,8 +18,19 @@ use Zero\Modules\Shop\Models\OrderItem;
 use Zero\Modules\Shop\Models\ProductVariant;
 use Zero\Support\Security;
 
+/**
+ * Class CheckoutController
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class CheckoutController implements Controller
 {
+    /**
+     * Handles the incoming HTTP action request context and dispatches response frames.
+     *
+     * @param mixed $param Argument descriptor.
+     * @return mixed Response output.
+     */
     public function handle($param)
     {
         App::ensureSession();

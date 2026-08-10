@@ -1,12 +1,30 @@
 <?php
+/**
+ * File: src/Modules/Queue/Database/Migrations/0023_CreateQueueScheduledTasksTable.php
+ * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
+ * Package: Zero\Modules\Queue\Database\Migrations
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 
 namespace Zero\Modules\Queue\Database\Migrations;
 
 use Zero\Database\DB;
 use Zero\Database\Migration;
 
+/**
+ * Class CreateQueueScheduledTasksTable
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class CreateQueueScheduledTasksTable extends Migration
 {
+    /**
+     * Runs the database transactional migrations to compile schemas.
+     *
+     * @return void Response output.
+     */
     public function up(): void
     {
         echo "Creating Queue Module Scheduled Tasks Database Table...\n";
@@ -27,6 +45,11 @@ class CreateQueueScheduledTasksTable extends Migration
         ");
     }
 
+    /**
+     * Reverses database schema migrations, rolling back table columns cleanly.
+     *
+     * @return void Response output.
+     */
     public function down(): void
     {
         echo "Dropping Queue Module Scheduled Tasks Database Table...\n";

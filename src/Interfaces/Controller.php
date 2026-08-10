@@ -1,7 +1,20 @@
 <?php
+/**
+ * File: src/Interfaces/Controller.php
+ * Architectural Purpose: Handles operations and business logic within the system.
+ * Package: Zero\Interfaces
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 
 namespace Zero\Interfaces;
 
+/**
+ * Interface Controller
+ *
+ * Defines systemic behavioral interface contract mechanisms.
+ */
 interface Controller
 {
     /**

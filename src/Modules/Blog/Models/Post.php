@@ -1,4 +1,12 @@
 <?php
+/**
+ * File: src/Modules/Blog/Models/Post.php
+ * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
+ * Package: Zero\Modules\Blog\Models
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 namespace Zero\Modules\Blog\Models;
 
 use Zero\Core\App;
@@ -11,6 +19,11 @@ use Zero\Modules\Blog\Models\Comment;
 use Zero\Modules\Search\Traits\Searchable;
 use Zero\Support\I18n;
 
+/**
+ * Class Post
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class Post extends Page
 {
     use HasFeaturedImage, IsModel, CascadesDeletes, Searchable {
@@ -24,7 +37,12 @@ class Post extends Page
     protected static $modelType = 'post'; // Define type for Post model
     protected static $fillable = ['title', 'summary', 'slug', 'content', 'status', 'allow_comments', 'comment_notifiers', 'featured_image', 'exclude_from_search'];
     protected static array $cascadeDeletes = [
-        Comment::class => 'post_id'
+        Comment::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class => 'post_id'
     ];
 
     public $comment_count = 0;
@@ -35,6 +53,12 @@ class Post extends Page
     public $updated_at;
     public $deleted_at;
 
+    /**
+     * __construct processing implementation helper.
+     *
+     * @param mixed $data Argument descriptor.
+     * @return mixed Response output.
+     */
     public function __construct($data = [])
     {
         parent::__construct($data);
@@ -86,6 +110,11 @@ class Post extends Page
         }
     }
 
+    /**
+     * Retrieves the config attribute value.
+     *
+     * @return mixed Response output.
+     */
     public static function getConfig(): array
     {
         $config = parent::getConfig();

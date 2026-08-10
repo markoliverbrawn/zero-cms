@@ -1,9 +1,22 @@
 <?php
+/**
+ * File: src/Core/Validator.php
+ * Architectural Purpose: Core bootstrapping, system environment configuration, and utility class of the framework.
+ * Package: Zero\Core
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 
 namespace Zero\Core;
 
 use Zero\Support\I18n;
 
+/**
+ * Class Validator
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class Validator
 {
     protected array $data = [];

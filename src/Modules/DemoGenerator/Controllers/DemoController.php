@@ -1,4 +1,12 @@
 <?php
+/**
+ * File: src/Modules/DemoGenerator/Controllers/DemoController.php
+ * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
+ * Package: Zero\Modules\DemoGenerator\Controllers
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 // src/Modules/DemoGenerator/Controllers/DemoController.php
 
 namespace Zero\Modules\DemoGenerator\Controllers;
@@ -11,6 +19,11 @@ use Zero\Support\Security;
 use Zero\Support\Logger;
 use Exception;
 
+/**
+ * Class DemoController
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class DemoController implements Controller
 {
     /**

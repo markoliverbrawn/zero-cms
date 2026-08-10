@@ -1,4 +1,12 @@
 <?php
+/**
+ * File: src/Models/Site.php
+ * Architectural Purpose: Active Record data model or behavioral trait wrapping database schema representation with tenant-scoping.
+ * Package: Zero\Models
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 // src/Models/Site.php
 
 namespace Zero\Models;
@@ -10,6 +18,11 @@ use Zero\Models\Traits\CascadesDeletes;
 use Zero\Models\Traits\IsModel;
 use Zero\Support\I18n;
 
+/**
+ * Class Site
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class Site implements Model
 {
     use IsModel, CascadesDeletes {
@@ -24,18 +37,78 @@ class Site implements Model
     protected static $fillable = ['name', 'domain', 'theme', 'enabled_modules', 'timezone', 'default_language', 'homepage_id', 'expires_at'];
     protected static $systemModules = ['admin', 'queue', 'security'];
     protected static array $cascadeDeletes = [
-        User::class => 'site_id',
-        Page::class => 'site_id',
-        Media::class => 'site_id',
-        PasswordReset::class => 'site_id',
-        AuditLog::class => 'site_id',
-        Post::class => 'site_id',
-        Category::class => 'site_id',
-        Product::class => 'site_id',
-        Order::class => 'site_id',
-        ForumBoard::class => 'site_id',
-        Submission::class => 'site_id',
-        SecurityAudit::class => 'site_id'
+        User::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class => 'site_id',
+        Page::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class => 'site_id',
+        Media::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class => 'site_id',
+        PasswordReset::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class => 'site_id',
+        AuditLog::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class => 'site_id',
+        Post::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class => 'site_id',
+        Category::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class => 'site_id',
+        Product::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class => 'site_id',
+        Order::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class => 'site_id',
+        ForumBoard::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class => 'site_id',
+        Submission::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class => 'site_id',
+        SecurityAudit::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class => 'site_id'
     ];
 
     public $id;
@@ -105,6 +178,12 @@ class Site implements Model
         }
     }
 
+    /**
+     * Find by domain processing implementation helper.
+     *
+     * @param string $domain Argument descriptor.
+     * @return mixed Response output.
+     */
     public static function findByDomain(string $domain)
     {
         $stmt = DB::query("SELECT * FROM sites WHERE domain = ? LIMIT 1", [$domain]);
@@ -144,7 +223,12 @@ class Site implements Model
         $registered = App::getRegisteredModels();
         foreach ($registered as $name => $class) {
             // Prevent self-referential or circular site cascading deletions
-            if ($class === self::class) {
+            if ($class === self::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class) {
                 continue;
             }
             if (class_exists($class)) {
@@ -168,6 +252,11 @@ class Site implements Model
         return $cascade;
     }
 
+    /**
+     * Retrieves the config attribute value.
+     *
+     * @return mixed Response output.
+     */
     public static function getConfig(): array
     {
         return [
@@ -240,6 +329,11 @@ class Site implements Model
         ];
     }
 
+    /**
+     * Retrieves the homepage options attribute value.
+     *
+     * @return mixed Response output.
+     */
     public static function getHomepageOptions(): array
     {
         $options = ['' => '-- Default Routing (Empty/Home slug) --'];
@@ -259,6 +353,11 @@ class Site implements Model
         return $options;
     }
 
+    /**
+     * Retrieves the theme options attribute value.
+     *
+     * @return mixed Response output.
+     */
     public static function getThemeOptions(): array
     {
         $options = [];
@@ -289,6 +388,11 @@ class Site implements Model
         return $options;
     }
 
+    /**
+     * Retrieves the timezone options attribute value.
+     *
+     * @return mixed Response output.
+     */
     public static function getTimezoneOptions(): array
     {
         $timezones = \DateTimeZone::listIdentifiers();
@@ -315,6 +419,12 @@ class Site implements Model
         return in_array($module, $modules);
     }
 
+    /**
+     * Registers the system module component definition dynamically.
+     *
+     * @param string $module Argument descriptor.
+     * @return mixed Response output.
+     */
     public static function registerSystemModule(string $module)
     {
         if (!in_array($module, self::$systemModules)) {

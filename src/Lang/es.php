@@ -1,4 +1,12 @@
 <?php
+/**
+ * File: src/Lang/es.php
+ * Architectural Purpose: Handles operations and business logic within the system.
+ * Package: Zero
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 return [
     // Sidebar
     'home' => 'Inicio',

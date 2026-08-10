@@ -1,12 +1,30 @@
 <?php
+/**
+ * File: src/Database/Migrations/0004_AddPrecedenceToPages.php
+ * Architectural Purpose: Database schema definition, transactional migration tracking, or seed data loader.
+ * Package: Zero\Database\Migrations
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 
 namespace Zero\Database\Migrations;
 
 use Zero\Database\Migration;
 use Zero\Database\DB;
 
+/**
+ * Class AddPrecedenceToPages
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class AddPrecedenceToPages extends Migration
 {
+    /**
+     * Runs the database transactional migrations to compile schemas.
+     *
+     * @return void Response output.
+     */
     public function up(): void
     {
         echo "Running migration: Adding precedence column to pages table...\n";
@@ -17,6 +35,11 @@ class AddPrecedenceToPages extends Migration
         }
     }
 
+    /**
+     * Reverses database schema migrations, rolling back table columns cleanly.
+     *
+     * @return void Response output.
+     */
     public function down(): void
     {
         echo "Reverting migration: Removing precedence column from pages table...\n";

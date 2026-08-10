@@ -1,4 +1,12 @@
 <?php
+/**
+ * File: src/Services/Ai/Providers/MockProvider.php
+ * Architectural Purpose: Handles operations and business logic within the system.
+ * Package: Zero\Services\Ai\Providers
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 
 namespace Zero\Services\Ai\Providers;
 
@@ -6,6 +14,11 @@ use Zero\Interfaces\AiProvider;
 use Exception;
 use Zero\Support\Str;
 
+/**
+ * Class MockProvider
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class MockProvider implements AiProvider
 {
     /**

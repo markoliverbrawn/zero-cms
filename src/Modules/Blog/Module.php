@@ -1,4 +1,12 @@
 <?php
+/**
+ * File: src/Modules/Blog/Module.php
+ * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
+ * Package: Zero\Modules\Blog
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 
 namespace Zero\Modules\Blog;
 
@@ -15,44 +23,114 @@ use Zero\Modules\Search\Services\SearchService;
 use Zero\Support\I18n;
 use Zero\Support\Seeder;
 
+/**
+ * Class Module
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class Module implements ModuleInterface
 {
+    /**
+     * Retrieves the accent color attribute value.
+     *
+     * @return string Response output.
+     */
     public function getAccentColor(): string
     {
         return '#3b82f6';
     }
 
+    /**
+     * Retrieves the dashboard widget view attribute value.
+     *
+     * @return string Response output.
+     */
     public function getDashboardWidgetView(): ?string
     {
         return 'dashboard-widget';
     }
 
+    /**
+     * Retrieves the id attribute value.
+     *
+     * @return string Response output.
+     */
     public function getId(): string
     {
         return 'blog';
     }
 
+    /**
+     * Retrieves the migration class attribute value.
+     *
+     * @return string Response output.
+     */
     public function getMigrationClass(): ?string
     {
-        return Migration::class;
+        return Migration::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class;
     }
 
+    /**
+     * Retrieves the routes attribute value.
+     *
+     * @return mixed Response output.
+     */
     public function getRoutes(): array
     {
         return [
-            '#^/post/([a-zA-Z0-9\-]+)$#' => PostViewController::class,
-            '#^/api/v1/posts(?:/(.*))?$#' => PostsController::class,
-            '#^/api/v1/blog/comments/submit$#' => CommentsController::class
+            '#^/post/([a-zA-Z0-9\-]+)$#' => PostViewController::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class,
+            '#^/api/v1/posts(?:/(.*))?$#' => PostsController::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class,
+            '#^/api/v1/blog/comments/submit$#' => CommentsController::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class
         ];
     }
 
+    /**
+     * Init processing implementation helper.
+     *
+     * @return mixed Response output.
+     */
     public function init()
     {
-        App::registerModel('posts', Post::class);
-        App::registerModel('comments', Comment::class);
+        App::registerModel('posts', Post::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class);
+        App::registerModel('comments', Comment::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class);
 
         // Register daily scheduled task to automatically purge rejected or spam comments (older than 7 days)
-        Scheduler::register(Jobs\PurgeOldCommentsJob::class, [], 'daily');
+        Scheduler::register(Jobs\PurgeOldCommentsJob::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class, [], 'daily');
 
         App::registerAdminSidebarLink('content', [
             'title' => I18n::t('manage_posts'),
@@ -78,8 +156,18 @@ class Module implements ModuleInterface
             'frontend_view' => dirname(__FILE__) . '/Views/blocks/frontend/latest_articles.php'
         ]);
 
-        if (class_exists(SearchService::class)) {
-            SearchService::register(Post::class, [
+        if (class_exists(SearchService::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class)) {
+            SearchService::register(Post::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class, [
                 'type_label' => 'Blog Post',
                 'search_fields' => ['title', 'content', 'summary'],
                 'title_field' => 'title',

@@ -1,9 +1,22 @@
 <?php
+/**
+ * File: src/Support/Logger.php
+ * Architectural Purpose: Global diagnostic tools, cryptographic security handlers, SMTP email transmitters, and text helpers.
+ * Package: Zero\Support
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 namespace Zero\Support;
 
 use Zero\Database\DB;
 use Zero\Core\App;
 
+/**
+ * Class Logger
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class Logger
 {
     /**

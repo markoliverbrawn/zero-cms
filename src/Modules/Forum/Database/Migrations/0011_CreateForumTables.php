@@ -1,12 +1,30 @@
 <?php
+/**
+ * File: src/Modules/Forum/Database/Migrations/0011_CreateForumTables.php
+ * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
+ * Package: Zero\Modules\Forum\Database\Migrations
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 
 namespace Zero\Modules\Forum\Database\Migrations;
 
 use Zero\Database\DB;
 use Zero\Database\Migration as BaseMigration;
 
+/**
+ * Class CreateForumTables
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class CreateForumTables extends BaseMigration
 {
+    /**
+     * Reverses database schema migrations, rolling back table columns cleanly.
+     *
+     * @return void Response output.
+     */
     public function down(): void
     {
         echo "Dropping Forum Module Database Tables...\n";
@@ -16,6 +34,11 @@ class CreateForumTables extends BaseMigration
         DB::query("DROP TABLE IF EXISTS forum_boards;");
     }
 
+    /**
+     * Runs the database transactional migrations to compile schemas.
+     *
+     * @return void Response output.
+     */
     public function up(): void
     {
         echo "Creating Forum Module Database Tables...\n";

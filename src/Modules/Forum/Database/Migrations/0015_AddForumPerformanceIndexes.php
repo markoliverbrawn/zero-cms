@@ -1,11 +1,29 @@
 <?php
+/**
+ * File: src/Modules/Forum/Database/Migrations/0015_AddForumPerformanceIndexes.php
+ * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
+ * Package: Zero\Modules\Forum\Database\Migrations
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 
 namespace Zero\Modules\Forum\Database\Migrations;
 
 use Zero\Database\DB;
 
+/**
+ * Class AddForumPerformanceIndexes
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class AddForumPerformanceIndexes extends \Zero\Database\Migration
 {
+    /**
+     * Runs the database transactional migrations to compile schemas.
+     *
+     * @return void Response output.
+     */
     public function up(): void
     {
         echo "Adding performance indexing to forum boards, threads, and posts tables...\n";
@@ -25,6 +43,11 @@ class AddForumPerformanceIndexes extends \Zero\Database\Migration
         DB::query("ALTER TABLE forum_posts ADD INDEX idx_forum_posts_site_thread_parent_deleted_status (site_id, thread_id, parent_id, deleted_at, status);");
     }
 
+    /**
+     * Reverses database schema migrations, rolling back table columns cleanly.
+     *
+     * @return void Response output.
+     */
     public function down(): void
     {
         echo "Removing performance indexing from forum boards, threads, and posts tables...\n";

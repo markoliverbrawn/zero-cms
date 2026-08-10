@@ -1,10 +1,23 @@
 <?php
+/**
+ * File: src/Modules/Shop/Models/ProductImage.php
+ * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
+ * Package: Zero\Modules\Shop\Models
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 
 namespace Zero\Modules\Shop\Models;
 
 use Zero\Interfaces\Model;
 use Zero\Models\Traits\IsModel;
 
+/**
+ * Class ProductImage
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class ProductImage implements Model
 {
     use IsModel;
@@ -20,6 +33,11 @@ class ProductImage implements Model
     public $created_at;
     public $updated_at;
 
+    /**
+     * Retrieves the config attribute value.
+     *
+     * @return mixed Response output.
+     */
     public static function getConfig(): array
     {
         return [];

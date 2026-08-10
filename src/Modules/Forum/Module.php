@@ -1,4 +1,12 @@
 <?php
+/**
+ * File: src/Modules/Forum/Module.php
+ * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
+ * Package: Zero\Modules\Forum
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
+
 
 namespace Zero\Modules\Forum;
 
@@ -16,53 +24,153 @@ use Zero\Modules\Forum\Controllers\ThreadCreateController;
 use Zero\Modules\Forum\Controllers\ThreadViewController;
 use Zero\Support\Seeder;
 
+/**
+ * Class Module
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class Module implements ModuleInterface
 {
+    /**
+     * Retrieves the accent color attribute value.
+     *
+     * @return string Response output.
+     */
     public function getAccentColor(): string
     {
         return '#6366f1';
     }
 
+    /**
+     * Retrieves the dashboard widget view attribute value.
+     *
+     * @return string Response output.
+     */
     public function getDashboardWidgetView(): ?string
     {
         return null;
     }
 
+    /**
+     * Retrieves the id attribute value.
+     *
+     * @return string Response output.
+     */
     public function getId(): string
     {
         return 'forum';
     }
 
+    /**
+     * Retrieves the migration class attribute value.
+     *
+     * @return string Response output.
+     */
     public function getMigrationClass(): ?string
     {
         return 'Zero\\Modules\\Forum\\Database\\Migrations\\CreateForumTables';
     }
 
+    /**
+     * Retrieves the routes attribute value.
+     *
+     * @return mixed Response output.
+     */
     public function getRoutes(): array
     {
         return [
             // Standard frontend auth fallbacks in case Shop module is not enabled
-            '#^/login$#' => FrontendLoginController::class,
-            '#^/register$#' => RegisterController::class,
-            '#^/forgot$#' => FrontendForgotController::class,
-            '#^/reset$#' => FrontendResetController::class,
+            '#^/login$#' => FrontendLoginController::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class,
+            '#^/register$#' => RegisterController::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class,
+            '#^/forgot$#' => FrontendForgotController::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class,
+            '#^/reset$#' => FrontendResetController::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class,
 
             // Forum paths
-            '#^/forum$#' => ForumHomeController::class,
-            '#^/forum/board/([a-zA-Z0-9\-]+)$#' => BoardViewController::class,
-            '#^/forum/thread/([a-zA-Z0-9\-]+)$#' => ThreadViewController::class,
-            '#^/forum/board/([a-zA-Z0-9\-]+)/create$#' => ThreadCreateController::class,
-            '#^/forum/thread/([a-zA-Z0-9\-]+)/reply$#' => ReplyCreateController::class,
-            '#^/forum/thread/([a-zA-Z0-9\-]+)/moderate$#' => ModerateController::class,
+            '#^/forum$#' => ForumHomeController::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class,
+            '#^/forum/board/([a-zA-Z0-9\-]+)$#' => BoardViewController::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class,
+            '#^/forum/thread/([a-zA-Z0-9\-]+)$#' => ThreadViewController::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class,
+            '#^/forum/board/([a-zA-Z0-9\-]+)/create$#' => ThreadCreateController::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class,
+            '#^/forum/thread/([a-zA-Z0-9\-]+)/reply$#' => ReplyCreateController::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class,
+            '#^/forum/thread/([a-zA-Z0-9\-]+)/moderate$#' => ModerateController::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class,
         ];
     }
 
+    /**
+     * Init processing implementation helper.
+     *
+     * @return mixed Response output.
+     */
     public function init()
     {
         App::registerThemeFallback('forum');
-        App::registerModel('forum_boards', Models\ForumBoard::class);
-        App::registerModel('forum_threads', Models\ForumThread::class);
-        App::registerModel('forum_posts', Models\ForumPost::class);
+        App::registerModel('forum_boards', Models\ForumBoard::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class);
+        App::registerModel('forum_threads', Models\ForumThread::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class);
+        App::registerModel('forum_posts', Models\ForumPost::/**
+ * Class 
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
+class);
 
         App::registerAdminSidebarSection('forum', [
             'title' => 'Forum Management',
