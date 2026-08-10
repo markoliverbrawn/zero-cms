@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Modules/Admin/Module.php
  * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
@@ -8,8 +11,8 @@
 
 namespace Zero\Modules\Admin;
 
-use Zero\Interfaces\Module as ModuleInterface;
 use Zero\Core\App;
+use Zero\Interfaces\Module as ModuleInterface;
 
 /**
  * Class Module
@@ -227,78 +230,78 @@ class,
             'label' => 'Baseline Hero Block',
             'description' => 'A bold headline hero block featuring an H1 title and content paragraphs.',
             'icon' => 'home',
-            'admin_view' => dirname(__FILE__) . '/Views/blocks/admin/baseline.php',
-            'frontend_view' => dirname(__FILE__) . '/Views/blocks/frontend/baseline.php'
+            'admin_view' => \dirname(__FILE__) . '/Views/blocks/admin/baseline.php',
+            'frontend_view' => \dirname(__FILE__) . '/Views/blocks/frontend/baseline.php'
         ]);
         App::registerBlock('grid', [
             'label' => 'Responsive Grid',
             'description' => 'A fully responsive grid layout of stacked image and text cards supporting links and sorting.',
             'icon' => 'grid',
-            'admin_view' => dirname(__FILE__) . '/Views/blocks/admin/grid.php',
-            'frontend_view' => dirname(__FILE__) . '/Views/blocks/frontend/grid.php'
+            'admin_view' => \dirname(__FILE__) . '/Views/blocks/admin/grid.php',
+            'frontend_view' => \dirname(__FILE__) . '/Views/blocks/frontend/grid.php'
         ]);
         App::registerBlock('text', [
             'label' => 'Rich Text Block',
             'description' => 'A standard content block with full-featured rich inline HTML editing capabilities.',
             'icon' => 'file',
-            'admin_view' => dirname(__FILE__) . '/Views/blocks/admin/text.php',
-            'frontend_view' => dirname(__FILE__) . '/Views/blocks/frontend/text.php'
+            'admin_view' => \dirname(__FILE__) . '/Views/blocks/admin/text.php',
+            'frontend_view' => \dirname(__FILE__) . '/Views/blocks/frontend/text.php'
         ]);
         App::registerBlock('text_image', [
             'label' => 'Rich Text Grid',
             'description' => 'Two-column text-and-image container block, optimized for visual/metadata side layouts.',
             'icon' => 'image',
-            'admin_view' => dirname(__FILE__) . '/Views/blocks/admin/text_image.php',
-            'frontend_view' => dirname(__FILE__) . '/Views/blocks/frontend/text_image.php'
+            'admin_view' => \dirname(__FILE__) . '/Views/blocks/admin/text_image.php',
+            'frontend_view' => \dirname(__FILE__) . '/Views/blocks/frontend/text_image.php'
         ]);
         App::registerBlock('gallery', [
             'label' => 'Responsive Grid Gallery',
             'description' => 'An elegant masonry style media gallery with interactive fullscreen asset selection previews.',
             'icon' => 'image',
-            'admin_view' => dirname(__FILE__) . '/Views/blocks/admin/gallery.php',
-            'frontend_view' => dirname(__FILE__) . '/Views/blocks/frontend/gallery.php'
+            'admin_view' => \dirname(__FILE__) . '/Views/blocks/admin/gallery.php',
+            'frontend_view' => \dirname(__FILE__) . '/Views/blocks/frontend/gallery.php'
         ]);
         App::registerBlock('masonry', [
             'label' => 'Pinterest Masonry Grid',
             'description' => 'Asymmetrical multi-column masonry card grid, ideal for lookbooks or designer portfolio displays.',
             'icon' => 'image',
-            'admin_view' => dirname(__FILE__) . '/Views/blocks/admin/masonry.php',
-            'frontend_view' => dirname(__FILE__) . '/Views/blocks/frontend/masonry.php'
+            'admin_view' => \dirname(__FILE__) . '/Views/blocks/admin/masonry.php',
+            'frontend_view' => \dirname(__FILE__) . '/Views/blocks/frontend/masonry.php'
         ]);
         App::registerBlock('testimonials', [
             'label' => 'Testimonials Carousel',
             'description' => 'An autoplaying client quote carousel slider with configurable slide duration and elegant transition states.',
             'icon' => 'settings',
-            'admin_view' => dirname(__FILE__) . '/Views/blocks/admin/testimonials.php',
-            'frontend_view' => dirname(__FILE__) . '/Views/blocks/frontend/testimonials.php'
+            'admin_view' => \dirname(__FILE__) . '/Views/blocks/admin/testimonials.php',
+            'frontend_view' => \dirname(__FILE__) . '/Views/blocks/frontend/testimonials.php'
         ]);
         App::registerBlock('accordion', [
             'label' => 'Accordion FAQ List',
             'description' => 'A sleek list of expandable/collapsible questions and answers with smooth height transitions.',
             'icon' => 'file',
-            'admin_view' => dirname(__FILE__) . '/Views/blocks/admin/accordion.php',
-            'frontend_view' => dirname(__FILE__) . '/Views/blocks/frontend/accordion.php'
+            'admin_view' => \dirname(__FILE__) . '/Views/blocks/admin/accordion.php',
+            'frontend_view' => \dirname(__FILE__) . '/Views/blocks/frontend/accordion.php'
         ]);
         App::registerBlock('sub_pages', [
             'label' => 'Sub-Pages List',
             'description' => 'A dynamic grid list of all sub-pages nested under the current page slug in the database.',
             'icon' => 'book-open',
-            'admin_view' => dirname(__FILE__) . '/Views/blocks/admin/sub_pages.php',
-            'frontend_view' => dirname(__FILE__) . '/Views/blocks/frontend/sub_pages.php'
+            'admin_view' => \dirname(__FILE__) . '/Views/blocks/admin/sub_pages.php',
+            'frontend_view' => \dirname(__FILE__) . '/Views/blocks/frontend/sub_pages.php'
         ]);
         App::registerBlock('code', [
             'label' => 'Source Code Block',
             'description' => 'A clean source code block with high-contrast syntax highlighting.',
             'icon' => 'file',
-            'admin_view' => dirname(__FILE__) . '/Views/blocks/admin/code.php',
-            'frontend_view' => dirname(__FILE__) . '/Views/blocks/frontend/code.php'
+            'admin_view' => \dirname(__FILE__) . '/Views/blocks/admin/code.php',
+            'frontend_view' => \dirname(__FILE__) . '/Views/blocks/frontend/code.php'
         ]);
         App::registerBlock('chart', [
             'label' => 'Performance Chart',
             'description' => 'A beautifully animated, zero-dependency SVG bar chart block to visualize comparative statistics.',
             'icon' => 'zap',
-            'admin_view' => dirname(__FILE__) . '/Views/blocks/admin/chart.php',
-            'frontend_view' => dirname(__FILE__) . '/Views/blocks/frontend/chart.php'
+            'admin_view' => \dirname(__FILE__) . '/Views/blocks/admin/chart.php',
+            'frontend_view' => \dirname(__FILE__) . '/Views/blocks/frontend/chart.php'
         ]);
     }
 }

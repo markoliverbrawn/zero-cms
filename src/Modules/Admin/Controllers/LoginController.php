@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Modules/Admin/Controllers/LoginController.php
  * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
@@ -10,10 +13,10 @@ namespace Zero\Modules\Admin\Controllers;
 
 use Zero\Core\App;
 use Zero\Database\DB;
-use Zero\Support\Logger;
-use Zero\Interfaces\Controller;
-use Zero\Support\Security;
 use Zero\Http\Middleware\AuthThrottlingMiddleware;
+use Zero\Interfaces\Controller;
+use Zero\Support\Logger;
+use Zero\Support\Security;
 
 /**
  * Class LoginController
@@ -40,7 +43,7 @@ class LoginController implements Controller
 
         // If the user is already authenticated, redirect them straight to the admin dashboard
         if (!empty($_SESSION['user_id'])) {
-            header('Location: /admin/dashboard');
+            \header('Location: /admin/dashboard');
             exit;
         }
 
@@ -59,7 +62,7 @@ class LoginController implements Controller
             if (!$row) {
                 $failReason = 'user_not_found';
             } else {
-                if (!password_verify($pass, $row['password_hash'])) {
+                if (!\password_verify($pass, $row['password_hash'])) {
                     $failReason = 'password_mismatch';
                 } else {
                     $userRole = $row['role'] ?? 'editor';
@@ -69,7 +72,7 @@ class LoginController implements Controller
                     if (!($userRole === 'super_admin' || $userSiteId === $currentSiteId)) {
                         $failReason = 'site_isolation_mismatch';
                     } else {
-                        if (!in_array($userRole, ['super_admin', 'admin', 'editor'])) {
+                        if (!\in_array($userRole, ['super_admin', 'admin', 'editor'])) {
                             $failReason = 'unauthorized_role';
                         } else {
                             $failReason = 'none';
@@ -88,7 +91,7 @@ class LoginController implements Controller
                 // Forward to original requested page if present, otherwise fallback to dashboard
                 $redirectTo = $_SESSION['redirect_to'] ?? '/admin/dashboard';
                 unset($_SESSION['redirect_to']); // Clean up session!
-                header('Location: ' . $redirectTo);
+                \header('Location: ' . $redirectTo);
                 exit;
             }
 
@@ -101,11 +104,11 @@ class LoginController implements Controller
                 'username' => $user, 
                 'ip_address' => $_SERVER['REMOTE_ADDR'],
                 'fail_reason' => $failReason,
-                'password_length' => strlen($pass)
+                'password_length' => \strlen($pass)
             ]);
             
             // SECURITY REMEDIATION: Throttle brute force dictionary attempts
-            sleep(1);
+            \sleep(1);
             
             App::render('admin/login', [
                 'error' => $error,

@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Models/Traits/HasFeaturedImage.php
  * Architectural Purpose: Active Record data model or behavioral trait wrapping database schema representation with tenant-scoping.
@@ -28,7 +31,7 @@ trait HasFeaturedImage
         if (!empty($this->featured_image_path)) {
             $this->featured_image_id = $this->featured_image;
             $this->featured_image = $this->featured_image_path;
-        } elseif (!empty($this->featured_image) && strlen($this->featured_image) === 36) {
+        } elseif (!empty($this->featured_image) && \strlen($this->featured_image) === 36) {
             $this->featured_image_id = $this->featured_image;
             $media = Media::find($this->featured_image);
             if ($media) {

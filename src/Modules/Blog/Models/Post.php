@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Modules/Blog/Models/Post.php
  * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
@@ -200,7 +203,7 @@ class => 'post_id'
     public function getFrontendUrl(): string
     {
         $slug = $this->slug ?? '';
-        return '/post/' . ltrim($slug, '/');
+        return '/post/' . \ltrim($slug, '/');
     }
 
     /**
@@ -219,20 +222,20 @@ class => 'post_id'
         $siteId = App::getCurrentSiteId();
         
         // Defensive whitelisting and column mapping of the ORDER BY clause
-        $orderByParts = explode(' ', trim($orderBy));
+        $orderByParts = \explode(' ', \trim($orderBy));
         $cleanOrderBy = 'blog_posts.created_at DESC'; // Fallback
 
         if (!empty($orderByParts)) {
             $column = $orderByParts[0];
-            $direction = isset($orderByParts[1]) ? strtoupper($orderByParts[1]) : 'ASC';
+            $direction = isset($orderByParts[1]) ? \strtoupper($orderByParts[1]) : 'ASC';
 
             if ($column === 'comment_count') {
                 $column = 'comment_count'; // Matches our SQL virtual column alias!
-            } elseif (strpos($column, 'blog_posts.') !== 0 && $column !== 'comment_count') {
+            } elseif (\strpos($column, 'blog_posts.') !== 0 && $column !== 'comment_count') {
                 $column = 'blog_posts.' . $column;
             }
 
-            if (preg_match('/^[a-zA-Z0-9_\.]+$/', $column)) {
+            if (\preg_match('/^[a-zA-Z0-9_\.]+$/', $column)) {
                 if ($direction !== 'ASC' && $direction !== 'DESC') {
                     $direction = 'ASC';
                 }
@@ -252,14 +255,14 @@ class => 'post_id'
             $params[] = $qParam;
         }
 
-        $whereSql = 'WHERE ' . implode(' AND ', $where);
+        $whereSql = 'WHERE ' . \implode(' AND ', $where);
 
         // Total count
         $totalStmt = DB::query("SELECT COUNT(*) as cnt FROM blog_posts {$whereSql}", $params);
         $total = $totalStmt->fetch();
-        $totalCount = $total ? intval($total['cnt']) : 0;
+        $totalCount = $total ? \intval($total['cnt']) : 0;
 
-        $pages = max(1, ceil($totalCount / $perPage));
+        $pages = \max(1, \ceil($totalCount / $perPage));
         $offset = ($page - 1) * $perPage;
 
         // Fetch paginated data using a JOIN to select comment_count and featured_image_path in a single query
@@ -305,6 +308,6 @@ class => 'post_id'
         $res = parent::save();
         
         $this->featured_image = $originalFeaturedImage;
-        return $res;
+        return $res !== false;
     }
 }

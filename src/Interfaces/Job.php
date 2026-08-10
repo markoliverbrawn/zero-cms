@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Interfaces/Job.php
  * Architectural Purpose: Handles operations and business logic within the system.

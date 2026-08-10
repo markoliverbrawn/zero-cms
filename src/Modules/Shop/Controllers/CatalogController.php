@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Modules/Shop/Controllers/CatalogController.php
  * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
@@ -8,11 +11,11 @@
 
 namespace Zero\Modules\Shop\Controllers;
 
-use Zero\Interfaces\Controller;
 use Zero\Core\App;
 use Zero\Database\DB;
-use Zero\Modules\Shop\Models\Product;
+use Zero\Interfaces\Controller;
 use Zero\Modules\Shop\Models\Category;
+use Zero\Modules\Shop\Models\Product;
 
 /**
  * Class CatalogController
@@ -31,13 +34,13 @@ class CatalogController implements Controller
     {
         $siteId = App::getCurrentSiteId();
         
-        $page = max(1, intval($_GET['page'] ?? 1));
+        $page = \max(1, \intval($_GET['page'] ?? 1));
         $perPage = 12; // Show 12 items per page for a beautiful grid!
         
         // Search & Filter parameters
         $search = $_GET['search'] ?? '';
-        $minPrice = floatval($_GET['min_price'] ?? 0);
-        $maxPrice = floatval($_GET['max_price'] ?? 0);
+        $minPrice = \floatval($_GET['min_price'] ?? 0);
+        $maxPrice = \floatval($_GET['max_price'] ?? 0);
         $sort = $_GET['sort'] ?? 'newest';
         $categorySlug = $_GET['category'] ?? '';
 
@@ -89,10 +92,10 @@ class CatalogController implements Controller
         $countSql = "SELECT COUNT(*) as total FROM (" . $sql . ") as sub";
         $totalRows = DB::query($countSql, $params)->fetch()['total'] ?? 0;
         
-        $totalPages = ceil($totalRows / $perPage);
+        $totalPages = \ceil($totalRows / $perPage);
         $offset = ($page - 1) * $perPage;
 
-        $sql .= " LIMIT " . intval($perPage) . " OFFSET " . intval($offset);
+        $sql .= " LIMIT " . \intval($perPage) . " OFFSET " . \intval($offset);
 
         $productsData = DB::query($sql, $params)->fetchAll();
         

@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Modules/Shop/Module.php
  * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
@@ -242,11 +245,11 @@ class);
             'label' => 'Product Categories Grid',
             'description' => 'Showcases all dynamic product categories with their respective imagery and collection links.',
             'icon' => 'shop',
-            'admin_view' => dirname(__FILE__) . '/Views/blocks/admin/categories.php',
-            'frontend_view' => dirname(__FILE__) . '/Views/blocks/frontend/categories.php'
+            'admin_view' => \dirname(__FILE__) . '/Views/blocks/admin/categories.php',
+            'frontend_view' => \dirname(__FILE__) . '/Views/blocks/frontend/categories.php'
         ]);
 
-        if (class_exists(SearchService::/**
+        if (\class_exists(SearchService::/**
  * Class 
  *
  * Provides structural platform implementation and operational encapsulation.

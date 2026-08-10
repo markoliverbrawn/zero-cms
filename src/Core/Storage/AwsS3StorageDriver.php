@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Core/Storage/AwsS3StorageDriver.php
  * Architectural Purpose: Core bootstrapping, system environment configuration, and utility class of the framework.
@@ -8,8 +11,8 @@
 
 namespace Zero\Core\Storage;
 
-use Zero\Core\Env;
 use Exception;
+use Zero\Core\Env;
 
 /**
  * Class AwsS3StorageDriver
@@ -46,10 +49,10 @@ class AwsS3StorageDriver implements StorageDriver
     public function cleanDirectory(string $path): bool
     {
         $cleanPath = $this->cleanPath($path);
-        $prefix = rtrim($cleanPath, '/') . '/';
+        $prefix = \rtrim($cleanPath, '/') . '/';
 
         // 1. List all keys matching the prefix via S3 ListObjectsV2 REST API
-        $query = 'list-type=2&prefix=' . urlencode($prefix);
+        $query = 'list-type=2&prefix=' . \urlencode($prefix);
         $response = $this->sendRequest('GET', '', '', [], $query);
 
         if ($response['status'] !== 200) {
@@ -57,7 +60,7 @@ class AwsS3StorageDriver implements StorageDriver
         }
 
         // 2. Extract keys using zero-dependency XML regex parsing
-        preg_match_all('/<Key>([^<]+)<\/Key>/i', $response['body'], $matches);
+        \preg_match_all('/<Key>([^<]+)<\/Key>/i', $response['body'], $matches);
         $keys = $matches[1] ?? [];
 
         // 3. Delete each key sequentially
@@ -73,14 +76,14 @@ class AwsS3StorageDriver implements StorageDriver
      */
     protected function cleanPath(string $path): string
     {
-        if (strpos($path, APPLICATION_ROOT) === 0) {
-            $path = substr($path, strlen(APPLICATION_ROOT));
+        if (\strpos($path, APPLICATION_ROOT) === 0) {
+            $path = \substr($path, \strlen(APPLICATION_ROOT));
         }
-        $path = ltrim($path, '/');
-        if (strpos($path, 'public/') === 0) {
-            $path = substr($path, 7);
+        $path = \ltrim($path, '/');
+        if (\strpos($path, 'public/') === 0) {
+            $path = \substr($path, 7);
         }
-        return ltrim($path, '/');
+        return \ltrim($path, '/');
     }
 
     /**
@@ -117,7 +120,7 @@ class AwsS3StorageDriver implements StorageDriver
      */
     protected function getMimeType(string $path): string
     {
-        $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+        $ext = \strtolower(\pathinfo($path, PATHINFO_EXTENSION));
         $mimes = [
             'png' => 'image/png',
             'jpg' => 'image/jpeg',
@@ -156,9 +159,9 @@ class AwsS3StorageDriver implements StorageDriver
     {
         $cleanPath = $this->cleanPath($path);
         
-        $now = time();
-        $amzDate = gmdate('Ymd\THis\Z', $now);
-        $date = gmdate('Ymd', $now);
+        $now = \time();
+        $amzDate = \gmdate('Ymd\THis\Z', $now);
+        $date = \gmdate('Ymd', $now);
         $region = $this->region;
         $scope = "{$date}/{$region}/s3/aws4_request";
         
@@ -170,19 +173,19 @@ class AwsS3StorageDriver implements StorageDriver
             'X-Amz-SignedHeaders' => 'host',
         ];
         
-        ksort($params);
+        \ksort($params);
         $queryParamsList = [];
         foreach ($params as $k => $v) {
-            $queryParamsList[] = urlencode($k) . '=' . urlencode($v);
+            $queryParamsList[] = \urlencode($k) . '=' . \urlencode($v);
         }
-        $canonicalQueryString = implode('&', $queryParamsList);
+        $canonicalQueryString = \implode('&', $queryParamsList);
         
         $host = "{$this->bucketName}.s3.{$region}.amazonaws.com";
         $escapedPath = '';
-        foreach (explode('/', $cleanPath) as $part) {
-            $escapedPath .= '/' . rawurlencode($part);
+        foreach (\explode('/', $cleanPath) as $part) {
+            $escapedPath .= '/' . \rawurlencode($part);
         }
-        $escapedPath = ltrim($escapedPath, '/');
+        $escapedPath = \ltrim($escapedPath, '/');
         
         $canonicalUri = "/{$escapedPath}";
         $canonicalHeaders = "host:{$host}\n";
@@ -199,13 +202,13 @@ class AwsS3StorageDriver implements StorageDriver
         $stringToSign = "AWS4-HMAC-SHA256\n" .
             $amzDate . "\n" .
             $scope . "\n" .
-            hash('sha256', $canonicalRequest);
+            \hash('sha256', $canonicalRequest);
             
-        $kDate = hash_hmac('sha256', $date, 'AWS4' . $this->secretKey, true);
-        $kRegion = hash_hmac('sha256', $region, $kDate, true);
-        $kService = hash_hmac('sha256', 's3', $kRegion, true);
-        $kSigning = hash_hmac('sha256', 'aws4_request', $kService, true);
-        $signature = hash_hmac('sha256', $stringToSign, $kSigning);
+        $kDate = \hash_hmac('sha256', $date, 'AWS4' . $this->secretKey, true);
+        $kRegion = \hash_hmac('sha256', $region, $kDate, true);
+        $kService = \hash_hmac('sha256', 's3', $kRegion, true);
+        $kSigning = \hash_hmac('sha256', 'aws4_request', $kService, true);
+        $signature = \hash_hmac('sha256', $stringToSign, $kSigning);
         
         return "https://{$host}/{$escapedPath}?{$canonicalQueryString}&X-Amz-Signature={$signature}";
     }
@@ -218,7 +221,7 @@ class AwsS3StorageDriver implements StorageDriver
      */
     public function makeDirectory(string $path): bool
     {
-        $cleanPath = rtrim($this->cleanPath($path), '/') . '/';
+        $cleanPath = \rtrim($this->cleanPath($path), '/') . '/';
         // Create an empty virtual folder placeholder object
         return $this->write($cleanPath, '');
     }
@@ -232,10 +235,10 @@ class AwsS3StorageDriver implements StorageDriver
      */
     public function putFile(string $path, string $tmpFilePath): bool
     {
-        if (!file_exists($tmpFilePath)) {
+        if (!\file_exists($tmpFilePath)) {
             return false;
         }
-        $content = file_get_contents($tmpFilePath);
+        $content = \file_get_contents($tmpFilePath);
         return $this->write($path, $content);
     }
 
@@ -270,8 +273,8 @@ class AwsS3StorageDriver implements StorageDriver
      */
     protected function sendRequest(string $method, string $path, string $payload = '', array $headers = [], string $queryString = ''): array
     {
-        $amzDate = gmdate('Ymd\THis\Z');
-        $dateStamp = gmdate('Ymd');
+        $amzDate = \gmdate('Ymd\THis\Z');
+        $dateStamp = \gmdate('Ymd');
         $service = 's3';
         
         $host = "{$this->bucketName}.s3.{$this->region}.amazonaws.com";
@@ -280,7 +283,7 @@ class AwsS3StorageDriver implements StorageDriver
             $endpoint .= '?' . $queryString;
         }
 
-        $payloadHash = hash('sha256', $payload);
+        $payloadHash = \hash('sha256', $payload);
 
         // Core AWS S3 Mandatory Headers
         $headers['Host'] = $host;
@@ -288,21 +291,21 @@ class AwsS3StorageDriver implements StorageDriver
         $headers['x-amz-date'] = $amzDate;
 
         // Sort header keys alphabetically for Signature matching
-        uksort($headers, 'strcasecmp');
+        \uksort($headers, 'strcasecmp');
 
         // 1. Build Canonical Request
-        $canonicalUri = '/' . str_replace('%2F', '/', rawurlencode($path));
+        $canonicalUri = '/' . \str_replace('%2F', '/', \rawurlencode($path));
         
         $canonicalHeaders = '';
         $signedHeadersList = [];
         foreach ($headers as $k => $v) {
-            $lowerKey = strtolower($k);
-            $canonicalHeaders .= $lowerKey . ':' . trim($v) . "\n";
+            $lowerKey = \strtolower($k);
+            $canonicalHeaders .= $lowerKey . ':' . \trim($v) . "\n";
             $signedHeadersList[] = $lowerKey;
         }
-        $signedHeaders = implode(';', $signedHeadersList);
+        $signedHeaders = \implode(';', $signedHeadersList);
 
-        $canonicalRequest = implode("\n", [
+        $canonicalRequest = \implode("\n", [
             $method,
             $canonicalUri,
             $queryString,
@@ -313,21 +316,21 @@ class AwsS3StorageDriver implements StorageDriver
 
         // 2. Build String to Sign
         $credentialScope = "{$dateStamp}/{$this->region}/{$service}/aws4_request";
-        $stringToSign = implode("\n", [
+        $stringToSign = \implode("\n", [
             'AWS4-HMAC-SHA256',
             $amzDate,
             $credentialScope,
-            hash('sha256', $canonicalRequest)
+            \hash('sha256', $canonicalRequest)
         ]);
 
         // 3. Generate Cryptographic AWS SigV4 Signing Key
-        $kDate = hash_hmac('sha256', $dateStamp, 'AWS4' . $this->secretKey, true);
-        $kRegion = hash_hmac('sha256', $this->region, $kDate, true);
-        $kService = hash_hmac('sha256', $service, $kRegion, true);
-        $kSigning = hash_hmac('sha256', 'aws4_request', $kService, true);
+        $kDate = \hash_hmac('sha256', $dateStamp, 'AWS4' . $this->secretKey, true);
+        $kRegion = \hash_hmac('sha256', $this->region, $kDate, true);
+        $kService = \hash_hmac('sha256', $service, $kRegion, true);
+        $kSigning = \hash_hmac('sha256', 'aws4_request', $kService, true);
 
         // 4. Calculate Signature
-        $signature = hash_hmac('sha256', $stringToSign, $kSigning);
+        $signature = \hash_hmac('sha256', $stringToSign, $kSigning);
 
         // 5. Compile Authorization Header
         $headers['Authorization'] = "AWS4-HMAC-SHA256 Credential={$this->accessKey}/{$credentialScope}, SignedHeaders={$signedHeaders}, Signature={$signature}";
@@ -344,7 +347,7 @@ class AwsS3StorageDriver implements StorageDriver
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_CUSTOMREQUEST => $method,
             CURLOPT_HTTPHEADER => $curlHeaders,
-            CURLOPT_SSL_VERIFYPEER => true
+            CURLOPT_TIMEOUT => 10
         ]);
 
         if ($method === 'PUT' || $method === 'POST') {

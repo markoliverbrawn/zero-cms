@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Database/Migrations/0004_AddPrecedenceToPages.php
  * Architectural Purpose: Database schema definition, transactional migration tracking, or seed data loader.
@@ -8,8 +11,8 @@
 
 namespace Zero\Database\Migrations;
 
-use Zero\Database\Migration;
 use Zero\Database\DB;
+use Zero\Database\Migration;
 
 /**
  * Class AddPrecedenceToPages

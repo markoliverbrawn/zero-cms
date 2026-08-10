@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Modules/Forum/Controllers/ThreadViewController.php
  * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
@@ -8,8 +11,8 @@
 
 namespace Zero\Modules\Forum\Controllers;
 
-use Zero\Interfaces\Controller;
 use Zero\Core\App;
+use Zero\Interfaces\Controller;
 use Zero\Modules\Forum\Models\ForumBoard;
 use Zero\Modules\Forum\Models\ForumThread;
 
@@ -34,7 +37,7 @@ class ThreadViewController implements Controller
 
         $thread = ForumThread::findBySlug($threadSlug);
         if (!$thread || $thread->site_id !== $siteId) {
-            http_response_code(404);
+            \http_response_code(404);
             echo "Forum thread not found.";
             exit;
         }

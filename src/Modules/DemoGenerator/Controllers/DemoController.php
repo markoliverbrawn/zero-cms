@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Modules/DemoGenerator/Controllers/DemoController.php
  * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
@@ -10,13 +13,13 @@
 
 namespace Zero\Modules\DemoGenerator\Controllers;
 
-use Zero\Interfaces\Controller;
+use Exception;
 use Zero\Core\Template;
 use Zero\Database\DB;
+use Zero\Interfaces\Controller;
 use Zero\Support\Emailer;
-use Zero\Support\Security;
 use Zero\Support\Logger;
-use Exception;
+use Zero\Support\Security;
 
 /**
  * Class DemoController
@@ -31,9 +34,9 @@ class DemoController implements Controller
     protected function createDemoSite(string $email, string $preset): array
     {
         $siteId = Security::uuidv7();
-        $demoId = substr(md5($siteId), 0, 8);
+        $demoId = \substr(\md5($siteId), 0, 8);
         $domain = "demo-{$demoId}.d6laptop.zero";
-        $password = bin2hex(random_bytes(4)); // Secure temporary 8-char password
+        $password = \bin2hex(\random_bytes(4)); // Secure temporary 8-char password
 
         // Build active modules list based on preset
         $enabledModules = ['blog'];
@@ -53,11 +56,11 @@ class DemoController implements Controller
                 VALUES (?, ?, ?, ?, ?, NOW(), NOW(), ?)
             ", [
                 $siteId,
-                "Demo Site #" . strtoupper($demoId),
+                "Demo Site #" . \strtoupper($demoId),
                 $domain,
                 $preset,
-                json_encode($enabledModules),
-                date('Y-m-d H:i:s', time() + 86400)
+                \json_encode($enabledModules),
+                \date('Y-m-d H:i:s', \time() + 86400)
             ]);
 
             // 2. Create Admin User (Scoped strictly to this new site)
@@ -70,7 +73,7 @@ class DemoController implements Controller
                 $siteId,
                 $email, // Set username to email to satisfy global unique constraints
                 $email,
-                password_hash($password, PASSWORD_BCRYPT)
+                \password_hash($password, PASSWORD_BCRYPT)
             ]);
 
             // 3. Seed from blueprint
@@ -117,28 +120,28 @@ class DemoController implements Controller
             $ip = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
             if (!Security::checkAuthRateLimit('demo_creation', $ip, 3, 3600)) {
                 Logger::log(null, 'demo_creation_failed', 'demo', null, ['ip_address' => $ip, 'error' => 'Rate limit exceeded']);
-                http_response_code(429);
-                header('Content-Type: application/json');
-                echo json_encode(['success' => false, 'error' => 'Rate limit exceeded. Please wait before creating another sandbox.']);
+                \http_response_code(429);
+                \header('Content-Type: application/json');
+                echo \json_encode(['success' => false, 'error' => 'Rate limit exceeded. Please wait before creating another sandbox.']);
                 exit;
             }
 
             $preset = $_POST['preset'] ?? 'kitchensink';
-            $email = filter_var($_POST['email'] ?? '', FILTER_VALIDATE_EMAIL);
+            $email = \filter_var($_POST['email'] ?? '', FILTER_VALIDATE_EMAIL);
 
             if (!$email) {
                 Logger::log(null, 'demo_creation_failed', 'demo', null, ['ip_address' => $ip, 'error' => 'Invalid email']);
-                http_response_code(400);
-                header('Content-Type: application/json');
-                echo json_encode(['success' => false, 'error' => 'Please provide a valid email address.']);
+                \http_response_code(400);
+                \header('Content-Type: application/json');
+                echo \json_encode(['success' => false, 'error' => 'Please provide a valid email address.']);
                 exit;
             }
 
             if ($preset !== 'kitchensink') {
                 Logger::log(null, 'demo_creation_failed', 'demo', null, ['ip_address' => $ip, 'error' => 'Invalid preset']);
-                http_response_code(400);
-                header('Content-Type: application/json');
-                echo json_encode(['success' => false, 'error' => 'Invalid preset template selected. Only the Kitchen Sink Showroom is available.']);
+                \http_response_code(400);
+                \header('Content-Type: application/json');
+                echo \json_encode(['success' => false, 'error' => 'Invalid preset template selected. Only the Kitchen Sink Showroom is available.']);
                 exit;
             }
 
@@ -153,9 +156,9 @@ class DemoController implements Controller
 
             if ($existing) {
                 Logger::log(null, 'demo_creation_failed', 'demo', null, ['ip_address' => $ip, 'error' => 'Active sandbox already exists', 'email' => $email]);
-                http_response_code(400);
-                header('Content-Type: application/json');
-                echo json_encode([
+                \http_response_code(400);
+                \header('Content-Type: application/json');
+                echo \json_encode([
                     'success' => false,
                     'error' => "An active sandbox is already registered to this email address (http://{$existing['domain']}). Please use it or wait for it to expire."
                 ]);
@@ -168,8 +171,8 @@ class DemoController implements Controller
 
                 Logger::log(null, 'demo_creation_success', 'demo', null, ['ip_address' => $ip, 'domain' => $demo['domain']]);
 
-                header('Content-Type: application/json');
-                echo json_encode([
+                \header('Content-Type: application/json');
+                echo \json_encode([
                     'success' => true,
                     'domain' => $demo['domain'],
                     // Security Hardening: Do not disclose plain text passwords in public HTTP/API responses
@@ -178,15 +181,15 @@ class DemoController implements Controller
                 exit;
             } catch (Exception $e) {
                 Logger::log(null, 'demo_creation_failed', 'demo', null, ['ip_address' => $ip, 'error' => $e->getMessage()]);
-                http_response_code(500);
-                header('Content-Type: application/json');
-                echo json_encode(['success' => false, 'error' => 'Server Error: ' . $e->getMessage()]);
+                \http_response_code(500);
+                \header('Content-Type: application/json');
+                echo \json_encode(['success' => false, 'error' => 'Server Error: ' . $e->getMessage()]);
                 exit;
             }
         }
 
         // Default GET request 404
-        http_response_code(404);
+        \http_response_code(404);
         echo "Not Found";
         exit;
     }
@@ -197,12 +200,12 @@ class DemoController implements Controller
     protected function seedFromBlueprint(string $siteId, string $preset): void
     {
         $blueprintPath = APPLICATION_ROOT . "/src/Modules/DemoGenerator/Seeders/{$preset}.php";
-        if (!file_exists($blueprintPath)) {
+        if (!\file_exists($blueprintPath)) {
             return;
         }
 
         $data = require $blueprintPath;
-        if (!is_array($data)) {
+        if (!\is_array($data)) {
             return;
         }
 
@@ -210,10 +213,10 @@ class DemoController implements Controller
         $mediaIdMap = [];
 
         // 1. Copy Media metadata and physical files FIRST to populate translation map
-        if (isset($data['media']) && is_array($data['media'])) {
+        if (isset($data['media']) && \is_array($data['media'])) {
             $targetDir = APPLICATION_ROOT . '/public/storage/uploads/' . $siteId;
-            if (!file_exists($targetDir)) {
-                mkdir($targetDir, 0755, true);
+            if (!\file_exists($targetDir)) {
+                \mkdir($targetDir, 0755, true);
             }
 
             foreach ($data['media'] as $media) {
@@ -231,10 +234,10 @@ class DemoController implements Controller
                 $seedVidPath = APPLICATION_ROOT . '/seeders/data/videos/' . $filename;
                 $targetPath = $targetDir . '/' . $filename;
 
-                if (file_exists($seedImgPath)) {
-                    copy($seedImgPath, $targetPath);
-                } elseif (file_exists($seedVidPath)) {
-                    copy($seedVidPath, $targetPath);
+                if (\file_exists($seedImgPath)) {
+                    \copy($seedImgPath, $targetPath);
+                } elseif (\file_exists($seedVidPath)) {
+                    \copy($seedVidPath, $targetPath);
                 }
 
                 DB::query("
@@ -253,17 +256,17 @@ class DemoController implements Controller
 
         // 2. Copy Pages and rewrite any old hardcoded media_id values
         $pagesMap = [];
-        if (isset($data['pages']) && is_array($data['pages'])) {
+        if (isset($data['pages']) && \is_array($data['pages'])) {
             foreach ($data['pages'] as $page) {
                 $pageId = Security::uuidv7();
                 $pagesMap[$page['slug']] = $pageId;
 
                 $contentBlocks = $page['content'] ?? [];
-                $contentJson = is_array($contentBlocks) ? json_encode($contentBlocks) : ($page['content'] ?? '');
+                $contentJson = \is_array($contentBlocks) ? \json_encode($contentBlocks) : ($page['content'] ?? '');
 
                 // Translate all old hardcoded media IDs into the new sandbox-specific unique IDs
                 foreach ($mediaIdMap as $oldId => $newId) {
-                    $contentJson = str_replace($oldId, $newId, $contentJson);
+                    $contentJson = \str_replace($oldId, $newId, $contentJson);
                 }
 
                 DB::query("
@@ -287,11 +290,11 @@ class DemoController implements Controller
         }
 
         // 3. Copy Shop Categories
-        if (isset($data['shop_categories']) && is_array($data['shop_categories'])) {
+        if (isset($data['shop_categories']) && \is_array($data['shop_categories'])) {
             foreach ($data['shop_categories'] as $cat) {
                 $catImage = $cat['image'] ?? null;
                 if (!empty($catImage)) {
-                    $filename = basename($catImage);
+                    $filename = \basename($catImage);
                     $catImage = '/storage/uploads/' . $siteId . '/' . $filename;
                 }
 
@@ -310,13 +313,13 @@ class DemoController implements Controller
         }
 
         // 4. Copy Shop Products and variants
-        if (isset($data['shop_products']) && is_array($data['shop_products'])) {
+        if (isset($data['shop_products']) && \is_array($data['shop_products'])) {
             foreach ($data['shop_products'] as $prod) {
                 $prodId = Security::uuidv7();
 
                 $mainImage = $prod['main_image'] ?? null;
                 if (!empty($mainImage)) {
-                    $filename = basename($mainImage);
+                    $filename = \basename($mainImage);
                     $mainImage = '/storage/uploads/' . $siteId . '/' . $filename;
                 }
 
@@ -324,7 +327,7 @@ class DemoController implements Controller
                 $mediaIds = $prod['media_ids'] ?? null;
                 if (!empty($mediaIds)) {
                     foreach ($mediaIdMap as $oldId => $newId) {
-                        $mediaIds = str_replace($oldId, $newId, $mediaIds);
+                        $mediaIds = \str_replace($oldId, $newId, $mediaIds);
                     }
                 }
 
@@ -346,7 +349,7 @@ class DemoController implements Controller
                 ]);
 
                 // Copy variants if present
-                if (isset($prod['variants']) && is_array($prod['variants'])) {
+                if (isset($prod['variants']) && \is_array($prod['variants'])) {
                     foreach ($prod['variants'] as $v) {
                         DB::query("
                             INSERT INTO shop_product_variants (id, site_id, product_id, title, sku, price, stock, created_at, updated_at)

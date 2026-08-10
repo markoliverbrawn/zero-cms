@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Support/I18n.php
  * Architectural Purpose: Global diagnostic tools, cryptographic security handlers, SMTP email transmitters, and text helpers.
@@ -8,8 +11,8 @@
 
 namespace Zero\Support;
 
-use Zero\Models\User;
 use Zero\Core\App;
+use Zero\Models\User;
 
 /**
  * Class I18n
@@ -41,11 +44,11 @@ class I18n
             $lang = $prefs['language'] ?? 'en';
         }
         
-        self::$currentLang = in_array($lang, ['en', 'es', 'mi', 'hr']) ? $lang : 'en';
+        self::$currentLang = \in_array($lang, ['en', 'es', 'mi', 'hr']) ? $lang : 'en';
         
         // 1. Load Core Translations
         $path = APPLICATION_ROOT . '/src/Lang/' . self::$currentLang . '.php';
-        if (file_exists($path)) {
+        if (\file_exists($path)) {
             self::$translations = require $path;
         } else {
             self::$translations = [];
@@ -53,17 +56,17 @@ class I18n
 
         // 2. Dynamically discover and merge all module-scoped Lang translations!
         $modulesDir = APPLICATION_ROOT . '/src/Modules';
-        if (is_dir($modulesDir)) {
-            $folders = scandir($modulesDir);
+        if (\is_dir($modulesDir)) {
+            $folders = \scandir($modulesDir);
             foreach ($folders as $folder) {
                 if ($folder === '.' || $folder === '..') {
                     continue;
                 }
                 $moduleLangFile = $modulesDir . '/' . $folder . '/Lang/' . self::$currentLang . '.php';
-                if (file_exists($moduleLangFile)) {
+                if (\file_exists($moduleLangFile)) {
                     $moduleTranslations = require $moduleLangFile;
-                    if (is_array($moduleTranslations)) {
-                        self::$customTranslations[self::$currentLang] = array_merge(
+                    if (\is_array($moduleTranslations)) {
+                        self::$customTranslations[self::$currentLang] = \array_merge(
                             self::$customTranslations[self::$currentLang] ?? [],
                             $moduleTranslations
                         );
@@ -112,7 +115,7 @@ class I18n
         if (!isset(self::$customTranslations[$lang])) {
             self::$customTranslations[$lang] = [];
         }
-        self::$customTranslations[$lang] = array_merge(self::$customTranslations[$lang], $translations);
+        self::$customTranslations[$lang] = \array_merge(self::$customTranslations[$lang], $translations);
     }
 
     /**
@@ -145,7 +148,7 @@ class I18n
         $translated = self::$translations[$key] ?? self::$customTranslations[self::$currentLang][$key] ?? $key;
 
         foreach ($replacements as $placeholder => $value) {
-            $translated = str_replace('{' . $placeholder . '}', $value, $translated);
+            $translated = \str_replace('{' . $placeholder . '}', $value, $translated);
         }
 
         return $translated;

@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * Zero CMS Forum Module Dynamic Post Seeder
  *
@@ -11,8 +14,8 @@
 namespace Zero\Modules\Forum\Seeders;
 
 use Exception;
-use Zero\Interfaces\SeederInterface;
 use Zero\Database\DB;
+use Zero\Interfaces\SeederInterface;
 use Zero\Support\Security;
 
 /**
@@ -59,8 +62,8 @@ class ForumPostSeeder implements SeederInterface
             throw new Exception("Seeding error: Target site ID '{$siteId}' not found.");
         }
 
-        $enabled = json_decode($site['enabled_modules'] ?? '[]', true);
-        if (!in_array('forum', $enabled)) {
+        $enabled = \json_decode($site['enabled_modules'] ?? '[]', true);
+        if (!\in_array('forum', $enabled)) {
             throw new Exception("Seeding error: Module 'forum' is not active for site '{$site['name']}'.");
         }
 
@@ -75,7 +78,7 @@ class ForumPostSeeder implements SeederInterface
             throw new Exception("Seeding error: No forum threads found for '{$site['name']}'. Seed boards & threads first!");
         }
 
-        echo "--> Found " . count($threads) . " active forum threads for '{$site['name']}'.\n";
+        echo "--> Found " . \count($threads) . " active forum threads for '{$site['name']}'.\n";
 
         // 3. Clear existing procedural forum posts for this site, keeping the 7 static/json-seeded ones safe
         // The static ones have IDs defined in kitchensink.json starting with '019ed7cd-0d1b-71e2-8062-88c2f0e89f0'
@@ -91,11 +94,11 @@ class ForumPostSeeder implements SeederInterface
         if (empty($users)) {
             $users = DB::query("SELECT id, username FROM users WHERE deleted_at IS NULL LIMIT 5")->fetchAll();
         }
-        $userIds = array_column($users, 'id');
+        $userIds = \array_column($users, 'id');
 
         // 5. Setup content dictionaries for combinatorial dynamic post generation (categorized by thread slug)
         $forumDataPath = __DIR__ . '/forum.php';
-        if (!file_exists($forumDataPath)) {
+        if (!\file_exists($forumDataPath)) {
             throw new Exception("Seeding error: forum.php blueprint file not found.");
         }
         $forumData = require $forumDataPath;
@@ -123,32 +126,32 @@ class ForumPostSeeder implements SeederInterface
 
         for ($i = 0; $i < $postsToCreate; $i++) {
             // Select thread
-            $thread = $threads[$i % count($threads)];
+            $thread = $threads[$i % \count($threads)];
             $tId = $thread['id'];
             $tSlug = $thread['slug'];
 
             // Select user
-            $userId = $userIds[array_rand($userIds)];
+            $userId = $userIds[\array_rand($userIds)];
 
             // Compile themed message
             $theme = $themes[$tSlug] ?? $themes['welcome-to-the-kitchensink-showroom-forums'];
-            $opener = $theme['openers'][array_rand($theme['openers'])];
-            $body = $theme['bodies'][array_rand($theme['bodies'])];
-            $closer = $theme['closers'][array_rand($theme['closers'])];
+            $opener = $theme['openers'][\array_rand($theme['openers'])];
+            $body = $theme['bodies'][\array_rand($theme['bodies'])];
+            $closer = $theme['closers'][\array_rand($theme['closers'])];
             $content = "{$opener} {$body} {$closer}";
 
             // Randomly decide if this is a reply to an existing post in the same thread (for conversation nesting)
             $parentId = null;
-            if (!empty($threadPostsMap[$tId]) && rand(1, 100) > 40) {
-                $parentId = $threadPostsMap[$tId][array_rand($threadPostsMap[$tId])];
+            if (!empty($threadPostsMap[$tId]) && \rand(1, 100) > 40) {
+                $parentId = $threadPostsMap[$tId][\array_rand($threadPostsMap[$tId])];
             }
 
             // Generate random timestamp over the last 15 days
-            $daysAgo = rand(0, 15);
-            $hoursAgo = rand(0, 23);
-            $minsAgo = rand(0, 59);
-            $secsAgo = rand(0, 59);
-            $createdAt = gmdate('Y-m-d H:i:s', strtotime("-{$daysAgo} days -{$hoursAgo} hours -{$minsAgo} minutes -{$secsAgo} seconds"));
+            $daysAgo = \rand(0, 15);
+            $hoursAgo = \rand(0, 23);
+            $minsAgo = \rand(0, 59);
+            $secsAgo = \rand(0, 59);
+            $createdAt = \gmdate('Y-m-d H:i:s', \strtotime("-{$daysAgo} days -{$hoursAgo} hours -{$minsAgo} minutes -{$secsAgo} seconds"));
 
             $postId = Security::uuidv7();
 
@@ -173,7 +176,7 @@ class ForumPostSeeder implements SeederInterface
 
         echo "====================================================================\n";
         echo "SUCCESS: Seeding Completed for '{$site['name']}'!\n";
-        echo "--> Generated & Seeded {$postsCreated} forum replies distributed across " . count($threads) . " threads.\n";
+        echo "--> Generated & Seeded {$postsCreated} forum replies distributed across " . \count($threads) . " threads.\n";
         echo "====================================================================\n";
     }
 }

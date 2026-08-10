@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Modules/Queue/Models/QueueJob.php
  * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
@@ -77,17 +80,17 @@ class QueueJob implements ModelInterface
         $values = [];
 
         foreach (static::$fillable as $field) {
-            if (property_exists($this, $field)) {
+            if (\property_exists($this, $field)) {
                 $set[] = "$field = ?";
                 $values[] = $this->$field;
             }
         }
 
         $set[] = 'updated_at = ?';
-        $values[] = gmdate('Y-m-d H:i:s');
+        $values[] = \gmdate('Y-m-d H:i:s');
         $values[] = $this->id; // for the WHERE clause
 
-        $sql = "UPDATE " . static::$tableName . " SET " . implode(', ', $set) . " WHERE id = ?";
+        $sql = "UPDATE " . static::$tableName . " SET " . \implode(', ', $set) . " WHERE id = ?";
         DB::query($sql, $values);
         return true;
     }

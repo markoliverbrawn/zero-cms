@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Modules/Shop/Controllers/CheckoutController.php
  * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
@@ -8,9 +11,9 @@
 
 namespace Zero\Modules\Shop\Controllers;
 
-use Zero\Interfaces\Controller;
 use Zero\Core\App;
 use Zero\Database\DB;
+use Zero\Interfaces\Controller;
 use Zero\Modules\Shop\Models\Order;
 use Zero\Modules\Shop\Models\OrderItem;
 use Zero\Modules\Shop\Models\ProductVariant;
@@ -35,7 +38,7 @@ class CheckoutController implements Controller
         $cart = $_SESSION['cart'] ?? [];
 
         if (empty($cart)) {
-            header('Location: /shop/cart');
+            \header('Location: /shop/cart');
             exit;
         }
 
@@ -74,8 +77,8 @@ class CheckoutController implements Controller
                 'total_price' => $subtotal,
                 'status' => 'paid', // Mark as paid for demo checkout simulation!
                 'shipping_address' => $address,
-                'created_at' => gmdate('Y-m-d H:i:s'),
-                'updated_at' => gmdate('Y-m-d H:i:s')
+                'created_at' => \gmdate('Y-m-d H:i:s'),
+                'updated_at' => \gmdate('Y-m-d H:i:s')
             ]);
 
             // Save order to database
@@ -92,8 +95,8 @@ class CheckoutController implements Controller
                     'title' => $item['title'] . ($item['variant_title'] ? ' - ' . $item['variant_title'] : ''),
                     'quantity' => $item['quantity'],
                     'price' => $item['price'],
-                    'created_at' => gmdate('Y-m-d H:i:s'),
-                    'updated_at' => gmdate('Y-m-d H:i:s')
+                    'created_at' => \gmdate('Y-m-d H:i:s'),
+                    'updated_at' => \gmdate('Y-m-d H:i:s')
                 ]);
                 $orderItem->save();
 
@@ -101,7 +104,7 @@ class CheckoutController implements Controller
                 if (!empty($item['variant_id'])) {
                     $variant = ProductVariant::find($item['variant_id']);
                     if ($variant) {
-                        $variant->stock = max(0, $variant->stock - $item['quantity']);
+                        $variant->stock = \max(0, $variant->stock - $item['quantity']);
                         $variant->save();
                     }
                 }
@@ -111,7 +114,7 @@ class CheckoutController implements Controller
             $_SESSION['cart'] = [];
 
             // Forward to success screen
-            header('Location: /shop/success?order_id=' . $orderId);
+            \header('Location: /shop/success?order_id=' . $orderId);
             exit;
         }
 

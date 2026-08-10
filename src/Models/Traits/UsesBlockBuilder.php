@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * Zero CMS - UsesBlockBuilder Trait
  *
@@ -44,7 +47,7 @@ trait UsesBlockBuilder
     public static function getAllowedBlocks(): ?array
     {
         $supported = static::getSupportedBlocks();
-        if (is_array($supported)) {
+        if (\is_array($supported)) {
             return $supported;
         }
         return null; // Null means all blocks are allowed

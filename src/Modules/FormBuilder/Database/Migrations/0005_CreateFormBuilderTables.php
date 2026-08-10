@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Modules/FormBuilder/Database/Migrations/0005_CreateFormBuilderTables.php
  * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.

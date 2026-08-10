@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Modules/Forum/Models/ForumThread.php
  * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
@@ -68,7 +71,7 @@ class => 'thread_id'
     public function __construct($data = [])
     {
         foreach ($data as $key => $value) {
-            if (property_exists($this, $key)) {
+            if (\property_exists($this, $key)) {
                 $this->$key = $value;
             }
         }
@@ -135,8 +138,8 @@ class => 'thread_id'
         
         // Eager load User models directly into the globally centralized DB identity map cache
         if (!empty($userIds)) {
-            $userIds = array_unique($userIds);
-            $placeholders = implode(',', array_fill(0, count($userIds), '?'));
+            $userIds = \array_unique($userIds);
+            $placeholders = \implode(',', \array_fill(0, \count($userIds), '?'));
             $usersData = DB::query(
                 "SELECT * FROM users WHERE id IN ($placeholders) AND deleted_at IS NULL",
                 $userIds
@@ -217,8 +220,8 @@ class => 'thread_id'
 
         // Eager load User models directly into the globally centralized DB identity map cache to prevent N+1 queries
         if (!empty($userIds)) {
-            $userIds = array_values(array_unique($userIds));
-            $placeholders = implode(',', array_fill(0, count($userIds), '?'));
+            $userIds = \array_values(\array_unique($userIds));
+            $placeholders = \implode(',', \array_fill(0, \count($userIds), '?'));
             $usersData = DB::query(
                 "SELECT * FROM users WHERE id IN ($placeholders) AND deleted_at IS NULL",
                 $userIds
@@ -247,7 +250,7 @@ class => 'thread_id'
             "SELECT COUNT(*) FROM forum_posts WHERE thread_id = ? AND parent_id IS NOT NULL AND deleted_at IS NULL",
             [$this->id]
         )->fetchColumn();
-        $this->replies_count = intval($cnt);
+        $this->replies_count = \intval($cnt);
         return $this->replies_count;
     }
 
@@ -279,8 +282,8 @@ class => 'thread_id'
             
             // Eager load User models directly into the globally centralized DB identity map cache
             if (!empty($userIds)) {
-                $userIds = array_unique($userIds);
-                $placeholders = implode(',', array_fill(0, count($userIds), '?'));
+                $userIds = \array_unique($userIds);
+                $placeholders = \implode(',', \array_fill(0, \count($userIds), '?'));
                 $usersData = DB::query(
                     "SELECT * FROM users WHERE id IN ($placeholders) AND deleted_at IS NULL",
                     $userIds
@@ -294,8 +297,8 @@ class => 'thread_id'
             
             // Eager load ForumBoard models directly into the globally centralized DB identity map cache
             if (!empty($boardIds)) {
-                $boardIds = array_unique($boardIds);
-                $placeholders = implode(',', array_fill(0, count($boardIds), '?'));
+                $boardIds = \array_unique($boardIds);
+                $placeholders = \implode(',', \array_fill(0, \count($boardIds), '?'));
                 $boardsData = DB::query(
                     "SELECT * FROM forum_boards WHERE id IN ($placeholders) AND deleted_at IS NULL",
                     $boardIds

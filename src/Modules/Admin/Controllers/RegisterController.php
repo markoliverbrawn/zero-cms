@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Modules/Admin/Controllers/RegisterController.php
  * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
@@ -10,9 +13,9 @@ namespace Zero\Modules\Admin\Controllers;
 
 use Zero\Core\App;
 use Zero\Database\DB;
-use Zero\Support\Logger;
 use Zero\Interfaces\Controller;
 use Zero\Models\User;
+use Zero\Support\Logger;
 use Zero\Support\Security;
 
 /**
@@ -32,7 +35,7 @@ class RegisterController implements Controller
     {
         App::ensureSession();
         if (App::getCurrentUser()) {
-            header('Location: /shop/account');
+            \header('Location: /shop/account');
             exit;
         }
 
@@ -40,8 +43,8 @@ class RegisterController implements Controller
         if ($method === 'POST') {
             App::applyCsrfMiddleware();
             
-            $username = trim($_POST['username'] ?? '');
-            $email = trim($_POST['email'] ?? '');
+            $username = \trim($_POST['username'] ?? '');
+            $email = \trim($_POST['email'] ?? '');
             $password = $_POST['password'] ?? '';
             $confirm = $_POST['confirm_password'] ?? '';
 
@@ -49,7 +52,7 @@ class RegisterController implements Controller
                 $error = 'All fields are required.';
             } elseif ($password !== $confirm) {
                 $error = 'Passwords do not match.';
-            } elseif (strlen($password) < 6) {
+            } elseif (\strlen($password) < 6) {
                 $error = 'Password must be at least 6 characters.';
             } else {
                 // Check if username already exists globally or for this site
@@ -70,11 +73,11 @@ class RegisterController implements Controller
                         'site_id' => $siteId,
                         'username' => $username,
                         'email' => $email,
-                        'password_hash' => password_hash($password, PASSWORD_DEFAULT),
+                        'password_hash' => \password_hash($password, PASSWORD_DEFAULT),
                         'role' => 'member', // Register as standard customer 'member' (CSP & RBAC hardened)
-                        'preferences' => json_encode(['theme' => 'light', 'addresses' => []]),
-                        'created_at' => gmdate('Y-m-d H:i:s'),
-                        'updated_at' => gmdate('Y-m-d H:i:s')
+                        'preferences' => \json_encode(['theme' => 'light', 'addresses' => []]),
+                        'created_at' => \gmdate('Y-m-d H:i:s'),
+                        'updated_at' => \gmdate('Y-m-d H:i:s')
                     ]);
                     
                     $newUser->save();
@@ -84,7 +87,7 @@ class RegisterController implements Controller
                     
                     Logger::log($userId, 'registration_success', 'user', $userId, ['username' => $username, 'ip_address' => $_SERVER['REMOTE_ADDR']]);
                     
-                    header('Location: /shop/account');
+                    \header('Location: /shop/account');
                     exit;
                 }
             }

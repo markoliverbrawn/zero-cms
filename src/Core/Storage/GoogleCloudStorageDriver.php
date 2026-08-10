@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Core/Storage/GoogleCloudStorageDriver.php
  * Architectural Purpose: Core bootstrapping, system environment configuration, and utility class of the framework.
@@ -8,8 +11,8 @@
 
 namespace Zero\Core\Storage;
 
-use Zero\Core\Env;
 use Exception;
+use Zero\Core\Env;
 
 /**
  * Class GoogleCloudStorageDriver
@@ -41,11 +44,11 @@ class GoogleCloudStorageDriver implements StorageDriver
     public function cleanDirectory(string $path): bool
     {
         $cleanPath = $this->cleanPath($path);
-        $prefix = rtrim($cleanPath, '/') . '/';
+        $prefix = \rtrim($cleanPath, '/') . '/';
         $token = $this->getAccessToken();
 
         // 1. List all objects matching the prefix
-        $url = "https://storage.googleapis.com/storage/v1/b/{$this->bucketName}/o?prefix=" . urlencode($prefix);
+        $url = "https://storage.googleapis.com/storage/v1/b/{$this->bucketName}/o?prefix=" . \urlencode($prefix);
         $ch = curl_init($url);
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
@@ -61,13 +64,13 @@ class GoogleCloudStorageDriver implements StorageDriver
             return false;
         }
 
-        $data = json_decode($response, true);
+        $data = \json_decode($response, true);
         $items = $data['items'] ?? [];
 
         // 2. Sequentially delete each object
         foreach ($items as $item) {
             $name = $item['name'];
-            $deleteUrl = "https://storage.googleapis.com/storage/v1/b/{$this->bucketName}/o/" . urlencode($name);
+            $deleteUrl = "https://storage.googleapis.com/storage/v1/b/{$this->bucketName}/o/" . \urlencode($name);
             $delCh = curl_init($deleteUrl);
             curl_setopt_array($delCh, [
                 CURLOPT_RETURNTRANSFER => true,
@@ -86,14 +89,14 @@ class GoogleCloudStorageDriver implements StorageDriver
      */
     protected function cleanPath(string $path): string
     {
-        if (strpos($path, APPLICATION_ROOT) === 0) {
-            $path = substr($path, strlen(APPLICATION_ROOT));
+        if (\strpos($path, APPLICATION_ROOT) === 0) {
+            $path = \substr($path, \strlen(APPLICATION_ROOT));
         }
-        $path = ltrim($path, '/');
-        if (strpos($path, 'public/') === 0) {
-            $path = substr($path, 7);
+        $path = \ltrim($path, '/');
+        if (\strpos($path, 'public/') === 0) {
+            $path = \substr($path, 7);
         }
-        return ltrim($path, '/');
+        return \ltrim($path, '/');
     }
 
     /**
@@ -107,7 +110,7 @@ class GoogleCloudStorageDriver implements StorageDriver
         $cleanPath = $this->cleanPath($path);
         $token = $this->getAccessToken();
 
-        $url = "https://storage.googleapis.com/storage/v1/b/{$this->bucketName}/o/" . urlencode($cleanPath);
+        $url = "https://storage.googleapis.com/storage/v1/b/{$this->bucketName}/o/" . \urlencode($cleanPath);
         $ch = curl_init($url);
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
@@ -133,7 +136,7 @@ class GoogleCloudStorageDriver implements StorageDriver
         $cleanPath = $this->cleanPath($path);
         $token = $this->getAccessToken();
 
-        $url = "https://storage.googleapis.com/storage/v1/b/{$this->bucketName}/o/" . urlencode($cleanPath);
+        $url = "https://storage.googleapis.com/storage/v1/b/{$this->bucketName}/o/" . \urlencode($cleanPath);
         $ch = curl_init($url);
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
@@ -153,12 +156,12 @@ class GoogleCloudStorageDriver implements StorageDriver
      */
     protected function getAccessToken(): string
     {
-        if ($this->accessToken && $this->tokenExpiresAt > time()) {
+        if ($this->accessToken && $this->tokenExpiresAt > \time()) {
             return $this->accessToken;
         }
 
         $keyPath = Env::get('GCS_KEY_FILE');
-        if (empty($keyPath) || !file_exists($keyPath)) {
+        if (empty($keyPath) || !\file_exists($keyPath)) {
             // Fallback: Fetch JWT-less OAuth2 Access Token from the Google Metadata Server natively on Cloud Run / GCP!
             $metadataUrl = 'http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token';
             $ch = curl_init($metadataUrl);
@@ -172,10 +175,10 @@ class GoogleCloudStorageDriver implements StorageDriver
             curl_close($ch);
 
             if ($status === 200 && !empty($response)) {
-                $data = json_decode($response, true);
+                $data = \json_decode($response, true);
                 if (isset($data['access_token'])) {
                     $this->accessToken = $data['access_token'];
-                    $this->tokenExpiresAt = time() + intval($data['expires_in'] ?? 3500) - 60; // 60s buffer
+                    $this->tokenExpiresAt = \time() + \intval($data['expires_in'] ?? 3500) - 60; // 60s buffer
                     return $this->accessToken;
                 }
             }
@@ -183,7 +186,7 @@ class GoogleCloudStorageDriver implements StorageDriver
             throw new Exception("GCS Key File is missing/not found, and Google Metadata Server token resolution failed.");
         }
 
-        $keyData = json_decode(file_get_contents($keyPath), true);
+        $keyData = \json_decode(\file_get_contents($keyPath), true);
         $privateKey = $keyData['private_key'] ?? null;
         $clientEmail = $keyData['client_email'] ?? null;
 
@@ -192,9 +195,9 @@ class GoogleCloudStorageDriver implements StorageDriver
         }
 
         // 1. Construct JWT Header and Claims
-        $now = time();
-        $header = rtrim(strtr(base64_encode(json_encode(['alg' => 'RS256', 'typ' => 'JWT'])), '+/', '-_'), '=');
-        $claimSet = rtrim(strtr(base64_encode(json_encode([
+        $now = \time();
+        $header = \rtrim(\strtr(\base64_encode(\json_encode(['alg' => 'RS256', 'typ' => 'JWT'])), '+/', '-_'), '=');
+        $claimSet = \rtrim(\strtr(\base64_encode(\json_encode([
             'iss' => $clientEmail,
             'scope' => 'https://www.googleapis.com/auth/devstorage.full_control',
             'aud' => 'https://oauth2.googleapis.com/token',
@@ -208,7 +211,7 @@ class GoogleCloudStorageDriver implements StorageDriver
         if (!openssl_sign($assertionInput, $signature, $privateKey, 'SHA256')) {
             throw new Exception("OpenSSL JWT Signing failed.");
         }
-        $encodedSignature = rtrim(strtr(base64_encode($signature), '+/', '-_'), '=');
+        $encodedSignature = \rtrim(\strtr(\base64_encode($signature), '+/', '-_'), '=');
         $jwt = "{$assertionInput}.{$encodedSignature}";
 
         // 3. Exchange JWT for OAuth2 Access Token via cURL
@@ -216,7 +219,7 @@ class GoogleCloudStorageDriver implements StorageDriver
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_POST => true,
-            CURLOPT_POSTFIELDS => http_build_query([
+            CURLOPT_POSTFIELDS => \http_build_query([
                 'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
                 'assertion' => $jwt
             ]),
@@ -231,9 +234,9 @@ class GoogleCloudStorageDriver implements StorageDriver
             throw new Exception("Google OAuth token exchange failed: " . $response);
         }
 
-        $tokenData = json_decode($response, true);
+        $tokenData = \json_decode($response, true);
         $this->accessToken = $tokenData['access_token'];
-        $this->tokenExpiresAt = time() + intval($tokenData['expires_in']) - 60; // 60s buffer
+        $this->tokenExpiresAt = \time() + \intval($tokenData['expires_in']) - 60; // 60s buffer
 
         return $this->accessToken;
     }
@@ -261,11 +264,11 @@ class GoogleCloudStorageDriver implements StorageDriver
         $cleanPath = $this->cleanPath($path);
         
         $keyPath = Env::get('GCS_KEY_FILE');
-        if (empty($keyPath) || !file_exists($keyPath)) {
+        if (empty($keyPath) || !\file_exists($keyPath)) {
             throw new Exception("GCS Private Key file is required to generate Signed URLs.");
         }
 
-        $keyData = json_decode(file_get_contents($keyPath), true);
+        $keyData = \json_decode(\file_get_contents($keyPath), true);
         $privateKey = $keyData['private_key'] ?? null;
         $clientEmail = $keyData['client_email'] ?? null;
 
@@ -273,9 +276,9 @@ class GoogleCloudStorageDriver implements StorageDriver
             throw new Exception("Malformed Google Service Account Key JSON.");
         }
 
-        $now = time();
-        $datetime = gmdate('Ymd\THis\Z', $now);
-        $date = gmdate('Ymd', $now);
+        $now = \time();
+        $datetime = \gmdate('Ymd\THis\Z', $now);
+        $date = \gmdate('Ymd', $now);
         $scope = "{$date}/auto/storage/goog4_request";
 
         $params = [
@@ -286,18 +289,18 @@ class GoogleCloudStorageDriver implements StorageDriver
             'X-Goog-SignedHeaders' => 'host',
         ];
 
-        ksort($params);
+        \ksort($params);
         $queryParamsList = [];
         foreach ($params as $k => $v) {
-            $queryParamsList[] = urlencode($k) . '=' . urlencode($v);
+            $queryParamsList[] = \urlencode($k) . '=' . \urlencode($v);
         }
-        $canonicalQueryString = implode('&', $queryParamsList);
+        $canonicalQueryString = \implode('&', $queryParamsList);
 
         $escapedPath = '';
-        foreach (explode('/', $cleanPath) as $part) {
-            $escapedPath .= '/' . rawurlencode($part);
+        foreach (\explode('/', $cleanPath) as $part) {
+            $escapedPath .= '/' . \rawurlencode($part);
         }
-        $escapedPath = ltrim($escapedPath, '/');
+        $escapedPath = \ltrim($escapedPath, '/');
         
         $canonicalUri = "/{$this->bucketName}/{$escapedPath}";
         $canonicalHeaders = "host:storage.googleapis.com\n";
@@ -314,14 +317,14 @@ class GoogleCloudStorageDriver implements StorageDriver
         $stringToSign = "GOOG4-RSA-SHA256\n" .
             $datetime . "\n" .
             $scope . "\n" .
-            hash('sha256', $canonicalRequest);
+            \hash('sha256', $canonicalRequest);
 
         $signature = '';
         if (!openssl_sign($stringToSign, $signature, $privateKey, 'SHA256')) {
             throw new Exception("Signing failed.");
         }
 
-        $hexSignature = bin2hex($signature);
+        $hexSignature = \bin2hex($signature);
         return "https://storage.googleapis.com/{$this->bucketName}/{$escapedPath}?{$canonicalQueryString}&X-Goog-Signature={$hexSignature}";
     }
 
@@ -347,22 +350,22 @@ class GoogleCloudStorageDriver implements StorageDriver
     {
         $cleanPath = $this->cleanPath($path);
         $token = $this->getAccessToken();
-        $mime = mime_content_type($tmpFilePath) ?: 'application/octet-stream';
+        $mime = \mime_content_type($tmpFilePath) ?: 'application/octet-stream';
 
-        $isPrivate = (strpos($cleanPath, 'storage/private/') === 0);
+        $isPrivate = (\strpos($cleanPath, 'storage/private/') === 0);
         $acl = $isPrivate ? 'private' : Env::get('GCS_PREDEFINED_ACL', '');
-        $aclParam = !empty($acl) ? '&predefinedAcl=' . urlencode($acl) : '';
+        $aclParam = !empty($acl) ? '&predefinedAcl=' . \urlencode($acl) : '';
 
-        $url = "https://storage.googleapis.com/upload/storage/v1/b/{$this->bucketName}/o?uploadType=media{$aclParam}&name=" . urlencode($cleanPath);
+        $url = "https://storage.googleapis.com/upload/storage/v1/b/{$this->bucketName}/o?uploadType=media{$aclParam}&name=" . \urlencode($cleanPath);
         $ch = curl_init($url);
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_CUSTOMREQUEST => 'POST',
-            CURLOPT_POSTFIELDS => file_get_contents($tmpFilePath),
+            CURLOPT_POSTFIELDS => \file_get_contents($tmpFilePath),
             CURLOPT_HTTPHEADER => [
                 "Authorization: Bearer {$token}",
                 "Content-Type: {$mime}",
-                "Content-Length: " . filesize($tmpFilePath)
+                "Content-Length: " . \filesize($tmpFilePath)
             ]
         ]);
 
@@ -387,10 +390,10 @@ class GoogleCloudStorageDriver implements StorageDriver
         $token = $this->getAccessToken();
 
         $acl = Env::get('GCS_PREDEFINED_ACL', '');
-        $aclParam = !empty($acl) ? '?destinationPredefinedAcl=' . urlencode($acl) : '';
+        $aclParam = !empty($acl) ? '?destinationPredefinedAcl=' . \urlencode($acl) : '';
 
         // GCS has no native rename. Copy to new path, then delete original.
-        $copyUrl = "https://storage.googleapis.com/storage/v1/b/{$this->bucketName}/o/" . urlencode($cleanOld) . "/copyTo/b/{$this->bucketName}/o/" . urlencode($cleanNew) . $aclParam;
+        $copyUrl = "https://storage.googleapis.com/storage/v1/b/{$this->bucketName}/o/" . \urlencode($cleanOld) . "/copyTo/b/{$this->bucketName}/o/" . \urlencode($cleanNew) . $aclParam;
         $ch = curl_init($copyUrl);
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
@@ -428,11 +431,11 @@ class GoogleCloudStorageDriver implements StorageDriver
         $cleanPath = $this->cleanPath($path);
         $token = $this->getAccessToken();
 
-        $isPrivate = (strpos($cleanPath, 'storage/private/') === 0);
+        $isPrivate = (\strpos($cleanPath, 'storage/private/') === 0);
         $acl = $isPrivate ? 'private' : Env::get('GCS_PREDEFINED_ACL', '');
-        $aclParam = !empty($acl) ? '&predefinedAcl=' . urlencode($acl) : '';
+        $aclParam = !empty($acl) ? '&predefinedAcl=' . \urlencode($acl) : '';
 
-        $ext = strtolower(pathinfo($cleanPath, PATHINFO_EXTENSION));
+        $ext = \strtolower(\pathinfo($cleanPath, PATHINFO_EXTENSION));
         $mimeTypes = [
             'jpg' => 'image/jpeg',
             'jpeg' => 'image/jpeg',
@@ -449,7 +452,7 @@ class GoogleCloudStorageDriver implements StorageDriver
         ];
         $mime = $mimeTypes[$ext] ?? 'text/plain';
 
-        $url = "https://storage.googleapis.com/upload/storage/v1/b/{$this->bucketName}/o?uploadType=media{$aclParam}&name=" . urlencode($cleanPath);
+        $url = "https://storage.googleapis.com/upload/storage/v1/b/{$this->bucketName}/o?uploadType=media{$aclParam}&name=" . \urlencode($cleanPath);
         $ch = curl_init($url);
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
@@ -458,7 +461,7 @@ class GoogleCloudStorageDriver implements StorageDriver
             CURLOPT_HTTPHEADER => [
                 "Authorization: Bearer {$token}",
                 "Content-Type: {$mime}",
-                "Content-Length: " . strlen($content)
+                "Content-Length: " . \strlen($content)
             ]
         ]);
 

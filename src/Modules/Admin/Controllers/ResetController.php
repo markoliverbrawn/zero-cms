@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Modules/Admin/Controllers/ResetController.php
  * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
@@ -10,10 +13,10 @@ namespace Zero\Modules\Admin\Controllers;
 
 use Zero\Core\App;
 use Zero\Database\DB;
-use Zero\Support\Logger;
-use Zero\Support\Security;
 use Zero\Http\Middleware\AuthThrottlingMiddleware;
 use Zero\Interfaces\Controller;
+use Zero\Support\Logger;
+use Zero\Support\Security;
 
 /**
  * Class ResetController
@@ -42,7 +45,7 @@ class ResetController implements Controller
             $new = $_POST['password'] ?? '';
             
             // Security Hardening: Enforce strong password complexity policy
-            if (strlen($new) < 10 || !preg_match('/[A-Z]/', $new) || !preg_match('/[a-z]/', $new) || !preg_match('/[0-9]/', $new)) {
+            if (\strlen($new) < 10 || !\preg_match('/[A-Z]/', $new) || !\preg_match('/[a-z]/', $new) || !\preg_match('/[0-9]/', $new)) {
                 App::render('admin/reset', [
                     'token' => $token,
                     'error' => 'Password is too weak. It must be at least 10 characters long and contain uppercase, lowercase, and numeric characters.'
@@ -51,7 +54,7 @@ class ResetController implements Controller
             }
 
             $row = DB::query('SELECT * FROM password_resets WHERE token = ? LIMIT 1', [$token])->fetch();
-            if (!$row || strtotime($row['expires_at']) < time()) {
+            if (!$row || \strtotime($row['expires_at']) < \time()) {
                 // Log failed attempt to increment rate limit counter
                 Logger::log(null, 'password_reset_failed', 'user', null, [
                     'ip_address' => $ip,
@@ -60,7 +63,7 @@ class ResetController implements Controller
                 App::render('admin/reset', ['error' => 'Invalid or expired token']);
                 exit;
             }
-            $hash = password_hash($new, PASSWORD_DEFAULT);
+            $hash = \password_hash($new, PASSWORD_DEFAULT);
             DB::query('UPDATE users SET password_hash = ? WHERE id = ?', [$hash, $row['user_id']]);
             
             // Security Hardening: Invalidate and rotate ALL pending password resets for this user upon success

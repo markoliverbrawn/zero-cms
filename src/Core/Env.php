@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Core/Env.php
  * Architectural Purpose: Core bootstrapping, system environment configuration, and utility class of the framework.
@@ -26,10 +29,10 @@ class Env
      */
     public static function get($key, $default = null)
     {
-        if (self::$data === null) self::load(getcwd());
+        if (self::$data === null) self::load(\getcwd());
         
         // Inspect native getenv environment variables first, then fallback to loaded .env file
-        $val = getenv($key);
+        $val = \getenv($key);
         if ($val !== false) {
             return $val;
         }
@@ -48,16 +51,16 @@ class Env
         if (self::$data !== null) return self::$data;
         $file = $path . '/.env';
         $data = [];
-        if (!file_exists($file)) return $data;
-        $lines = file($file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        if (!\file_exists($file)) return $data;
+        $lines = \file($file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
         foreach ($lines as $line) {
-            $line = trim($line);
+            $line = \trim($line);
             if ($line === '' || $line[0] === '#') continue;
-            if (strpos($line, '=') === false) continue;
-            list($k, $v) = explode('=', $line, 2);
-            $k = trim($k);
-            $v = trim($v);
-            $v = trim($v, "\"'");
+            if (\strpos($line, '=') === false) continue;
+            list($k, $v) = \explode('=', $line, 2);
+            $k = \trim($k);
+            $v = \trim($v);
+            $v = \trim($v, "\"'");
             $data[$k] = $v;
         }
         self::$data = $data;

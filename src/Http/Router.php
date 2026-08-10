@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Http/Router.php
  * Architectural Purpose: HTTP request routing, request filtering middleware, or dynamic content-security controllers.
@@ -32,7 +35,7 @@ class Router
         }
 
         foreach (self::$moduleNamespaces as $ns => $mod) {
-            if (strpos($controllerClass, $ns) === 0) {
+            if (\strpos($controllerClass, $ns) === 0) {
                 return $mod;
             }
         }
@@ -50,8 +53,8 @@ class Router
     {
         // 0. Process dynamically registered static module and core admin routes first!
         foreach (self::$routes as $pattern => $controllerClass) {
-            if (preg_match($pattern, $uri, $matches)) {
-                if (class_exists($controllerClass)) {
+            if (\preg_match($pattern, $uri, $matches)) {
+                if (\class_exists($controllerClass)) {
                     
                     // Identify if the matched route is associated with an active module
                     $moduleName = self::getModuleForController($controllerClass, $pattern);
@@ -73,7 +76,7 @@ class Router
         }
 
         // 1. Dynamic Page View fallback (any non-admin slug matches a Page)
-        if (preg_match('#^/([a-zA-Z0-9\-/]+)$#', $uri, $matches)) {
+        if (\preg_match('#^/([a-zA-Z0-9\-/]+)$#', $uri, $matches)) {
             $slug = $matches[1];
             $pageRecord = Page::findBySlug($slug);
             if ($pageRecord) {
@@ -91,7 +94,7 @@ class Router
                         }
                     }
                     
-                    if (class_exists($controllerClass)) {
+                    if (\class_exists($controllerClass)) {
                         $controller = new $controllerClass();
                         $controller->handle($pageRecord);
                         return true;
@@ -116,7 +119,7 @@ class Router
      */
     public static function register($routes, string $controllerClass = null, string $moduleName = null)
     {
-        if (is_array($routes)) {
+        if (\is_array($routes)) {
             self::$routes = $routes + self::$routes;
             if ($moduleName !== null) {
                 foreach ($routes as $pattern => $controller) {

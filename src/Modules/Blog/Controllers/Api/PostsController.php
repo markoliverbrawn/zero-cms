@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Modules/Blog/Controllers/Api/PostsController.php
  * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
@@ -45,12 +48,12 @@ class PostsController extends ApiController
             }
             $this->respond([
                 'success' => true,
-                'total' => count($output),
+                'total' => \count($output),
                 'posts' => $output
             ]);
         } else {
             $post = null;
-            if (strlen($param) === 36) {
+            if (\strlen($param) === 36) {
                 $post = Post::find($param);
             }
             if (!$post) {

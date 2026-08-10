@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Modules/Shop/Controllers/ProductViewController.php
  * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
@@ -8,8 +11,8 @@
 
 namespace Zero\Modules\Shop\Controllers;
 
-use Zero\Interfaces\Controller;
 use Zero\Core\App;
+use Zero\Interfaces\Controller;
 use Zero\Modules\Shop\Models\Product;
 
 /**
@@ -34,7 +37,7 @@ class ProductViewController implements Controller
         $product = Product::findBySlug($slug);
 
         if (!$product || $product->site_id !== $siteId || $product->status !== 'published') {
-            http_response_code(404);
+            \http_response_code(404);
             echo "Product not found";
             exit;
         }

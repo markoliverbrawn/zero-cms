@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Models/Traits/Paginates.php
  * Architectural Purpose: Active Record data model or behavioral trait wrapping database schema representation with tenant-scoping.
@@ -8,8 +11,8 @@
 
 namespace Zero\Models\Traits;
 
-use Zero\Database\DB;
 use Zero\Core\App;
+use Zero\Database\DB;
 
 /**
  * Trait Paginates
@@ -30,15 +33,15 @@ trait Paginates
     public static function paginate($page = 1, $perPage = 10, $filters = [], $orderBy = 'created_at DESC')
     {
         // Defensive whitelisting and sanitization of the ORDER BY clause
-        $orderByParts = explode(' ', trim($orderBy));
+        $orderByParts = \explode(' ', \trim($orderBy));
         $cleanOrderBy = 'created_at DESC'; // Fallback default
 
         if (!empty($orderByParts)) {
             $column = $orderByParts[0];
-            $direction = isset($orderByParts[1]) ? strtoupper($orderByParts[1]) : 'ASC';
+            $direction = isset($orderByParts[1]) ? \strtoupper($orderByParts[1]) : 'ASC';
 
             // Ensure column contains ONLY standard letters, numbers, underscores, and dots (e.g. table.col)
-            if (preg_match('/^[a-zA-Z0-9_\.]+$/', $column)) {
+            if (\preg_match('/^[a-zA-Z0-9_\.]+$/', $column)) {
                 // Ensure direction is strictly ASC or DESC
                 if ($direction !== 'ASC' && $direction !== 'DESC') {
                     $direction = 'ASC';
@@ -52,7 +55,7 @@ trait Paginates
         $params = [];
 
         // Multi-tenant isolation filter (exclude sites table)
-        $tableName = static::$tableName ?? strtolower((new \ReflectionClass(static::/**
+        $tableName = static::$tableName ?? \strtolower((new \ReflectionClass(static::/**
  * Class 
  *
  * Provides structural platform implementation and operational encapsulation.
@@ -83,7 +86,7 @@ class))->getShortName()) . 's';
         }
 
         if (isset($filters['q']) && !empty($filters['q'])) {
-            $config = method_exists(static::/**
+            $config = \method_exists(static::/**
  * Class 
  *
  * Provides structural platform implementation and operational encapsulation.
@@ -97,21 +100,21 @@ class, 'getConfig') ? static::getConfig() : [];
                 }
             }
             if ($searchWhere) {
-                $where[] = '(' . implode(' OR ', $searchWhere) . ')';
+                $where[] = '(' . \implode(' OR ', $searchWhere) . ')';
             }
         }
 
         $whereSql = '';
         if ($where) {
-            $whereSql = 'WHERE ' . implode(' AND ', $where);
+            $whereSql = 'WHERE ' . \implode(' AND ', $where);
         }
 
         // Total count
         $totalStmt = DB::query("SELECT COUNT(*) as cnt FROM {$tableName} {$whereSql}", $params);
         $total = $totalStmt->fetch();
-        $totalCount = $total ? intval($total['cnt']) : 0;
+        $totalCount = $total ? \intval($total['cnt']) : 0;
 
-        $pages = max(1, ceil($totalCount / $perPage));
+        $pages = \max(1, \ceil($totalCount / $perPage));
         $offset = ($page - 1) * $perPage;
 
         // Fetch paginated data

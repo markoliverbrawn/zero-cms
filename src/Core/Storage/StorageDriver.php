@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Core/Storage/StorageDriver.php
  * Architectural Purpose: Core bootstrapping, system environment configuration, and utility class of the framework.

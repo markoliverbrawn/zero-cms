@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Modules/Admin/Controllers/SecureDownloadController.php
  * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
@@ -42,7 +45,7 @@ class SecureDownloadController implements Controller
         ", [$fileId, $siteId])->fetch();
 
         if (!$file) {
-            http_response_code(404);
+            \http_response_code(404);
             echo "File not found or access denied.";
             exit;
         }
@@ -53,17 +56,17 @@ class SecureDownloadController implements Controller
             if ($driverName !== 'local') {
                 try {
                     $signedUrl = \Zero\Core\Storage\Storage::getSignedUrl($file['path'], 60);
-                    header("Location: " . $signedUrl);
+                    \header("Location: " . $signedUrl);
                     exit;
                 } catch (\Exception $e) {
-                    http_response_code(500);
+                    \http_response_code(500);
                     echo "Secure redirection failed: " . $e->getMessage();
                     exit;
                 }
             }
 
-            if (!file_exists($physicalPath)) {
-                http_response_code(404);
+            if (!\file_exists($physicalPath)) {
+                \http_response_code(404);
                 echo "Physical file missing from secure disk storage.";
                 exit;
             }
@@ -71,24 +74,24 @@ class SecureDownloadController implements Controller
             // 3. Securely stream the private file to the browser with protective headers
             $originalName = $file['original_name'] ?? $file['filename'];
             $mimeType = $file['mime'] ?? 'application/octet-stream';
-            $fileSize = $file['file_size'] ?? filesize($physicalPath);
+            $fileSize = $file['file_size'] ?? \filesize($physicalPath);
 
-            header('Content-Description: File Transfer');
-            header('Content-Type: ' . $mimeType);
-            header('Content-Disposition: attachment; filename="' . basename($originalName) . '"');
-            header('Content-Length: ' . $fileSize);
-            header('Expires: 0');
-            header('Cache-Control: private, must-revalidate');
-            header('Pragma: public');
+            \header('Content-Description: File Transfer');
+            \header('Content-Type: ' . $mimeType);
+            \header('Content-Disposition: attachment; filename="' . \basename($originalName) . '"');
+            \header('Content-Length: ' . $fileSize);
+            \header('Expires: 0');
+            \header('Cache-Control: private, must-revalidate');
+            \header('Pragma: public');
             
             // Output file in small, non-blocking chunks to prevent PHP memory exhaustion on heavy files
-            $fileHandle = fopen($physicalPath, 'rb');
-            while (!feof($fileHandle)) {
-                echo fread($fileHandle, 8192);
-                ob_flush();
-                flush();
+            $fileHandle = \fopen($physicalPath, 'rb');
+            while (!\feof($fileHandle)) {
+                echo \fread($fileHandle, 8192);
+                \ob_flush();
+                \flush();
             }
-            fclose($fileHandle);
+            \fclose($fileHandle);
             exit;
         });
     }

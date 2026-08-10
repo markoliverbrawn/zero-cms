@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Support/Emailer.php
  * Architectural Purpose: Global diagnostic tools, cryptographic security handlers, SMTP email transmitters, and text helpers.
@@ -25,17 +28,17 @@ class Emailer
      */
     private static function maskEmail(string $email): string
     {
-        $parts = explode('@', $email);
-        if (count($parts) !== 2) {
+        $parts = \explode('@', $email);
+        if (\count($parts) !== 2) {
             return $email;
         }
         $local = $parts[0];
         $domain = $parts[1];
-        $len = strlen($local);
+        $len = \strlen($local);
         if ($len <= 2) {
             return '***@' . $domain;
         }
-        return substr($local, 0, 1) . str_repeat('*', $len - 2) . substr($local, -1) . '@' . $domain;
+        return \substr($local, 0, 1) . \str_repeat('*', $len - 2) . \substr($local, -1) . '@' . $domain;
     }
 
     /**
@@ -46,12 +49,12 @@ class Emailer
     {
         // Read active SMTP configurations from environment
         $host = Env::get('SMTP_HOST', 'mailpit');
-        $port = intval(Env::get('SMTP_PORT', '1025'));
+        $port = \intval(Env::get('SMTP_PORT', '1025'));
         $fromEmail = Env::get('SMTP_FROM_EMAIL', 'noreply@zero.shop');
         $fromName = Env::get('SMTP_FROM_NAME', 'Zero CMS');
 
         if (empty($textBody)) {
-            $textBody = strip_tags($htmlBody);
+            $textBody = \strip_tags($htmlBody);
         }
 
         // Open direct socket connection to the SMTP server
@@ -91,18 +94,18 @@ class Emailer
             $getResponse($socket);
 
             // Construct secure, standard-compliant MIME headers & payload
-            $boundary = "bnd_" . md5(uniqid(time()));
+            $boundary = "bnd_" . \md5(\uniqid((string)\time()));
             $headers = [
                 "MIME-Version: 1.0",
-                "From: =?UTF-8?B?" . base64_encode($fromName) . "?= <{$fromEmail}>",
+                "From: =?UTF-8?B?" . \base64_encode($fromName) . "?= <{$fromEmail}>",
                 "To: <{$to}>",
-                "Subject: =?UTF-8?B?" . base64_encode($subject) . "?=",
+                "Subject: =?UTF-8?B?" . \base64_encode($subject) . "?=",
                 "Content-Type: multipart/alternative; boundary=\"{$boundary}\"",
-                "Date: " . date('r'),
+                "Date: " . \date('r'),
                 "X-Mailer: Zero-Dependency PHP Mailer"
             ];
 
-            $message = implode("\r\n", $headers) . "\r\n\r\n";
+            $message = \implode("\r\n", $headers) . "\r\n\r\n";
             $message .= "--{$boundary}\r\n";
             $message .= "Content-Type: text/plain; charset=UTF-8\r\n";
             $message .= "Content-Transfer-Encoding: 8bit\r\n\r\n";
@@ -114,13 +117,13 @@ class Emailer
             $message .= $htmlBody . "\r\n\r\n";
             $message .= "--{$boundary}--\r\n";
 
-            fputs($socket, $message . "\r\n.\r\n");
+            \fputs($socket, $message . "\r\n.\r\n");
             $getResponse($socket);
 
-            fputs($socket, "QUIT\r\n");
+            \fputs($socket, "QUIT\r\n");
             $getResponse($socket);
 
-            fclose($socket);
+            \fclose($socket);
 
             // Central audit logging of email send attempts with strict PII redaction
             try {
@@ -156,7 +159,7 @@ class Emailer
 
             return true;
         } catch (\Exception $e) {
-            fclose($socket);
+            \fclose($socket);
             return false;
         }
     }

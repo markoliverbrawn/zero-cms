@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Core/Validator.php
  * Architectural Purpose: Core bootstrapping, system environment configuration, and utility class of the framework.
@@ -49,9 +52,9 @@ class Validator
             $globalTranslated = I18n::t($globalKey);
             if ($globalTranslated !== $globalKey) {
                 // Support variable replacements in global translations, e.g. ":field must be valid"
-                $msg = str_replace(':field', $field, $globalTranslated);
+                $msg = \str_replace(':field', $field, $globalTranslated);
                 if ($ruleParam !== null) {
-                    $msg = str_replace(':value', $ruleParam, $msg);
+                    $msg = \str_replace(':value', $ruleParam, $msg);
                 }
                 $this->errors[$field][] = $msg;
             } else {
@@ -82,7 +85,7 @@ class Validator
     public function getValidatedData(): array
     {
         $validated = [];
-        foreach (array_keys($this->rules) as $field) {
+        foreach (\array_keys($this->rules) as $field) {
             if (isset($this->data[$field])) {
                 $validated[$field] = $this->data[$field];
             }
@@ -108,21 +111,21 @@ class Validator
 
         foreach ($this->rules as $field => $fieldRules) {
             // Support rules declared as pipe-separated string "required|email" or array ["required", "email"]
-            if (is_string($fieldRules)) {
-                $fieldRules = explode('|', $fieldRules);
+            if (\is_string($fieldRules)) {
+                $fieldRules = \explode('|', $fieldRules);
             }
 
             $value = $this->data[$field] ?? null;
 
             foreach ($fieldRules as $ruleDeclaration) {
                 // Support rules with parameters, e.g. "min:3" or "max:50"
-                $parts = explode(':', $ruleDeclaration, 2);
+                $parts = \explode(':', $ruleDeclaration, 2);
                 $ruleName = $parts[0];
                 $ruleParam = $parts[1] ?? null;
 
                 // 1. Check for 'required' rule separately because other rules can be bypassed if value is empty/null
                 if ($ruleName === 'required') {
-                    if ($value === null || $value === '' || (is_array($value) && empty($value))) {
+                    if ($value === null || $value === '' || (\is_array($value) && empty($value))) {
                         $this->addError($field, 'required', "The {$field} field is required.", $ruleParam);
                         break; // Stop running further rules for this field once required check fails
                     }
@@ -140,49 +143,49 @@ class Validator
 
                 switch ($ruleName) {
                     case 'email':
-                        $passed = (bool)filter_var($value, FILTER_VALIDATE_EMAIL);
+                        $passed = (bool)\filter_var($value, FILTER_VALIDATE_EMAIL);
                         $message = "The {$field} field must be a valid email address.";
                         break;
 
                     case 'phone':
                         // Extensible telephone validator (e.g., standard digits and formats)
                         // Allow digits, spaces, hyphens, parentheses, plus signs, e.g. +1 (555) 123-4567
-                        $passed = (bool)preg_match('/^[0-9+\s()\-]{7,20}$/', $value);
+                        $passed = (bool)\preg_match('/^[0-9+\s()\-]{7,20}$/', $value);
                         $message = "The {$field} field must be a valid telephone number.";
                         break;
 
                     case 'numeric':
-                        $passed = is_numeric($value);
+                        $passed = \is_numeric($value);
                         $message = "The {$field} field must be numeric.";
                         break;
 
                     case 'integer':
-                        $passed = filter_var($value, FILTER_VALIDATE_INT) !== false;
+                        $passed = \filter_var($value, FILTER_VALIDATE_INT) !== false;
                         $message = "The {$field} field must be an integer.";
                         break;
 
                     case 'min':
-                        if (is_numeric($value)) {
+                        if (\is_numeric($value)) {
                             $passed = $value >= $ruleParam;
                             $message = "The {$field} field must be at least {$ruleParam}.";
                         } else {
-                            $passed = strlen($value) >= $ruleParam;
+                            $passed = \strlen($value) >= $ruleParam;
                             $message = "The {$field} field must be at least {$ruleParam} characters.";
                         }
                         break;
 
                     case 'max':
-                        if (is_numeric($value)) {
+                        if (\is_numeric($value)) {
                             $passed = $value <= $ruleParam;
                             $message = "The {$field} field must not exceed {$ruleParam}.";
                         } else {
-                            $passed = strlen($value) <= $ruleParam;
+                            $passed = \strlen($value) <= $ruleParam;
                             $message = "The {$field} field must not exceed {$ruleParam} characters.";
                         }
                         break;
 
                     case 'regex':
-                        $passed = (bool)preg_match($ruleParam, $value);
+                        $passed = (bool)\preg_match($ruleParam, $value);
                         $message = "The {$field} field format is invalid.";
                         break;
 

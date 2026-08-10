@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * Zero CMS - Core Database Connection Engine
  *
@@ -76,7 +79,7 @@ class DB
     public static function getPDO()
     {
         // 1. Intercept test runs to dynamically initialize test schemas on-demand
-        if (defined('TEST_SUITE_RUNNING') && TEST_SUITE_RUNNING && !self::$testDbInitialized) {
+        if (\defined('TEST_SUITE_RUNNING') && TEST_SUITE_RUNNING && !self::$testDbInitialized) {
             self::$testDbInitialized = true;
             self::initializeTestDatabase();
         }
@@ -107,13 +110,13 @@ class DB
             return $pdo;
         } catch (PDOException $e) {
             // Write to local server error log instead of DB to prevent infinite recursion loop
-            error_log("Database connection failed: " . $e->getMessage() . "\n" . $e->getTraceAsString());
+            \error_log("Database connection failed: " . $e->getMessage() . "\n" . $e->getTraceAsString());
             
-            if (php_sapi_name() === 'cli') {
+            if (\php_sapi_name() === 'cli') {
                 throw $e; // In CLI, throw the exception so calling scripts can catch it and terminate with clean exit codes!
             }
             
-            http_response_code(500);
+            \http_response_code(500);
             echo "A database error occurred. Please try again later.";
             exit;
         }
@@ -126,7 +129,7 @@ class DB
      */
     public static function getQueryCount(): int
     {
-        return count(self::$queryLog);
+        return \count(self::$queryLog);
     }
 
     /**
@@ -200,7 +203,7 @@ class DB
             $rawPdo = new PDO($rawDsn, $user, $pass, [
                 PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
             ]);
-            $rawPdo->exec("CREATE DATABASE IF NOT EXISTS `" . str_replace("`", "``", $testDb) . "`");
+            $rawPdo->exec("CREATE DATABASE IF NOT EXISTS `" . \str_replace("`", "``", $testDb) . "`");
         } catch (PDOException $e) {
             echo "Fatal Error ensuring test database exists: " . $e->getMessage() . "\n";
             exit(1);
@@ -208,9 +211,9 @@ class DB
 
         try {
             // Always run pending migrations to ensure all core & module schemas are present
-            ob_start();
+            \ob_start();
             MigrationManager::up();
-            ob_end_clean();
+            \ob_end_clean();
 
             $pdo = new PDO($dsn, $user, $pass, [
                 PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
@@ -247,12 +250,12 @@ class DB
      */
     public static function query($sql, $params = [])
     {
-        $start = microtime(true);
+        $start = \microtime(true);
         
         $stmt = self::getPDO()->prepare($sql);
         $stmt->execute($params);
         
-        $duration = microtime(true) - $start;
+        $duration = \microtime(true) - $start;
         self::$totalQueryTime += $duration;
         self::$queryLog[] = [
             'sql' => $sql,
@@ -274,9 +277,9 @@ class DB
     public static function setIdentity(string $table, string $id, $record)
     {
         // Limit the static cache size per table to 1000 items to prevent memory ballooning
-        if (isset(self::$identityMap[$table]) && count(self::$identityMap[$table]) >= 1000) {
+        if (isset(self::$identityMap[$table]) && \count(self::$identityMap[$table]) >= 1000) {
             // Evict the oldest item in the cache (FIFO / LRU style)
-            array_shift(self::$identityMap[$table]);
+            \array_shift(self::$identityMap[$table]);
         }
         self::$identityMap[$table][$id] = $record;
     }

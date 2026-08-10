@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Http/Middleware/AuthMiddleware.php
  * Architectural Purpose: HTTP request routing, request filtering middleware, or dynamic content-security controllers.
@@ -42,14 +45,14 @@ class AuthMiddleware
             }
             
             // Redirect gracefully to login page
-            header('Location: ' . self::$loginUrl);
+            \header('Location: ' . self::$loginUrl);
             exit();
         }
 
         // Centralized RBAC Hardening: Restrict back-office access to administrative roles only
         $currentRole = App::getCurrentUserRole();
         if ($currentRole !== 'editor' && $currentRole !== 'super_admin') {
-            http_response_code(403);
+            \http_response_code(403);
             App::render('admin/access_denied', [
                 'currentRole' => $currentRole,
                 'requiredRole' => 'editor'

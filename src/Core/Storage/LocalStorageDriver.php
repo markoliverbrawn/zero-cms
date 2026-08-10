@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Core/Storage/LocalStorageDriver.php
  * Architectural Purpose: Core bootstrapping, system environment configuration, and utility class of the framework.
@@ -24,7 +27,7 @@ class LocalStorageDriver implements StorageDriver
     public function cleanDirectory(string $path): bool
     {
         $resolved = $this->resolvePath($path);
-        if (is_dir($resolved)) {
+        if (\is_dir($resolved)) {
             $this->deleteDirectoryRecursive($resolved, false); // Clear contents but keep root folder
             return true;
         }
@@ -40,16 +43,16 @@ class LocalStorageDriver implements StorageDriver
     public function delete(string $path): bool
     {
         $resolved = $this->resolvePath($path);
-        if (file_exists($resolved) && is_file($resolved)) {
-            $dir = dirname($resolved);
-            if (!is_writable($dir)) {
-                throw new \Exception("Permission denied: The upload directory containing the file is not writable (" . basename($resolved) . ").");
+        if (\file_exists($resolved) && \is_file($resolved)) {
+            $dir = \dirname($resolved);
+            if (!\is_writable($dir)) {
+                throw new \Exception("Permission denied: The upload directory containing the file is not writable (" . \basename($resolved) . ").");
             }
-            if (!is_writable($resolved)) {
-                throw new \Exception("Permission denied: The file is not writable (" . basename($resolved) . ").");
+            if (!\is_writable($resolved)) {
+                throw new \Exception("Permission denied: The file is not writable (" . \basename($resolved) . ").");
             }
-            if (!unlink($resolved)) {
-                throw new \Exception("Deletion failed: Could not delete the file (" . basename($resolved) . ").");
+            if (!\unlink($resolved)) {
+                throw new \Exception("Deletion failed: Could not delete the file (" . \basename($resolved) . ").");
             }
             return true;
         }
@@ -65,25 +68,25 @@ class LocalStorageDriver implements StorageDriver
      */
     protected function deleteDirectoryRecursive(string $dir, bool $removeSelf = true): void
     {
-        if (is_dir($dir)) {
-            if (!is_writable($dir)) {
-                throw new \Exception("Permission denied: The directory is not writable (" . basename($dir) . ").");
+        if (\is_dir($dir)) {
+            if (!\is_writable($dir)) {
+                throw new \Exception("Permission denied: The directory is not writable (" . \basename($dir) . ").");
             }
-            $objects = scandir($dir);
+            $objects = \scandir($dir);
             foreach ($objects as $object) {
                 if ($object !== "." && $object !== "..") {
                     $item = $dir . "/" . $object;
-                    if (is_dir($item)) {
+                    if (\is_dir($item)) {
                         $this->deleteDirectoryRecursive($item, true);
                     } else {
-                        if (is_file($item)) {
-                            if (!is_writable($dir)) {
+                        if (\is_file($item)) {
+                            if (!\is_writable($dir)) {
                                 throw new \Exception("Permission denied: The directory containing the file is not writable (" . $object . ").");
                             }
-                            if (!is_writable($item)) {
+                            if (!\is_writable($item)) {
                                 throw new \Exception("Permission denied: The file inside the directory is not writable (" . $object . ").");
                             }
-                            if (!unlink($item)) {
+                            if (!\unlink($item)) {
                                 throw new \Exception("Deletion failed: Could not delete the file inside the directory (" . $object . ").");
                             }
                         }
@@ -91,11 +94,11 @@ class LocalStorageDriver implements StorageDriver
                 }
             }
             if ($removeSelf) {
-                if (!is_writable($dir)) {
-                    throw new \Exception("Permission denied: The directory is not writable (" . basename($dir) . ").");
+                if (!\is_writable($dir)) {
+                    throw new \Exception("Permission denied: The directory is not writable (" . \basename($dir) . ").");
                 }
-                if (!rmdir($dir)) {
-                    throw new \Exception("Deletion failed: Could not remove the directory (" . basename($dir) . ").");
+                if (!\rmdir($dir)) {
+                    throw new \Exception("Deletion failed: Could not remove the directory (" . \basename($dir) . ").");
                 }
             }
         }
@@ -109,7 +112,7 @@ class LocalStorageDriver implements StorageDriver
      */
     public function exists(string $path): bool
     {
-        return file_exists($this->resolvePath($path));
+        return \file_exists($this->resolvePath($path));
     }
 
     /**
@@ -132,43 +135,43 @@ class LocalStorageDriver implements StorageDriver
      */
     public function getUrl(string $path): string
     {
-        $siteId = class_exists('\\Zero\\Core\\App') ? \Zero\Core\App::getCurrentSiteId() : null;
+        $siteId = \class_exists('\\Zero\\Core\\App') ? \Zero\Core\App::getCurrentSiteId() : null;
         if (empty($siteId)) {
             throw new \RuntimeException("Security exception: Cannot resolve storage URL without an active site context.");
         }
         $prefix = '/' . $siteId;
 
         // Handle private storage
-        $trimmed = ltrim($path, '/');
-        if (strpos($trimmed, 'storage/private/') === 0) {
+        $trimmed = \ltrim($path, '/');
+        if (\strpos($trimmed, 'storage/private/') === 0) {
             return '/' . $trimmed;
         }
 
         // Strip APPLICATION_ROOT to make it relative to web root
-        if (strpos($path, APPLICATION_ROOT) === 0) {
-            $subPath = substr($path, strlen(APPLICATION_ROOT));
-            $subPathClean = ltrim($subPath, '/');
+        if (\strpos($path, APPLICATION_ROOT) === 0) {
+            $subPath = \substr($path, \strlen(APPLICATION_ROOT));
+            $subPathClean = \ltrim($subPath, '/');
             
             // Handle private storage under APPLICATION_ROOT
-            if (strpos($subPathClean, 'storage/private/') === 0) {
+            if (\strpos($subPathClean, 'storage/private/') === 0) {
                 return '/' . $subPathClean;
             }
             
             // Strip leading /public if present (since /public is the web document root)
-            if (strpos($subPath, '/public') === 0) {
-                $subPath = substr($subPath, 7);
+            if (\strpos($subPath, '/public') === 0) {
+                $subPath = \substr($subPath, 7);
             }
-            $subPathClean = '/' . ltrim($subPathClean, '/');
-            if (strpos($subPathClean, '/storage/uploads') === 0) {
-                $subPathRest = substr($subPathClean, strlen('/storage/uploads'));
-                $subPathRest = ltrim($subPathRest, '/');
+            $subPathClean = '/' . \ltrim($subPathClean, '/');
+            if (\strpos($subPathClean, '/storage/uploads') === 0) {
+                $subPathRest = \substr($subPathClean, \strlen('/storage/uploads'));
+                $subPathRest = \ltrim($subPathRest, '/');
                 
-                $isAlreadyTenantScoped = preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}(\/|$)/i', $subPathRest);
+                $isAlreadyTenantScoped = \preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}(\/|$)/i', $subPathRest);
                 if ($isAlreadyTenantScoped) {
                     return $subPathClean;
                 }
                 
-                if (strpos($subPathRest, $siteId . '/') !== 0 && $subPathRest !== $siteId) {
+                if (\strpos($subPathRest, $siteId . '/') !== 0 && $subPathRest !== $siteId) {
                     return '/storage/uploads' . $prefix . '/' . $subPathRest;
                 }
                 return $subPathClean;
@@ -177,28 +180,28 @@ class LocalStorageDriver implements StorageDriver
         }
 
         // If it's already a relative web path (starts with /storage/uploads)
-        if (strpos($path, '/storage/uploads') === 0) {
-            $subPathRest = substr($path, strlen('/storage/uploads'));
-            $subPathRest = ltrim($subPathRest, '/');
+        if (\strpos($path, '/storage/uploads') === 0) {
+            $subPathRest = \substr($path, \strlen('/storage/uploads'));
+            $subPathRest = \ltrim($subPathRest, '/');
             
-            $isAlreadyTenantScoped = preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}(\/|$)/i', $subPathRest);
+            $isAlreadyTenantScoped = \preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}(\/|$)/i', $subPathRest);
             if ($isAlreadyTenantScoped) {
                 return $path;
             }
             
-            if (strpos($subPathRest, $siteId . '/') !== 0 && $subPathRest !== $siteId) {
+            if (\strpos($subPathRest, $siteId . '/') !== 0 && $subPathRest !== $siteId) {
                 return '/storage/uploads' . $prefix . '/' . $subPathRest;
             }
             return $path;
         }
 
         // Generic relative paths
-        $isAlreadyTenantScoped = preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}(\/|$)/i', $trimmed);
+        $isAlreadyTenantScoped = \preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}(\/|$)/i', $trimmed);
         if ($isAlreadyTenantScoped) {
             return '/storage/uploads/' . $trimmed;
         }
 
-        if (strpos($trimmed, $siteId . '/') !== 0 && $trimmed !== $siteId) {
+        if (\strpos($trimmed, $siteId . '/') !== 0 && $trimmed !== $siteId) {
             return '/storage/uploads' . $prefix . '/' . $trimmed;
         }
 
@@ -214,10 +217,10 @@ class LocalStorageDriver implements StorageDriver
     public function makeDirectory(string $path): bool
     {
         $resolved = $this->resolvePath($path);
-        if (!file_exists($resolved)) {
-            $res = mkdir($resolved, 0775, true);
+        if (!\file_exists($resolved)) {
+            $res = \mkdir($resolved, 0775, true);
             if ($res) {
-                @chmod($resolved, 0775);
+                @\chmod($resolved, 0775);
             }
             return $res;
         }
@@ -234,15 +237,15 @@ class LocalStorageDriver implements StorageDriver
     public function putFile(string $path, string $tmpFilePath): bool
     {
         $resolved = $this->resolvePath($path);
-        $dir = dirname($resolved);
-        if (!file_exists($dir)) {
-            mkdir($dir, 0775, true);
-            @chmod($dir, 0775);
+        $dir = \dirname($resolved);
+        if (!\file_exists($dir)) {
+            \mkdir($dir, 0775, true);
+            @\chmod($dir, 0775);
         }
-        if (is_uploaded_file($tmpFilePath)) {
-            return move_uploaded_file($tmpFilePath, $resolved);
+        if (\is_uploaded_file($tmpFilePath)) {
+            return \move_uploaded_file($tmpFilePath, $resolved);
         }
-        return copy($tmpFilePath, $resolved);
+        return \copy($tmpFilePath, $resolved);
     }
 
     /**
@@ -256,12 +259,12 @@ class LocalStorageDriver implements StorageDriver
     {
         $oldResolved = $this->resolvePath($oldPath);
         $newResolved = $this->resolvePath($newPath);
-        $dir = dirname($newResolved);
-        if (!file_exists($dir)) {
-            mkdir($dir, 0775, true);
-            @chmod($dir, 0775);
+        $dir = \dirname($newResolved);
+        if (!\file_exists($dir)) {
+            \mkdir($dir, 0775, true);
+            @\chmod($dir, 0775);
         }
-        return rename($oldResolved, $newResolved);
+        return \rename($oldResolved, $newResolved);
     }
 
     /**
@@ -270,48 +273,48 @@ class LocalStorageDriver implements StorageDriver
     protected function resolvePath(string $path): string
     {
         // Path Traversal check: Block '..' traversal and path manipulation
-        if (strpos($path, '..') !== false || strpos($path, '\\') !== false) {
+        if (\strpos($path, '..') !== false || \strpos($path, '\\') !== false) {
             throw new \InvalidArgumentException("Security exception: Malformed path traversal detected.");
         }
 
         // Clean relative or absolute public/storage/uploads paths to be absolute under APPLICATION_ROOT
-        $cleanInput = ltrim($path, '/');
-        if (strpos($cleanInput, 'public/storage/uploads') === 0) {
+        $cleanInput = \ltrim($path, '/');
+        if (\strpos($cleanInput, 'public/storage/uploads') === 0) {
             $path = APPLICATION_ROOT . '/' . $cleanInput;
         }
 
         // Get active site_id dynamically
-        $siteId = class_exists('\\Zero\\Core\\App') ? \Zero\Core\App::getCurrentSiteId() : null;
+        $siteId = \class_exists('\\Zero\\Core\\App') ? \Zero\Core\App::getCurrentSiteId() : null;
         if (empty($siteId)) {
             throw new \RuntimeException("Security exception: Cannot resolve storage paths without an active site context.");
         }
         $prefix = '/' . $siteId;
 
         // If the path starts with APPLICATION_ROOT
-        if (strpos($path, APPLICATION_ROOT) === 0) {
-            $subPath = substr($path, strlen(APPLICATION_ROOT));
-            $subPathClean = ltrim($subPath, '/');
+        if (\strpos($path, APPLICATION_ROOT) === 0) {
+            $subPath = \substr($path, \strlen(APPLICATION_ROOT));
+            $subPathClean = \ltrim($subPath, '/');
             
             // Handle private storage
-            if (strpos($subPathClean, 'storage/private/') === 0) {
+            if (\strpos($subPathClean, 'storage/private/') === 0) {
                 return $path;
             }
             
             // Strip leading public/ if present (since /public is the web document root)
-            if (strpos($subPathClean, 'public/') === 0) {
-                $subPathClean = substr($subPathClean, 7);
+            if (\strpos($subPathClean, 'public/') === 0) {
+                $subPathClean = \substr($subPathClean, 7);
             }
-            $subPathClean = '/' . ltrim($subPathClean, '/');
+            $subPathClean = '/' . \ltrim($subPathClean, '/');
 
-            if (strpos($subPathClean, '/storage/uploads') === 0) {
-                $subPathRest = substr($subPathClean, strlen('/storage/uploads'));
-                $subPathRest = ltrim($subPathRest, '/');
+            if (\strpos($subPathClean, '/storage/uploads') === 0) {
+                $subPathRest = \substr($subPathClean, \strlen('/storage/uploads'));
+                $subPathRest = \ltrim($subPathRest, '/');
                 
                 // If it already starts with a UUIDv7, bypass prefixing
-                $isAlreadyTenantScoped = preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}(\/|$)/i', $subPathRest);
+                $isAlreadyTenantScoped = \preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}(\/|$)/i', $subPathRest);
                 if (!$isAlreadyTenantScoped && !empty($subPathRest)) {
                     // Check if it already starts with siteId/ or is exactly siteId
-                    if (strpos($subPathRest, $siteId . '/') !== 0 && $subPathRest !== $siteId) {
+                    if (\strpos($subPathRest, $siteId . '/') !== 0 && $subPathRest !== $siteId) {
                         return APPLICATION_ROOT . '/public/storage/uploads' . $prefix . '/' . $subPathRest;
                     }
                 }
@@ -319,22 +322,22 @@ class LocalStorageDriver implements StorageDriver
             return $path;
         }
 
-        $trimmed = ltrim($path, '/');
+        $trimmed = \ltrim($path, '/');
         
         // Handle private storage
-        if (strpos($trimmed, 'storage/private/') === 0) {
+        if (\strpos($trimmed, 'storage/private/') === 0) {
             return APPLICATION_ROOT . '/' . $trimmed;
         }
 
         // If the path starts with /storage/uploads or storage/uploads
-        if (strpos($trimmed, 'storage/uploads') === 0) {
-            $subPathRest = substr($trimmed, strlen('storage/uploads'));
-            $subPathRest = ltrim($subPathRest, '/');
+        if (\strpos($trimmed, 'storage/uploads') === 0) {
+            $subPathRest = \substr($trimmed, \strlen('storage/uploads'));
+            $subPathRest = \ltrim($subPathRest, '/');
             
             // If it already starts with a UUIDv7, bypass prefixing
-            $isAlreadyTenantScoped = preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}(\/|$)/i', $subPathRest);
+            $isAlreadyTenantScoped = \preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}(\/|$)/i', $subPathRest);
             if (!$isAlreadyTenantScoped && !empty($subPathRest)) {
-                if (strpos($subPathRest, $siteId . '/') !== 0 && $subPathRest !== $siteId) {
+                if (\strpos($subPathRest, $siteId . '/') !== 0 && $subPathRest !== $siteId) {
                     return APPLICATION_ROOT . '/public/storage/uploads' . $prefix . '/' . $subPathRest;
                 }
             }
@@ -342,13 +345,13 @@ class LocalStorageDriver implements StorageDriver
         }
         
         // Default fallback: generic relative paths inside the site-scoped uploads folder
-        $isAlreadyTenantScoped = preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}(\/|$)/i', $trimmed);
+        $isAlreadyTenantScoped = \preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}(\/|$)/i', $trimmed);
         if ($isAlreadyTenantScoped) {
             return APPLICATION_ROOT . '/public/storage/uploads/' . $trimmed;
         }
 
         if (!empty($trimmed)) {
-            if (strpos($trimmed, $siteId . '/') !== 0 && $trimmed !== $siteId) {
+            if (\strpos($trimmed, $siteId . '/') !== 0 && $trimmed !== $siteId) {
                 return APPLICATION_ROOT . '/public/storage/uploads' . $prefix . '/' . $trimmed;
             }
             return APPLICATION_ROOT . '/public/storage/uploads/' . $trimmed;
@@ -367,11 +370,11 @@ class LocalStorageDriver implements StorageDriver
     public function write(string $path, string $content): bool
     {
         $resolved = $this->resolvePath($path);
-        $dir = dirname($resolved);
-        if (!file_exists($dir)) {
-            mkdir($dir, 0775, true);
-            @chmod($dir, 0775);
+        $dir = \dirname($resolved);
+        if (!\file_exists($dir)) {
+            \mkdir($dir, 0775, true);
+            @\chmod($dir, 0775);
         }
-        return file_put_contents($resolved, $content) !== false;
+        return \file_put_contents($resolved, $content) !== false;
     }
 }

@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Modules/DemoGenerator/Module.php
  * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
@@ -10,9 +13,9 @@
 
 namespace Zero\Modules\DemoGenerator;
 
+use Zero\Core\App;
 use Zero\Interfaces\Module as ModuleInterface;
 use Zero\Modules\DemoGenerator\Controllers\DemoController;
-use Zero\Core\App;
 
 /**
  * Class Module
@@ -77,8 +80,8 @@ class
             'label' => 'Demo Site Creator Form',
             'description' => 'An interactive, high-contrast dashboard form enabling visitors to spin up multi-tenant sandboxes.',
             'icon' => 'zap',
-            'admin_view' => dirname(__FILE__) . '/Views/blocks/admin/demo_creator.php',
-            'frontend_view' => dirname(__FILE__) . '/Views/blocks/frontend/demo_creator.php'
+            'admin_view' => \dirname(__FILE__) . '/Views/blocks/admin/demo_creator.php',
+            'frontend_view' => \dirname(__FILE__) . '/Views/blocks/frontend/demo_creator.php'
         ]);
     }
 }

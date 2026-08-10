@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Modules/FormBuilder/Models/Submission.php
  * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
@@ -42,22 +45,22 @@ class Submission implements Model
     public function __construct(array $data = [])
     {
         foreach ($data as $key => $value) {
-            if (property_exists($this, $key)) {
+            if (\property_exists($this, $key)) {
                 $this->$key = $value;
             }
         }
 
         // Dynamically decode and parse the rich JSON message payload
         if (!empty($this->message)) {
-            $decoded = json_decode($this->message, true);
-            if (is_array($decoded)) {
+            $decoded = \json_decode($this->message, true);
+            if (\is_array($decoded)) {
                 $this->form_title = $decoded['_meta_form_title'] ?? 'Contact Form';
                 $this->source_page = $decoded['_meta_source_page'] ?? 'Contact Page';
                 
                 // Clear metadata keys to leave only actual form submission inputs
                 $fields = [];
                 foreach ($decoded as $label => $val) {
-                    if (strpos($label, '_meta_') !== 0) {
+                    if (\strpos($label, '_meta_') !== 0) {
                         $fields[$label] = $val;
                     }
                 }

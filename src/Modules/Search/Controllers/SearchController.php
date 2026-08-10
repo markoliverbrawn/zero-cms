@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Modules/Search/Controllers/SearchController.php
  * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
@@ -8,8 +11,8 @@
 
 namespace Zero\Modules\Search\Controllers;
 
-use Zero\Interfaces\Controller;
 use Zero\Core\App;
+use Zero\Interfaces\Controller;
 use Zero\Modules\Search\Services\SearchService;
 
 /**
@@ -27,8 +30,8 @@ class SearchController implements Controller
      */
     public function handle($param)
     {
-        $q = trim(strval($_GET['q'] ?? ''));
-        $currentPage = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
+        $q = \trim(\strval($_GET['q'] ?? ''));
+        $currentPage = isset($_GET['page']) ? \max(1, \intval($_GET['page'])) : 1;
         $perPage = 10;
         $offset = ($currentPage - 1) * $perPage;
 
@@ -39,7 +42,7 @@ class SearchController implements Controller
 
         $results = $searchData['results'] ?? [];
         $total = $searchData['total'] ?? 0;
-        $totalPages = max(1, ceil($total / $perPage));
+        $totalPages = \max(1, \ceil($total / $perPage));
 
         App::render('search', [
             'results' => $results,

@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Modules/Admin/Controllers/FrontendResetController.php
  * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
@@ -10,9 +13,9 @@ namespace Zero\Modules\Admin\Controllers;
 
 use Zero\Core\App;
 use Zero\Database\DB;
-use Zero\Support\Logger;
 use Zero\Interfaces\Controller;
 use Zero\Models\User;
+use Zero\Support\Logger;
 
 /**
  * Class FrontendResetController
@@ -31,7 +34,7 @@ class FrontendResetController implements Controller
     {
         App::ensureSession();
         if (App::getCurrentUser()) {
-            header('Location: /shop/account');
+            \header('Location: /shop/account');
             exit;
         }
 
@@ -40,7 +43,7 @@ class FrontendResetController implements Controller
         // Locate token inside database
         $reset = DB::query("SELECT * FROM password_resets WHERE token = ? LIMIT 1", [$token])->fetch();
         
-        if (!$reset || strtotime($reset['expires_at']) < time()) {
+        if (!$reset || \strtotime($reset['expires_at']) < \time()) {
             App::render('reset', ['error' => 'Your password recovery token is invalid or has expired. Please request a new recovery link.']);
             exit;
         }
@@ -58,13 +61,13 @@ class FrontendResetController implements Controller
                 $error = 'All fields are required.';
             } elseif ($password !== $confirm) {
                 $error = 'Passwords do not match.';
-            } elseif (strlen($password) < 6) {
+            } elseif (\strlen($password) < 6) {
                 $error = 'Password must be at least 6 characters.';
             } else {
                 // Update User password hash
                 $user = User::find($userId);
                 if ($user) {
-                    $user->password_hash = password_hash($password, PASSWORD_DEFAULT);
+                    $user->password_hash = \password_hash($password, PASSWORD_DEFAULT);
                     $user->save();
                     
                     // Clear the used reset token from database
@@ -76,7 +79,7 @@ class FrontendResetController implements Controller
                     App::loginUser($userId);
                     
                     $_SESSION['success_msg'] = 'Password updated successfully! Welcome to your Account Portal.';
-                    header('Location: /shop/account');
+                    \header('Location: /shop/account');
                     exit;
                 }
                 $error = 'User account no longer exists.';

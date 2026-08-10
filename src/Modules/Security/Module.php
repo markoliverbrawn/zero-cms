@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Modules/Security/Module.php
  * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
@@ -122,7 +125,7 @@ class,
         ], null, 'admin');
 
         // Register dynamic automated security audit job if backend Scheduler is present
-        if (class_exists(Scheduler::/**
+        if (\class_exists(Scheduler::/**
  * Class 
  *
  * Provides structural platform implementation and operational encapsulation.

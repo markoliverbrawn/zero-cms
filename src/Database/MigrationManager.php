@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Database/MigrationManager.php
  * Architectural Purpose: Database schema definition, transactional migration tracking, or seed data loader.
@@ -64,11 +67,11 @@ class MigrationManager
                 $file = $meta['file'];
                 $class = $meta['class'];
 
-                if (file_exists($file)) {
+                if (\file_exists($file)) {
                     require_once $file;
                 }
 
-                if (class_exists($class)) {
+                if (\class_exists($class)) {
                     echo "Reverting sequential migration: {$name} (Batch {$latestBatch})...\n";
                     $instance = new $class();
                     $instance->down();
@@ -102,13 +105,13 @@ class MigrationManager
 
         // 1. Discover Core Migrations on disk
         $corePath = APPLICATION_ROOT . '/src/Database/Migrations/[0-9]*_*.php';
-        $coreFiles = glob($corePath);
-        if (is_array($coreFiles)) {
+        $coreFiles = \glob($corePath);
+        if (\is_array($coreFiles)) {
             foreach ($coreFiles as $file) {
-                $filename = basename($file, '.php'); // e.g. "0001_CreateCoreTables"
+                $filename = \basename($file, '.php'); // e.g. "0001_CreateCoreTables"
                 
                 // Extract class name by removing sequential prefix (e.g. "0001_")
-                $className = preg_replace('/^\d+_/', '', $filename);
+                $className = \preg_replace('/^\d+_/', '', $filename);
                 $classNamespace = "\\Zero\\Database\\Migrations\\" . $className;
 
                 $migrations[$filename] = [
@@ -120,14 +123,14 @@ class MigrationManager
 
         // 2. Discover Extensible Module Migrations on disk
         $modulePath = APPLICATION_ROOT . '/src/Modules/*/Database/Migrations/[0-9]*_*.php';
-        $moduleFiles = glob($modulePath);
-        if (is_array($moduleFiles)) {
+        $moduleFiles = \glob($modulePath);
+        if (\is_array($moduleFiles)) {
             foreach ($moduleFiles as $file) {
-                $filename = basename($file, '.php'); // e.g. "0002_CreateBlogTables"
-                $className = preg_replace('/^\d+_/', '', $filename);
+                $filename = \basename($file, '.php'); // e.g. "0002_CreateBlogTables"
+                $className = \preg_replace('/^\d+_/', '', $filename);
 
                 // Extract module name dynamically from path to construct correct PSR-4 namespace
-                if (preg_match('/src\/Modules\/([a-zA-Z0-9]+)\//', $file, $matches)) {
+                if (\preg_match('/src\/Modules\/([a-zA-Z0-9]+)\//', $file, $matches)) {
                     $moduleName = $matches[1];
                     $classNamespace = "\\Zero\\Modules\\{$moduleName}\\Database\\Migrations\\" . $className;
 
@@ -140,7 +143,7 @@ class MigrationManager
         }
 
         // 3. Sort keys alphabetically/chronologically to guarantee sequential order!
-        ksort($migrations);
+        \ksort($migrations);
 
         return $migrations;
     }
@@ -180,7 +183,7 @@ class MigrationManager
         // 5. Run any pending migrations in sequential order
         $runCount = 0;
         foreach ($migrationsList as $name => $meta) {
-            if (in_array($name, $executed)) {
+            if (\in_array($name, $executed)) {
                 continue; // Already run, skip!
             }
 
@@ -188,11 +191,11 @@ class MigrationManager
             $class = $meta['class'];
 
             // Manually require the file on disk to support sequential prefixes
-            if (file_exists($file)) {
+            if (\file_exists($file)) {
                 require_once $file;
             }
 
-            if (class_exists($class)) {
+            if (\class_exists($class)) {
                 echo "Running sequential migration: {$name}...\n";
                 $instance = new $class();
                 $instance->up();

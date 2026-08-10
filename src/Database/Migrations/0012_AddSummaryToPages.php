@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Database/Migrations/0012_AddSummaryToPages.php
  * Architectural Purpose: Database schema definition, transactional migration tracking, or seed data loader.

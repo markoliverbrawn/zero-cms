@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Modules/Blog/Module.php
  * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
@@ -150,11 +153,11 @@ class, [], 'daily');
             'label' => 'Latest Blog Articles',
             'description' => 'Showcases the newest published articles from your blog dynamically with layouts and options.',
             'icon' => 'edit-3',
-            'admin_view' => dirname(__FILE__) . '/Views/blocks/admin/latest_articles.php',
-            'frontend_view' => dirname(__FILE__) . '/Views/blocks/frontend/latest_articles.php'
+            'admin_view' => \dirname(__FILE__) . '/Views/blocks/admin/latest_articles.php',
+            'frontend_view' => \dirname(__FILE__) . '/Views/blocks/frontend/latest_articles.php'
         ]);
 
-        if (class_exists(SearchService::/**
+        if (\class_exists(SearchService::/**
  * Class 
  *
  * Provides structural platform implementation and operational encapsulation.

@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Modules/Forum/Controllers/ThreadCreateController.php
  * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
@@ -8,13 +11,13 @@
 
 namespace Zero\Modules\Forum\Controllers;
 
-use Zero\Interfaces\Controller;
 use Zero\Core\App;
 use Zero\Core\Validator;
-use Zero\Support\Security;
+use Zero\Interfaces\Controller;
 use Zero\Modules\Forum\Models\ForumBoard;
-use Zero\Modules\Forum\Models\ForumThread;
 use Zero\Modules\Forum\Models\ForumPost;
+use Zero\Modules\Forum\Models\ForumThread;
+use Zero\Support\Security;
 
 /**
  * Class ThreadCreateController
@@ -37,7 +40,7 @@ class ThreadCreateController implements Controller
 
         $board = ForumBoard::findBySlug($boardSlug);
         if (!$board || $board->site_id !== $siteId) {
-            http_response_code(404);
+            \http_response_code(404);
             echo "Forum board not found.";
             exit;
         }
@@ -45,7 +48,7 @@ class ThreadCreateController implements Controller
         $user = App::getCurrentUser();
         if (!$user) {
             $_SESSION['redirect_to'] = "/forum/board/{$board->slug}/create";
-            header('Location: /login');
+            \header('Location: /login');
             exit;
         }
 
@@ -82,7 +85,7 @@ class ThreadCreateController implements Controller
             // Handle duplicate slug collision safely
             $existing = ForumThread::findBySlug($threadSlug);
             if ($existing) {
-                $threadSlug .= '-' . substr(bin2hex(random_bytes(3)), 0, 4);
+                $threadSlug .= '-' . \substr(\bin2hex(\random_bytes(3)), 0, 4);
             }
 
             $thread = new ForumThread([
@@ -110,7 +113,7 @@ class ThreadCreateController implements Controller
             ]);
             $post->save();
 
-            header("Location: /forum/thread/{$thread->slug}");
+            \header("Location: /forum/thread/{$thread->slug}");
             exit;
         }
 

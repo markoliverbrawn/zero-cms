@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Blocks/AccordionBlock.php
  * Architectural Purpose: Handles operations and business logic within the system.
@@ -39,20 +42,20 @@ class AccordionBlock implements BlockHelperInterface
     {
         $parts = [];
         if (!empty($this->data['title'])) {
-            $parts[] = strip_tags($this->data['title']);
+            $parts[] = \strip_tags($this->data['title']);
         }
 
-        if (!empty($this->data['items']) && is_array($this->data['items'])) {
+        if (!empty($this->data['items']) && \is_array($this->data['items'])) {
             foreach ($this->data['items'] as $item) {
                 if (!empty($item['title'])) {
                     $parts[] = $item['title'];
                 }
                 if (!empty($item['content'])) {
-                    $parts[] = strip_tags($item['content']);
+                    $parts[] = \strip_tags($item['content']);
                 }
             }
         }
 
-        return implode(' ', $parts);
+        return \implode(' ', $parts);
     }
 }

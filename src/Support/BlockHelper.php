@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Support/BlockHelper.php
  * Architectural Purpose: Global diagnostic tools, cryptographic security handlers, SMTP email transmitters, and text helpers.
@@ -47,7 +50,7 @@ class BlockHelper
             $classes[] = $spaceAfter;
         }
 
-        return implode(' ', $classes);
+        return \implode(' ', $classes);
     }
 
     /**

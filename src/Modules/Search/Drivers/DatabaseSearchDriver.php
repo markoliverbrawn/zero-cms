@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Modules/Search/Drivers/DatabaseSearchDriver.php
  * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
@@ -10,8 +13,8 @@ namespace Zero\Modules\Search\Drivers;
 
 use Zero\Database\DB;
 use Zero\Modules\Search\Interfaces\SearchDriverInterface;
-use Zero\Support\Security;
 use Zero\Support\Logger;
+use Zero\Support\Security;
 
 /**
  * Class DatabaseSearchDriver
@@ -72,7 +75,7 @@ class DatabaseSearchDriver implements SearchDriverInterface
     ): void {
         try {
             $id = Security::uuidv7();
-            $now = gmdate('Y-m-d H:i:s');
+            $now = \gmdate('Y-m-d H:i:s');
 
             $sql = "
                 INSERT INTO search_index (id, site_id, model_type, model_id, title, content, url, created_at, updated_at)
@@ -111,7 +114,7 @@ class DatabaseSearchDriver implements SearchDriverInterface
      */
     public function search(string $query, array $options = []): array
     {
-        $query = trim($query);
+        $query = \trim($query);
         if ($query === '') {
             return [
                 'results' => [],

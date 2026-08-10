@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Support/Seeder.php
  * Architectural Purpose: Global diagnostic tools, cryptographic security handlers, SMTP email transmitters, and text helpers.
@@ -43,15 +46,15 @@ class Seeder
     {
         $this->uploadsDir = APPLICATION_ROOT . '/public/storage/uploads';
 
-        if (is_array($source)) {
+        if (\is_array($source)) {
             $this->data = $source;
-        } elseif (is_string($source)) {
-            $path = realpath($source);
-            if ($path === false || !file_exists($path)) {
+        } elseif (\is_string($source)) {
+            $path = \realpath($source);
+            if ($path === false || !\file_exists($path)) {
                 throw new Exception("Seeder JSON source file not found at: {$source}");
             }
-            $json = file_get_contents($path);
-            $this->data = json_decode($json, true) ?? [];
+            $json = \file_get_contents($path);
+            $this->data = \json_decode($json, true) ?? [];
         }
 
         // Register standard core-level handlers on first instantiation
@@ -71,7 +74,7 @@ class Seeder
             throw new Exception("Unable to open/create zip file at: {$outZipPath}");
         }
 
-        $sourcePath = realpath(APPLICATION_ROOT);
+        $sourcePath = \realpath(APPLICATION_ROOT);
         $files = new \RecursiveIteratorIterator(
             new \RecursiveDirectoryIterator($sourcePath),
             \RecursiveIteratorIterator::LEAVES_ONLY
@@ -83,19 +86,19 @@ class Seeder
             }
 
             $filePath = $file->getRealPath();
-            $relativePath = substr($filePath, strlen($sourcePath) + 1);
+            $relativePath = \substr($filePath, \strlen($sourcePath) + 1);
 
             // Exclude sensitive files, storage, git, and archives
             if (
-                strpos($relativePath, '.env') !== false ||
-                strpos($relativePath, '.git/') === 0 ||
-                strpos($relativePath, 'storage/uploads/') === 0 ||
-                strpos($relativePath, '_archive/') === 0 ||
-                strpos($relativePath, 'seeders/documentation/pack_svgs.php') !== false ||
-                strpos($relativePath, 'seeders/documentation/add_') !== false ||
-                strpos($relativePath, 'seeders/documentation/update_') !== false ||
-                strpos($relativePath, 'seeders/documentation/nest_') !== false ||
-                strpos($relativePath, 'seeders/documentation/restructure_') !== false
+                \strpos($relativePath, '.env') !== false ||
+                \strpos($relativePath, '.git/') === 0 ||
+                \strpos($relativePath, 'storage/uploads/') === 0 ||
+                \strpos($relativePath, '_archive/') === 0 ||
+                \strpos($relativePath, 'seeders/documentation/pack_svgs.php') !== false ||
+                \strpos($relativePath, 'seeders/documentation/add_') !== false ||
+                \strpos($relativePath, 'seeders/documentation/update_') !== false ||
+                \strpos($relativePath, 'seeders/documentation/nest_') !== false ||
+                \strpos($relativePath, 'seeders/documentation/restructure_') !== false
             ) {
                 continue;
             }
@@ -113,7 +116,7 @@ class Seeder
      */
     public function getSeededSiteIds(): array
     {
-        return array_values($this->seededSiteIds);
+        return \array_values($this->seededSiteIds);
     }
 
     /**
@@ -131,7 +134,7 @@ class Seeder
             while ($row = $stmt->fetch()) {
                 $columns[] = $row['Field'] ?? $row['column_name'] ?? '';
             }
-            self::$columnCache[$table] = array_filter($columns);
+            self::$columnCache[$table] = \array_filter($columns);
             return self::$columnCache[$table];
         } catch (\Exception $e) {
             // Fallback if DESCRIBE is not supported
@@ -151,7 +154,7 @@ class Seeder
         // 1. Field Filter: users api_token hashing
         self::registerFieldFilter('api_token', function ($value, $colName, $tableName) {
             if ($tableName === 'users' && !empty($value)) {
-                return hash('sha256', $value);
+                return \hash('sha256', $value);
             }
             return $value;
         });
@@ -159,11 +162,11 @@ class Seeder
         // 2. Field Filter: automatic tenant path routing replacement
         self::registerFieldFilter('*', function ($value, $colName, $tableName, $row) {
             $siteId = $row['site_id'] ?? '';
-            if (!empty($siteId) && is_string($value) && strpos($value, '/storage/uploads/') !== false) {
-                if (strpos($value, '/storage/uploads/' . $siteId . '/') !== false) {
+            if (!empty($siteId) && \is_string($value) && \strpos($value, '/storage/uploads/') !== false) {
+                if (\strpos($value, '/storage/uploads/' . $siteId . '/') !== false) {
                     return $value;
                 }
-                return str_replace('/storage/uploads/', '/storage/uploads/' . $siteId . '/', $value);
+                return \str_replace('/storage/uploads/', '/storage/uploads/' . $siteId . '/', $value);
             }
             return $value;
         });
@@ -187,7 +190,7 @@ class Seeder
             
             if (isset($row['content_base64'])) {
                 $filename = $row['filename'];
-                $content = base64_decode($row['content_base64']);
+                $content = \base64_decode($row['content_base64']);
                 $physicalPath = $seederInstance->getUploadsDir() . '/' . $siteId . '/' . $filename;
                 Storage::write($physicalPath, $content);
                 
@@ -201,12 +204,12 @@ class Seeder
             } elseif (isset($row['filename']) && ($row['mime'] ?? '') !== 'directory') {
                 $filename = $row['filename'];
                 $seedImgPath = APPLICATION_ROOT . '/seeders/data/images/' . $filename;
-                if (!file_exists($seedImgPath)) {
+                if (!\file_exists($seedImgPath)) {
                     $seedImgPath = APPLICATION_ROOT . '/seeders/data/videos/' . $filename;
                 }
                 
-                if (file_exists($seedImgPath)) {
-                    $content = file_get_contents($seedImgPath);
+                if (\file_exists($seedImgPath)) {
+                    $content = \file_get_contents($seedImgPath);
                     $physicalPath = $seederInstance->getUploadsDir() . '/' . $siteId . '/' . $filename;
                     Storage::write($physicalPath, $content);
                 }
@@ -236,10 +239,10 @@ class Seeder
         self::registerPostRunHook(function () {
             echo "Bulk-indexing seeded searchable records...\n";
             try {
-                if (class_exists('\\Zero\\Modules\\Search\\Services\\SearchService')) {
+                if (\class_exists('\\Zero\\Modules\\Search\\Services\\SearchService')) {
                     $searchables = \Zero\Modules\Search\Services\SearchService::getSearchables();
-                    foreach (array_keys($searchables) as $modelClass) {
-                        if (class_exists($modelClass)) {
+                    foreach (\array_keys($searchables) as $modelClass) {
+                        if (\class_exists($modelClass)) {
                             $tableName = $modelClass::getTableName();
                             $rows = DB::query("SELECT * FROM {$tableName} WHERE deleted_at IS NULL")->fetchAll();
                             foreach ($rows as $row) {
@@ -261,7 +264,7 @@ class Seeder
             if (!empty($adminPassword)) {
                 echo "Applying custom ADMIN_PASSWORD override from .env...\n";
                 try {
-                    $hashedPassword = password_hash($adminPassword, PASSWORD_DEFAULT);
+                    $hashedPassword = \password_hash($adminPassword, PASSWORD_DEFAULT);
                     DB::query(
                         "UPDATE users SET password_hash = ? WHERE (role = 'super_admin' OR username = 'admin') AND deleted_at IS NULL",
                         [$hashedPassword]
@@ -319,7 +322,7 @@ class Seeder
      */
     protected function resolvePlaceholders(&$data): void
     {
-        if (is_array($data)) {
+        if (\is_array($data)) {
             if (isset($data['media_placeholder'])) {
                 $filename = $data['media_placeholder'];
                 if (isset($this->mediaFilenameMap[$filename])) {
@@ -340,7 +343,7 @@ class Seeder
         $this->seededSiteIds = [];
 
         // Enforce a temporary context initially to satisfy active site checks for Storage exists() and cleanDirectory()
-        if (class_exists('\\Zero\\Core\\App') && empty(App::getCurrentSiteId())) {
+        if (\class_exists('\\Zero\\Core\\App') && empty(App::getCurrentSiteId())) {
             App::setCurrentSite(new \Zero\Models\Site([
                 'id' => '00000000-0000-0000-0000-000000000000',
                 'name' => 'Temporary Seeder Context',
@@ -360,7 +363,7 @@ class Seeder
                 $name = $site['name'];
                 $domain = $site['domain'];
                 $theme = $site['theme'] ?? 'default';
-                $enabledModules = isset($site['enabled_modules']) ? json_encode($site['enabled_modules']) : '[]';
+                $enabledModules = isset($site['enabled_modules']) ? \json_encode($site['enabled_modules']) : '[]';
                 
                 $existing = DB::query("SELECT id FROM sites WHERE domain = ? LIMIT 1", [$domain])->fetch();
                 if ($existing) {
@@ -405,7 +408,7 @@ class Seeder
 
         // Loop through and seed all JSON tables dynamically and generically
         foreach ($data as $tableName => $rows) {
-            if ($tableName === 'sites' || str_ends_with($tableName, '_blueprint') || !is_array($rows)) {
+            if ($tableName === 'sites' || \str_ends_with($tableName, '_blueprint') || !\is_array($rows)) {
                 continue;
             }
 
@@ -459,7 +462,7 @@ class Seeder
 
                 foreach ($row as $colName => $val) {
                     // Filter out any JSON properties that do not exist as columns in the DB table
-                    if (!empty($validColumns) && !in_array($colName, $validColumns)) {
+                    if (!empty($validColumns) && !\in_array($colName, $validColumns)) {
                         continue;
                     }
 
@@ -478,24 +481,24 @@ class Seeder
                     $columns[] = $colName;
                     $placeholders[] = '?';
                     
-                    if (is_array($val)) {
-                        $values[] = json_encode($val);
+                    if (\is_array($val)) {
+                        $values[] = \json_encode($val);
                     } else {
                         $values[] = $val;
                     }
                 }
 
-                if (!in_array('created_at', $columns)) {
+                if (!\in_array('created_at', $columns)) {
                     $columns[] = 'created_at';
                     $placeholders[] = 'NOW()';
                 }
-                if (!in_array('updated_at', $columns)) {
+                if (!\in_array('updated_at', $columns)) {
                     $columns[] = 'updated_at';
                     $placeholders[] = 'NOW()';
                 }
 
-                $colsSql = implode(', ', $columns);
-                $placeholdersSql = implode(', ', $placeholders);
+                $colsSql = \implode(', ', $columns);
+                $placeholdersSql = \implode(', ', $placeholders);
 
                 $sql = "INSERT INTO {$tableName} ({$colsSql}) VALUES ({$placeholdersSql})";
                 DB::query($sql, $values);
@@ -515,7 +518,7 @@ class Seeder
 
         // Generate distribution ZIP package generically (only if requested and ZipArchive is active)
         if ($generateZip) {
-            if (class_exists('\\ZipArchive')) {
+            if (\class_exists('\\ZipArchive')) {
                 try {
                     $this->createDistributionZip();
                 } catch (\Throwable $e) {

@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Modules/Blog/Jobs/PurgeOldCommentsJob.php
  * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
@@ -32,7 +35,7 @@ class PurgeOldCommentsJob implements Job
             return;
         }
 
-        $sevenDaysAgo = gmdate('Y-m-d H:i:s', strtotime('-7 days'));
+        $sevenDaysAgo = \gmdate('Y-m-d H:i:s', \strtotime('-7 days'));
 
         $pdo = DB::getPDO();
         $stmt = $pdo->prepare("

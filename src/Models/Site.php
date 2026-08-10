@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Models/Site.php
  * Architectural Purpose: Active Record data model or behavioral trait wrapping database schema representation with tenant-scoping.
@@ -147,33 +150,33 @@ class => 'site_id'
      */
     private function deleteDirectoryRecursive(string $dir): bool
     {
-        if (!file_exists($dir)) {
+        if (!\file_exists($dir)) {
             return true;
         }
 
         // Configure a temporary custom error handler to trap and convert filesystem warnings into exceptions,
         // avoiding any output printing (which would corrupt HTTP redirect headers).
-        set_error_handler(function($errno, $errstr) {
+        \set_error_handler(function($errno, $errstr) {
             throw new \ErrorException($errstr, 0, $errno);
         });
 
         try {
-            if (!is_dir($dir)) {
-                return unlink($dir);
+            if (!\is_dir($dir)) {
+                return \unlink($dir);
             }
-            foreach (scandir($dir) as $item) {
+            foreach (\scandir($dir) as $item) {
                 if ($item === '.' || $item === '..') {
                     continue;
                 }
                 // Recurse without interrupting the loop if one file encounters a permission blockage
                 $this->deleteDirectoryRecursive($dir . '/' . $item);
             }
-            return rmdir($dir);
+            return \rmdir($dir);
         } catch (\Exception $e) {
             // Rethrow descriptive file deletion or other failures to bubble out to the controller/user
             throw new \Exception("Deletion failed: Could not clean up tenant uploads folder. " . $e->getMessage());
         } finally {
-            restore_error_handler();
+            \restore_error_handler();
         }
     }
 
@@ -230,7 +233,7 @@ class => 'site_id'
 class) {
                 continue;
             }
-            if (class_exists($class)) {
+            if (\class_exists($class)) {
                 try {
                     $reflector = new \ReflectionClass($class);
                     if ($reflector->hasProperty('tableName')) {
@@ -361,15 +364,15 @@ class) {
     {
         $options = [];
         $themesDir = APPLICATION_ROOT . '/src/Views/themes';
-        if (is_dir($themesDir)) {
-            $folders = scandir($themesDir);
+        if (\is_dir($themesDir)) {
+            $folders = \scandir($themesDir);
             foreach ($folders as $folder) {
                 if ($folder === '.' || $folder === '..') {
                     continue;
                 }
-                if (is_dir($themesDir . '/' . $folder)) {
+                if (\is_dir($themesDir . '/' . $folder)) {
                     // Convert folder name dynamically (e.g., kebab-case or snake_case to Title Case)
-                    $friendlyName = ucwords(str_replace(['-', '_'], ' ', $folder));
+                    $friendlyName = \ucwords(\str_replace(['-', '_'], ' ', $folder));
                     if ($folder === 'default') {
                         $title = 'Default Corporate Theme';
                     } elseif ($folder === 'guide') {
@@ -395,7 +398,7 @@ class) {
     public static function getTimezoneOptions(): array
     {
         $timezones = \DateTimeZone::listIdentifiers();
-        return array_combine($timezones, $timezones);
+        return \array_combine($timezones, $timezones);
     }
 
     /**
@@ -403,7 +406,7 @@ class) {
      */
     public function isModuleEnabled(string $module): bool
     {
-        if (in_array($module, self::$systemModules)) {
+        if (\in_array($module, self::$systemModules)) {
             return true;
         }
 
@@ -411,11 +414,11 @@ class) {
             // Default fallback: if empty/unseeded, default to all enabled for backward compatibility
             return true;
         }
-        $modules = json_decode($this->enabled_modules, true);
-        if (!is_array($modules)) {
+        $modules = \json_decode($this->enabled_modules, true);
+        if (!\is_array($modules)) {
             return true;
         }
-        return in_array($module, $modules);
+        return \in_array($module, $modules);
     }
 
     /**
@@ -426,7 +429,7 @@ class) {
      */
     public static function registerSystemModule(string $module)
     {
-        if (!in_array($module, self::$systemModules)) {
+        if (!\in_array($module, self::$systemModules)) {
             self::$systemModules[] = $module;
         }
     }

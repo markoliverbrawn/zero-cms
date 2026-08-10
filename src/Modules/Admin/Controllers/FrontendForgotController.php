@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Modules/Admin/Controllers/FrontendForgotController.php
  * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
@@ -9,13 +12,13 @@
 namespace Zero\Modules\Admin\Controllers;
 
 use Zero\Core\App;
+use Zero\Core\Template;
 use Zero\Database\DB;
-use Zero\Support\Logger;
+use Zero\Http\Middleware\AuthThrottlingMiddleware;
 use Zero\Interfaces\Controller;
 use Zero\Support\Emailer;
+use Zero\Support\Logger;
 use Zero\Support\Security;
-use Zero\Http\Middleware\AuthThrottlingMiddleware;
-use Zero\Core\Template;
 
 /**
  * Class FrontendForgotController
@@ -34,7 +37,7 @@ class FrontendForgotController implements Controller
     {
         App::ensureSession();
         if (App::getCurrentUser()) {
-            header('Location: /shop/account');
+            \header('Location: /shop/account');
             exit;
         }
 
@@ -42,7 +45,7 @@ class FrontendForgotController implements Controller
         if ($method === 'POST') {
             App::applyCsrfMiddleware();
             
-            $username = trim($_POST['username'] ?? '');
+            $username = \trim($_POST['username'] ?? '');
             $siteId = App::getCurrentSiteId();
 
             // Enforce centralized rate limiting and progressive lockout protection via Middleware
@@ -52,8 +55,8 @@ class FrontendForgotController implements Controller
             $user = DB::query('SELECT * FROM users WHERE username = ? AND site_id = ? LIMIT 1', [$username, $siteId])->fetch();
             
             if ($user && !empty($user['email'])) {
-                $token = bin2hex(random_bytes(16));
-                $expires = gmdate('Y-m-d H:i:s', time() + 3600);
+                $token = \bin2hex(\random_bytes(16));
+                $expires = \gmdate('Y-m-d H:i:s', \time() + 3600);
                 $resetId = Security::uuidv7();
                 
                 // Track reset token in database
@@ -89,7 +92,7 @@ class FrontendForgotController implements Controller
                     'ip_address' => $_SERVER['REMOTE_ADDR']
                 ]);
                 // Introduce simulated timing delay to match successful path
-                usleep(250000); // 250ms
+                \usleep(250000); // 250ms
             }
             
             // SECURITY REMEDIATION (Timing mitigation):

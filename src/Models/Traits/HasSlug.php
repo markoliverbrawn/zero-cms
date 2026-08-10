@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Models/Traits/HasSlug.php
  * Architectural Purpose: Active Record data model or behavioral trait wrapping database schema representation with tenant-scoping.
@@ -8,8 +11,8 @@
 
 namespace Zero\Models\Traits;
 
-use Zero\Database\DB;
 use Zero\Core\App;
+use Zero\Database\DB;
 
 /**
  * Trait HasSlug
@@ -46,7 +49,7 @@ trait HasSlug
         }
 
         // Enforce polymorphic type restrictions if configured and column exists
-        $modelType = property_exists(static::/**
+        $modelType = \property_exists(static::/**
  * Class 
  *
  * Provides structural platform implementation and operational encapsulation.

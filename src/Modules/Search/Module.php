@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Modules/Search/Module.php
  * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
@@ -8,10 +11,10 @@
 
 namespace Zero\Modules\Search;
 
+use Zero\Core\App;
 use Zero\Interfaces\Module as ModuleInterface;
 use Zero\Modules\Search\Controllers\SearchController;
 use Zero\Modules\Search\Services\SearchService;
-use Zero\Core\App;
 
 /**
  * Class Module

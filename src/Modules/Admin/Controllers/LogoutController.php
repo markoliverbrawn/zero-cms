@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Modules/Admin/Controllers/LogoutController.php
  * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
@@ -9,8 +12,8 @@
 namespace Zero\Modules\Admin\Controllers;
 
 use Zero\Core\App;
-use Zero\Support\Logger;
 use Zero\Interfaces\Controller;
+use Zero\Support\Logger;
 
 /**
  * Class LogoutController
@@ -29,14 +32,14 @@ class LogoutController implements Controller
     {
         $method = $_SERVER['REQUEST_METHOD'];
         if ($method !== 'POST') {
-            http_response_code(405);
+            \http_response_code(405);
             echo 'Method not allowed';
             exit;
         }
         App::applyCsrfMiddleware();
         App::logoutUser();
         Logger::log($_SESSION['user_id'] ?? null, 'logout', 'user', $_SESSION['user_id'] ?? null, null);
-        header('Location: /admin/login');
+        \header('Location: /admin/login');
         exit;
     }
 }

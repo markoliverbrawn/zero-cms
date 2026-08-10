@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * Zero CMS - Blog Landing Page Controller
  *
@@ -15,9 +18,9 @@
 namespace Zero\Modules\Blog\Controllers;
 
 use Zero\Core\App;
-use Zero\Modules\Blog\Models\Post;
 use Zero\Interfaces\Controller;
 use Zero\Models\Traits\SupportsBlocks;
+use Zero\Modules\Blog\Models\Post;
 
 /**
  * Class BlogController
@@ -39,7 +42,7 @@ class BlogController implements Controller
         $pageRecord = $param;
 
         // Load current page from query string (default to 1)
-        $currentPage = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
+        $currentPage = isset($_GET['page']) ? \max(1, \intval($_GET['page'])) : 1;
 
         // Leverage the standard Paginates trait of Post model
         // 6 posts per page is visually spectacular for masonry grids or vertical card flows

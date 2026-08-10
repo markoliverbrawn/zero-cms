@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Modules/Blog/Database/Migrations/0007_AddAllowCommentsToBlogPosts.php
  * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.

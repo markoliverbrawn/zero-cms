@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Http/Controllers/CssBundleController.php
  * Architectural Purpose: HTTP request routing, request filtering middleware, or dynamic content-security controllers.
@@ -8,9 +11,9 @@
 
 namespace Zero\Http\Controllers;
 
-use Zero\Interfaces\Controller;
 use Zero\Core\App;
 use Zero\Core\Env;
+use Zero\Interfaces\Controller;
 
 /**
  * Class CssBundleController
@@ -38,13 +41,13 @@ class CssBundleController implements Controller
 
         // 2. If we are in production and the compiled file already exists on disk, serve it immediately.
         // We only re-compile if the file is missing, or if we are actively in development mode.
-        if (!$isDevelopment && file_exists($targetFile)) {
-            $cachedContent = file_get_contents($targetFile);
+        if (!$isDevelopment && \file_exists($targetFile)) {
+            $cachedContent = \file_get_contents($targetFile);
             if ($cachedContent === false) {
                 throw new \Exception("Failed to read cached CSS bundle from disk path: {$targetFile}");
             }
-            header('Content-Type: text/css; charset=UTF-8');
-            header('Cache-Control: public, max-age=31536000, immutable');
+            \header('Content-Type: text/css; charset=UTF-8');
+            \header('Cache-Control: public, max-age=31536000, immutable');
             echo $cachedContent;
             exit;
         }
@@ -60,7 +63,7 @@ class CssBundleController implements Controller
         $site = App::getCurrentSite();
         if ($site) {
             // A. Core Block Stylesheets (Core-level layout blocks available to any site)
-            $cssFiles = array_merge($cssFiles, [
+            $cssFiles = \array_merge($cssFiles, [
                 '/public/assets/css/blocks/text.css',
                 '/public/assets/css/blocks/text_image.css',
                 '/public/assets/css/blocks/gallery.css',
@@ -87,8 +90,8 @@ class CssBundleController implements Controller
 
         foreach ($cssFiles as $f) {
             $fullPath = APPLICATION_ROOT . $f;
-            if (file_exists($fullPath)) {
-                $content = file_get_contents($fullPath);
+            if (\file_exists($fullPath)) {
+                $content = \file_get_contents($fullPath);
                 if ($content === false) {
                     throw new \Exception("Failed to read source stylesheet file from disk path: {$fullPath}");
                 }
@@ -98,16 +101,16 @@ class CssBundleController implements Controller
 
         // 4. Minify compiled CSS (0% Package dependency)
         $minifiedCss = $this->minify($combinedCss);
-        $minifiedCss = "/* --- Compiled & Minified Theme Asset Bundle: " . gmdate('Y-m-d H:i:s') . " UTC [Theme: {$theme}] --- */\n" . $minifiedCss;
+        $minifiedCss = "/* --- Compiled & Minified Theme Asset Bundle: " . \gmdate('Y-m-d H:i:s') . " UTC [Theme: {$theme}] --- */\n" . $minifiedCss;
 
         // 5. Save the compiled & minified bundle onto disk so Apache serves it directly next time in production!
-        $bytesWritten = file_put_contents($targetFile, $minifiedCss);
+        $bytesWritten = \file_put_contents($targetFile, $minifiedCss);
         if ($bytesWritten === false) {
             throw new \Exception("Failed to write compiled CSS bundle to disk path: {$targetFile}");
         }
 
-        header('Content-Type: text/css; charset=UTF-8');
-        header('Cache-Control: public, max-age=31536000, immutable');
+        \header('Content-Type: text/css; charset=UTF-8');
+        \header('Cache-Control: public, max-age=31536000, immutable');
         echo $minifiedCss;
         exit;
     }
@@ -121,20 +124,20 @@ class CssBundleController implements Controller
     protected function minify($css)
     {
         // 1. Strip all CSS comments
-        $css = preg_replace('!/\*[^*]*\*+([^/*][^*]*\*+)*/!', '', $css);
+        $css = \preg_replace('!/\*[^*]*\*+([^/*][^*]*\*+)*/!', '', $css);
         
         // 2. Strip tabs, carriage returns, and newlines
-        $css = str_replace(["\r\n", "\r", "\n", "\t"], '', $css);
+        $css = \str_replace(["\r\n", "\r", "\n", "\t"], '', $css);
         
         // 3. Strip redundant multiple spaces
-        $css = preg_replace('/\s+/', ' ', $css);
+        $css = \preg_replace('/\s+/', ' ', $css);
         
         // 4. Strip spaces around structural delimiters and braces
-        $css = preg_replace('/\s*([{}|:;,])\s*/', '$1', $css);
+        $css = \preg_replace('/\s*([{}|:;,])\s*/', '$1', $css);
         
         // 5. Remove trailing semi-colons inside braces
-        $css = str_replace(';}', '}', $css);
+        $css = \str_replace(';}', '}', $css);
         
-        return trim($css);
+        return \trim($css);
     }
 }

@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * Zero CMS Blog Module Publications Seeder
  *
@@ -11,8 +14,8 @@
 namespace Zero\Modules\Blog\Seeders;
 
 use Exception;
-use Zero\Interfaces\SeederInterface;
 use Zero\Database\DB;
+use Zero\Interfaces\SeederInterface;
 use Zero\Support\Security;
 
 /**
@@ -59,8 +62,8 @@ class BlogArticleSeeder implements SeederInterface
             throw new Exception("Seeding error: Target site ID '{$siteId}' not found.");
         }
 
-        $enabled = json_decode($site['enabled_modules'] ?? '[]', true);
-        if (!in_array('blog', $enabled)) {
+        $enabled = \json_decode($site['enabled_modules'] ?? '[]', true);
+        if (!\in_array('blog', $enabled)) {
             throw new Exception("Seeding error: Module 'blog' is not active for site '{$site['name']}'.");
         }
 
@@ -71,13 +74,13 @@ class BlogArticleSeeder implements SeederInterface
 
         // Load the 10 hand-written articles from the PHP array on disk
         $phpPath = __DIR__ . '/handwritten_articles.php';
-        if (!file_exists($phpPath)) {
+        if (!\file_exists($phpPath)) {
             echo "Error: Seeder data file not found at: {$phpPath}\n";
             return;
         }
 
         $postsData = require $phpPath;
-        if (!is_array($postsData)) {
+        if (!\is_array($postsData)) {
             echo "Error: Failed to load handwritten articles array.\n";
             return;
         }
@@ -110,14 +113,14 @@ class BlogArticleSeeder implements SeederInterface
             
             $totalWords = 0;
             foreach ($contentBlocks as $block) {
-                $totalWords += str_word_count(strip_tags($block['content'] ?? ''));
+                $totalWords += \str_word_count(\strip_tags($block['content'] ?? ''));
             }
             
             // Serialize page-builder blocks into JSON content
-            $contentJson = json_encode($contentBlocks);
+            $contentJson = \json_encode($contentBlocks);
             
             // Database dates cascading offset to simulate realistic chronological posting history
-            $createdAt = date('Y-m-d H:i:s', time() - (10 - $index) * 86400);
+            $createdAt = \date('Y-m-d H:i:s', \time() - (10 - $index) * 86400);
             $updatedAt = $createdAt;
             
             // Resolve featured image from direct slug map
@@ -132,7 +135,7 @@ class BlogArticleSeeder implements SeederInterface
             
             // Fallback to traditional modulo selection if direct mapping is not found or resolved
             if (!$featuredImageId && !empty($mediaIds)) {
-                $featuredImageId = $mediaIds[$index % count($mediaIds)];
+                $featuredImageId = $mediaIds[$index % \count($mediaIds)];
             }
             
             // Insert into blog_posts table under Guide site isolation
@@ -151,7 +154,7 @@ class BlogArticleSeeder implements SeederInterface
                 $updatedAt
             ]);
             
-            echo "   [Article " . str_pad($index + 1, 2, '0', STR_PAD_LEFT) . "/10] Seeded: '{$title}' ({$totalWords} words)\n";
+            echo "   [Article " . \str_pad((string)($index + 1), 2, '0', STR_PAD_LEFT) . "/10] Seeded: '{$title}' ({$totalWords} words)\n";
         }
 
         echo "--> 10 hand-written, high-quality blog articles seeded successfully for '{$site['name']}'!\n";

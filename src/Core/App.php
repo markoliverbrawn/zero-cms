@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Core/App.php
  * Architectural Purpose: Core bootstrapping, system environment configuration, and utility class of the framework.
@@ -8,15 +11,15 @@
 
 namespace Zero\Core;
 
-use Zero\Support\Security;
-use Zero\Support\Str;
+use Zero\Core\Env;
+use Zero\Core\Storage\Storage;
+use Zero\Core\Template;
 use Zero\Database\DB;
 use Zero\Http\Middleware\AuthMiddleware;
 use Zero\Http\Middleware\CsrfMiddleware;
 use Zero\Http\Middleware\RateLimitMiddleware;
 use Zero\Http\Router;
 use Zero\Interfaces\Module as ModuleInterface;
-use Zero\Core\Env;
 use Zero\Models\Media;
 use Zero\Models\Page;
 use Zero\Models\Site;
@@ -25,8 +28,8 @@ use Zero\Modules\Security\Middleware\ContentSecurityPolicyMiddleware;
 use Zero\Modules\Security\Middleware\ForcePasswordChangeMiddleware;
 use Zero\Modules\Security\Models\AuditLog;
 use Zero\Modules\Security\Models\SecurityAudit;
-use Zero\Core\Template;
-use Zero\Core\Storage\Storage;
+use Zero\Support\Security;
+use Zero\Support\Str;
 
 /**
  * Class App
@@ -65,7 +68,7 @@ class App
         $totalTime = DB::getTotalQueryTime();
         
         // Calculate total page execution runtime
-        $totalPageTime = microtime(true) - (defined('REQUEST_START_TIME') ? REQUEST_START_TIME : $_SERVER['REQUEST_TIME_FLOAT']);
+        $totalPageTime = \microtime(true) - (\defined('REQUEST_START_TIME') ? REQUEST_START_TIME : $_SERVER['REQUEST_TIME_FLOAT']);
 
         // Render the benchmark widget from view template safely
         echo Template::renderFile(APPLICATION_ROOT . '/src/Views/components/BenchmarkWidget.php', [
@@ -161,7 +164,7 @@ class App
         }
 
         if ($currentRole !== $requiredRole) {
-            http_response_code(403);
+            \http_response_code(403);
             self::render(self::$accessDeniedView, [
                 'currentRole' => $currentRole,
                 'requiredRole' => $requiredRole
@@ -185,7 +188,7 @@ class App
         self::bootstrapSanitizeInputs();
 
         // DEV MODE SETUP WIZARD INTERCEPT
-        if (Env::get('ENVIRONMENT') === 'dev' && php_sapi_name() !== 'cli') {
+        if (Env::get('ENVIRONMENT') === 'dev' && \php_sapi_name() !== 'cli') {
             try {
                 $sitesTableExists = DB::query("SHOW TABLES LIKE 'sites'")->fetch();
                 $usersTableExists = DB::query("SHOW TABLES LIKE 'users'")->fetch();
@@ -201,10 +204,10 @@ class App
                 }
                 
                 if (!$sitesTableExists || !$usersTableExists || ($siteCount === 0 && $userCount === 0)) {
-                    $uri = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
-                    $ext = strtolower(pathinfo($uri, PATHINFO_EXTENSION));
+                    $uri = \parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
+                    $ext = \strtolower(\pathinfo($uri, PATHINFO_EXTENSION));
                     $staticExts = ['css', 'js', 'svg', 'woff2', 'png', 'jpg', 'jpeg', 'gif', 'mp4', 'ico'];
-                    if (!in_array($ext, $staticExts)) {
+                    if (!\in_array($ext, $staticExts)) {
                         $setupWizard = new \Zero\Modules\Admin\Controllers\SetupWizardController();
                         $setupWizard->handleRequest();
                         exit;
@@ -212,10 +215,10 @@ class App
                 }
             } catch (\Exception $e) {
                 // If tables don't exist yet, we also trigger the setup wizard!
-                $uri = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
-                $ext = strtolower(pathinfo($uri, PATHINFO_EXTENSION));
+                $uri = \parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
+                $ext = \strtolower(\pathinfo($uri, PATHINFO_EXTENSION));
                 $staticExts = ['css', 'js', 'svg', 'woff2', 'png', 'jpg', 'jpeg', 'gif', 'mp4', 'ico'];
-                if (!in_array($ext, $staticExts)) {
+                if (!\in_array($ext, $staticExts)) {
                     $setupWizard = new \Zero\Modules\Admin\Controllers\SetupWizardController();
                     $setupWizard->handleRequest();
                     exit;
@@ -223,7 +226,7 @@ class App
             }
         }
 
-        $host = explode(':', $_SERVER['HTTP_HOST'] ?? 'localhost')[0];
+        $host = \explode(':', $_SERVER['HTTP_HOST'] ?? 'localhost')[0];
         $userId = $_SESSION['user_id'] ?? null;
 
         $userFound = self::bootstrapFetchSiteAndUser($host, $userId);
@@ -470,14 +473,14 @@ class);
             Router::register($module->getRoutes(), null, $module->getId());
 
             // Convention-based View Registration: Check if a /Views directory exists inside the module folder
-            $moduleDir = dirname($ref->getFileName());
+            $moduleDir = \dirname($ref->getFileName());
             $viewsDir = $moduleDir . '/Views';
-            if (is_dir($viewsDir)) {
+            if (\is_dir($viewsDir)) {
                 self::registerViewDir($module->getId(), $viewsDir);
             }
 
             // Run optional initialization method on module (for dynamic block registrations, filters, etc.)
-            if (method_exists($module, 'init')) {
+            if (\method_exists($module, 'init')) {
                 $module->init();
             }
         }
@@ -495,18 +498,18 @@ class);
         }
 
         $modulesDir = APPLICATION_ROOT . '/src/Modules';
-        if (!is_dir($modulesDir)) {
+        if (!\is_dir($modulesDir)) {
             return;
         }
 
-        $folders = scandir($modulesDir);
+        $folders = \scandir($modulesDir);
         foreach ($folders as $folder) {
             if ($folder === '.' || $folder === '..') {
                 continue;
             }
 
             $className = "Zero\\Modules\\{$folder}\\Module";
-            if (class_exists($className)) {
+            if (\class_exists($className)) {
                 $module = new $className();
                 if ($module instanceof ModuleInterface) {
                     self::$modules[$module->getId()] = $module;
@@ -525,25 +528,25 @@ class);
         $mediaIds = [];
         
         $collectIds = function($data) use (&$collectIds, &$mediaIds) {
-            if (!is_array($data)) {
+            if (!\is_array($data)) {
                 return;
             }
             
             foreach ($data as $key => $val) {
                 if ($key === 'media_id') {
-                    if (is_string($val) && strlen($val) === 36 && strpos($val, '/') === false) {
+                    if (\is_string($val) && \strlen($val) === 36 && \strpos($val, '/') === false) {
                         $mediaIds[] = $val;
                     }
-                } elseif ($key === 'media_ids' && is_array($val)) {
+                } elseif ($key === 'media_ids' && \is_array($val)) {
                     foreach ($val as $v) {
-                        if (is_string($v) && strlen($v) === 36 && strpos($v, '/') === false) {
+                        if (\is_string($v) && \strlen($v) === 36 && \strpos($v, '/') === false) {
                             $mediaIds[] = $v;
                         }
                     }
                 }
                 
                 // Recursively check child arrays (such as 'items' inside accordion or masonry)
-                if (is_array($val)) {
+                if (\is_array($val)) {
                     $collectIds($val);
                 }
             }
@@ -553,11 +556,11 @@ class);
         
         $mediaIdMap = [];
         if (!empty($mediaIds)) {
-            $filteredIds = array_filter(array_unique($mediaIds));
+            $filteredIds = \array_filter(\array_unique($mediaIds));
             if (!empty($filteredIds)) {
-                $placeholders = implode(',', array_fill(0, count($filteredIds), '?'));
+                $placeholders = \implode(',', \array_fill(0, \count($filteredIds), '?'));
                 $sql = "SELECT id, path FROM media WHERE id IN ($placeholders) AND deleted_at IS NULL";
-                $stmt = DB::query($sql, array_values($filteredIds));
+                $stmt = DB::query($sql, \array_values($filteredIds));
                 while ($row = $stmt->fetch()) {
                     $mediaIdMap[$row['id']] = $row['path'];
                 }
@@ -573,9 +576,9 @@ class);
      */
     public static function ensureSession()
     {
-        if (session_status() === PHP_SESSION_NONE) {
+        if (\session_status() === PHP_SESSION_NONE) {
             // SECURITY REMEDIATION: Enforce strict secure session cookie configurations
-            session_start([
+            \session_start([
                 'cookie_httponly' => true,
                 'cookie_secure' => isset($_SERVER['HTTPS']) || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https'),
                 'cookie_samesite' => 'Lax'
@@ -643,14 +646,14 @@ class);
     public static function getAdminSidebarSections(): array
     {
         // Sort sections by precedence
-        uasort(self::$adminSidebarSections, function($a, $b) {
+        \uasort(self::$adminSidebarSections, function($a, $b) {
             return ($a['precedence'] ?? 100) <=> ($b['precedence'] ?? 100);
         });
 
         // Sort links within each section by precedence
         foreach (self::$adminSidebarSections as $id => &$section) {
             if (!empty($section['links'])) {
-                usort($section['links'], function($a, $b) {
+                \usort($section['links'], function($a, $b) {
                     return ($a['precedence'] ?? 100) <=> ($b['precedence'] ?? 100);
                 });
             }
@@ -742,7 +745,7 @@ class);
         }
 
         $path = "/assets/css/themes/{$themeName}/{$themeName}.css";
-        if (file_exists(APPLICATION_ROOT . '/public' . $path)) {
+        if (\file_exists(APPLICATION_ROOT . '/public' . $path)) {
             return $path;
         }
         return null;
@@ -831,7 +834,7 @@ class);
      */
     public static function isCli(): bool
     {
-        return PHP_SAPI === 'cli' || defined('CLI_CONTEXT');
+        return PHP_SAPI === 'cli' || \defined('CLI_CONTEXT');
     }
 
     /**
@@ -872,8 +875,8 @@ class);
     public static function loginUser($userId)
     {
         self::ensureSession();
-        if (!headers_sent()) {
-            session_regenerate_id(true);
+        if (!\headers_sent()) {
+            \session_regenerate_id(true);
         }
         $_SESSION['is_admin'] = true;
         $_SESSION['user_id'] = $userId;
@@ -891,8 +894,8 @@ class);
     {
         self::ensureSession();
         $_SESSION = [];
-        if (session_status() === PHP_SESSION_ACTIVE && !headers_sent()) {
-            session_regenerate_id(true);
+        if (\session_status() === PHP_SESSION_ACTIVE && !\headers_sent()) {
+            \session_regenerate_id(true);
         }
         
         // Clear caches
@@ -910,12 +913,12 @@ class);
     {
         if (!isset(self::$adminSidebarSections[$sectionId])) {
             self::registerAdminSidebarSection($sectionId, [
-                'title' => ucfirst($sectionId),
+                'title' => \ucfirst($sectionId),
                 'precedence' => 500
             ]);
         }
 
-        self::$adminSidebarSections[$sectionId]['links'][] = array_merge([
+        self::$adminSidebarSections[$sectionId]['links'][] = \array_merge([
             'title' => '',
             'url' => '',
             'icon' => 'file',
@@ -934,7 +937,7 @@ class);
      */
     public static function registerAdminSidebarSection(string $id, array $config): void
     {
-        self::$adminSidebarSections[$id] = array_merge([
+        self::$adminSidebarSections[$id] = \array_merge([
             'id' => $id,
             'title' => '',
             'icon' => 'file',
@@ -1003,7 +1006,7 @@ class);
      */
     public static function registerViewDir(string $prefix, string $dirPath)
     {
-        self::$viewDirs[$prefix] = rtrim($dirPath, '/');
+        self::$viewDirs[$prefix] = \rtrim($dirPath, '/');
     }
 
     /**
@@ -1020,8 +1023,8 @@ class);
 
         // Check if the view starts with any registered custom view directory prefix (e.g. 'admin/')
         foreach (self::$viewDirs as $prefix => $dirPath) {
-            if (strpos($view, $prefix . '/') === 0) {
-                $subView = substr($view, strlen($prefix) + 1);
+            if (\strpos($view, $prefix . '/') === 0) {
+                $subView = \substr($view, \strlen($prefix) + 1);
                 $phpFile = $dirPath . '/' . $subView . '.php';
                 $layoutFile = $dirPath . '/layout.php';
                 break;
@@ -1034,34 +1037,34 @@ class);
             $theme = $site ? ($site->theme ?? 'default') : 'default';
             
             $phpFile = APPLICATION_ROOT . '/src/Views/themes/' . $theme . '/' . $view . '.php';
-            if (!file_exists($phpFile)) {
+            if (!\file_exists($phpFile)) {
                 // Graceful fallback to default theme view
                 $phpFile = APPLICATION_ROOT . '/src/Views/themes/default/' . $view . '.php';
             }
-            if (!file_exists($phpFile)) {
+            if (!\file_exists($phpFile)) {
                 // Graceful fallback to dynamically registered module theme fallbacks!
                 foreach (self::$themeFallbacks as $fbTheme) {
                     $fbFile = APPLICATION_ROOT . '/src/Views/themes/' . $fbTheme . '/' . $view . '.php';
-                    if (file_exists($fbFile)) {
+                    if (\file_exists($fbFile)) {
                         $phpFile = $fbFile;
                         break;
                     }
                 }
             }
             $layoutFile = APPLICATION_ROOT . '/src/Views/themes/' . $theme . '/layout.php';
-            if (!file_exists($layoutFile)) {
+            if (!\file_exists($layoutFile)) {
                 $layoutFile = APPLICATION_ROOT . '/src/Views/themes/default/layout.php';
             }
         }
 
-        if (file_exists($phpFile)) {
+        if (\file_exists($phpFile)) {
             // ensure csrf token is available to templates
             $data['csrf'] = Security::csrfToken();
             $data['error'] = $data['error'] ?? '';
             $data['session'] = $_SESSION;
     
             $content = Template::renderFile($phpFile, $data);
-            if (file_exists($layoutFile)) {
+            if (\file_exists($layoutFile)) {
                 $data['content'] = $content;
                 $data['error'] = $data['error'] ?? '';
                 echo Template::renderFile($layoutFile, $data);
@@ -1102,8 +1105,8 @@ class);
         }
 
         $buildUrl = function($pageNum) use ($baseUrl, $cleanedParams) {
-            $params = array_merge($cleanedParams, ['page' => $pageNum]);
-            return $baseUrl . '?' . http_build_query($params);
+            $params = \array_merge($cleanedParams, ['page' => $pageNum]);
+            return $baseUrl . '?' . \http_build_query($params);
         };
 
         // Sliding window range calculation
@@ -1112,22 +1115,22 @@ class);
         $endPage = $currentPage + $range;
 
         if ($startPage < 1) {
-            $endPage += abs($startPage) + 1;
+            $endPage += \abs($startPage) + 1;
             $startPage = 1;
         }
         if ($endPage > $totalPages) {
             $startPage -= ($endPage - $totalPages);
             $endPage = $totalPages;
         }
-        $startPage = max(1, $startPage);
+        $startPage = \max(1, $startPage);
 
         $showFirst = ($startPage > 1);
         $showLast = ($endPage < $totalPages);
 
         // Buffer the baseline template render
-        ob_start();
+        \ob_start();
         $partialPath = APPLICATION_ROOT . '/src/Views/themes/default/partials/pagination.php';
-        if (file_exists($partialPath)) {
+        if (\file_exists($partialPath)) {
             include $partialPath;
         } else {
             // Inline fallback markup if the partial file is missing
@@ -1149,7 +1152,7 @@ class);
             </nav>
             <?php
         }
-        return ob_get_clean();
+        return \ob_get_clean();
     }
 
     /**
@@ -1158,13 +1161,13 @@ class);
      */
     public static function renderSiteNotFoundPage(string $host): void
     {
-        http_response_code(404);
+        \http_response_code(404);
 
-        $env = strtolower(Env::get('ENVIRONMENT', 'production'));
+        $env = \strtolower(Env::get('ENVIRONMENT', 'production'));
         $isDev = ($env === 'development' || $env === 'dev');
 
         $originalHost = $_SERVER['HTTP_HOST'] ?? 'localhost';
-        $parts = explode(':', $originalHost);
+        $parts = \explode(':', $originalHost);
         $portSuffix = isset($parts[1]) ? ':' . $parts[1] : '';
 
         // Query database to fetch all currently configured and active multi-tenant sites
@@ -1177,7 +1180,7 @@ class);
         }
 
         $templatePath = APPLICATION_ROOT . '/src/Views/errors/site-not-found.php';
-        if (file_exists($templatePath)) {
+        if (\file_exists($templatePath)) {
             echo Template::renderFile($templatePath, [
                 'host' => $host,
                 'isDev' => $isDev,
@@ -1261,8 +1264,8 @@ class);
     public static function svg(string $name): string
     {
         $path = APPLICATION_ROOT . '/public/assets/svgs/' . $name . '.svg';
-        if (file_exists($path)) {
-            return file_get_contents($path);
+        if (\file_exists($path)) {
+            return \file_get_contents($path);
         }
         return '';
     }

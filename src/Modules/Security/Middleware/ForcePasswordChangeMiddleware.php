@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Modules/Security/Middleware/ForcePasswordChangeMiddleware.php
  * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
@@ -30,7 +33,7 @@ class ForcePasswordChangeMiddleware
         $uri = $_SERVER['REQUEST_URI'] ?? '';
 
         // Allow pass-through for change password controller, logout, or static assets to prevent infinite redirection
-        if (strpos($uri, '/admin/change-password') === 0 || strpos($uri, '/admin/logout') === 0) {
+        if (\strpos($uri, '/admin/change-password') === 0 || \strpos($uri, '/admin/logout') === 0) {
             return $next();
         }
 
@@ -39,7 +42,7 @@ class ForcePasswordChangeMiddleware
         // Default seed installation password hash check
         $defaultHash = '$2y$10$2tdsRK0UD/QvrVPFoz1WZOtodh33dRR1jfRzQbkDDpUuBfHZJPzhC';
         if ($user !== null && $user->password_hash === $defaultHash) {
-            header('Location: /admin/change-password');
+            \header('Location: /admin/change-password');
             exit();
         }
 

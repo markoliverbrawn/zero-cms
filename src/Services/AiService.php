@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Services/AiService.php
  * Architectural Purpose: Handles operations and business logic within the system.
@@ -8,9 +11,9 @@
 
 namespace Zero\Services;
 
+use Exception;
 use Zero\Core\Env;
 use Zero\Interfaces\AiProvider;
-use Exception;
 
 /**
  * Class AiService

@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Modules/Admin/Controllers/FilesController.php
  * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
@@ -9,11 +12,11 @@
 namespace Zero\Modules\Admin\Controllers;
 
 use Zero\Core\App;
-use Zero\Database\DB;
-use Zero\Support\Logger;
 use Zero\Core\Storage\Storage;
-use Zero\Support\Security;
+use Zero\Database\DB;
 use Zero\Interfaces\Controller;
+use Zero\Support\Logger;
+use Zero\Support\Security;
 
 /**
  * Class FilesController
@@ -31,7 +34,7 @@ class FilesController implements Controller
     public function handle($param)
     {
         // Route multi-action files manager requests based on URI
-        $uri = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH);
+        $uri = \parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH);
         if ($uri === '/admin/files/json') {
             $this->handleJson();
         } elseif ($uri === '/admin/files/upload') {
@@ -42,7 +45,7 @@ class FilesController implements Controller
             $this->handleDelete();
         } elseif ($uri === '/admin/list/files') {
             $this->handleList();
-        } elseif (preg_match('#^/admin/list/files/edit/([a-zA-Z0-9\-]+)$#', $uri, $matches)) {
+        } elseif (\preg_match('#^/admin/list/files/edit/([a-zA-Z0-9\-]+)$#', $uri, $matches)) {
             $this->handleEdit($matches[1]);
         }
     }
@@ -60,9 +63,9 @@ class FilesController implements Controller
 
         $idsInput = $_POST['id'] ?? null;
         if ($idsInput) {
-            $ids = explode(',', $idsInput);
+            $ids = \explode(',', $idsInput);
             foreach ($ids as $id) {
-                $id = trim($id);
+                $id = \trim($id);
                 if (empty($id)) continue;
 
                 // Guard deletion strictly to files belonging to the active site/domain and not deleted!
@@ -96,7 +99,7 @@ class FilesController implements Controller
             exit;
         }
 
-        http_response_code(400);
+        \http_response_code(400);
         echo "Invalid file ID or permission denied";
         exit;
     }
@@ -109,14 +112,14 @@ class FilesController implements Controller
     public function handleJson()
     {
         App::applyAuthMiddleware();
-        header('Content-Type: application/json');
+        \header('Content-Type: application/json');
         $siteId = App::getCurrentSiteId();
 
         // Return files and directories strictly filtered by active site_id and NOT deleted!
         $stmt = DB::query("SELECT * FROM media WHERE site_id = ? AND deleted_at IS NULL ORDER BY (mime = 'directory') DESC, created_at DESC", [$siteId]);
         $files = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
-        echo json_encode($files);
+        echo \json_encode($files);
         exit;
     }
 
@@ -134,8 +137,8 @@ class FilesController implements Controller
         $folder = $_GET['folder'] ?? '';
         
         // Sanitize folder path
-        $folder = preg_replace('/[^a-zA-Z0-9_\-\/]/', '_', $folder);
-        $folder = trim($folder, '/');
+        $folder = \preg_replace('/[^a-zA-Z0-9_\-\/]/', '_', $folder);
+        $folder = \trim($folder, '/');
 
         if ($method === 'POST') {
             App::applyCsrfMiddleware();
@@ -144,10 +147,10 @@ class FilesController implements Controller
             if ($action === 'create_folder') {
                 $newFolderName = $_POST['folder_name'] ?? '';
                 // Clean new folder name
-                $newFolderName = preg_replace('/[^a-zA-Z0-9_-]/', '_', $newFolderName);
+                $newFolderName = \preg_replace('/[^a-zA-Z0-9_-]/', '_', $newFolderName);
                 $currentFolder = $_POST['folder'] ?? '';
-                $currentFolder = preg_replace('/[^a-zA-Z0-9_\-\/]/', '_', $currentFolder);
-                $currentFolder = trim($currentFolder, '/');
+                $currentFolder = \preg_replace('/[^a-zA-Z0-9_\-\/]/', '_', $currentFolder);
+                $currentFolder = \trim($currentFolder, '/');
 
                 if (empty($newFolderName)) {
                     $_SESSION['error'] = 'Folder name cannot be empty or invalid.';
@@ -173,39 +176,39 @@ class FilesController implements Controller
                         }
                     }
                 }
-                header('Location: /admin/list/files' . (!empty($currentFolder) ? '?folder=' . urlencode($currentFolder) : ''));
+                \header('Location: /admin/list/files' . (!empty($currentFolder) ? '?folder=' . \urlencode($currentFolder) : ''));
                 exit;
             }
 
             // Normal file upload
             if (!isset($_FILES['file']) || $_FILES['file']['error'] !== UPLOAD_ERR_OK) {
                 $_SESSION['error'] = 'File upload failed or no file selected.';
-                header('Location: /admin/list/files' . (!empty($folder) ? '?folder=' . urlencode($folder) : ''));
+                \header('Location: /admin/list/files' . (!empty($folder) ? '?folder=' . \urlencode($folder) : ''));
                 exit;
             }
 
             $file = $_FILES['file'];
-            $filename = basename($file['name']);
+            $filename = \basename($file['name']);
             
             // Clean filename and ensure uploads folder exists
-            $filename = preg_replace('/[^a-zA-Z0-9._-]/', '_', $filename);
+            $filename = \preg_replace('/[^a-zA-Z0-9._-]/', '_', $filename);
 
             // SECURITY REMEDIATION: Strict Extension and MIME Type Whitelists
             $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp', 'pdf', 'doc', 'docx', 'zip', 'txt', 'mp4'];
             $allowedMimeTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/svg+xml', 'image/webp', 'application/pdf', 'application/zip', 'text/plain', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'video/mp4'];
 
-            $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
-            $detectedMime = mime_content_type($file['tmp_name']);
+            $ext = \strtolower(\pathinfo($filename, PATHINFO_EXTENSION));
+            $detectedMime = \mime_content_type($file['tmp_name']);
 
-            if (!in_array($ext, $allowedExtensions) || !in_array($detectedMime, $allowedMimeTypes)) {
+            if (!\in_array($ext, $allowedExtensions) || !\in_array($detectedMime, $allowedMimeTypes)) {
                 $_SESSION['error'] = 'Forbidden file extension or invalid file type.';
-                header('Location: /admin/list/files' . (!empty($folder) ? '?folder=' . urlencode($folder) : ''));
+                \header('Location: /admin/list/files' . (!empty($folder) ? '?folder=' . \urlencode($folder) : ''));
                 exit;
             }
             
             $currentFolder = $_POST['folder'] ?? '';
-            $currentFolder = preg_replace('/[^a-zA-Z0-9_\-\/]/', '_', $currentFolder);
-            $currentFolder = trim($currentFolder, '/');
+            $currentFolder = \preg_replace('/[^a-zA-Z0-9_\-\/]/', '_', $currentFolder);
+            $currentFolder = \trim($currentFolder, '/');
 
             $uploadsDir = APPLICATION_ROOT . '/public/storage/uploads/' . $siteId . (!empty($currentFolder) ? '/' . $currentFolder : '');
             if (!Storage::exists($uploadsDir)) {
@@ -214,7 +217,7 @@ class FilesController implements Controller
 
             // Ensure unique filename to prevent overwriting
             $targetPath = $uploadsDir . '/' . $filename;
-            $info = pathinfo($filename);
+            $info = \pathinfo($filename);
             $counter = 1;
             while (Storage::exists($targetPath)) {
                 $filename = $info['filename'] . '_' . $counter . '.' . ($info['extension'] ?? '');
@@ -222,11 +225,11 @@ class FilesController implements Controller
                 $counter++;
             }
 
-            $mime = mime_content_type($file['tmp_name']);
+            $mime = \mime_content_type($file['tmp_name']);
             if ($mime === 'image/svg+xml' || $ext === 'svg') {
                 if (!Security::sanitizeSvg($file['tmp_name'])) {
                     $_SESSION['error'] = 'Invalid SVG file or sanitization failed.';
-                    header('Location: /admin/list/files' . (!empty($currentFolder) ? '?folder=' . urlencode($currentFolder) : ''));
+                    \header('Location: /admin/list/files' . (!empty($currentFolder) ? '?folder=' . \urlencode($currentFolder) : ''));
                     exit;
                 }
             }
@@ -246,7 +249,7 @@ class FilesController implements Controller
                 $_SESSION['error'] = 'Could not save the uploaded file.';
             }
 
-            header('Location: /admin/list/files' . (!empty($currentFolder) ? '?folder=' . urlencode($currentFolder) : ''));
+            \header('Location: /admin/list/files' . (!empty($currentFolder) ? '?folder=' . \urlencode($currentFolder) : ''));
             exit;
         }
 
@@ -266,27 +269,27 @@ class FilesController implements Controller
         $totalStmt = DB::query("SELECT COUNT(*) as total FROM media WHERE folder = ? AND site_id = ? AND deleted_at IS NULL", [$folder, $siteId]);
         $totalResult = $totalStmt->fetch(\PDO::FETCH_ASSOC);
         $total = (int)($totalResult['total'] ?? 0);
-        $hasMore = ($offset + count($files)) < $total;
+        $hasMore = ($offset + \count($files)) < $total;
 
         if (isset($_GET['ajax']) && $_GET['ajax'] == 1) {
-            header('Content-Type: application/json');
+            \header('Content-Type: application/json');
             $html = '';
             $csrfToken = Security::csrfToken();
             foreach ($files as $f) {
-                ob_start();
-                $isImage = !empty($f['mime']) && str_starts_with($f['mime'], 'image/');
+                \ob_start();
+                $isImage = !empty($f['mime']) && \str_starts_with($f['mime'], 'image/');
                 $filename = $f['filename'] ?? '';
                 $path = $f['path'] ?? '';
                 $id = $f['id'] ?? '';
                 $createdAt = $f['created_at'] ?? '';
                 $mime = $f['mime'] ?? '';
-                $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+                $ext = \strtolower(\pathinfo($filename, PATHINFO_EXTENSION));
                 $csrf = $csrfToken;
                 $currentFolder = $folder;
                 include APPLICATION_ROOT . '/src/Modules/Admin/Views/files/card.php';
-                $html .= ob_get_clean();
+                $html .= \ob_get_clean();
             }
-            echo json_encode([
+            echo \json_encode([
                 'html' => $html,
                 'has_more' => $hasMore,
                 'current_page' => $page,
@@ -316,17 +319,17 @@ class FilesController implements Controller
         App::applyCsrfMiddleware();
         $siteId = App::getCurrentSiteId();
         
-        header('Content-Type: application/json');
+        \header('Content-Type: application/json');
 
         $fileIdInput = $_POST['file_id'] ?? null;
         $targetFolderId = $_POST['target_folder_id'] ?? null;
         
         if (!$fileIdInput) {
-            echo json_encode(['success' => false, 'error' => 'Missing file ID(s).']);
+            echo \json_encode(['success' => false, 'error' => 'Missing file ID(s).']);
             exit;
         }
 
-        $fileIds = explode(',', $fileIdInput);
+        $fileIds = \explode(',', $fileIdInput);
 
         // Get the destination folder path
         $destinationFolder = '';
@@ -337,7 +340,7 @@ class FilesController implements Controller
             $stmtFolder = DB::query("SELECT * FROM media WHERE id = ? AND mime = 'directory' AND site_id = ? AND deleted_at IS NULL LIMIT 1", [$targetFolderId, $siteId]);
             $folderRecord = $stmtFolder->fetch(\PDO::FETCH_ASSOC);
             if (!$folderRecord) {
-                echo json_encode(['success' => false, 'error' => 'Destination folder not found or permission denied.']);
+                echo \json_encode(['success' => false, 'error' => 'Destination folder not found or permission denied.']);
                 exit;
             }
             $parentFolder = $folderRecord['folder'] ?? '';
@@ -349,7 +352,7 @@ class FilesController implements Controller
         $errors = [];
 
         foreach ($fileIds as $fileId) {
-            $fileId = trim($fileId);
+            $fileId = \trim($fileId);
             if (empty($fileId)) continue;
 
             // Guard: Get the file record strictly belonging to this site and not deleted
@@ -364,9 +367,9 @@ class FilesController implements Controller
             if ($targetFolderId === 'parent') {
                 // Get current folder of the file, and strip the last directory part safely
                 $currentFolder = $fileRecord['folder'] ?? '';
-                $parts = explode('/', $currentFolder);
-                array_pop($parts);
-                $currentDestinationFolder = implode('/', $parts);
+                $parts = \explode('/', $currentFolder);
+                \array_pop($parts);
+                $currentDestinationFolder = \implode('/', $parts);
             }
 
             // Physically move the file on disk!
@@ -381,7 +384,7 @@ class FilesController implements Controller
             $newPhysicalPath = $newPhysicalDir . '/' . $newFilename;
             
             // Handle name collisions in the new folder
-            $info = pathinfo($newFilename);
+            $info = \pathinfo($newFilename);
             $counter = 1;
             while (Storage::exists($newPhysicalPath)) {
                 $newFilename = $info['filename'] . '_' . $counter . '.' . ($info['extension'] ?? '');
@@ -419,15 +422,15 @@ class FilesController implements Controller
         }
 
         if ($movedCount > 0) {
-            echo json_encode([
+            echo \json_encode([
                 'success' => true, 
                 'moved' => $movedCount,
                 'errors' => $errors
             ]);
         } else {
-            echo json_encode([
+            echo \json_encode([
                 'success' => false, 
-                'error' => implode(' ', $errors) ?: 'No files were moved.'
+                'error' => \implode(' ', $errors) ?: 'No files were moved.'
             ]);
         }
         exit;
@@ -444,34 +447,34 @@ class FilesController implements Controller
         App::applyCsrfMiddleware();
         $siteId = App::getCurrentSiteId();
         
-        header('Content-Type: application/json');
+        \header('Content-Type: application/json');
 
         if (!isset($_FILES['file']) || $_FILES['file']['error'] !== UPLOAD_ERR_OK) {
-            echo json_encode(['success' => false, 'error' => 'File upload failed or no file selected.']);
+            echo \json_encode(['success' => false, 'error' => 'File upload failed or no file selected.']);
             exit;
         }
 
         $file = $_FILES['file'];
-        $filename = basename($file['name']);
+        $filename = \basename($file['name']);
         
         // Clean filename
-        $filename = preg_replace('/[^a-zA-Z0-9._-]/', '_', $filename);
+        $filename = \preg_replace('/[^a-zA-Z0-9._-]/', '_', $filename);
 
         // SECURITY LOCKDOWN: Strict Extension and MIME Type whitelists on async uploads!
         $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp', 'pdf', 'doc', 'docx', 'zip', 'txt', 'mp4'];
         $allowedMimeTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/svg+xml', 'image/webp', 'application/pdf', 'application/zip', 'text/plain', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'video/mp4'];
 
-        $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
-        $detectedMime = mime_content_type($file['tmp_name']);
+        $ext = \strtolower(\pathinfo($filename, PATHINFO_EXTENSION));
+        $detectedMime = \mime_content_type($file['tmp_name']);
 
-        if (!in_array($ext, $allowedExtensions) || !in_array($detectedMime, $allowedMimeTypes)) {
-            echo json_encode(['success' => false, 'error' => 'Forbidden file extension or invalid file type.']);
+        if (!\in_array($ext, $allowedExtensions) || !\in_array($detectedMime, $allowedMimeTypes)) {
+            echo \json_encode(['success' => false, 'error' => 'Forbidden file extension or invalid file type.']);
             exit;
         }
         
         $currentFolder = $_POST['folder'] ?? '';
-        $currentFolder = preg_replace('/[^a-zA-Z0-9_\-\/]/', '_', $currentFolder);
-        $currentFolder = trim($currentFolder, '/');
+        $currentFolder = \preg_replace('/[^a-zA-Z0-9_\-\/]/', '_', $currentFolder);
+        $currentFolder = \trim($currentFolder, '/');
 
         $uploadsDir = APPLICATION_ROOT . '/public/storage/uploads/' . $siteId . (!empty($currentFolder) ? '/' . $currentFolder : '');
         if (!Storage::exists($uploadsDir)) {
@@ -480,7 +483,7 @@ class FilesController implements Controller
 
         // Ensure unique filename to prevent overwriting
         $targetPath = $uploadsDir . '/' . $filename;
-        $info = pathinfo($filename);
+        $info = \pathinfo($filename);
         $counter = 1;
         while (Storage::exists($targetPath)) {
             $filename = $info['filename'] . '_' . $counter . '.' . ($info['extension'] ?? '');
@@ -488,10 +491,10 @@ class FilesController implements Controller
             $counter++;
         }
 
-        $mime = mime_content_type($file['tmp_name']);
+        $mime = \mime_content_type($file['tmp_name']);
         if ($mime === 'image/svg+xml' || $ext === 'svg') {
             if (!Security::sanitizeSvg($file['tmp_name'])) {
-                echo json_encode(['success' => false, 'error' => 'Invalid SVG file or sanitization failed.']);
+                echo \json_encode(['success' => false, 'error' => 'Invalid SVG file or sanitization failed.']);
                 exit;
             }
         }
@@ -508,7 +511,7 @@ class FilesController implements Controller
                 'title' => $filename
             ]);
 
-            echo json_encode([
+            echo \json_encode([
                 'success' => true,
                 'file' => [
                     'id' => $newFileId,
@@ -516,12 +519,12 @@ class FilesController implements Controller
                     'path' => $dbPath,
                     'mime' => $mime,
                     'folder' => $currentFolder,
-                    'created_at' => gmdate('Y-m-d H:i:s')
+                    'created_at' => \gmdate('Y-m-d H:i:s')
                 ]
             ]);
             exit;
         } else {
-            echo json_encode(['success' => false, 'error' => 'Could not save the uploaded file.']);
+            echo \json_encode(['success' => false, 'error' => 'Could not save the uploaded file.']);
             exit;
         }
         }
@@ -542,16 +545,16 @@ class FilesController implements Controller
         $fileRecord = $stmt->fetch(\PDO::FETCH_ASSOC);
 
         if (!$fileRecord) {
-            header('Location: /admin/list/files?error=file_not_found');
+            \header('Location: /admin/list/files?error=file_not_found');
             exit;
         }
 
         $method = $_SERVER['REQUEST_METHOD'];
         if ($method === 'POST') {
             App::applyCsrfMiddleware();
-            $isAjax = (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest');
+            $isAjax = (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && \strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest');
 
-            $title = trim($_POST['title'] ?? '');
+            $title = \trim($_POST['title'] ?? '');
 
             // Start with existing DB values
             $filename = $fileRecord['filename'];
@@ -561,31 +564,31 @@ class FilesController implements Controller
             // Handle optional file re-upload (overwriting physical asset while keeping DB ID)
             if (isset($_FILES['file']) && $_FILES['file']['error'] === UPLOAD_ERR_OK) {
                 $file = $_FILES['file'];
-                $newFilename = basename($file['name']);
-                $newFilename = preg_replace('/[^a-zA-Z0-9._-]/', '_', $newFilename);
+                $newFilename = \basename($file['name']);
+                $newFilename = \preg_replace('/[^a-zA-Z0-9._-]/', '_', $newFilename);
 
                 // Whitelists validation
                 $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp', 'pdf', 'doc', 'docx', 'zip', 'txt', 'mp4'];
                 $allowedMimeTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/svg+xml', 'image/webp', 'application/pdf', 'application/zip', 'text/plain', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'video/mp4'];
 
-                $ext = strtolower(pathinfo($newFilename, PATHINFO_EXTENSION));
-                $detectedMime = mime_content_type($file['tmp_name']);
+                $ext = \strtolower(\pathinfo($newFilename, PATHINFO_EXTENSION));
+                $detectedMime = \mime_content_type($file['tmp_name']);
 
-                if (!in_array($ext, $allowedExtensions) || !in_array($detectedMime, $allowedMimeTypes)) {
+                if (!\in_array($ext, $allowedExtensions) || !\in_array($detectedMime, $allowedMimeTypes)) {
                     $errorMsg = 'Forbidden file extension or invalid file type.';
                     if ($isAjax) {
-                        header('Content-Type: application/json');
-                        echo json_encode(['success' => false, 'error' => $errorMsg]);
+                        \header('Content-Type: application/json');
+                        echo \json_encode(['success' => false, 'error' => $errorMsg]);
                         exit;
                     }
                     $_SESSION['error'] = $errorMsg;
-                    header("Location: /admin/list/files/edit/{$fileId}");
+                    \header("Location: /admin/list/files/edit/{$fileId}");
                     exit;
                 }
 
                 // Delete the old physical file if it exists
                 $oldPhysicalPath = APPLICATION_ROOT . $fileRecord['path'];
-                if (Storage::exists($oldPhysicalPath) && is_file($oldPhysicalPath)) {
+                if (Storage::exists($oldPhysicalPath) && \is_file($oldPhysicalPath)) {
                     Storage::delete($oldPhysicalPath);
                 }
 
@@ -597,7 +600,7 @@ class FilesController implements Controller
 
                 // Ensure unique name inside the target folder to prevent overwrite collusions
                 $targetPath = $uploadsDir . '/' . $newFilename;
-                $info = pathinfo($newFilename);
+                $info = \pathinfo($newFilename);
                 $counter = 1;
                 while (Storage::exists($targetPath)) {
                     $newFilename = $info['filename'] . '_' . $counter . '.' . ($info['extension'] ?? '');
@@ -609,12 +612,12 @@ class FilesController implements Controller
                     if (!Security::sanitizeSvg($file['tmp_name'])) {
                         $errorMsg = 'Invalid SVG file or sanitization failed.';
                         if ($isAjax) {
-                            header('Content-Type: application/json');
-                            echo json_encode(['success' => false, 'error' => $errorMsg]);
+                            \header('Content-Type: application/json');
+                            echo \json_encode(['success' => false, 'error' => $errorMsg]);
                             exit;
                         }
                         $_SESSION['error'] = $errorMsg;
-                        header("Location: /admin/list/files/edit/{$fileId}");
+                        \header("Location: /admin/list/files/edit/{$fileId}");
                         exit;
                     }
                 }
@@ -625,18 +628,18 @@ class FilesController implements Controller
                 } else {
                     $errorMsg = 'Could not save the re-uploaded file.';
                     if ($isAjax) {
-                        header('Content-Type: application/json');
-                        echo json_encode(['success' => false, 'error' => $errorMsg]);
+                        \header('Content-Type: application/json');
+                        echo \json_encode(['success' => false, 'error' => $errorMsg]);
                         exit;
                     }
                     $_SESSION['error'] = $errorMsg;
-                    header("Location: /admin/list/files/edit/{$fileId}");
+                    \header("Location: /admin/list/files/edit/{$fileId}");
                     exit;
                 }
             }
 
-            $focusX = max(0, min(100, intval($_POST['focus_x'] ?? 50)));
-            $focusY = max(0, min(100, intval($_POST['focus_y'] ?? 50)));
+            $focusX = \max(0, \min(100, \intval($_POST['focus_x'] ?? 50)));
+            $focusY = \max(0, \min(100, \intval($_POST['focus_y'] ?? 50)));
 
             // Update record in database
             DB::query(
@@ -646,12 +649,12 @@ class FilesController implements Controller
 
             // Reset cached cropped images for this media item
             $cropsDir = APPLICATION_ROOT . "/public/storage/uploads/{$siteId}/_crops";
-            if (file_exists($cropsDir)) {
+            if (\file_exists($cropsDir)) {
                 $pattern = "{$cropsDir}/crop_{$fileId}_*.jpg";
-                $files = glob($pattern);
-                if (is_array($files)) {
+                $files = \glob($pattern);
+                if (\is_array($files)) {
                     foreach ($files as $f) {
-                        @unlink($f);
+                        @\unlink($f);
                     }
                 }
             }
@@ -662,24 +665,24 @@ class FilesController implements Controller
 
             $submitAction = $_POST['submit_action'] ?? 'save_return';
 
-            $isAjax = (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest');
+            $isAjax = (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && \strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest');
             if ($isAjax) {
-                header('Content-Type: application/json');
-                echo json_encode([
+                \header('Content-Type: application/json');
+                echo \json_encode([
                     'success' => true,
                     'id' => $fileId,
                     'folder' => $fileRecord['folder'] ?? '',
                     'new_path' => $dbPath,
-                    'redirect' => '/admin/list/files' . (!empty($fileRecord['folder']) ? '?folder=' . urlencode($fileRecord['folder']) : '')
+                    'redirect' => '/admin/list/files' . (!empty($fileRecord['folder']) ? '?folder=' . \urlencode($fileRecord['folder']) : '')
                 ]);
                 exit;
             }
 
             $_SESSION['success'] = 'Media file updated successfully.';
             if ($submitAction === 'save_continue') {
-                header("Location: /admin/list/files/edit/{$fileId}");
+                \header("Location: /admin/list/files/edit/{$fileId}");
             } else {
-                header('Location: /admin/list/files' . (!empty($fileRecord['folder']) ? '?folder=' . urlencode($fileRecord['folder']) : ''));
+                \header('Location: /admin/list/files' . (!empty($fileRecord['folder']) ? '?folder=' . \urlencode($fileRecord['folder']) : ''));
             }
             exit;
         }

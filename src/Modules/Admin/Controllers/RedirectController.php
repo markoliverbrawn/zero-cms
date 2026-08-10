@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Modules/Admin/Controllers/RedirectController.php
  * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
@@ -27,8 +30,8 @@ class RedirectController implements Controller
     {
         $matches = $param;
         $modelName = $matches[1];
-        if (in_array($modelName, ['files', 'pages', 'posts', 'users', 'products', 'productvariants', 'orders'])) {
-            header('Location: /admin/list/' . $modelName);
+        if (\in_array($modelName, ['files', 'pages', 'posts', 'users', 'products', 'productvariants', 'orders'])) {
+            \header('Location: /admin/list/' . $modelName);
             exit;
         }
     }

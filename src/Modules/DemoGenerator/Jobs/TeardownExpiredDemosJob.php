@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Modules/DemoGenerator/Jobs/TeardownExpiredDemosJob.php
  * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
@@ -10,8 +13,8 @@
 
 namespace Zero\Modules\DemoGenerator\Jobs;
 
-use Zero\Interfaces\Job;
 use Zero\Database\DB;
+use Zero\Interfaces\Job;
 use Zero\Models\Site;
 
 /**

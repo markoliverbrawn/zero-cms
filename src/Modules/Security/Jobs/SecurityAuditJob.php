@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Modules/Security/Jobs/SecurityAuditJob.php
  * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
@@ -62,7 +65,7 @@ class);
                 'user_id' => null, // Executed by system background daemon
                 'score' => $score,
                 'environment' => $telemetry['environment'] ?? 'production',
-                'telemetry' => json_encode($telemetry),
+                'telemetry' => \json_encode($telemetry),
                 'report' => $report
             ]);
             $audit->save();

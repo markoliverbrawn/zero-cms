@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Modules/FormBuilder/Module.php
  * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
@@ -8,9 +11,9 @@
 
 namespace Zero\Modules\FormBuilder;
 
+use Zero\Core\App;
 use Zero\Interfaces\Module as ModuleInterface;
 use Zero\Modules\FormBuilder\Controllers\FormApiController;
-use Zero\Core\App;
 use Zero\Modules\FormBuilder\Models\Submission;
 
 /**
@@ -93,8 +96,8 @@ class
             'label' => 'Dynamic Form Builder',
             'description' => 'A dynamic AJAX form builder block supporting custom text, select, checkboxes, and radio options.',
             'icon' => 'inbox',
-            'admin_view' => dirname(__FILE__) . '/Views/blocks/admin/form_builder.php',
-            'frontend_view' => dirname(__FILE__) . '/Views/blocks/frontend/form_builder.php',
+            'admin_view' => \dirname(__FILE__) . '/Views/blocks/admin/form_builder.php',
+            'frontend_view' => \dirname(__FILE__) . '/Views/blocks/frontend/form_builder.php',
             'bypass_preview_sanitizer' => true
         ]);
 

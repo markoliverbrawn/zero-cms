@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Modules/Search/Traits/Searchable.php
  * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
@@ -35,10 +38,10 @@ trait Searchable
         ];
 
         foreach ($array as $key => $value) {
-            if (is_array($value)) {
-                $extracted = array_merge($extracted, $this->extractTextRecursively($value));
-            } elseif (is_string($value) && !is_numeric($key) && !in_array(strtolower($key), $metaBlacklist)) {
-                $extracted[] = strip_tags($value);
+            if (\is_array($value)) {
+                $extracted = \array_merge($extracted, $this->extractTextRecursively($value));
+            } elseif (\is_string($value) && !\is_numeric($key) && !\in_array(\strtolower($key), $metaBlacklist)) {
+                $extracted[] = \strip_tags($value);
             }
         }
 
@@ -57,28 +60,28 @@ trait Searchable
         $content = $this->content ?? $this->description ?? '';
         $textParts = [];
 
-        $decoded = json_decode($content, true);
-        if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+        $decoded = \json_decode($content, true);
+        if (\json_last_error() === JSON_ERROR_NONE && \is_array($decoded)) {
             foreach ($decoded as $block) {
                 $type = $block['type'] ?? '';
                 // Resolve StudlyCase class name from snake_case block type, e.g. text_image -> TextImageBlock
-                $className = '\\Zero\\Blocks\\' . str_replace(' ', '', ucwords(str_replace('_', ' ', $type))) . 'Block';
+                $className = '\\Zero\\Blocks\\' . \str_replace(' ', '', \ucwords(\str_replace('_', ' ', $type))) . 'Block';
 
-                if (class_exists($className) && is_subclass_of($className, '\\Zero\\Interfaces\\BlockHelperInterface')) {
+                if (\class_exists($className) && \is_subclass_of($className, '\\Zero\\Interfaces\\BlockHelperInterface')) {
                     $helper = new $className($block);
                     $textParts[] = $helper->getSearchableContent();
                 } else {
                     // Graceful fallback to the recursive string extractor if no specialized helper class is found
-                    $textParts = array_merge($textParts, $this->extractTextRecursively([$block]));
+                    $textParts = \array_merge($textParts, $this->extractTextRecursively([$block]));
                 }
             }
         } else {
-            $textParts[] = strip_tags($content);
+            $textParts[] = \strip_tags($content);
         }
 
         // Prepend summary if available to increase keyword richness
         if (!empty($this->summary)) {
-            array_unshift($textParts, strip_tags($this->summary));
+            \array_unshift($textParts, \strip_tags($this->summary));
         }
 
         // Include sku if available (mostly for Products)
@@ -86,7 +89,7 @@ trait Searchable
             $textParts[] = $this->sku;
         }
 
-        return trim(implode(' ', array_filter($textParts)));
+        return \trim(\implode(' ', \array_filter($textParts)));
     }
 
     /**
@@ -106,10 +109,10 @@ trait Searchable
      */
     public function getSearchableUrl(): string
     {
-        if (method_exists($this, 'getFrontendUrl')) {
+        if (\method_exists($this, 'getFrontendUrl')) {
             return $this->getFrontendUrl();
         }
-        return '/' . ltrim($this->slug ?? '', '/');
+        return '/' . \ltrim($this->slug ?? '', '/');
     }
 
     /**
@@ -134,20 +137,20 @@ trait Searchable
             return;
         }
 
-        $modelType = property_exists(static::/**
+        $modelType = \property_exists(static::/**
  * Class 
  *
  * Provides structural platform implementation and operational encapsulation.
  */
 class, 'modelType') ? static::$modelType : null;
         if (empty($modelType)) {
-            $parts = explode('\\', static::/**
+            $parts = \explode('\\', static::/**
  * Class 
  *
  * Provides structural platform implementation and operational encapsulation.
  */
 class);
-            $modelType = strtolower(end($parts));
+            $modelType = \strtolower(\end($parts));
         }
 
         $title = $this->getSearchableTitle();
@@ -168,20 +171,20 @@ class);
             return;
         }
 
-        $modelType = property_exists(static::/**
+        $modelType = \property_exists(static::/**
  * Class 
  *
  * Provides structural platform implementation and operational encapsulation.
  */
 class, 'modelType') ? static::$modelType : null;
         if (empty($modelType)) {
-            $parts = explode('\\', static::/**
+            $parts = \explode('\\', static::/**
  * Class 
  *
  * Provides structural platform implementation and operational encapsulation.
  */
 class);
-            $modelType = strtolower(end($parts));
+            $modelType = \strtolower(\end($parts));
         }
 
         SearchService::delete($modelType, $this->id);

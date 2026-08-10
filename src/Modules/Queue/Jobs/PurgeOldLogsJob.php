@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Modules/Queue/Jobs/PurgeOldLogsJob.php
  * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
@@ -32,7 +35,7 @@ class PurgeOldLogsJob implements Job
             return;
         }
 
-        $oneYearAgo = gmdate('Y-m-d H:i:s', strtotime('-1 year'));
+        $oneYearAgo = \gmdate('Y-m-d H:i:s', \strtotime('-1 year'));
 
         $pdo = DB::getPDO();
         $stmt = $pdo->prepare("

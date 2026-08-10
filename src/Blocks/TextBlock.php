@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Blocks/TextBlock.php
  * Architectural Purpose: Handles operations and business logic within the system.
@@ -38,11 +41,11 @@ class TextBlock implements BlockHelperInterface
     {
         $parts = [];
         if (!empty($this->data['title'])) {
-            $parts[] = strip_tags($this->data['title']);
+            $parts[] = \strip_tags($this->data['title']);
         }
         if (!empty($this->data['content'])) {
-            $parts[] = strip_tags($this->data['content']);
+            $parts[] = \strip_tags($this->data['content']);
         }
-        return implode(' ', $parts);
+        return \implode(' ', $parts);
     }
 }

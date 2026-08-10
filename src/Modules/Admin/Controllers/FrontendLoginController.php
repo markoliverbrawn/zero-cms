@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Modules/Admin/Controllers/FrontendLoginController.php
  * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
@@ -10,10 +13,10 @@ namespace Zero\Modules\Admin\Controllers;
 
 use Zero\Core\App;
 use Zero\Database\DB;
-use Zero\Support\Logger;
-use Zero\Support\Security;
 use Zero\Http\Middleware\AuthThrottlingMiddleware;
 use Zero\Interfaces\Controller;
+use Zero\Support\Logger;
+use Zero\Support\Security;
 
 /**
  * Class FrontendLoginController
@@ -40,7 +43,7 @@ class FrontendLoginController implements Controller
             AuthThrottlingMiddleware::handle('login', 'login', [], function() {});
 
             $row = DB::query('SELECT * FROM users WHERE username = ? LIMIT 1', [$user])->fetch();
-            if ($row && password_verify($pass, $row['password_hash'])) {
+            if ($row && \password_verify($pass, $row['password_hash'])) {
                 // Multi-Tenant User Separation Constraint:
                 // Frontend users must belong to the active site/domain, unless they are super_admin!
                 $userRole = $row['role'] ?? 'editor';
@@ -54,7 +57,7 @@ class FrontendLoginController implements Controller
                     // Forward to original requested page if present, otherwise fallback to home
                     $redirectTo = $_SESSION['redirect_to'] ?? '/';
                     unset($_SESSION['redirect_to']); // Clean up session!
-                    header('Location: ' . $redirectTo);
+                    \header('Location: ' . $redirectTo);
                     exit;
                 }
             }
@@ -63,7 +66,7 @@ class FrontendLoginController implements Controller
             Logger::log(null, 'frontend_login_failed', 'user', null, ['username' => $user, 'ip_address' => $_SERVER['REMOTE_ADDR']]);
             
             // SECURITY REMEDIATION: Throttle brute force dictionary attempts
-            sleep(1);
+            \sleep(1);
             
             App::render('login', ['error' => $error]);
             exit;

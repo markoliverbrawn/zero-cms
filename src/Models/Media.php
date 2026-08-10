@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Models/Media.php
  * Architectural Purpose: Active Record data model or behavioral trait wrapping database schema representation with tenant-scoping.
@@ -60,9 +63,9 @@ class Media implements Model
     public function forceDelete()
     {
         if (!empty($this->path)) {
-            $relativePath = ltrim($this->path, '/');
-            if (strpos($relativePath, 'storage/uploads/') === 0) {
-                $relativePath = substr($relativePath, strlen('storage/uploads/'));
+            $relativePath = \ltrim($this->path, '/');
+            if (\strpos($relativePath, 'storage/uploads/') === 0) {
+                $relativePath = \substr($relativePath, \strlen('storage/uploads/'));
             }
 
             try {
@@ -102,20 +105,20 @@ class Media implements Model
     public function getSquareCropUrl(int $size = 300): string
     {
         $mime = $this->mime;
-        if (empty($mime) || strpos($mime, 'image/') !== 0) {
+        if (empty($mime) || \strpos($mime, 'image/') !== 0) {
             return $this->path; // Non-images fall back to their default path
         }
 
         $physicalPath = APPLICATION_ROOT . '/public' . $this->path;
-        if (!file_exists($physicalPath)) {
+        if (!\file_exists($physicalPath)) {
             return $this->path; // Return original path if physical file doesn't exist
         }
 
         // Generate cache/hash based on media ID, focus points, file mtime and target thumbnail resolution
-        $mtime = filemtime($physicalPath);
+        $mtime = \filemtime($physicalPath);
         $focusX = $this->focus_x ?? 50;
         $focusY = $this->focus_y ?? 50;
-        $hash = md5("{$this->id}_{$focusX}_{$focusY}_{$mtime}_{$size}");
+        $hash = \md5("{$this->id}_{$focusX}_{$focusY}_{$mtime}_{$size}");
         
         $siteId = $this->site_id ?? 'default';
         $cropsDir = APPLICATION_ROOT . "/public/storage/uploads/{$siteId}/_crops";
@@ -125,14 +128,14 @@ class Media implements Model
         $cachedPublicUrl = "/storage/uploads/{$siteId}/_crops/{$cachedFilename}";
 
         // Return cached URL immediately if crop already exists on disk
-        if (file_exists($cachedPhysicalPath)) {
+        if (\file_exists($cachedPhysicalPath)) {
             return $cachedPublicUrl;
         }
 
         // Create the directory if it is missing, applying defensive chmod
-        if (!file_exists($cropsDir)) {
-            @mkdir($cropsDir, 0775, true);
-            @chmod($cropsDir, 0775);
+        if (!\file_exists($cropsDir)) {
+            @\mkdir($cropsDir, 0775, true);
+            @\chmod($cropsDir, 0775);
         }
 
         // Load the source image safely using PHP GD extensions
@@ -140,16 +143,16 @@ class Media implements Model
         switch ($mime) {
             case 'image/jpeg':
             case 'image/jpg':
-                $srcImage = @imagecreatefromjpeg($physicalPath);
+                $srcImage = @\imagecreatefromjpeg($physicalPath);
                 break;
             case 'image/png':
-                $srcImage = @imagecreatefrompng($physicalPath);
+                $srcImage = @\imagecreatefrompng($physicalPath);
                 break;
             case 'image/webp':
-                $srcImage = @imagecreatefromwebp($physicalPath);
+                $srcImage = @\imagecreatefromwebp($physicalPath);
                 break;
             case 'image/gif':
-                $srcImage = @imagecreatefromgif($physicalPath);
+                $srcImage = @\imagecreatefromgif($physicalPath);
                 break;
         }
 
@@ -157,8 +160,8 @@ class Media implements Model
             return $this->path; // Fallback to original image if load failed
         }
 
-        $origWidth = imagesx($srcImage);
-        $origHeight = imagesy($srcImage);
+        $origWidth = \imagesx($srcImage);
+        $origHeight = \imagesy($srcImage);
 
         // Calculate aspect-ratio aligned crop boundaries
         $cropSize = 0;
@@ -171,25 +174,25 @@ class Media implements Model
             $srcX = 0;
             
             $centerY = ($focusY / 100) * $origHeight;
-            $srcY = max(0, min($origHeight - $cropSize, $centerY - ($cropSize / 2)));
+            $srcY = \max(0, \min($origHeight - $cropSize, $centerY - ($cropSize / 2)));
         } else {
             // Landscape/Square: Square is as tall as the image height, constrained horizontally
             $cropSize = $origHeight;
             $srcY = 0;
 
             $centerX = ($focusX / 100) * $origWidth;
-            $srcX = max(0, min($origWidth - $cropSize, $centerX - ($cropSize / 2)));
+            $srcX = \max(0, \min($origWidth - $cropSize, $centerX - ($cropSize / 2)));
         }
 
         // Initialize target cropped resampled canvas
-        $dstImage = imagecreatetruecolor($size, $size);
+        $dstImage = \imagecreatetruecolor($size, $size);
 
         // Fill background with clean white (e.g. for transparent PNG fallback)
-        $white = imagecolorallocate($dstImage, 255, 255, 255);
-        imagefill($dstImage, 0, 0, $white);
+        $white = \imagecolorallocate($dstImage, 255, 255, 255);
+        \imagefill($dstImage, 0, 0, $white);
 
         // Perform high-quality pixel resampling
-        imagecopyresampled(
+        \imagecopyresampled(
             $dstImage,
             $srcImage,
             0, 0,
@@ -199,12 +202,12 @@ class Media implements Model
         );
 
         // Save at 90% JPEG quality to optimize compression sizes and listing loading times
-        imagejpeg($dstImage, $cachedPhysicalPath, 90);
-        @chmod($cachedPhysicalPath, 0664); // Defensively ensure secure read/write access to cropped files
+        \imagejpeg($dstImage, $cachedPhysicalPath, 90);
+        @\chmod($cachedPhysicalPath, 0664); // Defensively ensure secure read/write access to cropped files
 
         // Garbage collection of image resources
-        imagedestroy($srcImage);
-        imagedestroy($dstImage);
+        \imagedestroy($srcImage);
+        \imagedestroy($dstImage);
 
         return $cachedPublicUrl;
     }

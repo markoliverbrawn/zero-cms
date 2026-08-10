@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Modules/Blog/Models/Comment.php
  * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
@@ -8,10 +11,10 @@
 
 namespace Zero\Modules\Blog\Models;
 
-use Zero\Interfaces\Model;
-use Zero\Models\Traits\IsModel;
 use Zero\Core\App;
 use Zero\Database\DB;
+use Zero\Interfaces\Model;
+use Zero\Models\Traits\IsModel;
 
 /**
  * Class Comment
@@ -45,7 +48,7 @@ class Comment implements Model
     public function __construct(array $data = [])
     {
         foreach ($data as $key => $value) {
-            if (property_exists($this, $key)) {
+            if (\property_exists($this, $key)) {
                 $this->$key = $value;
             }
         }
@@ -116,20 +119,20 @@ class);
     public static function paginate($page = 1, $perPage = 10, $filters = [], $orderBy = 'created_at DESC')
     {
         // Defensive whitelisting and column mapping of the ORDER BY clause
-        $orderByParts = explode(' ', trim($orderBy));
+        $orderByParts = \explode(' ', \trim($orderBy));
         $cleanOrderBy = 'blog_comments.created_at DESC'; // Fallback
 
         if (!empty($orderByParts)) {
             $column = $orderByParts[0];
-            $direction = isset($orderByParts[1]) ? strtoupper($orderByParts[1]) : 'ASC';
+            $direction = isset($orderByParts[1]) ? \strtoupper($orderByParts[1]) : 'ASC';
 
             if ($column === 'post_title') {
                 $column = 'blog_posts.title';
-            } elseif (strpos($column, 'blog_comments.') !== 0 && $column !== 'title') {
+            } elseif (\strpos($column, 'blog_comments.') !== 0 && $column !== 'title') {
                 $column = 'blog_comments.' . $column;
             }
 
-            if (preg_match('/^[a-zA-Z0-9_\.]+$/', $column)) {
+            if (\preg_match('/^[a-zA-Z0-9_\.]+$/', $column)) {
                 if ($direction !== 'ASC' && $direction !== 'DESC') {
                     $direction = 'ASC';
                 }
@@ -169,7 +172,7 @@ class);
 
         $whereSql = '';
         if ($where) {
-            $whereSql = 'WHERE ' . implode(' AND ', $where);
+            $whereSql = 'WHERE ' . \implode(' AND ', $where);
         }
 
         // Total count (using left join to ensure we can count matching search rows)
@@ -181,9 +184,9 @@ class);
         ";
         $totalStmt = DB::query($totalQuery, $params);
         $total = $totalStmt->fetch();
-        $totalCount = $total ? intval($total['cnt']) : 0;
+        $totalCount = $total ? \intval($total['cnt']) : 0;
 
-        $pages = max(1, ceil($totalCount / $perPage));
+        $pages = \max(1, \ceil($totalCount / $perPage));
         $offset = ($page - 1) * $perPage;
 
         // Fetch paginated data (using left join to select post title as well!)

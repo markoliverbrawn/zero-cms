@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Modules/Forum/Controllers/ReplyCreateController.php
  * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
@@ -8,12 +11,12 @@
 
 namespace Zero\Modules\Forum\Controllers;
 
-use Zero\Interfaces\Controller;
 use Zero\Core\App;
 use Zero\Core\Validator;
-use Zero\Support\Security;
-use Zero\Modules\Forum\Models\ForumThread;
+use Zero\Interfaces\Controller;
 use Zero\Modules\Forum\Models\ForumPost;
+use Zero\Modules\Forum\Models\ForumThread;
+use Zero\Support\Security;
 
 /**
  * Class ReplyCreateController
@@ -36,14 +39,14 @@ class ReplyCreateController implements Controller
 
         $thread = ForumThread::findBySlug($threadSlug);
         if (!$thread || $thread->site_id !== $siteId) {
-            http_response_code(404);
+            \http_response_code(404);
             echo "Forum thread not found.";
             exit;
         }
 
         // Lock check: block replies if thread is locked
         if ($thread->status === 'locked') {
-            http_response_code(403);
+            \http_response_code(403);
             echo "This thread is locked and cannot receive replies.";
             exit;
         }
@@ -51,12 +54,12 @@ class ReplyCreateController implements Controller
         $user = App::getCurrentUser();
         if (!$user) {
             $_SESSION['redirect_to'] = "/forum/thread/{$thread->slug}";
-            header('Location: /login');
+            \header('Location: /login');
             exit;
         }
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header("Location: /forum/thread/{$thread->slug}");
+            \header("Location: /forum/thread/{$thread->slug}");
             exit;
         }
 
@@ -78,7 +81,7 @@ class ReplyCreateController implements Controller
             } else {
                 $_SESSION['reply_quick_content_draft'] = $_POST['content'] ?? '';
             }
-            header("Location: /forum/thread/{$thread->slug}");
+            \header("Location: /forum/thread/{$thread->slug}");
             exit;
         }
 
@@ -92,7 +95,7 @@ class ReplyCreateController implements Controller
         if ($parentId !== null) {
             $parentPost = ForumPost::find($parentId);
             if (!$parentPost || $parentPost->thread_id !== $thread->id) {
-                http_response_code(400);
+                \http_response_code(400);
                 echo "Invalid parent post for nesting.";
                 exit;
             }
@@ -110,7 +113,7 @@ class ReplyCreateController implements Controller
         ]);
         $post->save();
 
-        header("Location: /forum/thread/{$thread->slug}");
+        \header("Location: /forum/thread/{$thread->slug}");
         exit;
     }
 }

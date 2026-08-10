@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Services/Ai/Providers/GeminiProvider.php
  * Architectural Purpose: Handles operations and business logic within the system.
@@ -8,9 +11,9 @@
 
 namespace Zero\Services\Ai\Providers;
 
-use Zero\Interfaces\AiProvider;
-use Zero\Core\Env;
 use Exception;
+use Zero\Core\Env;
+use Zero\Interfaces\AiProvider;
 
 /**
  * Class GeminiProvider
@@ -37,7 +40,7 @@ class GeminiProvider implements AiProvider
         $model = $options['model'] ?? 'gemini-2.5-flash';
         $timeout = $options['timeout'] ?? 60;
 
-        $url = "https://generativelanguage.googleapis.com/v1beta/models/" . urlencode($model) . ":generateContent?key=" . urlencode($apiKey);
+        $url = "https://generativelanguage.googleapis.com/v1beta/models/" . \urlencode($model) . ":generateContent?key=" . \urlencode($apiKey);
         $payload = [
             'contents' => [
                 [
@@ -48,26 +51,26 @@ class GeminiProvider implements AiProvider
             ]
         ];
 
-        $ch = curl_init($url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
-        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
-        curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+        $ch = \curl_init($url);
+        \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        \curl_setopt($ch, CURLOPT_POST, true);
+        \curl_setopt($ch, CURLOPT_POSTFIELDS, \json_encode($payload));
+        \curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+        \curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
+        \curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        \curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
 
-        $response = curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $curlError = curl_error($ch);
-        curl_close($ch);
+        $response = \curl_exec($ch);
+        $httpCode = \curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlError = \curl_error($ch);
+        \curl_close($ch);
 
         if (!empty($curlError)) {
             throw new Exception("cURL Network Issue: " . $curlError);
         }
 
         if ($httpCode !== 200) {
-            $resData = json_decode($response, true);
+            $resData = \json_decode($response, true);
             $errorMsg = $resData['error']['message'] ?? 'Unknown Google API Error';
             throw new Exception("Google Gemini API Error (HTTP {$httpCode}): " . $errorMsg);
         }
@@ -76,7 +79,7 @@ class GeminiProvider implements AiProvider
             throw new Exception("Empty response returned from Google Gemini API.");
         }
 
-        $resData = json_decode($response, true);
+        $resData = \json_decode($response, true);
         $generatedText = $resData['candidates'][0]['content']['parts'][0]['text'] ?? '';
 
         if (empty($generatedText)) {
@@ -106,7 +109,7 @@ class GeminiProvider implements AiProvider
         $aspectRatio = $options['aspect_ratio'] ?? '1:1';
         $timeout = $options['timeout'] ?? 90;
 
-        $url = "https://generativelanguage.googleapis.com/v1beta/models/" . urlencode($model) . ":predict?key=" . urlencode($apiKey);
+        $url = "https://generativelanguage.googleapis.com/v1beta/models/" . \urlencode($model) . ":predict?key=" . \urlencode($apiKey);
         $payload = [
             'instances' => [['prompt' => $prompt]],
             'parameters' => [
@@ -116,26 +119,26 @@ class GeminiProvider implements AiProvider
             ]
         ];
 
-        $ch = curl_init($url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
-        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
-        curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+        $ch = \curl_init($url);
+        \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        \curl_setopt($ch, CURLOPT_POST, true);
+        \curl_setopt($ch, CURLOPT_POSTFIELDS, \json_encode($payload));
+        \curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+        \curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
+        \curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        \curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
 
-        $response = curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $curlError = curl_error($ch);
-        curl_close($ch);
+        $response = \curl_exec($ch);
+        $httpCode = \curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlError = \curl_error($ch);
+        \curl_close($ch);
 
         if (!empty($curlError)) {
             throw new Exception("cURL Network Issue: " . $curlError);
         }
 
         if ($httpCode !== 200) {
-            $resData = json_decode($response, true);
+            $resData = \json_decode($response, true);
             $errorMsg = $resData['error']['message'] ?? 'Unknown Google API Error';
             throw new Exception("Google Imagen API Error (HTTP {$httpCode}): " . $errorMsg);
         }
@@ -144,7 +147,7 @@ class GeminiProvider implements AiProvider
             throw new Exception("Empty response returned from Google Imagen API.");
         }
 
-        $resData = json_decode($response, true);
+        $resData = \json_decode($response, true);
         $base64Data = $resData['predictions'][0]['bytesBase64Encoded'] ?? '';
 
         if (empty($base64Data)) {

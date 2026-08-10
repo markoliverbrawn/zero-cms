@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Models/Traits/IsOrderable.php
  * Architectural Purpose: Active Record data model or behavioral trait wrapping database schema representation with tenant-scoping.
@@ -8,8 +11,8 @@
 
 namespace Zero\Models\Traits;
 
-use Zero\Database\DB;
 use Zero\Core\App;
+use Zero\Database\DB;
 
 /**
  * Trait IsOrderable
@@ -42,7 +45,7 @@ trait IsOrderable
 
         $precedence = 10;
         foreach ($ids as $id) {
-            $id = trim($id);
+            $id = \trim($id);
             if (empty($id)) continue;
 
             // Scope by site_id for tenant isolation (except sites table)

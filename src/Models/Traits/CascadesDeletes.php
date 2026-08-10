@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Models/Traits/CascadesDeletes.php
  * Architectural Purpose: Active Record data model or behavioral trait wrapping database schema representation with tenant-scoping.
@@ -22,13 +25,13 @@ trait CascadesDeletes
      */
     protected function cascadeDeleteChildren()
     {
-        $cascadeList = method_exists($this, 'getCascadeDeletes') ? $this->getCascadeDeletes() : (static::$cascadeDeletes ?? []);
-        if (empty($cascadeList) || !is_array($cascadeList)) {
+        $cascadeList = \method_exists($this, 'getCascadeDeletes') ? $this->getCascadeDeletes() : (static::$cascadeDeletes ?? []);
+        if (empty($cascadeList) || !\is_array($cascadeList)) {
             return;
         }
 
         foreach ($cascadeList as $childClass => $foreignKey) {
-            if (class_exists($childClass)) {
+            if (\class_exists($childClass)) {
                 try {
                     $reflector = new \ReflectionClass($childClass);
                     $prop = $reflector->getProperty('tableName');
@@ -55,13 +58,13 @@ trait CascadesDeletes
      */
     protected function cascadeForceDeleteChildren()
     {
-        $cascadeList = method_exists($this, 'getCascadeDeletes') ? $this->getCascadeDeletes() : (static::$cascadeDeletes ?? []);
-        if (empty($cascadeList) || !is_array($cascadeList)) {
+        $cascadeList = \method_exists($this, 'getCascadeDeletes') ? $this->getCascadeDeletes() : (static::$cascadeDeletes ?? []);
+        if (empty($cascadeList) || !\is_array($cascadeList)) {
             return;
         }
 
         foreach ($cascadeList as $childClass => $foreignKey) {
-            if (class_exists($childClass)) {
+            if (\class_exists($childClass)) {
                 try {
                     $reflector = new \ReflectionClass($childClass);
                     $prop = $reflector->getProperty('tableName');

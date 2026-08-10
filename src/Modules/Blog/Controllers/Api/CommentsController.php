@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Modules/Blog/Controllers/Api/CommentsController.php
  * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
@@ -11,9 +14,9 @@ namespace Zero\Modules\Blog\Controllers\Api;
 use Zero\Core\App;
 use Zero\Core\Validator;
 use Zero\Database\DB;
-use Zero\Support\Security;
 use Zero\Interfaces\Controller;
 use Zero\Support\Emailer;
+use Zero\Support\Security;
 use Zero\Support\Str;
 
 /**
@@ -33,25 +36,25 @@ class CommentsController implements Controller
     {
         // Enforce POST requests
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            http_response_code(405);
-            header('Content-Type: application/json; charset=utf-8');
-            echo json_encode(['success' => false, 'error' => 'Method Not Allowed']);
+            \http_response_code(405);
+            \header('Content-Type: application/json; charset=utf-8');
+            echo \json_encode(['success' => false, 'error' => 'Method Not Allowed']);
             exit;
         }
 
-        header('Content-Type: application/json; charset=utf-8');
+        \header('Content-Type: application/json; charset=utf-8');
 
         // Parse JSON payload
-        $json = json_decode(file_get_contents('php://input'), true);
-        if (!is_array($json)) {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'error' => 'Invalid JSON Payload']);
+        $json = \json_decode(\file_get_contents('php://input'), true);
+        if (!\is_array($json)) {
+            \http_response_code(400);
+            echo \json_encode(['success' => false, 'error' => 'Invalid JSON Payload']);
             exit;
         }
 
         // SPAM HONEYPOT TRAP: If the hidden bait field is filled, silently discard
         if (!empty($json['website_url'])) {
-            echo json_encode([
+            echo \json_encode([
                 'success' => true,
                 'note' => 'Spam filtered successfully.'
             ]);
@@ -72,8 +75,8 @@ class CommentsController implements Controller
         $validator = new Validator($json, $rules);
 
         if (!$validator->validate()) {
-            http_response_code(400);
-            echo json_encode([
+            \http_response_code(400);
+            echo \json_encode([
                 'success' => false,
                 'errors' => $validator->getErrors()
             ]);
@@ -90,15 +93,15 @@ class CommentsController implements Controller
         ])->fetch();
 
         if (!$post) {
-            http_response_code(404);
-            echo json_encode(['success' => false, 'error' => 'Target post not found.']);
+            \http_response_code(404);
+            echo \json_encode(['success' => false, 'error' => 'Target post not found.']);
             exit;
         }
 
         // Verify that comments are allowed/enabled on this post
-        if (isset($post['allow_comments']) && intval($post['allow_comments']) === 0) {
-            http_response_code(403);
-            echo json_encode(['success' => false, 'error' => 'Comments are disabled for this article.']);
+        if (isset($post['allow_comments']) && \intval($post['allow_comments']) === 0) {
+            \http_response_code(403);
+            echo \json_encode(['success' => false, 'error' => 'Comments are disabled for this article.']);
             exit;
         }
 
@@ -121,10 +124,10 @@ class CommentsController implements Controller
             // Dispatch notification emails if comment_notifiers is set
             $notifiersJson = $post['comment_notifiers'] ?? '';
             if (!empty($notifiersJson)) {
-                $notifierIds = json_decode($notifiersJson, true);
-                if (is_array($notifierIds) && !empty($notifierIds)) {
+                $notifierIds = \json_decode($notifiersJson, true);
+                if (\is_array($notifierIds) && !empty($notifierIds)) {
                     // Fetch email addresses of all selected users
-                    $placeholders = implode(',', array_fill(0, count($notifierIds), '?'));
+                    $placeholders = \implode(',', \array_fill(0, \count($notifierIds), '?'));
                     $usersList = DB::query("SELECT email FROM users WHERE id IN ($placeholders) AND deleted_at IS NULL", $notifierIds)->fetchAll();
                     
                     if (!empty($usersList)) {
@@ -136,7 +139,7 @@ class CommentsController implements Controller
                             <p><strong>Author:</strong> " . Str::escape($validated['author_name']) . " (" . Str::escape($validated['author_email']) . ")</p>
                             <p><strong>Content:</strong></p>
                             <div style='background-color: #f7f9fa; border: 1px solid #e1e4e6; padding: 15px; border-radius: 6px;'>
-                                " . nl2br(Str::escape($validated['content'])) . "
+                                " . \nl2br(Str::escape($validated['content'])) . "
                             </div>
                         ";
                         
@@ -150,20 +153,20 @@ class CommentsController implements Controller
             }
 
             // Return success with formatted dates
-            echo json_encode([
+            echo \json_encode([
                 'success' => true,
                 'comment' => [
                     'id' => $commentId,
                     'author_name' => Str::escape($validated['author_name']),
-                    'content' => nl2br(Str::escape($validated['content'])),
-                    'created_at' => date('F d, Y \a\t g:i A'),
+                    'content' => \nl2br(Str::escape($validated['content'])),
+                    'created_at' => \date('F d, Y \a\t g:i A'),
                     'status' => 'pending'
                 ]
             ]);
             exit;
         } catch (\Exception $e) {
-            http_response_code(500);
-            echo json_encode([
+            \http_response_code(500);
+            echo \json_encode([
                 'success' => false,
                 'error' => 'Could not save your comment: ' . $e->getMessage()
             ]);

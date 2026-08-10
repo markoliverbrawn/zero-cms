@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Modules/Blog/Controllers/PostViewController.php
  * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
@@ -9,8 +12,8 @@
 namespace Zero\Modules\Blog\Controllers;
 
 use Zero\Core\App;
-use Zero\Modules\Blog\Models\Post;
 use Zero\Interfaces\Controller;
+use Zero\Modules\Blog\Models\Post;
 
 /**
  * Class PostViewController
@@ -31,7 +34,7 @@ class PostViewController implements Controller
         $slug = $matches[1];
         $post = Post::findBySlug($slug);
         if (!$post) {
-            http_response_code(404);
+            \http_response_code(404);
             echo "Post not found.";
             exit;
         }

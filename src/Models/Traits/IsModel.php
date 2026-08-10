@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Models/Traits/IsModel.php
  * Architectural Purpose: Active Record data model or behavioral trait wrapping database schema representation with tenant-scoping.
@@ -8,8 +11,8 @@
 
 namespace Zero\Models\Traits;
 
-use Zero\Database\DB;
 use Zero\Core\App;
+use Zero\Database\DB;
 use Zero\Support\Security;
 
 /**
@@ -32,7 +35,7 @@ trait IsModel
     public function __construct($data = [])
     {
         foreach ($data as $key => $value) {
-            if (property_exists($this, $key)) {
+            if (\property_exists($this, $key)) {
                 $this->$key = $value;
             }
         }
@@ -46,9 +49,9 @@ trait IsModel
      */
     public function __get($name)
     {
-        if (str_ends_with($name, '_local')) {
-            $baseField = substr($name, 0, -6);
-            if (property_exists($this, $baseField)) {
+        if (\str_ends_with($name, '_local')) {
+            $baseField = \substr($name, 0, -6);
+            if (\property_exists($this, $baseField)) {
                 $val = $this->$baseField;
                 if (!empty($val)) {
                     return \Zero\Support\I18n::localizeDateTime($val);
@@ -66,9 +69,9 @@ trait IsModel
      */
     public function __isset($name)
     {
-        if (str_ends_with($name, '_local')) {
-            $baseField = substr($name, 0, -6);
-            if (property_exists($this, $baseField)) {
+        if (\str_ends_with($name, '_local')) {
+            $baseField = \substr($name, 0, -6);
+            if (\property_exists($this, $baseField)) {
                 return !empty($this->$baseField);
             }
         }
@@ -91,7 +94,7 @@ trait IsModel
             $params[] = App::getCurrentSiteId();
         }
 
-        $sql .= " WHERE " . implode(' AND ', $where);
+        $sql .= " WHERE " . \implode(' AND ', $where);
 
         $stmt = DB::query($sql, $params);
         $results = [];
@@ -126,39 +129,39 @@ trait IsModel
 
         $fields[] = 'created_at';
         $placeholders[] = '?';
-        $values[] = gmdate('Y-m-d H:i:s');
+        $values[] = \gmdate('Y-m-d H:i:s');
         $fields[] = 'updated_at';
         $placeholders[] = '?';
-        $values[] = gmdate('Y-m-d H:i:s');
+        $values[] = \gmdate('Y-m-d H:i:s');
 
         // Add site_id if table has site_id column and it is not explicitly in fillable
-        if (static::$tableName !== 'sites' && !in_array('site_id', $fields)) {
+        if (static::$tableName !== 'sites' && !\in_array('site_id', $fields)) {
             $fields[] = 'site_id';
             $placeholders[] = '?';
             $values[] = $this->site_id ?? App::getCurrentSiteId();
         }
 
         // Add type if static::$modelType is set and the table is a polymorphic table (pages, blog_posts)
-        $modelType = property_exists(static::/**
+        $modelType = \property_exists(static::/**
  * Class 
  *
  * Provides structural platform implementation and operational encapsulation.
  */
 class, 'modelType') ? static::$modelType : null;
-        if ($modelType !== null && !in_array('type', $fields) && (static::$tableName === 'pages' || static::$tableName === 'blog_posts')) {
+        if ($modelType !== null && !\in_array('type', $fields) && (static::$tableName === 'pages' || static::$tableName === 'blog_posts')) {
             $fields[] = 'type';
             $placeholders[] = '?';
             $values[] = $modelType;
         }
 
-        $sql = "INSERT INTO " . static::$tableName . " (" . implode(', ', $fields) . ") VALUES (" . implode(', ', $placeholders) . ")";
+        $sql = "INSERT INTO " . static::$tableName . " (" . \implode(', ', $fields) . ") VALUES (" . \implode(', ', $placeholders) . ")";
         DB::query($sql, $values);
 
         // Clear the globally centralized DB identity map cache for this newly created record (force fresh lookup for full hydration)
         DB::setIdentity(static::$tableName, $this->id, null);
 
         // Synchronize with search index if searchable
-        if (method_exists($this, 'indexInSearch')) {
+        if (\method_exists($this, 'indexInSearch')) {
             $this->indexInSearch();
         }
 
@@ -172,13 +175,13 @@ class, 'modelType') ? static::$modelType : null;
      */
     public function delete()
     {
-        DB::query("UPDATE " . static::$tableName . " SET deleted_at = ? WHERE id = ?", [gmdate('Y-m-d H:i:s'), $this->id]);
+        DB::query("UPDATE " . static::$tableName . " SET deleted_at = ? WHERE id = ?", [\gmdate('Y-m-d H:i:s'), $this->id]);
         
         // Clear the globally centralized DB identity map cache for this record
         DB::setIdentity(static::$tableName, $this->id, null);
 
         // Remove from search index if searchable
-        if (method_exists($this, 'removeFromSearch')) {
+        if (\method_exists($this, 'removeFromSearch')) {
             $this->removeFromSearch();
         }
 
@@ -248,7 +251,7 @@ class, 'modelType') ? static::$modelType : null;
         DB::setIdentity(static::$tableName, $this->id, null);
 
         // Remove from search index if searchable
-        if (method_exists($this, 'removeFromSearch')) {
+        if (\method_exists($this, 'removeFromSearch')) {
             $this->removeFromSearch();
         }
 
@@ -272,13 +275,13 @@ class, 'modelType') ? static::$modelType : null;
      */
     public function restore()
     {
-        DB::query("UPDATE " . static::$tableName . " SET deleted_at = NULL, updated_at = ? WHERE id = ?", [gmdate('Y-m-d H:i:s'), $this->id]);
+        DB::query("UPDATE " . static::$tableName . " SET deleted_at = NULL, updated_at = ? WHERE id = ?", [\gmdate('Y-m-d H:i:s'), $this->id]);
         
         // Clear the globally centralized DB identity map cache for this record
         DB::setIdentity(static::$tableName, $this->id, null);
 
         // Synchronize with search index if searchable
-        if (method_exists($this, 'indexInSearch')) {
+        if (\method_exists($this, 'indexInSearch')) {
             $this->indexInSearch();
         }
 
@@ -320,17 +323,17 @@ class, 'modelType') ? static::$modelType : null;
         }
 
         $set[] = 'updated_at = ?';
-        $values[] = gmdate('Y-m-d H:i:s');
+        $values[] = \gmdate('Y-m-d H:i:s');
         $values[] = $this->id; // for the WHERE clause
 
-        $sql = "UPDATE " . static::$tableName . " SET " . implode(', ', $set) . " WHERE id = ?";
+        $sql = "UPDATE " . static::$tableName . " SET " . \implode(', ', $set) . " WHERE id = ?";
         DB::query($sql, $values);
 
         // Clear the globally centralized DB identity map cache for this record
         DB::setIdentity(static::$tableName, $this->id, null);
 
         // Synchronize with search index if searchable
-        if (method_exists($this, 'indexInSearch')) {
+        if (\method_exists($this, 'indexInSearch')) {
             $this->indexInSearch();
         }
 

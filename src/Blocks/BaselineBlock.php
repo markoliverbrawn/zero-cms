@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Blocks/BaselineBlock.php
  * Architectural Purpose: Handles operations and business logic within the system.
@@ -38,14 +41,14 @@ class BaselineBlock implements BlockHelperInterface
     {
         $parts = [];
         if (!empty($this->data['title'])) {
-            $parts[] = strip_tags($this->data['title']);
+            $parts[] = \strip_tags($this->data['title']);
         }
         if (!empty($this->data['subtitle'])) {
             $parts[] = $this->data['subtitle'];
         }
         if (!empty($this->data['content'])) {
-            $parts[] = strip_tags($this->data['content']);
+            $parts[] = \strip_tags($this->data['content']);
         }
-        return implode(' ', $parts);
+        return \implode(' ', $parts);
     }
 }

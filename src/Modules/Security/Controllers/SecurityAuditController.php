@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Modules/Security/Controllers/SecurityAuditController.php
  * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
@@ -59,13 +62,13 @@ class SecurityAuditController implements Controller
         }
 
         // Apply a small deduction if static analysis finds certain issues
-        $findingsCount = count($telemetry['static_analysis_findings'] ?? []);
+        $findingsCount = \count($telemetry['static_analysis_findings'] ?? []);
         if ($findingsCount > 0) {
             // Cap the deduction at 15 points
-            $score -= min($findingsCount * 5, 15);
+            $score -= \min($findingsCount * 5, 15);
         }
 
-        return max($score, 0);
+        return \max($score, 0);
     }
 
     /**
@@ -88,12 +91,12 @@ class SecurityAuditController implements Controller
         ];
         
         foreach ($possiblePaths as $path) {
-            if (file_exists($path)) {
+            if (\file_exists($path)) {
                 $telemetry['install_file_exists'] = true;
-                $telemetry['install_file_path'] = (strpos($path, 'etc/') !== false) ? 'etc/install.php' : 'install.php';
+                $telemetry['install_file_path'] = (\strpos($path, 'etc/') !== false) ? 'etc/install.php' : 'install.php';
                 
-                $content = file_get_contents($path);
-                if (strpos($content, "php_sapi_name() !== 'cli'") !== false) {
+                $content = \file_get_contents($path);
+                if (\strpos($content, "php_sapi_name() !== 'cli'") !== false) {
                     $telemetry['install_file_cli_locked'] = true;
                 }
                 break;
@@ -111,8 +114,8 @@ class SecurityAuditController implements Controller
                 [$defaultHash, App::getCurrentSiteId()]
             )->fetchAll();
             
-            $telemetry['default_admin_password_in_use'] = (count($rows) > 0);
-            $telemetry['default_password_usernames'] = array_column($rows, 'username');
+            $telemetry['default_admin_password_in_use'] = (\count($rows) > 0);
+            $telemetry['default_password_usernames'] = \array_column($rows, 'username');
         } catch (\Exception $e) {
             $telemetry['default_admin_password_in_use'] = false;
             $telemetry['default_password_usernames'] = [];
@@ -121,9 +124,9 @@ class SecurityAuditController implements Controller
         // 4. Check folder execution protection
         $uploadsDir = APPLICATION_ROOT . '/public/storage/uploads';
         $telemetry['storage_directory_open_access'] = true;
-        if (file_exists($uploadsDir)) {
-            $telemetry['storage_directory_writable'] = is_writable($uploadsDir);
-            if (file_exists(APPLICATION_ROOT . '/public/storage/.htaccess')) {
+        if (\file_exists($uploadsDir)) {
+            $telemetry['storage_directory_writable'] = \is_writable($uploadsDir);
+            if (\file_exists(APPLICATION_ROOT . '/public/storage/.htaccess')) {
                 $telemetry['storage_directory_open_access'] = false;
             }
         } else {
@@ -139,7 +142,7 @@ class SecurityAuditController implements Controller
                    AND deleted_at IS NULL",
                 [App::getCurrentSiteId()]
             )->fetchColumn();
-            $telemetry['total_super_admins'] = intval($adminsCount);
+            $telemetry['total_super_admins'] = \intval($adminsCount);
         } catch (\Exception $e) {
             $telemetry['total_super_admins'] = 0;
         }
@@ -149,7 +152,7 @@ class SecurityAuditController implements Controller
             $sitesCount = DB::query(
                 "SELECT COUNT(*) FROM sites WHERE deleted_at IS NULL"
             )->fetchColumn();
-            $telemetry['total_tenant_sites'] = intval($sitesCount);
+            $telemetry['total_tenant_sites'] = \intval($sitesCount);
         } catch (\Exception $e) {
             $telemetry['total_tenant_sites'] = 0;
         }
@@ -162,13 +165,13 @@ class SecurityAuditController implements Controller
                    AND deleted_at IS NULL",
                 [App::getCurrentSiteId()]
             )->fetchColumn();
-            $telemetry['audit_warnings_logged'] = intval($warningsCount);
+            $telemetry['audit_warnings_logged'] = \intval($warningsCount);
         } catch (\Exception $e) {
             $telemetry['audit_warnings_logged'] = 0;
         }
 
         // 8. Capture active runtime environment (defaults strictly to 'production' if not defined)
-        $telemetry['environment'] = strtolower(Env::get('ENVIRONMENT', 'production'));
+        $telemetry['environment'] = \strtolower(Env::get('ENVIRONMENT', 'production'));
 
         // 9. Fetch recent CVEs from OSV for major framework packages
         try {
@@ -234,7 +237,7 @@ class SecurityAuditController implements Controller
             $deleteId = $_GET['delete'];
             DB::query("UPDATE security_audits SET deleted_at = NOW() WHERE id = ? AND site_id = ?", [$deleteId, $siteId]);
             $_SESSION['success_flash'] = 'Archived audit report deleted successfully.';
-            header('Location: /admin/list/security_audits');
+            \header('Location: /admin/list/security_audits');
             exit();
         }
 
@@ -251,7 +254,7 @@ class SecurityAuditController implements Controller
                     'user_id' => $userId,
                     'score' => $telemetry['calculated_score'] ?? 100,
                     'environment' => $telemetry['environment'] ?? 'production',
-                    'telemetry' => json_encode($telemetry),
+                    'telemetry' => \json_encode($telemetry),
                     'report' => $report
                 ]);
                 $audit->save();
@@ -259,8 +262,8 @@ class SecurityAuditController implements Controller
                 // Silently bypass if schema is being initialized
             }
 
-            header('Content-Type: application/json');
-            echo json_encode([
+            \header('Content-Type: application/json');
+            echo \json_encode([
                 'success' => true,
                 'report' => $report,
                 'telemetry' => $telemetry
@@ -302,7 +305,7 @@ class SecurityAuditController implements Controller
 
         $prompt = "You are an elite cybersecurity auditor specializing in PHP, multi-tenant architectures, and zero-dependency security. Perform a security analysis of the Zero CMS installation based on the following local telemetry metrics collected in real-time, which now includes recent framework CVE database entries and local static analysis exploit scans:
 
-" . json_encode($telemetry, JSON_PRETTY_PRINT) . "
+" . \json_encode($telemetry, JSON_PRETTY_PRINT) . "
 
 Generate a highly polished, professional, and structured security report.
 

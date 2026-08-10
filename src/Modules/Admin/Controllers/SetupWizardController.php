@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * Zero CMS System Setup Wizard Controller
  *
@@ -38,15 +41,15 @@ class SetupWizardController
 
         if ($method === 'POST') {
             $inputs = [
-                'username' => trim($_POST['username'] ?? ''),
-                'email' => trim($_POST['email'] ?? ''),
+                'username' => \trim($_POST['username'] ?? ''),
+                'email' => \trim($_POST['email'] ?? ''),
                 'password' => $_POST['password'] ?? '',
                 'password_confirmation' => $_POST['password_confirmation'] ?? '',
-                'site_name' => trim($_POST['site_name'] ?? ''),
-                'site_domain' => trim($_POST['site_domain'] ?? ''),
-                'site_timezone' => trim($_POST['site_timezone'] ?? 'Pacific/Auckland'),
-                'site_language' => trim($_POST['site_language'] ?? 'en'),
-                'site_theme' => trim($_POST['site_theme'] ?? 'default')
+                'site_name' => \trim($_POST['site_name'] ?? ''),
+                'site_domain' => \trim($_POST['site_domain'] ?? ''),
+                'site_timezone' => \trim($_POST['site_timezone'] ?? 'Pacific/Auckland'),
+                'site_language' => \trim($_POST['site_language'] ?? 'en'),
+                'site_theme' => \trim($_POST['site_theme'] ?? 'default')
             ];
 
             try {
@@ -75,10 +78,10 @@ class SetupWizardController
 
         // Include the view template directly to make the Setup Wizard 100% self-contained
         $viewPath = APPLICATION_ROOT . '/src/Modules/Admin/Views/setup-wizard.php';
-        if (file_exists($viewPath)) {
+        if (\file_exists($viewPath)) {
             require $viewPath;
         } else {
-            http_response_code(500);
+            \http_response_code(500);
             echo "Setup Wizard View file not found.";
         }
         exit;
@@ -111,7 +114,7 @@ class SetupWizardController
                     $compiledErrors[] = $err;
                 }
             }
-            throw new Exception(implode(' | ', $compiledErrors));
+            throw new Exception(\implode(' | ', $compiledErrors));
         }
 
         if ($inputs['password'] !== $inputs['password_confirmation']) {
@@ -120,12 +123,12 @@ class SetupWizardController
 
         // 2. Programmatically Run Migrations Upward to establish the database schema
         try {
-            ob_start();
+            \ob_start();
             MigrationManager::up();
-            ob_end_clean();
+            \ob_end_clean();
         } catch (Exception $e) {
-            if (ob_get_level() > 0) {
-                ob_end_clean();
+            if (\ob_get_level() > 0) {
+                \ob_end_clean();
             }
             throw new Exception("Database Handshake Failure: " . $e->getMessage());
         }
@@ -154,12 +157,12 @@ class SetupWizardController
             $siteTheme,
             $siteTimezone,
             $siteLanguage,
-            json_encode(['blog', 'shop', 'forum', 'formbuilder', 'security', 'queue', 'site-search'])
+            \json_encode(['blog', 'shop', 'forum', 'formbuilder', 'security', 'queue', 'site-search'])
         ]);
 
         // 4. Create and hash the Super Admin credentials
         $userId = Security::uuidv7();
-        $passwordHash = password_hash($inputs['password'], PASSWORD_BCRYPT);
+        $passwordHash = \password_hash($inputs['password'], PASSWORD_BCRYPT);
 
         DB::query("
             INSERT INTO users (id, site_id, username, email, password_hash, role, created_at, updated_at)
@@ -174,7 +177,7 @@ class SetupWizardController
 
         // 5. Seed a basic dynamic home page record with standard layout content
         $pageId = Security::uuidv7();
-        $defaultContent = json_encode([
+        $defaultContent = \json_encode([
             [
                 'type' => 'text',
                 'title' => 'Welcome to Zero CMS!',
@@ -195,15 +198,15 @@ class SetupWizardController
         DB::query("UPDATE sites SET homepage_id = ? WHERE id = ?", [$pageId, $siteId]);
 
         // 6. Log the newly registered admin in and redirect to dashboard
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
+        if (\session_status() === PHP_SESSION_NONE) {
+            \session_start();
         }
         $_SESSION['user_id'] = $userId;
         $_SESSION['username'] = $inputs['username'];
         $_SESSION['role'] = 'super_admin';
 
         // Redirect directly to the back office
-        header('Location: /admin/dashboard');
+        \header('Location: /admin/dashboard');
         exit;
     }
 }

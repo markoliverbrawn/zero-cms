@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Modules/Forum/Controllers/ForumHomeController.php
  * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
@@ -8,8 +11,8 @@
 
 namespace Zero\Modules\Forum\Controllers;
 
-use Zero\Interfaces\Controller;
 use Zero\Core\App;
+use Zero\Interfaces\Controller;
 use Zero\Modules\Forum\Models\ForumBoard;
 
 /**

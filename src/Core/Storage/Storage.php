@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Core/Storage/Storage.php
  * Architectural Purpose: Core bootstrapping, system environment configuration, and utility class of the framework.
@@ -8,8 +11,8 @@
 
 namespace Zero\Core\Storage;
 
-use Zero\Core\Env;
 use Exception;
+use Zero\Core\Env;
 
 /**
  * Class Storage
@@ -116,11 +119,11 @@ class Storage
      */
     protected static function optimizeImageFile(string $filePath, string $destPath = ''): bool
     {
-        if (!file_exists($filePath) || is_dir($filePath)) {
+        if (!\file_exists($filePath) || \is_dir($filePath)) {
             return false;
         }
 
-        $info = @getimagesize($filePath);
+        $info = @\getimagesize($filePath);
         if (!$info) {
             return false;
         }
@@ -131,16 +134,16 @@ class Storage
         switch ($mime) {
             case 'image/jpeg':
             case 'image/jpg':
-                $srcImage = @imagecreatefromjpeg($filePath);
+                $srcImage = @\imagecreatefromjpeg($filePath);
                 break;
             case 'image/png':
-                $srcImage = @imagecreatefrompng($filePath);
+                $srcImage = @\imagecreatefrompng($filePath);
                 break;
             case 'image/webp':
-                $srcImage = @imagecreatefromwebp($filePath);
+                $srcImage = @\imagecreatefromwebp($filePath);
                 break;
             case 'image/gif':
-                $srcImage = @imagecreatefromgif($filePath);
+                $srcImage = @\imagecreatefromgif($filePath);
                 break;
         }
 
@@ -148,8 +151,8 @@ class Storage
             return false;
         }
 
-        $width = imagesx($srcImage);
-        $height = imagesy($srcImage);
+        $width = \imagesx($srcImage);
+        $height = \imagesy($srcImage);
         $maxDimension = 1200;
 
         $dstImage = $srcImage;
@@ -158,22 +161,22 @@ class Storage
         if ($width > $maxDimension || $height > $maxDimension) {
             if ($width > $height) {
                 $newWidth = $maxDimension;
-                $newHeight = (int)round(($height / $width) * $maxDimension);
+                $newHeight = (int)\round(($height / $width) * $maxDimension);
             } else {
                 $newHeight = $maxDimension;
-                $newWidth = (int)round(($width / $height) * $maxDimension);
+                $newWidth = (int)\round(($width / $height) * $maxDimension);
             }
 
-            $dstImage = imagecreatetruecolor($newWidth, $newHeight);
+            $dstImage = \imagecreatetruecolor($newWidth, $newHeight);
 
             if ($mime === 'image/png' || $mime === 'image/webp') {
-                imagealphablending($dstImage, false);
-                imagesavealpha($dstImage, true);
-                $transparent = imagecolorallocatealpha($dstImage, 255, 255, 255, 127);
-                imagefill($dstImage, 0, 0, $transparent);
+                \imagealphablending($dstImage, false);
+                \imagesavealpha($dstImage, true);
+                $transparent = \imagecolorallocatealpha($dstImage, 255, 255, 255, 127);
+                \imagefill($dstImage, 0, 0, $transparent);
             }
 
-            imagecopyresampled(
+            \imagecopyresampled(
                 $dstImage,
                 $srcImage,
                 0, 0, 0, 0,
@@ -184,34 +187,34 @@ class Storage
         }
 
         // Determine target output extension format from destPath
-        $ext = !empty($destPath) ? strtolower(pathinfo($destPath, PATHINFO_EXTENSION)) : '';
+        $ext = !empty($destPath) ? \strtolower(\pathinfo($destPath, PATHINFO_EXTENSION)) : '';
         if ($ext === 'jpeg') {
             $ext = 'jpg';
         }
-        if (!in_array($ext, ['jpg', 'png', 'webp', 'gif'])) {
+        if (!\in_array($ext, ['jpg', 'png', 'webp', 'gif'])) {
             $ext = ($mime === 'image/png') ? 'png' : (($mime === 'image/webp') ? 'webp' : (($mime === 'image/gif') ? 'gif' : 'jpg'));
         }
 
         $success = false;
         switch ($ext) {
             case 'jpg':
-                $success = @imagejpeg($dstImage, $filePath, 80);
+                $success = @\imagejpeg($dstImage, $filePath, 80);
                 break;
             case 'png':
-                $success = @imagepng($dstImage, $filePath, 7);
+                $success = @\imagepng($dstImage, $filePath, 7);
                 break;
             case 'webp':
-                $success = @imagewebp($dstImage, $filePath, 80);
+                $success = @\imagewebp($dstImage, $filePath, 80);
                 break;
             case 'gif':
-                $success = @imagegif($dstImage, $filePath);
+                $success = @\imagegif($dstImage, $filePath);
                 break;
         }
 
         if ($resized) {
-            imagedestroy($dstImage);
+            \imagedestroy($dstImage);
         }
-        imagedestroy($srcImage);
+        \imagedestroy($srcImage);
 
         return $success;
     }
@@ -250,15 +253,15 @@ class Storage
      */
     public static function write(string $path, string $content): bool
     {
-        $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
-        if (in_array($ext, ['jpg', 'jpeg', 'png', 'webp', 'gif'])) {
-            $tmp = tempnam(sys_get_temp_dir(), 'img_opt_');
+        $ext = \strtolower(\pathinfo($path, PATHINFO_EXTENSION));
+        if (\in_array($ext, ['jpg', 'jpeg', 'png', 'webp', 'gif'])) {
+            $tmp = \tempnam(\sys_get_temp_dir(), 'img_opt_');
             if ($tmp) {
-                file_put_contents($tmp, $content);
+                \file_put_contents($tmp, $content);
                 if (self::optimizeImageFile($tmp, $path)) {
-                    $content = file_get_contents($tmp);
+                    $content = \file_get_contents($tmp);
                 }
-                @unlink($tmp);
+                @\unlink($tmp);
             }
         }
         return self::getDriver()->write($path, $content);

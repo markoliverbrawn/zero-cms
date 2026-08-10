@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Modules/Shop/Controllers/Api/ProductsController.php
  * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
@@ -8,11 +11,11 @@
 
 namespace Zero\Modules\Shop\Controllers\Api;
 
+use Zero\Core\App;
+use Zero\Database\DB;
 use Zero\Http\Controllers\ApiController;
 use Zero\Modules\Shop\Models\Product;
 use Zero\Modules\Shop\Models\ProductVariant;
-use Zero\Core\App;
-use Zero\Database\DB;
 
 /**
  * Class ProductsController
@@ -54,8 +57,8 @@ class ProductsController extends ApiController
                     'title' => $prod->title,
                     'slug' => $prod->slug,
                     'sku' => $prod->sku,
-                    'price' => floatval($prod->price),
-                    'compare_at_price' => $prod->compare_at_price ? floatval($prod->compare_at_price) : null,
+                    'price' => \floatval($prod->price),
+                    'compare_at_price' => $prod->compare_at_price ? \floatval($prod->compare_at_price) : null,
                     'main_image' => $prod->main_image,
                     'status' => $prod->status,
                     'created_at' => $prod->created_at
@@ -63,13 +66,13 @@ class ProductsController extends ApiController
             }
             $this->respond([
                 'success' => true,
-                'total' => count($output),
+                'total' => \count($output),
                 'products' => $output
             ]);
         } else {
             // Handle Single View (search by ID or slug!)
             $product = null;
-            if (strlen($param) === 36) {
+            if (\strlen($param) === 36) {
                 $product = Product::find($param);
             }
             if (!$product) {
@@ -91,8 +94,8 @@ class ProductsController extends ApiController
                     'id' => $v->id,
                     'title' => $v->title,
                     'sku' => $v->sku,
-                    'price' => floatval($v->price),
-                    'stock' => intval($v->stock)
+                    'price' => \floatval($v->price),
+                    'stock' => \intval($v->stock)
                 ];
             }
 
@@ -112,8 +115,8 @@ class ProductsController extends ApiController
                     'slug' => $product->slug,
                     'sku' => $product->sku,
                     'description' => $product->description,
-                    'price' => floatval($product->price),
-                    'compare_at_price' => $product->compare_at_price ? floatval($product->compare_at_price) : null,
+                    'price' => \floatval($product->price),
+                    'compare_at_price' => $product->compare_at_price ? \floatval($product->compare_at_price) : null,
                     'main_image' => $product->main_image,
                     'status' => $product->status,
                     'variants' => $variantsOutput,

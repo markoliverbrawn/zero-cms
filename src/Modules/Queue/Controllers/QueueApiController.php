@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Modules/Queue/Controllers/QueueApiController.php
  * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
@@ -8,9 +11,9 @@
 
 namespace Zero\Modules\Queue\Controllers;
 
+use Zero\Core\Env;
 use Zero\Interfaces\Controller;
 use Zero\Modules\Queue\Support\QueueManager;
-use Zero\Core\Env;
 
 /**
  * Class QueueApiController
@@ -28,12 +31,12 @@ class QueueApiController implements Controller
     public function handle($param)
     {
         // Enforce Content-Type header
-        header('Content-Type: application/json');
+        \header('Content-Type: application/json');
 
         // 1. Enforce POST-only requests to prevent search crawler bot accidents
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            http_response_code(405);
-            echo json_encode(['error' => 'Method Not Allowed - POST required']);
+            \http_response_code(405);
+            echo \json_encode(['error' => 'Method Not Allowed - POST required']);
             exit;
         }
 
@@ -42,33 +45,33 @@ class QueueApiController implements Controller
         $requestToken = $_GET['token'] ?? $_SERVER['HTTP_X_QUEUE_TOKEN'] ?? null;
 
         if (empty($envToken)) {
-            http_response_code(500);
-            echo json_encode(['error' => 'Configuration Error - QUEUE_TRIGGER_TOKEN must be defined inside .env first']);
+            \http_response_code(500);
+            echo \json_encode(['error' => 'Configuration Error - QUEUE_TRIGGER_TOKEN must be defined inside .env first']);
             exit;
         }
 
         if ($requestToken !== $envToken) {
-            http_response_code(403);
-            echo json_encode(['error' => 'Forbidden - Invalid or missing queue trigger token']);
+            \http_response_code(403);
+            echo \json_encode(['error' => 'Forbidden - Invalid or missing queue trigger token']);
             exit;
         }
 
         // 3. Rate Limiting & Cooldown Lock to prevent thread/connection exhaustion
         $lockFile = APPLICATION_ROOT . '/storage/queue-web-lock.txt';
-        if (file_exists($lockFile)) {
-            $lastTrigger = filemtime($lockFile);
-            if (time() - $lastTrigger < 5) { // 5-second rate limiting cooldown
-                http_response_code(429);
-                echo json_encode(['error' => 'Too Many Requests - Rate limit cooldown active']);
+        if (\file_exists($lockFile)) {
+            $lastTrigger = \filemtime($lockFile);
+            if (\time() - $lastTrigger < 5) { // 5-second rate limiting cooldown
+                \http_response_code(429);
+                echo \json_encode(['error' => 'Too Many Requests - Rate limit cooldown active']);
                 exit;
             }
         }
-        touch($lockFile);
+        \touch($lockFile);
 
         // Execute non-blocking job run
         $processed = QueueManager::runNextPendingJob();
 
-        echo json_encode([
+        echo \json_encode([
             'success' => true,
             'processed' => $processed
         ]);

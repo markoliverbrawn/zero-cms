@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Modules/DemoGenerator/Seeders/documentation.php
  * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
@@ -579,9 +582,22 @@ Percentage of the requests served within a certain time (ms)
                     'content' => '<p>Zero CMS leverages PHP traits to provide extremely simple, Eloquent-like Active Record models. Place models inside the core namespace <code>src/Models/</code> or decoupled module namespaces <code>src/Modules/[ModuleName]/Models/</code>.</p><p>Extend the <code>Zero\\Interfaces\\Model</code> interface, and include <code>IsModel</code> for CRUD and <code>HasSlug</code> for slugs:</p><pre><code class="language-php">&lt;?php
 namespace Zero\\Modules\\Blog\\Models;
 
-use Zero\\Interfaces\\Model;
-use Zero\\Models\\Traits\\IsModel;
-use Zero\\Models\\Traits\\HasSlug;
+use Exception;
+use Zero\Core\App;
+use Zero\Core\Env;
+use Zero\Database\DB;
+use Zero\Interfaces\BlockHelperInterface;
+use Zero\Interfaces\Controller;
+use Zero\Interfaces\Job as JobInterface;
+use Zero\Interfaces\Model;
+use Zero\Interfaces\SeederInterface;
+use Zero\Models\Traits\HasSlug;
+use Zero\Models\Traits\IsModel;
+use Zero\Modules\Blog\Models\Post;
+use Zero\Modules\Search\Traits\Searchable;
+use Zero\Modules\Shop\Jobs\SendOrderReceipt;
+use Zero\Support\Emailer;
+use Zero\Support\Security;
 
 class Post implements Model {
     use IsModel, HasSlug;
@@ -654,8 +670,6 @@ class Post implements Model {
                     'language' => 'php',
                     'code' => '<?php
 // src/Modules/DemoGenerator/Seeders/my-preset.php
-use Zero\\Core\\Env;
-
 $domain = parse_url(Env::get(\'BASE_URL\', \'http://localhost\'), PHP_URL_HOST) ?: \'localhost\';
 
 return [
@@ -690,9 +704,22 @@ return [
                     'code' => '<?php
 namespace Zero\\Modules\\MyModule\\Seeders;
 
-use Zero\\Interfaces\\SeederInterface;
-use Zero\\Database\\DB;
-use Zero\\Support\\Security;
+use Exception;
+use Zero\Core\App;
+use Zero\Core\Env;
+use Zero\Database\DB;
+use Zero\Interfaces\BlockHelperInterface;
+use Zero\Interfaces\Controller;
+use Zero\Interfaces\Job as JobInterface;
+use Zero\Interfaces\Model;
+use Zero\Interfaces\SeederInterface;
+use Zero\Models\Traits\HasSlug;
+use Zero\Models\Traits\IsModel;
+use Zero\Modules\Blog\Models\Post;
+use Zero\Modules\Search\Traits\Searchable;
+use Zero\Modules\Shop\Jobs\SendOrderReceipt;
+use Zero\Support\Emailer;
+use Zero\Support\Security;
 
 class MyCustomSeeder implements SeederInterface
 {
@@ -748,8 +775,6 @@ class MyCustomSeeder implements SeederInterface
                     'language' => 'php',
                     'code' => 'namespace Zero\\Http\\Middleware;
 
-use Zero\\Core\\App;
-
 class AuthMiddleware
 {
     protected static $loginUrl = \'/admin/login\';
@@ -791,9 +816,22 @@ class AuthMiddleware
                     'content' => '<p>Controllers act as the bridge between Models and Views. They can reside in <code>src/Modules/[ModuleName]/Controllers/</code> and must implement the <code>Zero\\Interfaces\\Controller</code> interface.</p><pre><code class="language-php">&lt;?php
 namespace Zero\\Modules\\Blog\\Controllers;
 
-use Zero\\Interfaces\\Controller;
-use Zero\\Core\\App;
-use Zero\\Modules\\Blog\\Models\\Post;
+use Exception;
+use Zero\Core\App;
+use Zero\Core\Env;
+use Zero\Database\DB;
+use Zero\Interfaces\BlockHelperInterface;
+use Zero\Interfaces\Controller;
+use Zero\Interfaces\Job as JobInterface;
+use Zero\Interfaces\Model;
+use Zero\Interfaces\SeederInterface;
+use Zero\Models\Traits\HasSlug;
+use Zero\Models\Traits\IsModel;
+use Zero\Modules\Blog\Models\Post;
+use Zero\Modules\Search\Traits\Searchable;
+use Zero\Modules\Shop\Jobs\SendOrderReceipt;
+use Zero\Support\Emailer;
+use Zero\Support\Security;
 
 class BlogController implements Controller {
     public function handle($matches) {
@@ -1233,9 +1271,6 @@ self::registerBlock(\'accordion\', [
                     'language' => 'php',
                     'code' => 'namespace Zero\\Modules\\Blog\\Models;
 
-use Zero\\Interfaces\\Model;
-use Zero\\Models\\Traits\\IsModel;
-
 class Comment implements Model
 {
     use IsModel;
@@ -1281,9 +1316,6 @@ class Comment implements Model
                     'language' => 'php',
                     'code' => 'namespace Zero\\Modules\\Shop\\Models;
 
-use Zero\\Interfaces\\Model;
-use Zero\\Models\\Traits\\IsModel;
-
 class Product implements Model
 {
     use IsModel;
@@ -1302,9 +1334,6 @@ class Product implements Model
                     'title' => 'Product Variant Model (ProductVariant.php)',
                     'language' => 'php',
                     'code' => 'namespace Zero\\Modules\\Shop\\Models;
-
-use Zero\\Interfaces\\Model;
-use Zero\\Models\\Traits\\IsModel;
 
 class ProductVariant implements Model
 {
@@ -1326,9 +1355,6 @@ class ProductVariant implements Model
                     'language' => 'php',
                     'code' => 'namespace Zero\\Modules\\Shop\\Models;
 
-use Zero\\Interfaces\\Model;
-use Zero\\Models\\Traits\\IsModel;
-
 class Order implements Model
 {
     use IsModel;
@@ -1348,9 +1374,6 @@ class OrderItem implements Model
                     'title' => 'ACID Transaction & Stock Locking Checkout Workflow',
                     'language' => 'php',
                     'code' => 'namespace Zero\\Modules\\Shop\\Controllers;
-
-use Zero\\Database\\DB;
-use Exception;
 
 class CheckoutController
 {
@@ -1415,9 +1438,6 @@ class CheckoutController
                     'title' => 'Submissions Model (Submission.php)',
                     'language' => 'php',
                     'code' => 'namespace Zero\\Modules\\FormBuilder\\Models;
-
-use Zero\\Interfaces\\Model;
-use Zero\\Models\\Traits\\IsModel;
 
 class Submission implements Model
 {
@@ -1527,9 +1547,6 @@ $submission->save(); // Inserts into form_submissions table under active site_id
                     'title' => 'Hooking Comments Notification Callback Triggers',
                     'language' => 'php',
                     'code' => 'namespace Zero\\Modules\\Blog\\Controllers\\Api;
-
-use Zero\\Database\\DB;
-use Zero\\Support\\Emailer;
 
 class CustomCommentsHandler 
 {
@@ -1715,8 +1732,22 @@ class CustomCommentsHandler
 
 namespace Zero\\Modules\\Shop\\Jobs;
 
-use Zero\\Interfaces\\Job as JobInterface;
-use Zero\\Support\\Emailer;
+use Exception;
+use Zero\Core\App;
+use Zero\Core\Env;
+use Zero\Database\DB;
+use Zero\Interfaces\BlockHelperInterface;
+use Zero\Interfaces\Controller;
+use Zero\Interfaces\Job as JobInterface;
+use Zero\Interfaces\Model;
+use Zero\Interfaces\SeederInterface;
+use Zero\Models\Traits\HasSlug;
+use Zero\Models\Traits\IsModel;
+use Zero\Modules\Blog\Models\Post;
+use Zero\Modules\Search\Traits\Searchable;
+use Zero\Modules\Shop\Jobs\SendOrderReceipt;
+use Zero\Support\Emailer;
+use Zero\Support\Security;
 
 class SendOrderReceipt implements JobInterface
 {
@@ -1734,8 +1765,6 @@ class SendOrderReceipt implements JobInterface
                     'type' => 'text',
                     'title' => 'Step 2: Dispatch the Job to the Queue',
                     'content' => '<p>To queue your task, invoke the static <code>QueueManager::dispatch()</code> helper from anywhere in your application (controllers, hooks, model events, etc.). The dispatcher automatically serializes parameters to JSON and generates a unique UUIDv7 tracking ID:</p><pre><code class="language-php">use Zero\\Modules\\Queue\\Support\\QueueManager;
-use Zero\\Modules\\Shop\\Jobs\\SendOrderReceipt;
-
 // Queue receipt dispatching
 $jobId = QueueManager::dispatch(
     jobClass: SendOrderReceipt::class,
@@ -2090,10 +2119,6 @@ SEARCH_DRIVER=database</code></pre>',
                     'language' => 'php',
                     'code' => 'namespace Zero\\Custom\\Models;
 
-use Zero\\Interfaces\\Model;
-use Zero\\Models\\Traits\\IsModel;
-use Zero\\Modules\\Search\\Traits\\Searchable;
-
 class CustomBook implements Model
 {
     // 1. Import Searchable Trait alongside standard active-record IsModel
@@ -2114,8 +2139,6 @@ class CustomBook implements Model
                     'title' => '5. Developer How-To: Creating Custom Block Helpers',
                     'language' => 'php',
                     'code' => 'namespace Zero\\Blocks;
-
-use Zero\\Interfaces\\BlockHelperInterface;
 
 class ProductShowcaseBlock implements BlockHelperInterface
 {

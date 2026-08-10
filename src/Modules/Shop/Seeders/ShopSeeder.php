@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * Zero CMS Shop Module Dynamic Seeder
  *
@@ -11,8 +14,8 @@
 namespace Zero\Modules\Shop\Seeders;
 
 use Exception;
-use Zero\Interfaces\SeederInterface;
 use Zero\Database\DB;
+use Zero\Interfaces\SeederInterface;
 use Zero\Support\Security;
 
 /**
@@ -59,8 +62,8 @@ class ShopSeeder implements SeederInterface
             throw new Exception("Seeding error: Target site ID '{$siteId}' not found.");
         }
 
-        $enabled = json_decode($site['enabled_modules'] ?? '[]', true);
-        if (!in_array('shop', $enabled)) {
+        $enabled = \json_decode($site['enabled_modules'] ?? '[]', true);
+        if (!\in_array('shop', $enabled)) {
             throw new Exception("Seeding error: Module 'shop' is not active for site '{$site['name']}'.");
         }
 
@@ -70,7 +73,7 @@ class ShopSeeder implements SeederInterface
 
         // Load the declarative blueprints from blueprints.php
         $shopDataPath = __DIR__ . '/blueprints.php';
-        if (!file_exists($shopDataPath)) {
+        if (!\file_exists($shopDataPath)) {
             throw new Exception("Seeding error: blueprints.php file not found.");
         }
         $shopData = require $shopDataPath;
@@ -166,10 +169,10 @@ class ShopSeeder implements SeederInterface
                 ]);
             }
 
-            echo "   Created Product: '{$p['title']}' ({$p['sku']}) with " . count($p['variants']) . " variants\n";
+            echo "   Created Product: '{$p['title']}' ({$p['sku']}) with " . \count($p['variants']) . " variants\n";
         }
 
-        echo "--> Successfully seeded " . count($productsList) . " target products and variants.\n";
+        echo "--> Successfully seeded " . \count($productsList) . " target products and variants.\n";
 
         // 5. Generate and seed orders procedural stream
         $numOrders = 60;
@@ -187,19 +190,19 @@ class ShopSeeder implements SeederInterface
         for ($i = 0; $i < $numOrders; $i++) {
             $orderId = Security::uuidv7();
 
-            $fname = $firstNames[array_rand($firstNames)];
-            $lname = $lastNames[array_rand($lastNames)];
+            $fname = $firstNames[\array_rand($firstNames)];
+            $lname = $lastNames[\array_rand($lastNames)];
             $customerName = "{$fname} {$lname}";
-            $customerEmail = strtolower($fname . "." . $lname . "_" . rand(100, 999) . "@example.com");
-            $shippingAddress = rand(10, 999) . " " . $streets[array_rand($streets)] . ", Suite " . rand(1, 10) . ", " . $sectors[array_rand($sectors)];
+            $customerEmail = \strtolower($fname . "." . $lname . "_" . \rand(100, 999) . "@example.com");
+            $shippingAddress = \rand(10, 999) . " " . $streets[\array_rand($streets)] . ", Suite " . \rand(1, 10) . ", " . $sectors[\array_rand($sectors)];
 
-            $daysAgo = rand(0, 30);
-            $hoursAgo = rand(0, 23);
-            $minsAgo = rand(0, 59);
-            $secsAgo = rand(0, 59);
-            $createdAt = gmdate('Y-m-d H:i:s', strtotime("-{$daysAgo} days -{$hoursAgo} hours -{$minsAgo} minutes -{$secsAgo} seconds"));
+            $daysAgo = \rand(0, 30);
+            $hoursAgo = \rand(0, 23);
+            $minsAgo = \rand(0, 59);
+            $secsAgo = \rand(0, 59);
+            $createdAt = \gmdate('Y-m-d H:i:s', \strtotime("-{$daysAgo} days -{$hoursAgo} hours -{$minsAgo} minutes -{$secsAgo} seconds"));
 
-            $statusRoll = rand(1, 100);
+            $statusRoll = \rand(1, 100);
             if ($statusRoll <= 50) {
                 $status = "completed";
             } elseif ($statusRoll <= 75) {
@@ -210,9 +213,9 @@ class ShopSeeder implements SeederInterface
                 $status = "pending";
             }
 
-            $numItems = rand(1, 3);
-            $selectedProductKeys = array_rand($productsList, $numItems);
-            if (!is_array($selectedProductKeys)) {
+            $numItems = \rand(1, 3);
+            $selectedProductKeys = \array_rand($productsList, $numItems);
+            if (!\is_array($selectedProductKeys)) {
                 $selectedProductKeys = [$selectedProductKeys];
             }
 
@@ -222,7 +225,7 @@ class ShopSeeder implements SeederInterface
             foreach ($selectedProductKeys as $prodKey) {
                 $product = $productsList[$prodKey];
                 $itemId = Security::uuidv7();
-                $qty = rand(1, 3);
+                $qty = \rand(1, 3);
                 $price = $product['price'];
                 $itemTotal = $qty * $price;
                 $totalPrice += $itemTotal;

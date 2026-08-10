@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File: src/Modules/Admin/Controllers/Api/AdminApiController.php
  * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
@@ -33,8 +36,8 @@ class AdminApiController extends ApiController
      */
     protected function authenticate(): array
     {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
+        if (\session_status() === PHP_SESSION_NONE) {
+            \session_start();
         }
 
         $userId = $_SESSION['user_id'] ?? null;
@@ -55,13 +58,13 @@ class AdminApiController extends ApiController
 
         // Apply CSRF validation for state-modifying requests (POST, PUT, PATCH, DELETE)
         $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
-        if (in_array($method, ['POST', 'PUT', 'PATCH', 'DELETE'])) {
+        if (\in_array($method, ['POST', 'PUT', 'PATCH', 'DELETE'])) {
             // Check HTTP headers first, then fallback to JSON body or POST variables
             $csrfToken = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? $_POST['csrf'] ?? '';
             
             if (empty($csrfToken)) {
-                $rawBody = file_get_contents('php://input');
-                $jsonData = json_decode($rawBody, true);
+                $rawBody = \file_get_contents('php://input');
+                $jsonData = \json_decode($rawBody, true);
                 $csrfToken = $jsonData['csrf'] ?? '';
             }
 
@@ -89,14 +92,14 @@ class AdminApiController extends ApiController
         $siteId = App::getCurrentSiteId();
         
         $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
-        $uri = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH);
+        $uri = \parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH);
 
         // Parse JSON or standard post body
-        $raw = file_get_contents('php://input');
-        $body = json_decode($raw, true) ?? $_POST;
+        $raw = \file_get_contents('php://input');
+        $body = \json_decode($raw, true) ?? $_POST;
 
         // Route: /api/v1/admin/files
-        if (preg_match('#^/api/v1/admin/files/?$#', $uri)) {
+        if (\preg_match('#^/api/v1/admin/files/?$#', $uri)) {
             if ($method === 'GET') {
                 $this->handleGetFiles($siteId);
             } elseif ($method === 'POST') {
@@ -109,7 +112,7 @@ class AdminApiController extends ApiController
         }
 
         // Route: /api/v1/admin/models/([a-zA-Z0-9_-]+) (POST/create)
-        if (preg_match('#^/api/v1/admin/models/([a-zA-Z0-9_-]+)/?$#', $uri, $routeMatches)) {
+        if (\preg_match('#^/api/v1/admin/models/([a-zA-Z0-9_-]+)/?$#', $uri, $routeMatches)) {
             $modelName = $routeMatches[1];
             if ($method === 'POST') {
                 $this->handleSaveModel($modelName, null, $body);
@@ -117,7 +120,7 @@ class AdminApiController extends ApiController
         }
 
         // Route: /api/v1/admin/models/([a-zA-Z0-9_-]+)/reorder (POST)
-        if (preg_match('#^/api/v1/admin/models/([a-zA-Z0-9_-]+)/reorder/?$#', $uri, $routeMatches)) {
+        if (\preg_match('#^/api/v1/admin/models/([a-zA-Z0-9_-]+)/reorder/?$#', $uri, $routeMatches)) {
             $modelName = $routeMatches[1];
             if ($method === 'POST') {
                 $this->handleReorderModel($modelName, $body);
@@ -125,7 +128,7 @@ class AdminApiController extends ApiController
         }
 
         // Route: /api/v1/admin/models/([a-zA-Z0-9_-]+)/([a-zA-Z0-9\-]+)/cascade-check (GET)
-        if (preg_match('#^/api/v1/admin/models/([a-zA-Z0-9_-]+)/([a-zA-Z0-9\-]+)/cascade-check$#', $uri, $routeMatches)) {
+        if (\preg_match('#^/api/v1/admin/models/([a-zA-Z0-9_-]+)/([a-zA-Z0-9\-]+)/cascade-check$#', $uri, $routeMatches)) {
             $modelName = $routeMatches[1];
             $id = $routeMatches[2];
             if ($method === 'GET') {
@@ -134,7 +137,7 @@ class AdminApiController extends ApiController
         }
 
         // Route: /api/v1/admin/models/([a-zA-Z0-9_-]+)/([a-zA-Z0-9\-]+) (PATCH/edit or DELETE/delete)
-        if (preg_match('#^/api/v1/admin/models/([a-zA-Z0-9_-]+)/([a-zA-Z0-9\-]+)$#', $uri, $routeMatches)) {
+        if (\preg_match('#^/api/v1/admin/models/([a-zA-Z0-9_-]+)/([a-zA-Z0-9\-]+)$#', $uri, $routeMatches)) {
             $modelName = $routeMatches[1];
             $id = $routeMatches[2];
             
@@ -146,28 +149,28 @@ class AdminApiController extends ApiController
         }
 
         // Route: /api/v1/admin/audit-logs/purge
-        if (preg_match('#^/api/v1/admin/audit-logs/purge/?$#', $uri)) {
+        if (\preg_match('#^/api/v1/admin/audit-logs/purge/?$#', $uri)) {
             if ($method === 'POST') {
                 $this->handlePurgeAuditLogs($siteId, $user, $body);
             }
         }
 
         // Route: /api/v1/admin/preferences
-        if (preg_match('#^/api/v1/admin/preferences/?$#', $uri)) {
+        if (\preg_match('#^/api/v1/admin/preferences/?$#', $uri)) {
             if ($method === 'PATCH' || $method === 'POST') {
                 $this->handleSavePreferences($user['id'], $body);
             }
         }
 
         // Route: /api/v1/admin/block-preview
-        if (preg_match('#^/api/v1/admin/block-preview/?$#', $uri)) {
+        if (\preg_match('#^/api/v1/admin/block-preview/?$#', $uri)) {
             if ($method === 'POST') {
                 $this->handleBlockPreview($body);
             }
         }
 
         // Route: /api/v1/admin/ai/generate-summary
-        if (preg_match('#^/api/v1/admin/ai/generate-summary/?$#', $uri)) {
+        if (\preg_match('#^/api/v1/admin/ai/generate-summary/?$#', $uri)) {
             if ($method === 'POST') {
                 $this->handleAiGenerateSummary($body);
             }
@@ -201,7 +204,7 @@ class AdminApiController extends ApiController
             $summary = AiService::generate($prompt);
             $this->respond([
                 'success' => true,
-                'summary' => trim($summary)
+                'summary' => \trim($summary)
             ]);
         } catch (\Exception $e) {
             $this->respond([
@@ -229,9 +232,9 @@ class AdminApiController extends ApiController
         // 2. Check if the block has a registered, module-owned 'frontend_view' path.
         // 3. Graceful legacy fallback.
         $blockPath = APPLICATION_ROOT . '/src/Views/themes/' . $theme . '/blocks/' . $type . '.php';
-        if (!file_exists($blockPath)) {
+        if (!\file_exists($blockPath)) {
             $registeredBlock = App::getRegisteredBlocks()[$type] ?? [];
-            if (!empty($registeredBlock['frontend_view']) && file_exists($registeredBlock['frontend_view'])) {
+            if (!empty($registeredBlock['frontend_view']) && \file_exists($registeredBlock['frontend_view'])) {
                 $blockPath = $registeredBlock['frontend_view'];
             } else {
                 $blockPath = APPLICATION_ROOT . '/src/Views/themes/default/blocks/' . $type . '.php';
@@ -241,18 +244,18 @@ class AdminApiController extends ApiController
         // Custom mock resolver helper
         $resolveMedia = function($idOrPath) {
             if (empty($idOrPath)) return '';
-            if (strpos($idOrPath, '/') === 0) return Storage::getUrl($idOrPath);
+            if (\strpos($idOrPath, '/') === 0) return Storage::getUrl($idOrPath);
             $media = Media::find($idOrPath);
             return $media ? Storage::getUrl($media->path) : '';
         };
 
-        if (file_exists($blockPath)) {
-            ob_start();
+        if (\file_exists($blockPath)) {
+            \ob_start();
             echo Template::renderFile($blockPath, [
                 'block' => $block,
                 'resolveMedia' => $resolveMedia
             ]);
-            $html = ob_get_clean();
+            $html = \ob_get_clean();
             
             // Clean/Sanitise HTML output for XSS (bypass dynamically based on the block's registered configuration option)
             $registeredBlock = App::getRegisteredBlocks()[$type] ?? [];
@@ -270,7 +273,7 @@ class AdminApiController extends ApiController
             if ($hideTitle !== '1' && !empty($title) && $type !== 'baseline') {
                 if ($theme === 'kitchensink') {
                     $tag = $hideTitle === '2' ? 'h1' : 'h3';
-                    $colorVar = in_array($type, ['text_image', 'testimonials', 'gallery']) ? '--neon-pink' : '--neon-cyan';
+                    $colorVar = \in_array($type, ['text_image', 'testimonials', 'gallery']) ? '--neon-pink' : '--neon-cyan';
                     $titleHtml = '<' . $tag . ' style="color: var(' . $colorVar . '); margin-bottom: 1.25rem;">' . Security::sanitizeHtml($title) . '</' . $tag . '>';
                 } else {
                     $tag = $hideTitle === '2' ? 'h1' : 'h2';
@@ -286,7 +289,7 @@ class AdminApiController extends ApiController
             
             // Dynamically load block-specific styles if they exist on disk (e.g. blocks/text_image.css)
             $blockCss = '/assets/css/blocks/' . $type . '.css';
-            if (file_exists(APPLICATION_ROOT . '/public' . $blockCss)) {
+            if (\file_exists(APPLICATION_ROOT . '/public' . $blockCss)) {
                 $themeStylesheets[] = $blockCss;
             }
 
@@ -297,7 +300,7 @@ class AdminApiController extends ApiController
             } else {
                 // Fallback to convention-based path
                 $fallbackPath = '/assets/css/themes/' . $theme . '/' . $theme . '.css';
-                if (file_exists(APPLICATION_ROOT . '/public' . $fallbackPath)) {
+                if (\file_exists(APPLICATION_ROOT . '/public' . $fallbackPath)) {
                     $themeStylesheets[] = $fallbackPath;
                 }
             }
@@ -327,7 +330,7 @@ class AdminApiController extends ApiController
         }
 
         $record = $model::find($id);
-        if (!$record && method_exists($model, 'findTrashed')) {
+        if (!$record && \method_exists($model, 'findTrashed')) {
             $record = $model::findTrashed($id);
         }
         if (!$record) {
@@ -336,9 +339,9 @@ class AdminApiController extends ApiController
 
         // Check if model uses CascadesDeletes trait or has getCascadeDeletes method
         $cascadeModels = [];
-        if (method_exists($record, 'getCascadeDeletes')) {
+        if (\method_exists($record, 'getCascadeDeletes')) {
             $cascadeModels = $record->getCascadeDeletes();
-        } elseif (property_exists($model, 'cascadeDeletes')) {
+        } elseif (\property_exists($model, 'cascadeDeletes')) {
             try {
                 $reflector = new \ReflectionClass($model);
                 if ($reflector->hasProperty('cascadeDeletes')) {
@@ -354,7 +357,7 @@ class AdminApiController extends ApiController
         $labels = [];
         if (!empty($cascadeModels)) {
             foreach ($cascadeModels as $childClass => $foreignKey) {
-                if (class_exists($childClass)) {
+                if (\class_exists($childClass)) {
                     try {
                         $reflector = new \ReflectionClass($childClass);
                         $prop = $reflector->getProperty('tableName');
@@ -380,7 +383,7 @@ class AdminApiController extends ApiController
 
         $details = '';
         if (!empty($labels)) {
-            $details = "Soft deleting this record will automatically cascade into:\n" . implode("\n", $labels);
+            $details = "Soft deleting this record will automatically cascade into:\n" . \implode("\n", $labels);
         }
 
         $this->respond([
@@ -404,11 +407,11 @@ class AdminApiController extends ApiController
             $this->respond(['success' => false, 'error' => 'Missing ID(s)'], 400);
         }
 
-        $ids = is_array($idsInput) ? $idsInput : explode(',', $idsInput);
+        $ids = \is_array($idsInput) ? $idsInput : \explode(',', $idsInput);
         $deletedCount = 0;
 
         foreach ($ids as $id) {
-            $id = trim($id);
+            $id = \trim($id);
             if (empty($id)) continue;
 
             $stmt = DB::query("SELECT * FROM media WHERE id = ? AND site_id = ? AND deleted_at IS NULL LIMIT 1", [$id, $siteId]);
@@ -494,8 +497,8 @@ class AdminApiController extends ApiController
     protected function handleGetFiles($siteId)
     {
         $folder = $_GET['folder'] ?? '';
-        $folder = preg_replace('/[^a-zA-Z0-9_\-\/]/', '_', $folder);
-        $folder = trim($folder, '/');
+        $folder = \preg_replace('/[^a-zA-Z0-9_\-\/]/', '_', $folder);
+        $folder = \trim($folder, '/');
 
         // Check if pagination/infinite scroll is requested via query param page
         if (isset($_GET['page'])) {
@@ -511,23 +514,23 @@ class AdminApiController extends ApiController
             $totalStmt = DB::query("SELECT COUNT(*) as total FROM media WHERE folder = ? AND site_id = ? AND deleted_at IS NULL", [$folder, $siteId]);
             $totalResult = $totalStmt->fetch(\PDO::FETCH_ASSOC);
             $total = (int)($totalResult['total'] ?? 0);
-            $hasMore = ($offset + count($files)) < $total;
+            $hasMore = ($offset + \count($files)) < $total;
 
             $html = '';
             $csrfToken = $_SESSION['csrf'] ?? '';
             foreach ($files as $f) {
-                ob_start();
-                $isImage = !empty($f['mime']) && str_starts_with($f['mime'], 'image/');
+                \ob_start();
+                $isImage = !empty($f['mime']) && \str_starts_with($f['mime'], 'image/');
                 $filename = $f['filename'] ?? '';
                 $path = $f['path'] ?? '';
                 $id = $f['id'] ?? '';
                 $createdAt = $f['created_at'] ?? '';
                 $mime = $f['mime'] ?? '';
-                $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+                $ext = \strtolower(\pathinfo($filename, PATHINFO_EXTENSION));
                 $csrf = $csrfToken;
                 $currentFolder = $folder;
                 include APPLICATION_ROOT . '/src/Modules/Admin/Views/files/card.php';
-                $html .= ob_get_clean();
+                $html .= \ob_get_clean();
             }
 
             $this->respond([
@@ -561,7 +564,7 @@ class AdminApiController extends ApiController
             $this->respond(['success' => false, 'error' => 'Missing file ID(s)'], 400);
         }
 
-        $fileIds = is_array($fileIdInput) ? $fileIdInput : explode(',', $fileIdInput);
+        $fileIds = \is_array($fileIdInput) ? $fileIdInput : \explode(',', $fileIdInput);
 
         // Get the destination folder path
         $destinationFolder = '';
@@ -580,7 +583,7 @@ class AdminApiController extends ApiController
         $errors = [];
 
         foreach ($fileIds as $fileId) {
-            $fileId = trim($fileId);
+            $fileId = \trim($fileId);
             if (empty($fileId)) continue;
 
             $stmt = DB::query("SELECT * FROM media WHERE id = ? AND site_id = ? AND deleted_at IS NULL LIMIT 1", [$fileId, $siteId]);
@@ -593,9 +596,9 @@ class AdminApiController extends ApiController
             $currentDestinationFolder = $destinationFolder;
             if ($targetFolderId === 'parent') {
                 $currentFolder = $fileRecord['folder'] ?? '';
-                $parts = explode('/', $currentFolder);
-                array_pop($parts);
-                $currentDestinationFolder = implode('/', $parts);
+                $parts = \explode('/', $currentFolder);
+                \array_pop($parts);
+                $currentDestinationFolder = \implode('/', $parts);
             }
 
             $oldPhysicalPath = APPLICATION_ROOT . $fileRecord['path'];
@@ -607,7 +610,7 @@ class AdminApiController extends ApiController
             }
 
             $newPhysicalPath = $newPhysicalDir . '/' . $newFilename;
-            $info = pathinfo($newFilename);
+            $info = \pathinfo($newFilename);
             $counter = 1;
             while (Storage::exists($newPhysicalPath)) {
                 $newFilename = $info['filename'] . '_' . $counter . '.' . ($info['extension'] ?? '');
@@ -719,20 +722,20 @@ class AdminApiController extends ApiController
         }
 
         // Check if model has IsOrderable trait or supports reordering
-        $traits = class_uses($model);
+        $traits = \class_uses($model);
         $isOrderable = isset($traits[IsOrderable::/**
  * Class 
  *
  * Provides structural platform implementation and operational encapsulation.
  */
-class]) || (method_exists($model, 'isOrderable') && $model::isOrderable());
+class]) || (\method_exists($model, 'isOrderable') && $model::isOrderable());
 
         if (!$isOrderable) {
             $this->respond(['success' => false, 'error' => 'Model is not orderable'], 400);
         }
 
         $ids = $body['ids'] ?? [];
-        if (!is_array($ids)) {
+        if (!\is_array($ids)) {
             $this->respond(['success' => false, 'error' => 'Invalid or missing ids array'], 400);
         }
 
@@ -773,15 +776,15 @@ class]) || (method_exists($model, 'isOrderable') && $model::isOrderable());
             if ($fieldConfig['editable'] ?? false) {
                 $val = $body[$field] ?? '';
                 // Automatically json_encode array values (such as enabled_modules checkbox arrays!)
-                if (is_array($val)) {
-                    $val = json_encode($val);
+                if (\is_array($val)) {
+                    $val = \json_encode($val);
                 }
                 $data[$field] = $val;
             }
         }
 
         // Auto-generate slug if the model has a slug property and title is set (bypassed for pages which compiles slugs hierarchically)
-        if ($modelName !== 'pages' && property_exists($model, 'slug') && isset($data['title'])) {
+        if ($modelName !== 'pages' && \property_exists($model, 'slug') && isset($data['title'])) {
             $inputSlug = $data['slug'] ?? '';
             if (empty($inputSlug)) {
                 $data['slug'] = App::slugify($data['title']);
@@ -837,7 +840,7 @@ class]) || (method_exists($model, 'isOrderable') && $model::isOrderable());
 
         if ($action === 'save_layout') {
             $layout = $body['layout'] ?? [];
-            if (!is_array($layout)) {
+            if (!\is_array($layout)) {
                 $this->respond(['success' => false, 'error' => 'Invalid layout data'], 400);
             }
 
@@ -845,7 +848,7 @@ class]) || (method_exists($model, 'isOrderable') && $model::isOrderable());
             $prefs = User::getPreferencesForUser($userId);
             $prefs['dashboard_layout'] = $layout;
             
-            DB::query("UPDATE users SET preferences = ? WHERE id = ?", [json_encode($prefs), $userId]);
+            DB::query("UPDATE users SET preferences = ? WHERE id = ?", [\json_encode($prefs), $userId]);
             $this->respond(['success' => true]);
         }
 
@@ -855,19 +858,19 @@ class]) || (method_exists($model, 'isOrderable') && $model::isOrderable());
         $widgets = $body['widgets'] ?? [];
         $language = $body['language'] ?? 'en';
         $timezone = $body['timezone'] ?? 'UTC';
-        $perPage = intval($body['per_page'] ?? 20);
+        $perPage = \intval($body['per_page'] ?? 20);
 
         // Basic validation
-        if (!in_array($theme, ['light', 'dark'])) {
+        if (!\in_array($theme, ['light', 'dark'])) {
             $theme = 'light';
         }
-        if (!in_array($themePreset, ['default', 'vintage-greenscreen'])) {
+        if (!\in_array($themePreset, ['default', 'vintage-greenscreen'])) {
             $themePreset = 'default';
         }
-        if (!in_array($language, ['en', 'es', 'mi', 'hr'])) {
+        if (!\in_array($language, ['en', 'es', 'mi', 'hr'])) {
             $language = 'en';
         }
-        if (!in_array($perPage, [10, 20, 50, 100])) {
+        if (!\in_array($perPage, [10, 20, 50, 100])) {
             $perPage = 20;
         }
 
@@ -882,7 +885,7 @@ class]) || (method_exists($model, 'isOrderable') && $model::isOrderable());
         // Reset translation cache to apply language changes on the current page load instantly
         I18n::reset();
 
-        DB::query("UPDATE users SET preferences = ? WHERE id = ?", [json_encode($prefs), $userId]);
+        DB::query("UPDATE users SET preferences = ? WHERE id = ?", [\json_encode($prefs), $userId]);
         $this->respond(['success' => true]);
     }
 
@@ -899,22 +902,22 @@ class]) || (method_exists($model, 'isOrderable') && $model::isOrderable());
         }
 
         $file = $_FILES['file'];
-        $filename = basename($file['name']);
-        $filename = preg_replace('/[^a-zA-Z0-9._-]/', '_', $filename);
+        $filename = \basename($file['name']);
+        $filename = \preg_replace('/[^a-zA-Z0-9._-]/', '_', $filename);
 
         $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp', 'pdf', 'doc', 'docx', 'zip', 'txt', 'mp4'];
         $allowedMimeTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/svg+xml', 'image/webp', 'application/pdf', 'application/zip', 'text/plain', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'video/mp4'];
 
-        $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
-        $detectedMime = mime_content_type($file['tmp_name']);
+        $ext = \strtolower(\pathinfo($filename, PATHINFO_EXTENSION));
+        $detectedMime = \mime_content_type($file['tmp_name']);
 
-        if (!in_array($ext, $allowedExtensions) || !in_array($detectedMime, $allowedMimeTypes)) {
+        if (!\in_array($ext, $allowedExtensions) || !\in_array($detectedMime, $allowedMimeTypes)) {
             $this->respond(['success' => false, 'error' => 'Forbidden file extension or invalid file type.'], 403);
         }
 
         $currentFolder = $_POST['folder'] ?? '';
-        $currentFolder = preg_replace('/[^a-zA-Z0-9_\-\/]/', '_', $currentFolder);
-        $currentFolder = trim($currentFolder, '/');
+        $currentFolder = \preg_replace('/[^a-zA-Z0-9_\-\/]/', '_', $currentFolder);
+        $currentFolder = \trim($currentFolder, '/');
 
         $uploadsDir = APPLICATION_ROOT . '/public/storage/uploads/' . $siteId . (!empty($currentFolder) ? '/' . $currentFolder : '');
         if (!Storage::exists($uploadsDir)) {
@@ -922,7 +925,7 @@ class]) || (method_exists($model, 'isOrderable') && $model::isOrderable());
         }
 
         $targetPath = $uploadsDir . '/' . $filename;
-        $info = pathinfo($filename);
+        $info = \pathinfo($filename);
         $counter = 1;
         while (Storage::exists($targetPath)) {
             $filename = $info['filename'] . '_' . $counter . '.' . ($info['extension'] ?? '');
@@ -930,7 +933,7 @@ class]) || (method_exists($model, 'isOrderable') && $model::isOrderable());
             $counter++;
         }
 
-        $mime = mime_content_type($file['tmp_name']);
+        $mime = \mime_content_type($file['tmp_name']);
         if ($mime === 'image/svg+xml' || $ext === 'svg') {
             if (!Security::sanitizeSvg($file['tmp_name'])) {
                 $this->respond(['success' => false, 'error' => 'Invalid SVG file or sanitization failed.'], 400);
@@ -957,7 +960,7 @@ class]) || (method_exists($model, 'isOrderable') && $model::isOrderable());
                     'path' => $dbPath,
                     'mime' => $mime,
                     'folder' => $currentFolder,
-                    'created_at' => gmdate('Y-m-d H:i:s')
+                    'created_at' => \gmdate('Y-m-d H:i:s')
                 ]
             ]);
         } else {
