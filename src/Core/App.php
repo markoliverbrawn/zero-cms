@@ -48,6 +48,7 @@ class App
     protected static $registeredBlocks = [];
     protected static $registeredModels = [];
     protected static $themeFallbacks = [];
+    protected static $themePaths = [];
     protected static $adminSidebarSections = [];
     protected static $themeStylesheets = [];
     protected static $nonce = '';
@@ -986,6 +987,80 @@ class);
     }
 
     /**
+     * Register an absolute filesystem directory as the source for a theme name, taking
+     * precedence over the bundled theme of the same name shipped inside this repo. Lets a
+     * host project embedding Zero as a git submodule keep its own themes entirely in its own
+     * tree (e.g. registered from the host's own bootstrap, before App::bootstrap() runs)
+     * instead of committing them inside the submodule.
+     *
+     * @param string $themeName
+     * @param string $absoluteDir
+     * @return void
+     */
+    public static function registerThemePath(string $themeName, string $absoluteDir): void
+    {
+        self::$themePaths[$themeName] = \rtrim($absoluteDir, '/');
+    }
+
+    /**
+     * Get the names of all themes registered via registerThemePath(), e.g. for building an
+     * admin theme picker that also lists themes contributed from outside this repo.
+     *
+     * @return array<string>
+     */
+    public static function getRegisteredThemeNames(): array
+    {
+        return \array_keys(self::$themePaths);
+    }
+
+    /**
+     * Resolve the absolute directory for a theme name, preferring a directory registered via
+     * registerThemePath() over the bundled theme of the same name.
+     *
+     * @param string $themeName
+     * @return string|null Absolute directory path, or null if the theme is not found anywhere.
+     */
+    public static function resolveThemeDir(string $themeName): ?string
+    {
+        if (isset(self::$themePaths[$themeName])) {
+            return self::$themePaths[$themeName];
+        }
+
+        $bundled = APPLICATION_ROOT . '/src/Views/themes/' . $themeName;
+        return \is_dir($bundled) ? $bundled : null;
+    }
+
+    /**
+     * Resolve a theme-relative file (e.g. 'layout.php' or 'post.php') to an absolute path,
+     * walking the standard theme fallback chain: the requested theme, then 'default', then any
+     * dynamically registered module theme fallbacks (registerThemeFallback()). Each theme name
+     * in the chain is resolved via resolveThemeDir(), so registered custom theme paths are
+     * checked before bundled ones at every step.
+     *
+     * @param string $themeName
+     * @param string $relativePath
+     * @return string|null Absolute file path, or null if not found in any theme in the chain.
+     */
+    public static function resolveThemeFile(string $themeName, string $relativePath): ?string
+    {
+        $candidates = \array_unique(\array_merge([$themeName, 'default'], self::$themeFallbacks));
+        $relativePath = \ltrim($relativePath, '/');
+
+        foreach ($candidates as $candidate) {
+            $dir = self::resolveThemeDir($candidate);
+            if ($dir === null) {
+                continue;
+            }
+            $file = $dir . '/' . $relativePath;
+            if (\file_exists($file)) {
+                return $file;
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Register a stylesheet path dynamically for a theme.
      *
      * @param string $themeName
@@ -1036,25 +1111,10 @@ class);
             $site = self::getCurrentSite();
             $theme = $site ? ($site->theme ?? 'default') : 'default';
             
-            $phpFile = APPLICATION_ROOT . '/src/Views/themes/' . $theme . '/' . $view . '.php';
-            if (!\file_exists($phpFile)) {
-                // Graceful fallback to default theme view
-                $phpFile = APPLICATION_ROOT . '/src/Views/themes/default/' . $view . '.php';
-            }
-            if (!\file_exists($phpFile)) {
-                // Graceful fallback to dynamically registered module theme fallbacks!
-                foreach (self::$themeFallbacks as $fbTheme) {
-                    $fbFile = APPLICATION_ROOT . '/src/Views/themes/' . $fbTheme . '/' . $view . '.php';
-                    if (\file_exists($fbFile)) {
-                        $phpFile = $fbFile;
-                        break;
-                    }
-                }
-            }
-            $layoutFile = APPLICATION_ROOT . '/src/Views/themes/' . $theme . '/layout.php';
-            if (!\file_exists($layoutFile)) {
-                $layoutFile = APPLICATION_ROOT . '/src/Views/themes/default/layout.php';
-            }
+            $phpFile = self::resolveThemeFile($theme, $view . '.php')
+                ?? (APPLICATION_ROOT . '/src/Views/themes/' . $theme . '/' . $view . '.php');
+            $layoutFile = self::resolveThemeFile($theme, 'layout.php')
+                ?? (APPLICATION_ROOT . '/src/Views/themes/' . $theme . '/layout.php');
         }
 
         if (\file_exists($phpFile)) {
@@ -1129,8 +1189,8 @@ class);
 
         // Buffer the baseline template render
         \ob_start();
-        $partialPath = APPLICATION_ROOT . '/src/Views/themes/default/partials/pagination.php';
-        if (\file_exists($partialPath)) {
+        $partialPath = self::resolveThemeFile('default', 'partials/pagination.php');
+        if ($partialPath !== null) {
             include $partialPath;
         } else {
             // Inline fallback markup if the partial file is missing

@@ -32,12 +32,14 @@ class Template
         // Ensure $templatePath is an absolute path from VIEWS_DIR
         // This assumes APPLICATION_ROOT and VIEWS_DIR are defined constants.
         if (\strpos($templatePath, '/') !== 0) { // If not already absolute
-            // Resolve relative path inside active theme
+            // Resolve relative path inside active theme (checks any registered custom theme
+            // path via App::registerThemePath() before falling back to the bundled theme)
             $siteId = App::getCurrentSiteId();
             require_once APPLICATION_ROOT . '/src/Models/Site.php';
             $site = Site::find($siteId);
             $theme = $site ? ($site->theme ?? 'default') : 'default';
-            $templatePath = APPLICATION_ROOT . '/src/Views/themes/' . $theme . '/' . $templatePath;
+            $templatePath = App::resolveThemeFile($theme, $templatePath)
+                ?? (APPLICATION_ROOT . '/src/Views/themes/' . $theme . '/' . $templatePath);
         }
 
         // We assume templatePath now ends with .php
