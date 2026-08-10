@@ -1,15 +1,43 @@
 <?php
+
+declare(strict_types=1);
+
 // tests/run.php
 // Master Parallel Test Runner for Zero CMS exhaustive unit test suite.
 // Discovers and runs all *Test.php files in parallel subprocesses with isolated databases.
 
 define('TESTS_ROOT', __DIR__);
 
-// Find all test files matching *Test.php
-$testFiles = glob(TESTS_ROOT . '/*Test.php');
+/**
+ * Recursively finds all PHP files matching *Test.php under a given directory.
+ *
+ * @param string $dir Target directory path.
+ * @return array Array of matching absolute file paths.
+ */
+function find_test_files(string $dir): array
+{
+    $files = [];
+    if (!is_dir($dir)) {
+        return $files;
+    }
+    $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir));
+    foreach ($iterator as $file) {
+        if ($file->isFile() && $file->getExtension() === 'php' && str_ends_with($file->getFilename(), 'Test.php')) {
+            $files[] = $file->getPathname();
+        }
+    }
+    return $files;
+}
+
+// Find all test files recursively from both tests/ and src/Modules/ subfolders
+$testFiles = array_merge(
+    find_test_files(TESTS_ROOT),
+    find_test_files(dirname(TESTS_ROOT) . '/src/Modules')
+);
 
 // Sort test files alphabetically for consistent run ordering
 sort($testFiles);
+$testFiles = array_values(array_unique($testFiles));
 
 echo "\033[1;36m==================================================\033[0m\033[1m\n";
 echo "       ZERO CMS PARALLEL UNIT TEST RUNNER          \n";
