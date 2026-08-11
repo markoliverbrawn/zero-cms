@@ -1,33 +1,40 @@
 #!/usr/bin/env bash
-# bin/create-subproject
+# create-subproject
 #
-# Scaffold a new, isolated sub-project that embeds this repository (Zero CMS Core) as a git
-# submodule, ringfenced from the sub-project's own code: this script places the core into its
-# own sub-folder, generates a .gitmodules file at the sub-project root, and lays down a basic
-# public/src/seeders/tests/storage folder structure for the sub-project's own files.
+# Standalone bootstrapper: save this one file anywhere and run it on its own (no existing Zero
+# CMS checkout required). It clones Zero CMS Core as a git submodule into a new sub-project
+# directory (generating the resulting .gitmodules file at the sub-project root), lays down a
+# basic public/src/seeders/tests/storage folder structure for the sub-project's own files, and
+# then deletes itself once the sub-project is fully scaffolded.
 #
 # Usage:
-#   bin/create-subproject <target-directory> [options]
+#   create-subproject <target-directory> [options]
 #
 # Options:
-#   --remote <url>            Git remote URL to add as the submodule (default: this repo's own 'origin')
-#   --branch <name>           Branch of the remote to track (default: remote's default branch)
+#   --branch <name>           Branch of Zero CMS Core to clone (default: dev)
+#   --remote <url>            Git remote URL to clone instead of the default Zero CMS Core repo
 #   --submodule-path <name>   Directory name for the core submodule inside the new project (default: zero-core)
 #   -h, --help                Show this help message
 #
 # Example:
-#   bin/create-subproject ../acme-website
-#   bin/create-subproject ../acme-website --remote git@github.com:acme/zero-fork.git --branch main
+#   create-subproject ../acme-website
+#   create-subproject ../acme-website --branch main
+#   create-subproject ../acme-website --remote git@github.com:acme/zero-fork.git --branch main
 
 set -euo pipefail
 
-CORE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# Resolve this script's own absolute path up front, before anything below can cd elsewhere --
+# needed so the self-delete step at the end can find it reliably regardless of how deep the
+# scaffolding process changes the working directory.
+SELF_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/$(basename "${BASH_SOURCE[0]}")"
+
+DEFAULT_REMOTE="git@github.com:markoliverbrawn/zero-cms.git"
 SUBMODULE_PATH="zero-core"
-BRANCH=""
-REMOTE=""
+BRANCH="dev"
+REMOTE="$DEFAULT_REMOTE"
 
 usage() {
-    sed -n '2,20p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+    sed -n '2,22p' "$SELF_PATH" | sed 's/^# \{0,1\}//'
 }
 
 # Scan all arguments first so -h/--help works no matter where it appears (including as the
@@ -40,6 +47,12 @@ for arg in "$@"; do
 done
 
 if [ $# -lt 1 ]; then
+    usage
+    exit 1
+fi
+
+if [ "${1#-}" != "$1" ]; then
+    echo "Error: first argument must be the target directory, got option-like value: $1" >&2
     usage
     exit 1
 fi
@@ -61,16 +74,6 @@ while [ $# -gt 0 ]; do
             exit 1 ;;
     esac
 done
-
-# --- Detect the core's own remote if the caller didn't pass one explicitly ---
-if [ -z "$REMOTE" ]; then
-    REMOTE="$(git -C "$CORE_DIR" remote get-url origin 2>/dev/null || true)"
-    if [ -z "$REMOTE" ]; then
-        echo "Error: could not auto-detect a git remote for $CORE_DIR (no 'origin' configured)." >&2
-        echo "Pass one explicitly with --remote <url>." >&2
-        exit 1
-    fi
-fi
 
 if ! command -v git >/dev/null 2>&1; then
     echo "Error: git is required." >&2
@@ -550,9 +553,9 @@ BASH_EOF
 chmod +x "$TARGET/bin/setup-symlinks"
 
 # --- 8. Environment configuration ---
-if [ -f "$CORE_DIR/.env.example" ]; then
-    cp "$CORE_DIR/.env.example" "$TARGET/.env"
-    echo "-> Copied zero-core/.env.example to .env (edit DB credentials before running the seeder)"
+if [ -f "$TARGET/$SUBMODULE_PATH/.env.example" ]; then
+    cp "$TARGET/$SUBMODULE_PATH/.env.example" "$TARGET/.env"
+    echo "-> Copied ${SUBMODULE_PATH}/.env.example to .env (edit DB credentials before running the seeder)"
 fi
 
 # --- 9. .gitignore ---
@@ -629,3 +632,11 @@ echo "  php seeders/seeder.php        # migrate Core + seed sub-project tables"
 echo "  php tests/run.php             # run the sub-project test suite"
 echo "  git commit -m 'Initial sub-project scaffold'"
 echo
+
+# --- 12. Self-delete: this script's one job was to bootstrap $TARGET, and it's done.
+# Only reached if every step above succeeded (set -e aborts earlier otherwise), and only
+# removes a real, ordinary file at the path resolved before any 'cd' happened above.
+if [ -f "$SELF_PATH" ] && [ ! -L "$SELF_PATH" ]; then
+    echo "-> Removing this bootstrap script ($SELF_PATH), its job is done"
+    rm -f -- "$SELF_PATH"
+fi
