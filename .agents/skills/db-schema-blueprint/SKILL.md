@@ -1,16 +1,14 @@
 ---
 name: db-schema-blueprint
-description: Provides a starting-point SQL schema reference for Zero CMS's core and module database tables. Use when you need a quick sense of a table's shape, but ALWAYS verify against the actual migration files under src/*/Database/Migrations/ before relying on exact columns — this reference is known to lag behind newer migrations.
+description: Provides an accurate SQL schema reference for Zero CMS's core and module database tables, reconstructed directly from every migration file. Use when you need a table's current shape — columns, indexes, and known field-naming quirks.
 ---
 
-# System Database Schema Blueprint (KNOWN INCOMPLETE — verify against migrations)
+# System Database Schema Blueprint
 
-> **This snapshot is stale.** It was carried over from the original `GEMINI.md` monolith and only reflects roughly the first 3-6 migrations. A cross-check against `src/Database/Migrations/` and each module's own `Database/Migrations/` found columns and entire tables below that are **not represented here**, including: `media` (title, focus point columns, private-storage fields), `pages`/`blog_posts`/`shop_products` (`exclude_from_search`), `pages` (`show_in_nav`, `summary`, `omit_title`), `sites` (`timezone`, `default_language`, `homepage_id`, `expires_at`), a `security_audits` table, `queue_jobs`/`queue_scheduled_tasks` tables, a `search_index` table, a `shop_product_category_links` table, `form_submissions` (never had a documented schema here), and various performance-index migrations.
->
-> **Treat the tables below as a rough starting sketch only.** For any real schema question, read the actual migration file — every table's true source of truth is `src/Database/Migrations/*.php` (core) or `src/Modules/<Module>/Database/Migrations/*.php` (module-owned tables), applied in filename order by `MigrationManager`.
+This was reconstructed directly from every migration file under `src/Database/Migrations/` and each module's own `Database/Migrations/`, applied in filename order (`0001` → `0029` as of this writing). **If a new migration is added after this, this file goes stale — update it, or at minimum re-derive it from the migrations before trusting it blindly.** The migrations themselves remain the actual source of truth; this is a convenience snapshot, not a replacement for reading them.
 
 ```sql
--- 0. Migrations Tracking
+-- 0. Migrations Tracking (created directly by MigrationManager, not a numbered migration file)
 CREATE TABLE migrations (
     id INT AUTO_INCREMENT PRIMARY KEY,
     migration VARCHAR(255) NOT NULL UNIQUE,
@@ -18,7 +16,7 @@ CREATE TABLE migrations (
     run_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- 1. Sites (Tenant definitions) -- NOTE: later migrations add timezone, default_language, homepage_id, expires_at
+-- 1. Sites (Tenant definitions)
 CREATE TABLE sites (
     id VARCHAR(36) PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
@@ -27,7 +25,11 @@ CREATE TABLE sites (
     enabled_modules TEXT NULL,
     created_at DATETIME,
     updated_at DATETIME,
-    deleted_at DATETIME NULL
+    deleted_at DATETIME NULL,
+    timezone VARCHAR(100) NOT NULL DEFAULT 'UTC',        -- added 0021
+    default_language VARCHAR(50) NOT NULL DEFAULT 'en',  -- added 0021
+    homepage_id VARCHAR(36) NULL,                        -- added 0025 -- FK-by-convention to pages.id
+    expires_at DATETIME NULL                             -- added 0029
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- 2. Users (Accounts and permissions)
@@ -46,35 +48,49 @@ CREATE TABLE users (
     INDEX (api_token)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- 3. Media Assets -- NOTE: later migrations add title, focus point, and private-storage columns
+-- 3. Media Assets
 CREATE TABLE media (
     id VARCHAR(36) PRIMARY KEY,
     site_id VARCHAR(36) NULL,
+    title VARCHAR(255) NULL,                    -- added 0016
+    focus_x INT NOT NULL DEFAULT 50,             -- added 0017 -- crop/focal-point %, 0-100
+    focus_y INT NOT NULL DEFAULT 50,             -- added 0017
     filename VARCHAR(255) NOT NULL,
     path VARCHAR(255) NOT NULL,
     mime VARCHAR(255) NOT NULL, -- Core uses 'mime' column
     folder VARCHAR(255) NOT NULL DEFAULT '',
     created_at DATETIME,
     updated_at DATETIME,
-    deleted_at DATETIME NULL
+    deleted_at DATETIME NULL,
+    visibility VARCHAR(20) DEFAULT 'public',     -- added 0024 -- 'public' | private
+    submission_id VARCHAR(36) NULL,              -- added 0024 -- links a private upload back to its form_submissions row
+    original_name VARCHAR(255) NULL,             -- added 0024
+    file_size INT NOT NULL DEFAULT 0,            -- added 0024
+    INDEX (visibility),
+    INDEX (submission_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- 4. Multi-Tenant Pages -- NOTE: later migrations add show_in_nav, summary, omit_title, exclude_from_search
+-- 4. Multi-Tenant Pages (Content blocks container with display precedence)
 CREATE TABLE pages (
     id VARCHAR(36) PRIMARY KEY,
     site_id VARCHAR(36) NULL,
     title VARCHAR(255) NOT NULL,
+    omit_title TINYINT(1) NOT NULL DEFAULT 0,          -- added 0019 -- hide the H1 title on render
     slug VARCHAR(255) NOT NULL,
     content TEXT, -- Contains the serialized JSON array of block-builder components
+    summary TEXT NULL,                                 -- added 0012
     type VARCHAR(50) NULL,
     controller VARCHAR(255) NULL, -- Custom Controller routing override
     view VARCHAR(255) NULL, -- Custom View template override
     status VARCHAR(20) DEFAULT 'draft', -- draft, published
-    precedence INT DEFAULT 0, -- Order / priority of display
+    precedence INT DEFAULT 0,                          -- added 0004 -- Order / priority of display
+    show_in_nav TINYINT(1) NOT NULL DEFAULT 1,         -- added 0010
+    exclude_from_search TINYINT(1) NOT NULL DEFAULT 0, -- added 0026
     created_at DATETIME,
     updated_at DATETIME,
     deleted_at DATETIME NULL,
-    UNIQUE KEY site_slug_unique (site_id, slug)
+    UNIQUE KEY site_slug_unique (site_id, slug),
+    INDEX idx_pages_site_deleted_precedence (site_id, deleted_at, precedence ASC) -- added 0013
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- 5. Password Resets (Core auth recovery tokens)
@@ -100,24 +116,49 @@ CREATE TABLE audit_logs (
     object_id VARCHAR(100) NULL,
     meta JSON NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NULL,
     deleted_at DATETIME NULL,
     INDEX (site_id),
     INDEX (user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- 7. Blog Module Posts -- NOTE: later migrations add allow_comments, comment_notifiers, summary, featured_image
+-- 7. Blog Module Posts
 CREATE TABLE blog_posts (
     id VARCHAR(36) PRIMARY KEY,
     site_id VARCHAR(36) NULL,
     title VARCHAR(255) NOT NULL,
+    summary TEXT NULL,                                 -- added 0009
     slug VARCHAR(255) NOT NULL,
     content TEXT, -- Block-builder JSON data
     type VARCHAR(50) NULL,
     status VARCHAR(20) DEFAULT 'draft',
+    featured_image VARCHAR(36) NULL,                   -- added 0018 -- media.id
+    exclude_from_search TINYINT(1) NOT NULL DEFAULT 0,  -- added 0026
+    allow_comments TINYINT(1) DEFAULT 1,                -- added 0007
+    comment_notifiers TEXT NULL,                        -- added 0008 -- serialized JSON array of user UUIDv7 strings
     created_at DATETIME,
     updated_at DATETIME,
     deleted_at DATETIME NULL,
-    UNIQUE KEY site_slug_unique (site_id, slug)
+    UNIQUE KEY site_slug_unique (site_id, slug),
+    INDEX idx_blog_site_status_deleted_created (site_id, status, deleted_at, created_at DESC) -- added 0014
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 7b. Blog Comments (see also the blog-comments-pipeline skill)
+CREATE TABLE blog_comments (
+    id VARCHAR(36) PRIMARY KEY,
+    site_id VARCHAR(36) NULL,
+    post_id VARCHAR(36) NOT NULL,
+    author_name VARCHAR(255) NOT NULL,
+    author_email VARCHAR(255) NOT NULL,
+    content TEXT NOT NULL,
+    status VARCHAR(50) DEFAULT 'approved', -- NOTE: default here is 'approved' at the DB level; the actual
+                                            -- application-level moderation default is 'pending' -- see the
+                                            -- blog-comments-pipeline skill, which documents the real behavior
+    created_at DATETIME,
+    updated_at DATETIME,
+    deleted_at DATETIME NULL,
+    INDEX (site_id),
+    INDEX (post_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- 8. Shop Module Categories
@@ -135,7 +176,7 @@ CREATE TABLE shop_categories (
     INDEX (site_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- 9. Shop Module Products -- NOTE: a later Search-module migration adds exclude_from_search
+-- 9. Shop Module Products
 CREATE TABLE shop_products (
     id VARCHAR(36) PRIMARY KEY,
     site_id VARCHAR(36) NOT NULL,
@@ -149,12 +190,23 @@ CREATE TABLE shop_products (
     main_image VARCHAR(255) NULL,
     media_ids TEXT NULL,
     status VARCHAR(20) DEFAULT 'published',
+    exclude_from_search TINYINT(1) NOT NULL DEFAULT 0, -- added 0026
     created_at DATETIME,
     updated_at DATETIME,
     deleted_at DATETIME NULL,
     UNIQUE KEY site_product_slug_unique (site_id, slug),
     INDEX (site_id),
     INDEX (category_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 9b. Shop Product <-> Category many-to-many links (added 0028 -- a product's primary category is still
+-- shop_products.category_id; this junction table is for *additional* category associations)
+CREATE TABLE shop_product_category_links (
+    product_id VARCHAR(36) NOT NULL,
+    category_id VARCHAR(36) NOT NULL,
+    site_id VARCHAR(36) NOT NULL,
+    PRIMARY KEY (product_id, category_id),
+    INDEX site_id_index (site_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- 10. Shop Module Product Variants
@@ -217,7 +269,8 @@ CREATE TABLE forum_boards (
     updated_at DATETIME,
     deleted_at DATETIME NULL,
     UNIQUE KEY site_board_slug_unique (site_id, slug),
-    INDEX (site_id)
+    INDEX (site_id),
+    INDEX idx_forum_boards_site_deleted_precedence (site_id, deleted_at, precedence ASC) -- added 0015
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- 14. Forum Module Threads
@@ -236,7 +289,8 @@ CREATE TABLE forum_threads (
     UNIQUE KEY site_thread_slug_unique (site_id, slug),
     INDEX (site_id),
     INDEX (board_id),
-    INDEX (user_id)
+    INDEX (user_id),
+    INDEX idx_forum_threads_site_board_deleted_status (site_id, board_id, deleted_at, status) -- added 0015
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- 15. Forum Module Posts
@@ -254,8 +308,91 @@ CREATE TABLE forum_posts (
     INDEX (site_id),
     INDEX (thread_id),
     INDEX (user_id),
-    INDEX (parent_id)
+    INDEX (parent_id),
+    INDEX idx_forum_posts_site_thread_parent_deleted_status (site_id, thread_id, parent_id, deleted_at, status) -- added 0015
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 16. Form Builder Submissions (see also the form-builder-engine skill)
+CREATE TABLE form_submissions (
+    id VARCHAR(36) PRIMARY KEY,
+    site_id VARCHAR(36) NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    phone VARCHAR(50) NULL,
+    message TEXT NOT NULL, -- Archived JSON string of every submitted field -- see form-builder-engine skill
+    created_at DATETIME,
+    updated_at DATETIME,
+    deleted_at DATETIME NULL,
+    INDEX (site_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 17. Security Audits (added 0020)
+CREATE TABLE security_audits (
+    id VARCHAR(36) PRIMARY KEY,
+    site_id VARCHAR(36) NOT NULL,
+    user_id VARCHAR(36) NULL,
+    score INT NOT NULL,
+    environment VARCHAR(50) NOT NULL,
+    telemetry TEXT NOT NULL,
+    report LONGTEXT NOT NULL,
+    created_at DATETIME,
+    updated_at DATETIME NULL,
+    deleted_at DATETIME NULL,
+    INDEX (site_id),
+    INDEX (user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 18. Queue Jobs (added 0022)
+CREATE TABLE queue_jobs (
+    id VARCHAR(36) PRIMARY KEY,
+    site_id VARCHAR(36) NOT NULL,
+    job_class VARCHAR(255) NOT NULL,
+    payload JSON NOT NULL,
+    status VARCHAR(20) DEFAULT 'pending',
+    attempts INT DEFAULT 0,
+    reserved_at DATETIME NULL,
+    failed_at DATETIME NULL,
+    error_message TEXT NULL,
+    created_at DATETIME,
+    updated_at DATETIME,
+    deleted_at DATETIME NULL,
+    INDEX (site_id),
+    INDEX (status, reserved_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 19. Queue Scheduled Tasks (added 0023)
+CREATE TABLE queue_scheduled_tasks (
+    id VARCHAR(36) PRIMARY KEY,
+    site_id VARCHAR(36) NOT NULL,
+    task_key VARCHAR(255) NOT NULL,
+    payload JSON NOT NULL,
+    expression VARCHAR(100) NOT NULL, -- cron-style schedule expression
+    last_run_at DATETIME NULL,
+    created_at DATETIME,
+    updated_at DATETIME,
+    deleted_at DATETIME NULL,
+    UNIQUE KEY site_task_unique (site_id, task_key)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 20. Search Index (added 0027 -- a flattened, cross-model index rebuilt from indexInSearch(); see the
+-- test-suite-architecture skill's Searchable-trait note and the page-builder-engine skill's BlockHelper note)
+CREATE TABLE search_index (
+    id VARCHAR(36) PRIMARY KEY,
+    site_id VARCHAR(36) NOT NULL,
+    model_type VARCHAR(100) NOT NULL,
+    model_id VARCHAR(36) NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    content LONGTEXT NULL,
+    url VARCHAR(255) NOT NULL,
+    created_at DATETIME NOT NULL,
+    updated_at DATETIME NOT NULL,
+    UNIQUE KEY model_unique (model_type, model_id),
+    INDEX site_id_index (site_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
 
-See also the `blog-comments-pipeline` skill for `blog_comments`' schema, which is documented there instead of duplicated here.
+## Notes on tables intentionally not detailed here
+
+* **`blog_comments`** — full schema is above, but see the `blog-comments-pipeline` skill for the moderation-flow behavior.
+* **`form_submissions`** — full schema is above, but see the `form-builder-engine` skill for how `message` is structured as JSON.
+* Every module's migrations live at `src/Modules/<Module>/Database/Migrations/*.php`; core's own live at `src/Database/Migrations/*.php`. `MigrationManager` discovers and runs both sets by filename glob, in a single flat numeric order — always check the highest existing number across *all* of them before adding a new migration (see the `module-creation` skill).

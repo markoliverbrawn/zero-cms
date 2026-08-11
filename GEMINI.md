@@ -221,7 +221,7 @@ This foundational request lifecycle underlies virtually every request Zero CMS h
 Detailed architecture references for individual subsystems are no longer inlined in this file — they're on-demand Agent Skills under `.agents/skills/`, activated automatically when a task matches their description:
 
 * `page-builder-engine` — dynamic layout page builder, block JSON structure, admin pre-rendering, generic JS serializer
-* `db-schema-blueprint` — SQL schema reference for core/module tables (flagged as a rough sketch — always verify against actual migrations)
+* `db-schema-blueprint` — SQL schema reference for core/module tables, reconstructed from every migration file (update it whenever a new migration is added, or it'll drift again)
 * `raw-tcp-emailer` — zero-dependency raw SMTP socket mailer
 * `multitenant-seeder` — the `seeders/seeder.php` revert/migrate/seed pipeline and documentation-seeding conventions
 * `google-oauth-integration` — zero-dependency Google OAuth 2.0 SSO flow and tenant-scoping checks
