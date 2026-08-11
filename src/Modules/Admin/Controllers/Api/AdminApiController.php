@@ -597,9 +597,19 @@ class AdminApiController extends ApiController
                 $currentDestinationFolder = \implode('/', $parts);
             }
 
-            $oldPhysicalPath = Storage::getRoot() . $fileRecord['path'];
+            // $fileRecord['path'] is the DB-relative path (e.g. /storage/uploads/{siteId}/file.ext,
+            // no leading /public) -- pass it straight into Storage::exists()/rename() and let
+            // their own path resolution handle it. Manually prepending Storage::getRoot() here
+            // would make resolvePath() treat it as an already-absolute, already-tenant-scoped
+            // path and return it unmodified (skipping the /public insertion it would otherwise
+            // apply), so Storage::exists() would always report false and the physical move would
+            // silently never happen.
+            $oldPath = $fileRecord['path'];
             $newFilename = $fileRecord['filename'];
-            $newPhysicalDir = Storage::getUploadsRoot() . (!empty($currentDestinationFolder) ? '/' . $currentDestinationFolder : '');
+            // Scope the destination under the tenant's own uploads folder, matching
+            // FilesController::handleMoveFiles() -- without the $siteId segment this would land
+            // directly under the shared uploads root instead of the tenant-isolated subfolder.
+            $newPhysicalDir = Storage::getUploadsRoot() . '/' . $siteId . (!empty($currentDestinationFolder) ? '/' . $currentDestinationFolder : '');
             
             if (!Storage::exists($newPhysicalDir)) {
                 Storage::makeDirectory($newPhysicalDir);
@@ -614,8 +624,8 @@ class AdminApiController extends ApiController
                 $counter++;
             }
 
-            if (Storage::exists($oldPhysicalPath)) {
-                if (Storage::rename($oldPhysicalPath, $newPhysicalPath)) {
+            if (Storage::exists($oldPath)) {
+                if (Storage::rename($oldPath, $newPhysicalPath)) {
                     $newDbPath = Storage::getUrl($newPhysicalPath);
                     DB::query(
                         "UPDATE media SET filename = ?, path = ?, folder = ?, updated_at = NOW() WHERE id = ? AND site_id = ?",

@@ -51,6 +51,12 @@ namespace {
 
     echo "=== Emailer Support Tests ===\n";
 
+    // This test specifically exercises Emailer::send()'s real code path (SMTP handshake, audit
+    // logging, PII masking), so it opts out of the test-suite-wide mock enabled by
+    // tests/bootstrap.php. This is still fully safe: the fsockopen/fgets/fputs/fclose functions
+    // are shadowed above in the Zero\Support namespace, so no real socket is ever opened.
+    Emailer::disableTestMode();
+
     // Ensure the sites and users tables are bootstrapped to avoid any cascade or audit log association issues
     $siteId = \Zero\Support\Security::uuidv7();
     DB::query("

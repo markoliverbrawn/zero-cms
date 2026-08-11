@@ -22,6 +22,54 @@ use Zero\Support\Logger;
  */
 class Emailer
 {
+    protected static $testMode = false;
+    protected static $testModeSentEmails = [];
+
+    /**
+     * Enable test mode: send() short-circuits before opening any real SMTP connection, recording
+     * the attempt instead. Prevents automated test runs from triggering real email sends as a
+     * side effect of exercising code paths (e.g. a scheduled job) that happen to call
+     * Emailer::send() indirectly.
+     *
+     * @return void
+     */
+    public static function enableTestMode(): void
+    {
+        self::$testMode = true;
+        self::$testModeSentEmails = [];
+    }
+
+    /**
+     * Disable test mode, restoring real SMTP send behavior. Used by tests that specifically need
+     * to exercise the real send() code path (typically because they've already made it safe some
+     * other way, e.g. by shadowing the low-level socket functions).
+     *
+     * @return void
+     */
+    public static function disableTestMode(): void
+    {
+        self::$testMode = false;
+    }
+
+    /**
+     * @return bool
+     */
+    public static function isTestMode(): bool
+    {
+        return self::$testMode;
+    }
+
+    /**
+     * Get every email "sent" while in test mode, for tests that want to assert on what would
+     * have been sent without any real email actually going out.
+     *
+     * @return array
+     */
+    public static function getTestModeSentEmails(): array
+    {
+        return self::$testModeSentEmails;
+    }
+
     /**
      * Obfuscates Personally Identifiable Information (PII) like email addresses.
      * e.g., "jordan.smith@example.com" -> "j**********h@example.com"
@@ -47,6 +95,16 @@ class Emailer
      */
     public static function send(string $to, string $subject, string $htmlBody, string $textBody = ''): bool
     {
+        if (self::$testMode) {
+            self::$testModeSentEmails[] = [
+                'to' => $to,
+                'subject' => $subject,
+                'html_body' => $htmlBody,
+                'text_body' => $textBody
+            ];
+            return true;
+        }
+
         // Read active SMTP configurations from environment
         $host = Env::get('SMTP_HOST', 'mailpit');
         $port = \intval(Env::get('SMTP_PORT', '1025'));

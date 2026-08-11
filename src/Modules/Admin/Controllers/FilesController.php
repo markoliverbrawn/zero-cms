@@ -372,8 +372,14 @@ class FilesController implements Controller
                 $currentDestinationFolder = \implode('/', $parts);
             }
 
-            // Physically move the file on disk!
-            $oldPhysicalPath = Storage::getRoot() . $fileRecord['path'];
+            // Physically move the file on disk! $fileRecord['path'] is the DB-relative path (e.g.
+            // /storage/uploads/{siteId}/file.ext, no leading /public) -- pass it straight into
+            // Storage::exists()/rename() and let their own path resolution handle it. Manually
+            // prepending Storage::getRoot() here would make resolvePath() treat it as an
+            // already-absolute, already-tenant-scoped path and return it unmodified (skipping the
+            // /public insertion it would otherwise apply), so Storage::exists() would always
+            // report false and the physical move would silently never happen.
+            $oldPath = $fileRecord['path'];
             $newFilename = $fileRecord['filename'];
             
             $newPhysicalDir = Storage::getUploadsRoot() . '/' . $siteId . (!empty($currentDestinationFolder) ? '/' . $currentDestinationFolder : '');
@@ -392,8 +398,8 @@ class FilesController implements Controller
                 $counter++;
             }
 
-            if (Storage::exists($oldPhysicalPath)) {
-                if (Storage::rename($oldPhysicalPath, $newPhysicalPath)) {
+            if (Storage::exists($oldPath)) {
+                if (Storage::rename($oldPath, $newPhysicalPath)) {
                     $newDbPath = Storage::getUrl($newPhysicalPath);
                     
                     // Update database record strictly for this file and site
@@ -586,8 +592,11 @@ class FilesController implements Controller
                     exit;
                 }
 
-                // Delete the old physical file if it exists
-                $oldPhysicalPath = Storage::getRoot() . $fileRecord['path'];
+                // Delete the old physical file if it exists. $fileRecord['path'] is DB-relative
+                // (e.g. /storage/uploads/{siteId}/file.ext) -- \is_file() needs a real absolute
+                // path, so the /public segment (omitted from the stored DB path) must be inserted
+                // here explicitly; Storage::getRoot() alone would point at the wrong directory.
+                $oldPhysicalPath = Storage::getRoot() . '/public' . $fileRecord['path'];
                 if (Storage::exists($oldPhysicalPath) && \is_file($oldPhysicalPath)) {
                     Storage::delete($oldPhysicalPath);
                 }

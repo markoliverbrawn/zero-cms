@@ -42,6 +42,12 @@ try {
     echo "Warning setting up test database override: " . $e->getMessage() . "\n";
 }
 
+// Prevent any real email from ever being sent as a side effect of running the test suite (e.g. a
+// scheduled job like SecurityAuditJob getting dispatched and executed via the Queue module's own
+// tests, which would otherwise email the real ADMIN_EMAIL configured in .env). Tests that need to
+// exercise Emailer::send()'s real code path opt back out explicitly (see EmailerTest.php).
+\Zero\Support\Emailer::enableTestMode();
+
 /**
  * Custom light-weight test assertion helper.
  * Exits with status code 1 on failure to signal the test runner.
