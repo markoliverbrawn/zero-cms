@@ -4,7 +4,7 @@
 # Standalone bootstrapper: save this one file anywhere and run it on its own (no existing Zero
 # CMS checkout required). It clones Zero CMS Core as a git submodule into a new sub-project
 # directory (generating the resulting .gitmodules file at the sub-project root), lays down a
-# basic public/src/seeders/tests/storage folder structure for the sub-project's own files, and
+# basic public/src/bin/tests/storage folder structure for the sub-project's own files, and
 # then deletes itself once the sub-project is fully scaffolded.
 #
 # Usage:
@@ -116,8 +116,7 @@ mkdir -p "$TARGET"/public/assets
 mkdir -p "$TARGET"/src/Controllers
 mkdir -p "$TARGET"/src/Models
 mkdir -p "$TARGET"/src/Views
-mkdir -p "$TARGET"/src/Modules
-mkdir -p "$TARGET"/seeders
+mkdir -p "$TARGET"/src/Modules/Records/Database/Migrations
 mkdir -p "$TARGET"/tests
 mkdir -p "$TARGET"/storage/private
 mkdir -p "$TARGET"/storage/logs
@@ -157,6 +156,11 @@ require_once CORE_ROOT . '/src/Core/Autoloader.php';
 // sub-project's own root instead of the read-only zero-core submodule -- paired with
 // bin/setup-symlinks, which points public/storage at ../storage so public URLs stay stable.
 \Zero\Core\Storage\Storage::setRoot(APP_ROOT);
+
+// Let this sub-project's own src/Modules/ contribute modules and migrations the same way
+// Core's own src/Modules/ does (see bin/seed and src/Modules/Records/Database/Migrations/
+// for a real example) -- must be registered before App::bootstrap().
+\Zero\Core\App::registerModulePath(APP_ROOT . '/src/Modules', 'App\\Modules\\');
 
 use Zero\Core\Env;
 use Zero\Core\App;
@@ -213,6 +217,7 @@ require_once CORE_ROOT . '/src/Core/Autoloader.php';
 \Zero\Core\Autoloader::init();
 \Zero\Core\Autoloader::registerNamespace('App\\', APP_ROOT . '/src');
 \Zero\Core\Storage\Storage::setRoot(APP_ROOT);
+\Zero\Core\App::registerModulePath(APP_ROOT . '/src/Modules', 'App\\Modules\\');
 
 use Zero\Core\Env;
 
@@ -334,13 +339,54 @@ assert_test($controller instanceof \Zero\Interfaces\Controller, "HomeController 
 echo "Example sub-project tests completed.\n";
 PHP_EOF
 
-# --- 5. Generate the seeder ---
-cat > "$TARGET/seeders/seeder.php" <<'PHP_EOF'
+# --- 5. Generate the example migration and the seed script ---
+cat > "$TARGET/src/Modules/Records/Database/Migrations/0001_CreateCustomRecordsTable.php" <<'PHP_EOF'
 <?php
 /**
- * seeders/seeder.php
- * Custom database seeder for this sub-project: runs Core's own migrations, then creates and
- * seeds this sub-project's own tables.
+ * src/Modules/Records/Database/Migrations/0001_CreateCustomRecordsTable.php
+ * Example migration for this sub-project's own schema. Discovered automatically by
+ * Zero\Database\MigrationManager because public/index.php (and tests/bootstrap.php, bin/seed)
+ * register src/Modules/ as a module search path via App::registerModulePath() -- the same
+ * mechanism Core's own bundled modules use for their migrations. Add more modules here the
+ * same way (SomeName/Database/Migrations/000N_Whatever.php) and they'll be picked up the same way.
+ */
+
+namespace App\Modules\Records\Database\Migrations;
+
+use Zero\Database\DB;
+
+class CreateCustomRecordsTable extends \Zero\Database\Migration
+{
+    public function up(): void
+    {
+        echo "Creating custom_records table...\n";
+        DB::query("CREATE TABLE IF NOT EXISTS custom_records (
+            id VARCHAR(36) PRIMARY KEY,
+            site_id VARCHAR(36) NOT NULL,
+            name VARCHAR(255) NOT NULL,
+            description TEXT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            deleted_at DATETIME NULL,
+            INDEX (site_id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+    }
+
+    public function down(): void
+    {
+        echo "Dropping custom_records table...\n";
+        DB::query("DROP TABLE IF EXISTS custom_records;");
+    }
+}
+PHP_EOF
+
+cat > "$TARGET/bin/seed" <<'PHP_EOF'
+#!/usr/bin/env php
+<?php
+/**
+ * bin/seed
+ * Runs every pending migration (Core's own, plus this sub-project's own modules under
+ * src/Modules, e.g. src/Modules/Records/Database/Migrations) and seeds an example record.
  */
 
 define('SUBPROJECT_ROOT', dirname(__DIR__));
@@ -357,9 +403,9 @@ require_once CORE_ROOT . '/src/Core/Autoloader.php';
 \Zero\Core\Autoloader::init();
 \Zero\Core\Autoloader::registerNamespace('App\\', APP_ROOT . '/src');
 \Zero\Core\Storage\Storage::setRoot(APP_ROOT);
+\Zero\Core\App::registerModulePath(APP_ROOT . '/src/Modules', 'App\\Modules\\');
 
 use Zero\Core\Env;
-use Zero\Database\DB;
 use Zero\Core\App;
 use Zero\Database\MigrationManager;
 use App\Models\CustomModel;
@@ -368,30 +414,17 @@ Env::load(APP_ROOT);
 App::bootstrap();
 
 echo "====================================================================\n";
-echo "SUB-PROJECT DATABASE SEEDER\n";
+echo "SUB-PROJECT SETUP: MIGRATE + SEED\n";
 echo "====================================================================\n\n";
 
 try {
-    echo "Running Zero CMS Core migrations...\n";
+    echo "Running migrations (Core + this sub-project's own)...\n";
     MigrationManager::up();
-    echo "Core migrations up to date.\n\n";
-
-    echo "Creating sub-project tables...\n";
-    DB::query("CREATE TABLE IF NOT EXISTS custom_records (
-        id VARCHAR(36) PRIMARY KEY,
-        site_id VARCHAR(36) NOT NULL,
-        name VARCHAR(255) NOT NULL,
-        description TEXT NULL,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        deleted_at DATETIME NULL,
-        INDEX (site_id)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
-    echo "Sub-project tables ready.\n\n";
+    echo "Migrations up to date.\n\n";
 
     $siteId = App::getCurrentSiteId();
     if (!empty($siteId)) {
-        echo "Seeding example records...\n";
+        echo "Seeding an example record...\n";
         (new CustomModel(['site_id' => $siteId, 'name' => 'First Custom Record', 'description' => 'Seeded example record.']))->save();
         echo "Done.\n";
     } else {
@@ -399,12 +432,13 @@ try {
         echo "(Register a site for this domain in the admin back-office first.)\n";
     }
 
-    echo "\n\xE2\x9C\x85 SUB-PROJECT SEEDING COMPLETE\n";
+    echo "\n\xE2\x9C\x85 SETUP COMPLETE\n";
 } catch (\Exception $e) {
-    echo "\n\xE2\x9D\x8C SEEDER FAILED: " . $e->getMessage() . "\n";
+    echo "\n\xE2\x9D\x8C FAILED: " . $e->getMessage() . "\n";
     exit(1);
 }
 PHP_EOF
+chmod +x "$TARGET/bin/seed"
 
 # --- 6. Generate an example controller, model, and views ---
 cat > "$TARGET/src/Controllers/HomeController.php" <<'PHP_EOF'
@@ -428,7 +462,7 @@ class HomeController implements Controller
         try {
             $records = CustomModel::all();
         } catch (\Exception $e) {
-            // Table might not be migrated yet -- run seeders/seeder.php
+            // Table might not be migrated yet -- run bin/seed
         }
 
         // Note the 'app/' prefix: this is what App::registerViewDir('app', VIEWS_DIR) in
@@ -520,7 +554,7 @@ use Zero\Support\Str;
                 <?php endforeach; ?>
             </ul>
         <?php else: ?>
-            <p>No custom records found yet. Run <code>php seeders/seeder.php</code> to create one.</p>
+            <p>No custom records found yet. Run <code>bin/seed</code> to create one.</p>
         <?php endif; ?>
     </main>
 </div>
@@ -581,9 +615,10 @@ entirely separate from this sub-project's own code, views, storage, and uploads.
    ./bin/setup-symlinks
    \`\`\`
 2. Edit \`.env\` with your real database credentials.
-3. Run the seeder to migrate Core's tables and this sub-project's own tables:
+3. Run every pending migration (Core's own, plus this sub-project's own under
+   \`src/Modules/*/Database/Migrations/\`) and seed an example record:
    \`\`\`
-   php seeders/seeder.php
+   bin/seed
    \`\`\`
 4. Run the test suite:
    \`\`\`
@@ -598,8 +633,11 @@ entirely separate from this sub-project's own code, views, storage, and uploads.
 
 - \`${SUBMODULE_PATH}/\` -- Zero CMS Core (read-only submodule; do not edit in place)
 - \`public/\` -- this sub-project's document root
-- \`src/Controllers\`, \`src/Models\`, \`src/Views\`, \`src/Modules\` -- your own code (namespace \`App\\\`)
-- \`seeders/\`, \`tests/\` -- your own seeders and tests
+- \`src/Controllers\`, \`src/Models\`, \`src/Views\` -- your own simple code (namespace \`App\\\`)
+- \`src/Modules/Records\` -- an example self-contained module (own migration under
+  \`Database/Migrations/\`), showing how to add real modules the same way Core's own
+  bundled modules are structured -- add more alongside it the same way
+- \`bin/seed\`, \`tests/\` -- your own setup script and tests
 - \`storage/\` -- private files and logs, kept outside \`${SUBMODULE_PATH}/\`
 
 ## Updating Core
@@ -628,7 +666,7 @@ echo
 echo "Next steps:"
 echo "  cd $TARGET"
 echo "  \$EDITOR .env                 # set your real DB credentials"
-echo "  php seeders/seeder.php        # migrate Core + seed sub-project tables"
+echo "  bin/seed                      # migrate Core + this sub-project's tables, seed an example"
 echo "  php tests/run.php             # run the sub-project test suite"
 echo "  git commit -m 'Initial sub-project scaffold'"
 echo
