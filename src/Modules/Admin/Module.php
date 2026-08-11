@@ -195,13 +195,18 @@ class,
  */
 class,
 
-            // Admin REST API routes
-            '#^/api/v1/admin/([a-zA-Z0-9_/\-]+)$#' => Controllers\Api\AdminApiController::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class,
+            // Admin REST API routes, one focused controller per resource (see
+            // src/Modules/Admin/Controllers/Api/ and FileManagerService for the shared
+            // file-manager logic also used by the traditional /admin/files/* routes above)
+            '#^/api/v1/admin/files/?$#' => Controllers\Api\FilesApiController::class,
+            '#^/api/v1/admin/models/([a-zA-Z0-9_-]+)/?$#' => Controllers\Api\ModelApiController::class,
+            '#^/api/v1/admin/models/([a-zA-Z0-9_-]+)/reorder/?$#' => Controllers\Api\ModelApiController::class,
+            '#^/api/v1/admin/models/([a-zA-Z0-9_-]+)/([a-zA-Z0-9\-]+)/cascade-check$#' => Controllers\Api\ModelApiController::class,
+            '#^/api/v1/admin/models/([a-zA-Z0-9_-]+)/([a-zA-Z0-9\-]+)$#' => Controllers\Api\ModelApiController::class,
+            '#^/api/v1/admin/audit-logs/purge/?$#' => Controllers\Api\AuditLogApiController::class,
+            '#^/api/v1/admin/preferences/?$#' => Controllers\Api\PreferencesApiController::class,
+            '#^/api/v1/admin/block-preview/?$#' => Controllers\Api\BlockPreviewApiController::class,
+            '#^/api/v1/admin/ai/generate-summary/?$#' => Controllers\Api\AiApiController::class,
             '#^/api/v1/user/send-welcome$#' => Controllers\Api\SendWelcomeController::/**
  * Class 
  *

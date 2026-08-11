@@ -122,7 +122,7 @@ assert_test(strpos($html2_ks, '<h1 style="color: var(--neon-cyan); margin-bottom
 // 2. Test Block Preview endpoint output in admin back-office
 echo "  Testing block preview rendering for admin back-office...\n";
 
-class TestAdminApiController extends \Zero\Modules\Admin\Controllers\Api\AdminApiController {
+class TestAdminApiController extends \Zero\Modules\Admin\Controllers\Api\BlockPreviewApiController {
     public $responseData = null;
     public $responseStatusCode = null;
 

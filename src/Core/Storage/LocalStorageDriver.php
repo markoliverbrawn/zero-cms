@@ -128,6 +128,26 @@ class LocalStorageDriver implements StorageDriver
     }
 
     /**
+     * Determine whether a path segment sitting directly under "storage/uploads" needs the active
+     * site's UUID prefix inserted. Returns false if it's already scoped to some tenant (matches
+     * the UUIDv7 pattern, whether the active site or another one) or already belongs to the
+     * active site -- both cases mean the caller should leave the path unchanged.
+     *
+     * @param string $subPathRest The segment after "storage/uploads/", already trimmed of
+     *                            leading slashes.
+     * @param string $siteId The active site's UUID.
+     * @return bool
+     */
+    protected function needsActiveSitePrefix(string $subPathRest, string $siteId): bool
+    {
+        $isAlreadyTenantScoped = \preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}(\/|$)/i', $subPathRest);
+        if ($isAlreadyTenantScoped) {
+            return false;
+        }
+        return \strpos($subPathRest, $siteId . '/') !== 0 && $subPathRest !== $siteId;
+    }
+
+    /**
      * Resolves the public URL path for a stored asset.
      *
      * @param string $path Argument descriptor.
@@ -165,13 +185,8 @@ class LocalStorageDriver implements StorageDriver
             if (\strpos($subPathClean, '/storage/uploads') === 0) {
                 $subPathRest = \substr($subPathClean, \strlen('/storage/uploads'));
                 $subPathRest = \ltrim($subPathRest, '/');
-                
-                $isAlreadyTenantScoped = \preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}(\/|$)/i', $subPathRest);
-                if ($isAlreadyTenantScoped) {
-                    return $subPathClean;
-                }
-                
-                if (\strpos($subPathRest, $siteId . '/') !== 0 && $subPathRest !== $siteId) {
+
+                if ($this->needsActiveSitePrefix($subPathRest, $siteId)) {
                     return '/storage/uploads' . $prefix . '/' . $subPathRest;
                 }
                 return $subPathClean;
@@ -183,25 +198,15 @@ class LocalStorageDriver implements StorageDriver
         if (\strpos($path, '/storage/uploads') === 0) {
             $subPathRest = \substr($path, \strlen('/storage/uploads'));
             $subPathRest = \ltrim($subPathRest, '/');
-            
-            $isAlreadyTenantScoped = \preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}(\/|$)/i', $subPathRest);
-            if ($isAlreadyTenantScoped) {
-                return $path;
-            }
-            
-            if (\strpos($subPathRest, $siteId . '/') !== 0 && $subPathRest !== $siteId) {
+
+            if ($this->needsActiveSitePrefix($subPathRest, $siteId)) {
                 return '/storage/uploads' . $prefix . '/' . $subPathRest;
             }
             return $path;
         }
 
         // Generic relative paths
-        $isAlreadyTenantScoped = \preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}(\/|$)/i', $trimmed);
-        if ($isAlreadyTenantScoped) {
-            return '/storage/uploads/' . $trimmed;
-        }
-
-        if (\strpos($trimmed, $siteId . '/') !== 0 && $trimmed !== $siteId) {
+        if ($this->needsActiveSitePrefix($trimmed, $siteId)) {
             return '/storage/uploads' . $prefix . '/' . $trimmed;
         }
 
@@ -311,13 +316,8 @@ class LocalStorageDriver implements StorageDriver
                 $subPathRest = \substr($subPathClean, \strlen('/storage/uploads'));
                 $subPathRest = \ltrim($subPathRest, '/');
 
-                // If it already starts with a UUIDv7, bypass prefixing
-                $isAlreadyTenantScoped = \preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}(\/|$)/i', $subPathRest);
-                if (!$isAlreadyTenantScoped && !empty($subPathRest)) {
-                    // Check if it already starts with siteId/ or is exactly siteId
-                    if (\strpos($subPathRest, $siteId . '/') !== 0 && $subPathRest !== $siteId) {
-                        return Storage::getUploadsRoot() . $prefix . '/' . $subPathRest;
-                    }
+                if (!empty($subPathRest) && $this->needsActiveSitePrefix($subPathRest, $siteId)) {
+                    return Storage::getUploadsRoot() . $prefix . '/' . $subPathRest;
                 }
             }
             return $path;
@@ -335,30 +335,22 @@ class LocalStorageDriver implements StorageDriver
             $subPathRest = \substr($trimmed, \strlen('storage/uploads'));
             $subPathRest = \ltrim($subPathRest, '/');
 
-            // If it already starts with a UUIDv7, bypass prefixing
-            $isAlreadyTenantScoped = \preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}(\/|$)/i', $subPathRest);
-            if (!$isAlreadyTenantScoped && !empty($subPathRest)) {
-                if (\strpos($subPathRest, $siteId . '/') !== 0 && $subPathRest !== $siteId) {
-                    return Storage::getUploadsRoot() . $prefix . '/' . $subPathRest;
-                }
+            if (!empty($subPathRest) && $this->needsActiveSitePrefix($subPathRest, $siteId)) {
+                return Storage::getUploadsRoot() . $prefix . '/' . $subPathRest;
             }
             return Storage::getRoot() . '/public/' . $trimmed;
         }
 
         // Default fallback: generic relative paths inside the site-scoped uploads folder
-        $isAlreadyTenantScoped = \preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}(\/|$)/i', $trimmed);
-        if ($isAlreadyTenantScoped) {
-            return Storage::getUploadsRoot() . '/' . $trimmed;
+        if (empty($trimmed)) {
+            return Storage::getUploadsRoot() . '/' . $siteId;
         }
 
-        if (!empty($trimmed)) {
-            if (\strpos($trimmed, $siteId . '/') !== 0 && $trimmed !== $siteId) {
-                return Storage::getUploadsRoot() . $prefix . '/' . $trimmed;
-            }
-            return Storage::getUploadsRoot() . '/' . $trimmed;
+        if ($this->needsActiveSitePrefix($trimmed, $siteId)) {
+            return Storage::getUploadsRoot() . $prefix . '/' . $trimmed;
         }
 
-        return Storage::getUploadsRoot() . '/' . $siteId;
+        return Storage::getUploadsRoot() . '/' . $trimmed;
     }
 
     /**
