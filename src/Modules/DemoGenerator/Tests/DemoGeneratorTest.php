@@ -11,6 +11,7 @@ use Zero\Models\Page;
 use Zero\Models\Media;
 use Zero\Modules\DemoGenerator\Controllers\DemoController;
 use Zero\Modules\DemoGenerator\Jobs\TeardownExpiredDemosJob;
+use Zero\Core\Storage\Storage;
 
 echo "=== Sandbox Demo Generator Lifecycle Integration Tests ===\n";
 
@@ -76,7 +77,7 @@ $mediaCount = intval(DB::query("SELECT COUNT(*) FROM media WHERE site_id = ?", [
 assert_test($mediaCount > 0, "Media metadata records populated successfully: {$mediaCount} items found");
 
 // Verify physical files were copied successfully to the tenant uploads directory
-$uploadDir = APPLICATION_ROOT . '/public/storage/uploads/' . $siteId;
+$uploadDir = Storage::getUploadsRoot() . '/' . $siteId;
 assert_test(file_exists($uploadDir) && is_dir($uploadDir), "Tenant physical uploads directory created on disk");
 
 $copiedFiles = glob($uploadDir . '/*');

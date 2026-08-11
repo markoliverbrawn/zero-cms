@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Zero\Models;
 
 use Zero\Core\App;
+use Zero\Core\Storage\Storage;
 use Zero\Database\DB;
 use Zero\Interfaces\Model;
 use Zero\Models\Traits\CascadesDeletes;
@@ -139,7 +140,7 @@ class => 'site_id'
         $res = $this->traitDelete();
 
         // Recursively clean up the tenant uploads directory if it exists
-        $uploadDir = APPLICATION_ROOT . '/public/storage/uploads/' . $this->id;
+        $uploadDir = Storage::getUploadsRoot() . '/' . $this->id;
         $this->deleteDirectoryRecursive($uploadDir);
 
         return $res;
@@ -209,7 +210,7 @@ class => 'site_id'
         $res = $this->traitForceDelete();
 
         // Recursively clean up the tenant uploads directory if it exists
-        $uploadDir = APPLICATION_ROOT . '/public/storage/uploads/' . $this->id;
+        $uploadDir = Storage::getUploadsRoot() . '/' . $this->id;
         $this->deleteDirectoryRecursive($uploadDir);
 
         return $res;

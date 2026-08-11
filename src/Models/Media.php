@@ -121,7 +121,7 @@ class Media implements Model
         $hash = \md5("{$this->id}_{$focusX}_{$focusY}_{$mtime}_{$size}");
         
         $siteId = $this->site_id ?? 'default';
-        $cropsDir = APPLICATION_ROOT . "/public/storage/uploads/{$siteId}/_crops";
+        $cropsDir = Storage::getUploadsRoot() . "/{$siteId}/_crops";
         
         $cachedFilename = "crop_{$this->id}_{$hash}.jpg";
         $cachedPhysicalPath = "{$cropsDir}/{$cachedFilename}";

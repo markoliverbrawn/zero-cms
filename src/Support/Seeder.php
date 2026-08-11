@@ -44,7 +44,7 @@ class Seeder
      */
     public function __construct($source)
     {
-        $this->uploadsDir = APPLICATION_ROOT . '/public/storage/uploads';
+        $this->uploadsDir = Storage::getUploadsRoot();
 
         if (\is_array($source)) {
             $this->data = $source;

@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Zero\Modules\DemoGenerator\Controllers;
 
 use Exception;
+use Zero\Core\Storage\Storage;
 use Zero\Core\Template;
 use Zero\Database\DB;
 use Zero\Interfaces\Controller;
@@ -214,7 +215,7 @@ class DemoController implements Controller
 
         // 1. Copy Media metadata and physical files FIRST to populate translation map
         if (isset($data['media']) && \is_array($data['media'])) {
-            $targetDir = APPLICATION_ROOT . '/public/storage/uploads/' . $siteId;
+            $targetDir = Storage::getUploadsRoot() . '/' . $siteId;
             if (!\file_exists($targetDir)) {
                 \mkdir($targetDir, 0755, true);
             }

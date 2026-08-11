@@ -22,6 +22,54 @@ use Zero\Core\Env;
 class Storage
 {
     protected static $driverInstance = null;
+    protected static $root = null;
+
+    /**
+     * Register the absolute root directory under which this app's own local storage lives:
+     * `<root>/public/storage/uploads` for public tenant uploads, `<root>/storage/private` for
+     * non-web-accessible private storage. Defaults to APPLICATION_ROOT.
+     *
+     * Lets a host project embedding Zero as a git submodule keep every uploaded file entirely
+     * outside the submodule (e.g. registered as its own project root) instead of writing runtime
+     * user data into a git-tracked vendor directory.
+     *
+     * @param string $absoluteDir
+     * @return void
+     */
+    public static function setRoot(string $absoluteDir): void
+    {
+        self::$root = \rtrim($absoluteDir, '/');
+    }
+
+    /**
+     * Get the configured storage root, defaulting to APPLICATION_ROOT when none is registered.
+     *
+     * @return string
+     */
+    public static function getRoot(): string
+    {
+        return self::$root ?? APPLICATION_ROOT;
+    }
+
+    /**
+     * Get the absolute directory where public tenant uploads live on local disk.
+     *
+     * @return string
+     */
+    public static function getUploadsRoot(): string
+    {
+        return self::getRoot() . '/public/storage/uploads';
+    }
+
+    /**
+     * Get the absolute directory where non-web-accessible private files live on local disk.
+     *
+     * @return string
+     */
+    public static function getPrivateStorageRoot(): string
+    {
+        return self::getRoot() . '/storage/private';
+    }
 
     /**
      * Clears all contents of the target directory recursively via the active driver.

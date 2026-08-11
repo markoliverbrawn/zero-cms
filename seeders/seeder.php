@@ -10,6 +10,7 @@ require_once APPLICATION_ROOT . '/src/Core/Autoloader.php';
 use Zero\Core\Env;
 use Zero\Database\DB;
 use Zero\Core\App;
+use Zero\Core\Storage\Storage;
 use Zero\Database\MigrationManager;
 use Zero\Support\Seeder;
 
@@ -260,7 +261,7 @@ foreach ($discoveredList as $setInfo) {
 
                 // Execute only if the module is active/enabled for this site
                 if (in_array($moduleId, $enabledModules)) {
-                    $oopSeeder->run($siteId, APPLICATION_ROOT . '/public/storage/uploads');
+                    $oopSeeder->run($siteId, Storage::getUploadsRoot());
 
                     // Scoped Garbage Collection to keep CLI footprint extremely light
                     DB::clearIdentityMap();

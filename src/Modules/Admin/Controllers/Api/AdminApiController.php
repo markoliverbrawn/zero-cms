@@ -597,9 +597,9 @@ class AdminApiController extends ApiController
                 $currentDestinationFolder = \implode('/', $parts);
             }
 
-            $oldPhysicalPath = APPLICATION_ROOT . $fileRecord['path'];
+            $oldPhysicalPath = Storage::getRoot() . $fileRecord['path'];
             $newFilename = $fileRecord['filename'];
-            $newPhysicalDir = APPLICATION_ROOT . '/public/storage/uploads' . (!empty($currentDestinationFolder) ? '/' . $currentDestinationFolder : '');
+            $newPhysicalDir = Storage::getUploadsRoot() . (!empty($currentDestinationFolder) ? '/' . $currentDestinationFolder : '');
             
             if (!Storage::exists($newPhysicalDir)) {
                 Storage::makeDirectory($newPhysicalDir);
@@ -915,7 +915,7 @@ class]) || (\method_exists($model, 'isOrderable') && $model::isOrderable());
         $currentFolder = \preg_replace('/[^a-zA-Z0-9_\-\/]/', '_', $currentFolder);
         $currentFolder = \trim($currentFolder, '/');
 
-        $uploadsDir = APPLICATION_ROOT . '/public/storage/uploads/' . $siteId . (!empty($currentFolder) ? '/' . $currentFolder : '');
+        $uploadsDir = Storage::getUploadsRoot() . '/' . $siteId . (!empty($currentFolder) ? '/' . $currentFolder : '');
         if (!Storage::exists($uploadsDir)) {
             Storage::makeDirectory($uploadsDir);
         }

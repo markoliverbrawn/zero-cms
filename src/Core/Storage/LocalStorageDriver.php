@@ -147,12 +147,12 @@ class LocalStorageDriver implements StorageDriver
             return '/' . $trimmed;
         }
 
-        // Strip APPLICATION_ROOT to make it relative to web root
-        if (\strpos($path, APPLICATION_ROOT) === 0) {
-            $subPath = \substr($path, \strlen(APPLICATION_ROOT));
+        // Strip the configured storage root to make it relative to web root
+        if (\strpos($path, Storage::getRoot()) === 0) {
+            $subPath = \substr($path, \strlen(Storage::getRoot()));
             $subPathClean = \ltrim($subPath, '/');
-            
-            // Handle private storage under APPLICATION_ROOT
+
+            // Handle private storage under the configured storage root
             if (\strpos($subPathClean, 'storage/private/') === 0) {
                 return '/' . $subPathClean;
             }
@@ -277,10 +277,11 @@ class LocalStorageDriver implements StorageDriver
             throw new \InvalidArgumentException("Security exception: Malformed path traversal detected.");
         }
 
-        // Clean relative or absolute public/storage/uploads paths to be absolute under APPLICATION_ROOT
+        // Clean relative or absolute public/storage/uploads paths to be absolute under the
+        // configured storage root
         $cleanInput = \ltrim($path, '/');
         if (\strpos($cleanInput, 'public/storage/uploads') === 0) {
-            $path = APPLICATION_ROOT . '/' . $cleanInput;
+            $path = Storage::getRoot() . '/' . $cleanInput;
         }
 
         // Get active site_id dynamically
@@ -290,16 +291,16 @@ class LocalStorageDriver implements StorageDriver
         }
         $prefix = '/' . $siteId;
 
-        // If the path starts with APPLICATION_ROOT
-        if (\strpos($path, APPLICATION_ROOT) === 0) {
-            $subPath = \substr($path, \strlen(APPLICATION_ROOT));
+        // If the path starts with the configured storage root
+        if (\strpos($path, Storage::getRoot()) === 0) {
+            $subPath = \substr($path, \strlen(Storage::getRoot()));
             $subPathClean = \ltrim($subPath, '/');
-            
+
             // Handle private storage
             if (\strpos($subPathClean, 'storage/private/') === 0) {
                 return $path;
             }
-            
+
             // Strip leading public/ if present (since /public is the web document root)
             if (\strpos($subPathClean, 'public/') === 0) {
                 $subPathClean = \substr($subPathClean, 7);
@@ -309,13 +310,13 @@ class LocalStorageDriver implements StorageDriver
             if (\strpos($subPathClean, '/storage/uploads') === 0) {
                 $subPathRest = \substr($subPathClean, \strlen('/storage/uploads'));
                 $subPathRest = \ltrim($subPathRest, '/');
-                
+
                 // If it already starts with a UUIDv7, bypass prefixing
                 $isAlreadyTenantScoped = \preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}(\/|$)/i', $subPathRest);
                 if (!$isAlreadyTenantScoped && !empty($subPathRest)) {
                     // Check if it already starts with siteId/ or is exactly siteId
                     if (\strpos($subPathRest, $siteId . '/') !== 0 && $subPathRest !== $siteId) {
-                        return APPLICATION_ROOT . '/public/storage/uploads' . $prefix . '/' . $subPathRest;
+                        return Storage::getUploadsRoot() . $prefix . '/' . $subPathRest;
                     }
                 }
             }
@@ -323,41 +324,41 @@ class LocalStorageDriver implements StorageDriver
         }
 
         $trimmed = \ltrim($path, '/');
-        
+
         // Handle private storage
         if (\strpos($trimmed, 'storage/private/') === 0) {
-            return APPLICATION_ROOT . '/' . $trimmed;
+            return Storage::getRoot() . '/' . $trimmed;
         }
 
         // If the path starts with /storage/uploads or storage/uploads
         if (\strpos($trimmed, 'storage/uploads') === 0) {
             $subPathRest = \substr($trimmed, \strlen('storage/uploads'));
             $subPathRest = \ltrim($subPathRest, '/');
-            
+
             // If it already starts with a UUIDv7, bypass prefixing
             $isAlreadyTenantScoped = \preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}(\/|$)/i', $subPathRest);
             if (!$isAlreadyTenantScoped && !empty($subPathRest)) {
                 if (\strpos($subPathRest, $siteId . '/') !== 0 && $subPathRest !== $siteId) {
-                    return APPLICATION_ROOT . '/public/storage/uploads' . $prefix . '/' . $subPathRest;
+                    return Storage::getUploadsRoot() . $prefix . '/' . $subPathRest;
                 }
             }
-            return APPLICATION_ROOT . '/public/' . $trimmed;
+            return Storage::getRoot() . '/public/' . $trimmed;
         }
-        
+
         // Default fallback: generic relative paths inside the site-scoped uploads folder
         $isAlreadyTenantScoped = \preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}(\/|$)/i', $trimmed);
         if ($isAlreadyTenantScoped) {
-            return APPLICATION_ROOT . '/public/storage/uploads/' . $trimmed;
+            return Storage::getUploadsRoot() . '/' . $trimmed;
         }
 
         if (!empty($trimmed)) {
             if (\strpos($trimmed, $siteId . '/') !== 0 && $trimmed !== $siteId) {
-                return APPLICATION_ROOT . '/public/storage/uploads' . $prefix . '/' . $trimmed;
+                return Storage::getUploadsRoot() . $prefix . '/' . $trimmed;
             }
-            return APPLICATION_ROOT . '/public/storage/uploads/' . $trimmed;
+            return Storage::getUploadsRoot() . '/' . $trimmed;
         }
 
-        return APPLICATION_ROOT . '/public/storage/uploads/' . $siteId;
+        return Storage::getUploadsRoot() . '/' . $siteId;
     }
 
     /**

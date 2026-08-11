@@ -170,7 +170,7 @@ class FilesController implements Controller
                         ]);
                         
                         // Physically create physical directory as well to keep filesystem organized
-                        $dirPath = APPLICATION_ROOT . '/public/storage/uploads/' . $siteId . (!empty($currentFolder) ? '/' . $currentFolder : '') . '/' . $newFolderName;
+                        $dirPath = Storage::getUploadsRoot() . '/' . $siteId . (!empty($currentFolder) ? '/' . $currentFolder : '') . '/' . $newFolderName;
                         if (!Storage::exists($dirPath)) {
                             Storage::makeDirectory($dirPath);
                         }
@@ -210,7 +210,7 @@ class FilesController implements Controller
             $currentFolder = \preg_replace('/[^a-zA-Z0-9_\-\/]/', '_', $currentFolder);
             $currentFolder = \trim($currentFolder, '/');
 
-            $uploadsDir = APPLICATION_ROOT . '/public/storage/uploads/' . $siteId . (!empty($currentFolder) ? '/' . $currentFolder : '');
+            $uploadsDir = Storage::getUploadsRoot() . '/' . $siteId . (!empty($currentFolder) ? '/' . $currentFolder : '');
             if (!Storage::exists($uploadsDir)) {
                 Storage::makeDirectory($uploadsDir);
             }
@@ -373,10 +373,10 @@ class FilesController implements Controller
             }
 
             // Physically move the file on disk!
-            $oldPhysicalPath = APPLICATION_ROOT . $fileRecord['path'];
+            $oldPhysicalPath = Storage::getRoot() . $fileRecord['path'];
             $newFilename = $fileRecord['filename'];
             
-            $newPhysicalDir = APPLICATION_ROOT . '/public/storage/uploads/' . $siteId . (!empty($currentDestinationFolder) ? '/' . $currentDestinationFolder : '');
+            $newPhysicalDir = Storage::getUploadsRoot() . '/' . $siteId . (!empty($currentDestinationFolder) ? '/' . $currentDestinationFolder : '');
             if (!Storage::exists($newPhysicalDir)) {
                 Storage::makeDirectory($newPhysicalDir);
             }
@@ -476,7 +476,7 @@ class FilesController implements Controller
         $currentFolder = \preg_replace('/[^a-zA-Z0-9_\-\/]/', '_', $currentFolder);
         $currentFolder = \trim($currentFolder, '/');
 
-        $uploadsDir = APPLICATION_ROOT . '/public/storage/uploads/' . $siteId . (!empty($currentFolder) ? '/' . $currentFolder : '');
+        $uploadsDir = Storage::getUploadsRoot() . '/' . $siteId . (!empty($currentFolder) ? '/' . $currentFolder : '');
         if (!Storage::exists($uploadsDir)) {
             Storage::makeDirectory($uploadsDir);
         }
@@ -587,13 +587,13 @@ class FilesController implements Controller
                 }
 
                 // Delete the old physical file if it exists
-                $oldPhysicalPath = APPLICATION_ROOT . $fileRecord['path'];
+                $oldPhysicalPath = Storage::getRoot() . $fileRecord['path'];
                 if (Storage::exists($oldPhysicalPath) && \is_file($oldPhysicalPath)) {
                     Storage::delete($oldPhysicalPath);
                 }
 
                 $currentFolder = $fileRecord['folder'] ?? '';
-                $uploadsDir = APPLICATION_ROOT . '/public/storage/uploads/' . $siteId . (!empty($currentFolder) ? '/' . $currentFolder : '');
+                $uploadsDir = Storage::getUploadsRoot() . '/' . $siteId . (!empty($currentFolder) ? '/' . $currentFolder : '');
                 if (!Storage::exists($uploadsDir)) {
                     Storage::makeDirectory($uploadsDir);
                 }
@@ -648,7 +648,7 @@ class FilesController implements Controller
             );
 
             // Reset cached cropped images for this media item
-            $cropsDir = APPLICATION_ROOT . "/public/storage/uploads/{$siteId}/_crops";
+            $cropsDir = Storage::getUploadsRoot() . "/{$siteId}/_crops";
             if (\file_exists($cropsDir)) {
                 $pattern = "{$cropsDir}/crop_{$fileId}_*.jpg";
                 $files = \glob($pattern);

@@ -13,6 +13,7 @@ namespace Zero\Modules\Security\Controllers;
 
 use Zero\Core\App;
 use Zero\Core\Env;
+use Zero\Core\Storage\Storage;
 use Zero\Core\Template;
 use Zero\Database\DB;
 use Zero\Interfaces\Controller;
@@ -122,11 +123,11 @@ class SecurityAuditController implements Controller
         }
 
         // 4. Check folder execution protection
-        $uploadsDir = APPLICATION_ROOT . '/public/storage/uploads';
+        $uploadsDir = Storage::getUploadsRoot();
         $telemetry['storage_directory_open_access'] = true;
         if (\file_exists($uploadsDir)) {
             $telemetry['storage_directory_writable'] = \is_writable($uploadsDir);
-            if (\file_exists(APPLICATION_ROOT . '/public/storage/.htaccess')) {
+            if (\file_exists(Storage::getRoot() . '/public/storage/.htaccess')) {
                 $telemetry['storage_directory_open_access'] = false;
             }
         } else {
