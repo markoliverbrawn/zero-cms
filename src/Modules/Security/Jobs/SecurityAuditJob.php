@@ -42,12 +42,7 @@ class SecurityAuditJob implements Job
 
         // 1. Core audit orchestration via reflection on SecurityAuditController
         $controller = new SecurityAuditController();
-        $reflector = new ReflectionClass(SecurityAuditController::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class);
+        $reflector = new ReflectionClass(SecurityAuditController::class);
 
         $collectMethod = $reflector->getMethod('collectTelemetry');
         $collectMethod->setAccessible(true);

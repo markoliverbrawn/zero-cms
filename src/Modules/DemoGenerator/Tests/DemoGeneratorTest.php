@@ -2,7 +2,7 @@
 // tests/DemoGeneratorTest.php
 // Integration test to verify the Demo Generator module, sandbox creations, and teardown lifecycle.
 
-require_once __DIR__ . '/bootstrap.php';
+require_once dirname(dirname(dirname(__DIR__))) . '/Support/TestBootstrap.php';
 
 use Zero\Database\DB;
 use Zero\Models\Site;

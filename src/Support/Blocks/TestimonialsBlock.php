@@ -3,13 +3,13 @@
 declare(strict_types=1);
 
 /**
- * File: src/Blocks/TestimonialsBlock.php
+ * File: src/Support/Blocks/TestimonialsBlock.php
  * Architectural Purpose: Handles operations and business logic within the system.
- * Package: Zero\Blocks
+ * Package: Zero\Support\Blocks
  * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
  */
 
-namespace Zero\Blocks;
+namespace Zero\Support\Blocks;
 
 use Zero\Interfaces\BlockHelperInterface;
 

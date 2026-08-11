@@ -2,7 +2,7 @@
 // tests/SecurityTest.php
 // Unit tests for Security utilities (Zero\Support\Security)
 
-require_once __DIR__ . '/bootstrap.php';
+require_once dirname(dirname(__DIR__)) . '/Support/TestBootstrap.php';
 
 use Zero\Core\App;
 use Zero\Database\DB;

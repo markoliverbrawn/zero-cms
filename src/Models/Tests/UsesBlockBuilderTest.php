@@ -2,7 +2,7 @@
 // tests/UsesBlockBuilderTest.php
 // Unit test to verify the UsesBlockBuilder and SupportsBlocks core traits and overriding behavior.
 
-require_once __DIR__ . '/bootstrap.php';
+require_once dirname(dirname(__DIR__)) . '/Support/TestBootstrap.php';
 
 use Zero\Models\Page;
 use Zero\Models\Traits\UsesBlockBuilder;

@@ -116,42 +116,12 @@ trait ResolvesTenantContext
         self::applyContentSecurityPolicyMiddleware();
 
         // Register core models dynamically in the core on bootstrap!
-        self::registerModel('audit_logs', AuditLog::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class);
-        self::registerModel('files', Media::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class);
-        self::registerModel('pages', Page::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class);
-        self::registerModel('security_audits', SecurityAudit::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class);
-        self::registerModel('sites', Site::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class);
-        self::registerModel('users', User::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class);
+        self::registerModel('audit_logs', AuditLog::class);
+        self::registerModel('files', Media::class);
+        self::registerModel('pages', Page::class);
+        self::registerModel('security_audits', SecurityAudit::class);
+        self::registerModel('sites', Site::class);
+        self::registerModel('users', User::class);
 
         // Populate standard core dashboard, content, and security sidebar items
         self::initializeDefaultSidebar();

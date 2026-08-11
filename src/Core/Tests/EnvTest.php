@@ -2,7 +2,7 @@
 // tests/EnvTest.php
 // Unit tests for the environment loader (Zero\Core\Env)
 
-require_once __DIR__ . '/bootstrap.php';
+require_once dirname(dirname(__DIR__)) . '/Support/TestBootstrap.php';
 
 use Zero\Core\Env;
 

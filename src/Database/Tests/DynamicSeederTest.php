@@ -2,7 +2,7 @@
 // tests/DynamicSeederTest.php
 // Integration test to verify the Core-Agnostic, Event-Driven Seeder framework.
 
-require_once __DIR__ . '/bootstrap.php';
+require_once dirname(dirname(__DIR__)) . '/Support/TestBootstrap.php';
 
 use Zero\Support\Seeder;
 use Zero\Support\Security;

@@ -49,12 +49,7 @@ trait HasSlug
         }
 
         // Enforce polymorphic type restrictions if configured and column exists
-        $modelType = \property_exists(static::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class, 'modelType') ? static::$modelType : null;
+        $modelType = \property_exists(static::class, 'modelType') ? static::$modelType : null;
         if ($modelType !== null && DB::hasColumn(static::$tableName, 'type')) {
             $sql .= " AND `type` = ?";
             $params[] = $modelType;

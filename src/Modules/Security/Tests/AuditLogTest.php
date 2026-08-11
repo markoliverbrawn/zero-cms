@@ -2,7 +2,7 @@
 // tests/AuditLogTest.php
 // Unit tests for the AuditLog active record model
 
-require_once __DIR__ . '/bootstrap.php';
+require_once dirname(dirname(dirname(__DIR__))) . '/Support/TestBootstrap.php';
 
 use Zero\Modules\Security\Models\AuditLog;
 use Zero\Interfaces\Model as ModelInterface;

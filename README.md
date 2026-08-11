@@ -172,13 +172,13 @@ Zero CMS is engineered under a strict, zero-trust security blueprint. Below is t
 
 ## 5. Automated Testing & Continuous Integration
 
-Zero CMS maintains absolute stability and multi-tenant isolation via a **Zero-Dependency Automated Testing Suite** nested inside `/tests/`:
+Zero CMS maintains absolute stability and multi-tenant isolation via a **Zero-Dependency Automated Testing Suite**, with tests housed alongside the code they cover in each component's own `Tests/` folder (e.g. `src/Core/Tests/`, `src/Modules/Blog/Tests/`), sharing one common `src/Support/TestBootstrap.php`:
 
-* **psr-4 Autoloading:** `tests/bootstrap.php` boots CLI-safe environments and loads namespaces dynamically.
-* **Subprocess Isolation:** `tests/run.php` scans for suites matching `*Test.php` and executes each sequentially inside an **isolated PHP subprocess** (`exec("php {testFile}")`), preventing static variables, mock session variables, and transactional database connections from bleeding between tests.
+* **psr-4 Autoloading:** `src/Support/TestBootstrap.php` boots CLI-safe environments and loads namespaces dynamically.
+* **Subprocess Isolation:** `bin/test` (backed by `Zero\Support\TestRunner`) scans for suites matching `*Test.php` and executes several **concurrently**, each inside its own **isolated PHP subprocess** (`proc_open`, with a small pool of `TEST_TOKEN` slots giving each subprocess its own isolated database), preventing static variables, mock session variables, and transactional database connections from bleeding between tests.
 
 ### Execution
 Run the automated unit testing suite inside the container before staging or deploying code:
 ```bash
-docker exec -w /data/misc/zero php83 php tests/run.php
+docker exec -w /data/misc/zero php83 bin/test
 ```

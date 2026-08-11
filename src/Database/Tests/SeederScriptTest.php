@@ -2,7 +2,7 @@
 // tests/SeederScriptTest.php
 // Integration test to verify Option 1 and Option 2 fallback of the multi-tenant seeder.
 
-require_once __DIR__ . '/bootstrap.php';
+require_once dirname(dirname(__DIR__)) . '/Support/TestBootstrap.php';
 
 use Zero\Core\Env;
 use Zero\Database\DB;

@@ -2047,7 +2047,7 @@ git fetch upstream
 git merge upstream/dev
 
 # 3. Always execute the isolated subprocess test runner to verify 100% regression-free stability
-docker exec -w /data/misc/zero php83 php tests/run.php',
+docker exec -w /data/misc/zero php83 bin/test',
                 ],
             ],
             'type' => 'page',

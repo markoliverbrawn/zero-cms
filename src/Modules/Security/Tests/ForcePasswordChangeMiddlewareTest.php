@@ -2,7 +2,7 @@
 // tests/ForcePasswordChangeMiddlewareTest.php
 // Unit tests for ForcePasswordChangeMiddleware and ChangePasswordController components
 
-require_once __DIR__ . '/bootstrap.php';
+require_once dirname(dirname(dirname(__DIR__))) . '/Support/TestBootstrap.php';
 
 use Zero\Modules\Security\Middleware\ForcePasswordChangeMiddleware;
 use Zero\Modules\Security\Controllers\ChangePasswordController;

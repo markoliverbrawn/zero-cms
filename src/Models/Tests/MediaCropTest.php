@@ -2,7 +2,7 @@
 // tests/MediaCropTest.php
 // Integration and unit test to verify focal-point square cropping generation and cache reset.
 
-require_once __DIR__ . '/bootstrap.php';
+require_once dirname(dirname(__DIR__)) . '/Support/TestBootstrap.php';
 
 use Zero\Models\Media;
 use Zero\Database\DB;

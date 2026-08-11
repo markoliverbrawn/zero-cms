@@ -42,12 +42,7 @@ class Product implements Model
     protected static $modelType = 'product';
     protected static $fillable = ['category_id', 'title', 'slug', 'sku', 'description', 'price', 'compare_at_price', 'main_image', 'media_ids', 'status', 'exclude_from_search'];
     protected static array $cascadeDeletes = [
-        ProductVariant::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class => 'product_id'
+        ProductVariant::class => 'product_id'
     ];
 
     public $id;
@@ -230,12 +225,7 @@ class => 'product_id'
     public static function getConfig(): array
     {
         $categories = [];
-        if (\class_exists(Category::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class)) {
+        if (\class_exists(Category::class)) {
             $allCats = Category::all();
             foreach ($allCats as $cat) {
                 $categories[$cat->id] = $cat->title;

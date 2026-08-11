@@ -2,7 +2,7 @@
 // tests/PostPrecedenceTest.php
 // Automated test to verify that the Post model is not orderable and does not include page-specific columns in its config.
 
-require_once __DIR__ . '/bootstrap.php';
+require_once dirname(dirname(dirname(__DIR__))) . '/Support/TestBootstrap.php';
 
 use Zero\Modules\Blog\Models\Post;
 

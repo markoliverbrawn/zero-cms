@@ -58,12 +58,7 @@ class ListController implements Controller
 
         // Check if model has IsOrderable trait or supports reordering
         $traits = \class_uses($model);
-        $isOrderable = isset($traits[IsOrderable::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class]) || (\method_exists($model, 'isOrderable') && $model::isOrderable());
+        $isOrderable = isset($traits[IsOrderable::class]) || (\method_exists($model, 'isOrderable') && $model::isOrderable());
         
         $sort = $_GET['sort'] ?? '';
         $defaultOrder = $isOrderable ? 'asc' : 'desc';

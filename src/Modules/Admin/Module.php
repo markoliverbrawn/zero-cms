@@ -70,130 +70,30 @@ class Module implements ModuleInterface
     {
         return [
             // Admin authentication routes
-            '#^/admin/?$#' => Controllers\LoginController::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class,
-            '#^/admin/login$#' => Controllers\LoginController::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class,
-            '#^/admin/logout$#' => Controllers\LogoutController::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class,
-            '#^/admin/forgot$#' => Controllers\ForgotController::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class,
-            '#^/admin/reset$#' => Controllers\ResetController::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class,
+            '#^/admin/?$#' => Controllers\LoginController::class,
+            '#^/admin/login$#' => Controllers\LoginController::class,
+            '#^/admin/logout$#' => Controllers\LogoutController::class,
+            '#^/admin/forgot$#' => Controllers\ForgotController::class,
+            '#^/admin/reset$#' => Controllers\ResetController::class,
 
             // Admin back-office routes
-            '#^/admin/dashboard$#' => Controllers\DashboardController::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class,
-            '#^/admin/list/files/edit/([a-zA-Z0-9\-]+)$#' => Controllers\FilesController::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class,
-            '#^/admin/list/files$#' => Controllers\FilesController::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class,
-            '#^/admin/files$#' => Controllers\FilesController::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class,
-            '#^/admin/files/([a-zA-Z0-9_-]+)$#' => Controllers\FilesController::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class,
-            '#^/admin/secure-download/([a-zA-Z0-9\-]+)$#' => Controllers\SecureDownloadController::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class,
-            '#^/admin/preferences$#' => Controllers\PreferencesController::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class,
-            '#^/admin/theme-switcher$#' => Controllers\ThemeSwitcherController::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class,
-            '#^/admin/google-callback$#' => Controllers\GoogleAuthController::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class,
+            '#^/admin/dashboard$#' => Controllers\DashboardController::class,
+            '#^/admin/list/files/edit/([a-zA-Z0-9\-]+)$#' => Controllers\FilesController::class,
+            '#^/admin/list/files$#' => Controllers\FilesController::class,
+            '#^/admin/files$#' => Controllers\FilesController::class,
+            '#^/admin/files/([a-zA-Z0-9_-]+)$#' => Controllers\FilesController::class,
+            '#^/admin/secure-download/([a-zA-Z0-9\-]+)$#' => Controllers\SecureDownloadController::class,
+            '#^/admin/preferences$#' => Controllers\PreferencesController::class,
+            '#^/admin/theme-switcher$#' => Controllers\ThemeSwitcherController::class,
+            '#^/admin/google-callback$#' => Controllers\GoogleAuthController::class,
 
             // CRUD Model routes
-            '#^/admin/list/([a-zA-Z0-9_-]+)$#' => Controllers\ListController::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class,
-            '#^/admin/edit/([a-zA-Z0-9_-]+)/([a-zA-Z0-9\-]+)$#' => Controllers\ModelController::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class,
-            '#^/admin/delete/([a-zA-Z0-9_-]+)$#' => Controllers\ModelController::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class,
-            '#^/admin/restore/([a-zA-Z0-9_-]+)$#' => Controllers\ModelController::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class,
-            '#^/admin/force-delete/([a-zA-Z0-9_-]+)$#' => Controllers\ModelController::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class,
-            '#^/admin/export/([a-zA-Z0-9_-]+)$#' => Controllers\ExportController::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class,
+            '#^/admin/list/([a-zA-Z0-9_-]+)$#' => Controllers\ListController::class,
+            '#^/admin/edit/([a-zA-Z0-9_-]+)/([a-zA-Z0-9\-]+)$#' => Controllers\ModelController::class,
+            '#^/admin/delete/([a-zA-Z0-9_-]+)$#' => Controllers\ModelController::class,
+            '#^/admin/restore/([a-zA-Z0-9_-]+)$#' => Controllers\ModelController::class,
+            '#^/admin/force-delete/([a-zA-Z0-9_-]+)$#' => Controllers\ModelController::class,
+            '#^/admin/export/([a-zA-Z0-9_-]+)$#' => Controllers\ExportController::class,
 
             // Admin REST API routes, one focused controller per resource (see
             // src/Modules/Admin/Controllers/Api/ and FileManagerService for the shared
@@ -207,20 +107,10 @@ class,
             '#^/api/v1/admin/preferences/?$#' => Controllers\Api\PreferencesApiController::class,
             '#^/api/v1/admin/block-preview/?$#' => Controllers\Api\BlockPreviewApiController::class,
             '#^/api/v1/admin/ai/generate-summary/?$#' => Controllers\Api\AiApiController::class,
-            '#^/api/v1/user/send-welcome$#' => Controllers\Api\SendWelcomeController::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class,
+            '#^/api/v1/user/send-welcome$#' => Controllers\Api\SendWelcomeController::class,
 
             // Redirect route for backward compatibility / back links
-            '#^/admin/([a-zA-Z0-9_-]+)$#' => Controllers\RedirectController::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class,
+            '#^/admin/([a-zA-Z0-9_-]+)$#' => Controllers\RedirectController::class,
         ];
     }
 

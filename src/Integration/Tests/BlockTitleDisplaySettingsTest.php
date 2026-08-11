@@ -4,7 +4,7 @@
 // are correctly respected and rendered across all themes (default, guide, and kitchensink).
 // Also asserts that block previews correctly render block titles reflecting the active theme.
 
-require_once __DIR__ . '/bootstrap.php';
+require_once dirname(dirname(__DIR__)) . '/Support/TestBootstrap.php';
 
 use Zero\Core\App;
 use Zero\Core\Template;

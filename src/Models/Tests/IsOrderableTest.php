@@ -2,7 +2,7 @@
 // tests/IsOrderableTest.php
 // Unit and integration tests for IsOrderable Active Record Trait (Zero\Models\Traits\IsOrderable)
 
-require_once __DIR__ . '/bootstrap.php';
+require_once dirname(dirname(__DIR__)) . '/Support/TestBootstrap.php';
 
 use Zero\Models\Page;
 use Zero\Database\DB;

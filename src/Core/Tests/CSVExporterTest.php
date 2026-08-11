@@ -2,7 +2,7 @@
 // tests/CSVExporterTest.php
 // Unit tests for CSVExporter core helper (Zero\Core\CSVExporter)
 
-require_once __DIR__ . '/bootstrap.php';
+require_once dirname(dirname(__DIR__)) . '/Support/TestBootstrap.php';
 
 use Zero\Core\CSVExporter;
 

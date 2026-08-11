@@ -2,7 +2,7 @@
 // tests/RouterTest.php
 // Unit tests for HTTP Router engine (Zero\Http\Router)
 
-require_once __DIR__ . '/bootstrap.php';
+require_once dirname(dirname(__DIR__)) . '/Support/TestBootstrap.php';
 
 use Zero\Http\Router;
 

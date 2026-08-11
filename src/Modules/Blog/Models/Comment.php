@@ -106,12 +106,7 @@ class Comment implements Model
             WHERE site_id = ? AND post_id = ? AND status = 'approved' AND deleted_at IS NULL 
             ORDER BY created_at ASC
         ";
-        return DB::query($query, [$siteId, $postId])->fetchAll(\PDO::FETCH_CLASS, self::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class);
+        return DB::query($query, [$siteId, $postId])->fetchAll(\PDO::FETCH_CLASS, self::class);
     }
 /**
      * Custom pagination for Comments to support left-joins and searching by dynamic Post Title.

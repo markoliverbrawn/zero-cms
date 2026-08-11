@@ -71,24 +71,9 @@ class Module implements ModuleInterface
     public function getRoutes(): array
     {
         return [
-            '#^/search$#' => SearchController::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class,
-            '#^/api/v1/admin/search/reindex/start$#' => \Zero\Modules\Search\Controllers\SearchReindexController::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class,
-            '#^/api/v1/admin/search/reindex/batch$#' => \Zero\Modules\Search\Controllers\SearchReindexController::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class,
+            '#^/search$#' => SearchController::class,
+            '#^/api/v1/admin/search/reindex/start$#' => \Zero\Modules\Search\Controllers\SearchReindexController::class,
+            '#^/api/v1/admin/search/reindex/batch$#' => \Zero\Modules\Search\Controllers\SearchReindexController::class,
         ];
     }
 
@@ -101,12 +86,7 @@ class,
     public function init()
     {
         // Register core Pages searchable
-        SearchService::register(\Zero\Models\Page::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class, [
+        SearchService::register(\Zero\Models\Page::class, [
             'type_label' => 'Page',
             'search_fields' => ['title', 'content', 'summary'],
             'title_field' => 'title',

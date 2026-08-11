@@ -2,7 +2,7 @@
 // tests/EnabledModulesViewTest.php
 // Unit/integration tests for the enabled modules field view renderer
 
-require_once __DIR__ . '/bootstrap.php';
+require_once dirname(dirname(__DIR__)) . '/Support/TestBootstrap.php';
 
 use Zero\Core\Template;
 

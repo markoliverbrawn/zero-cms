@@ -40,78 +40,18 @@ class Site implements Model
     protected static $fillable = ['name', 'domain', 'theme', 'enabled_modules', 'timezone', 'default_language', 'homepage_id', 'expires_at'];
     protected static $systemModules = ['admin', 'queue', 'security'];
     protected static array $cascadeDeletes = [
-        User::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class => 'site_id',
-        Page::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class => 'site_id',
-        Media::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class => 'site_id',
-        PasswordReset::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class => 'site_id',
-        AuditLog::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class => 'site_id',
-        Post::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class => 'site_id',
-        Category::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class => 'site_id',
-        Product::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class => 'site_id',
-        Order::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class => 'site_id',
-        ForumBoard::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class => 'site_id',
-        Submission::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class => 'site_id',
-        SecurityAudit::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class => 'site_id'
+        User::class => 'site_id',
+        Page::class => 'site_id',
+        Media::class => 'site_id',
+        PasswordReset::class => 'site_id',
+        AuditLog::class => 'site_id',
+        Post::class => 'site_id',
+        Category::class => 'site_id',
+        Product::class => 'site_id',
+        Order::class => 'site_id',
+        ForumBoard::class => 'site_id',
+        Submission::class => 'site_id',
+        SecurityAudit::class => 'site_id'
     ];
 
     public $id;
@@ -226,12 +166,7 @@ class => 'site_id'
         $registered = App::getRegisteredModels();
         foreach ($registered as $name => $class) {
             // Prevent self-referential or circular site cascading deletions
-            if ($class === self::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class) {
+            if ($class === self::class) {
                 continue;
             }
             if (\class_exists($class)) {

@@ -40,12 +40,7 @@ class ForumThread implements ModelInterface
     protected static $modelType = null;
     protected static $fillable = ['board_id', 'user_id', 'title', 'slug', 'status', 'views_count'];
     protected static array $cascadeDeletes = [
-        ForumPost::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class => 'thread_id'
+        ForumPost::class => 'thread_id'
     ];
 
     public $id;

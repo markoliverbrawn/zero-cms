@@ -68,12 +68,7 @@ class Module implements ModuleInterface
      */
     public function getMigrationClass(): ?string
     {
-        return Migration::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class;
+        return Migration::class;
     }
 
     /**
@@ -84,24 +79,9 @@ class;
     public function getRoutes(): array
     {
         return [
-            '#^/post/([a-zA-Z0-9\-]+)$#' => PostViewController::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class,
-            '#^/api/v1/posts(?:/(.*))?$#' => PostsController::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class,
-            '#^/api/v1/blog/comments/submit$#' => CommentsController::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class
+            '#^/post/([a-zA-Z0-9\-]+)$#' => PostViewController::class,
+            '#^/api/v1/posts(?:/(.*))?$#' => PostsController::class,
+            '#^/api/v1/blog/comments/submit$#' => CommentsController::class
         ];
     }
 
@@ -112,26 +92,11 @@ class
      */
     public function init()
     {
-        App::registerModel('posts', Post::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class);
-        App::registerModel('comments', Comment::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class);
+        App::registerModel('posts', Post::class);
+        App::registerModel('comments', Comment::class);
 
         // Register daily scheduled task to automatically purge rejected or spam comments (older than 7 days)
-        Scheduler::register(Jobs\PurgeOldCommentsJob::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class, [], 'daily');
+        Scheduler::register(Jobs\PurgeOldCommentsJob::class, [], 'daily');
 
         App::registerAdminSidebarLink('content', [
             'title' => I18n::t('manage_posts'),
@@ -157,18 +122,8 @@ class, [], 'daily');
             'frontend_view' => \dirname(__FILE__) . '/Views/blocks/frontend/latest_articles.php'
         ]);
 
-        if (\class_exists(SearchService::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class)) {
-            SearchService::register(Post::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class, [
+        if (\class_exists(SearchService::class)) {
+            SearchService::register(Post::class, [
                 'type_label' => 'Blog Post',
                 'search_fields' => ['title', 'content', 'summary'],
                 'title_field' => 'title',

@@ -2,7 +2,7 @@
 // tests/BlogIndexBlocksTest.php
 // Integration test to verify that the blog index page supports page builder blocks across themes.
 
-require_once __DIR__ . '/bootstrap.php';
+require_once dirname(dirname(dirname(__DIR__))) . '/Support/TestBootstrap.php';
 
 use Zero\Core\App;
 use Zero\Core\Template;

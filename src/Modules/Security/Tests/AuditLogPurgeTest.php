@@ -2,7 +2,7 @@
 // tests/AuditLogPurgeTest.php
 // Integration tests for multi-tenant and global Audit Log purging behavior
 
-require_once __DIR__ . '/bootstrap.php';
+require_once dirname(dirname(dirname(__DIR__))) . '/Support/TestBootstrap.php';
 
 use Zero\Database\DB;
 use Zero\Support\Logger;

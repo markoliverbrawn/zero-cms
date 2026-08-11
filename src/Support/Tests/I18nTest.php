@@ -2,7 +2,7 @@
 // tests/I18nTest.php
 // Unit tests for internationalization engine (Zero\Support\I18n)
 
-require_once __DIR__ . '/bootstrap.php';
+require_once dirname(dirname(__DIR__)) . '/Support/TestBootstrap.php';
 
 use Zero\Support\I18n;
 

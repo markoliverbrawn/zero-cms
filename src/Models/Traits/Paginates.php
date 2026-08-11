@@ -55,12 +55,7 @@ trait Paginates
         $params = [];
 
         // Multi-tenant isolation filter (exclude sites table)
-        $tableName = static::$tableName ?? \strtolower((new \ReflectionClass(static::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class))->getShortName()) . 's';
+        $tableName = static::$tableName ?? \strtolower((new \ReflectionClass(static::class))->getShortName()) . 's';
         if ($tableName !== 'sites') {
             if ($tableName === 'users') {
                 // Show users belonging to this site AND global super-admins (site_id IS NULL)
@@ -86,12 +81,7 @@ class))->getShortName()) . 's';
         }
 
         if (isset($filters['q']) && !empty($filters['q'])) {
-            $config = \method_exists(static::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class, 'getConfig') ? static::getConfig() : [];
+            $config = \method_exists(static::class, 'getConfig') ? static::getConfig() : [];
             $searchWhere = [];
             foreach ($config as $fieldname => $value) {
                 if ($value['searchable'] ?? false) {

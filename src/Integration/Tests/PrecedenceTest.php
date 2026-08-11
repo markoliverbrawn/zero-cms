@@ -2,7 +2,7 @@
 // tests/PrecedenceTest.php
 // Integration test to verify the IsOrderable trait and model reordering features.
 
-require_once __DIR__ . '/bootstrap.php';
+require_once dirname(dirname(__DIR__)) . '/Support/TestBootstrap.php';
 
 use Zero\Database\DB;
 use Zero\Models\Page;

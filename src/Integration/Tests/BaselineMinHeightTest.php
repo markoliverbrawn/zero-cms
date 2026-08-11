@@ -13,7 +13,7 @@
  * @copyright  2026 Zero CMS
  */
 
-require_once __DIR__ . '/bootstrap.php';
+require_once dirname(dirname(__DIR__)) . '/Support/TestBootstrap.php';
 
 use Zero\Core\App;
 use Zero\Core\Template;

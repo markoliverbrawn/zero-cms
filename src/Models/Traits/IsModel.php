@@ -142,12 +142,7 @@ trait IsModel
         }
 
         // Add type if static::$modelType is set and the table is a polymorphic table (pages, blog_posts)
-        $modelType = \property_exists(static::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class, 'modelType') ? static::$modelType : null;
+        $modelType = \property_exists(static::class, 'modelType') ? static::$modelType : null;
         if ($modelType !== null && !\in_array('type', $fields) && (static::$tableName === 'pages' || static::$tableName === 'blog_posts')) {
             $fields[] = 'type';
             $placeholders[] = '?';

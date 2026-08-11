@@ -81,68 +81,18 @@ class Module implements ModuleInterface
     {
         return [
             // Standard frontend auth fallbacks in case Shop module is not enabled
-            '#^/login$#' => FrontendLoginController::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class,
-            '#^/register$#' => RegisterController::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class,
-            '#^/forgot$#' => FrontendForgotController::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class,
-            '#^/reset$#' => FrontendResetController::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class,
+            '#^/login$#' => FrontendLoginController::class,
+            '#^/register$#' => RegisterController::class,
+            '#^/forgot$#' => FrontendForgotController::class,
+            '#^/reset$#' => FrontendResetController::class,
 
             // Forum paths
-            '#^/forum$#' => ForumHomeController::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class,
-            '#^/forum/board/([a-zA-Z0-9\-]+)$#' => BoardViewController::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class,
-            '#^/forum/thread/([a-zA-Z0-9\-]+)$#' => ThreadViewController::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class,
-            '#^/forum/board/([a-zA-Z0-9\-]+)/create$#' => ThreadCreateController::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class,
-            '#^/forum/thread/([a-zA-Z0-9\-]+)/reply$#' => ReplyCreateController::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class,
-            '#^/forum/thread/([a-zA-Z0-9\-]+)/moderate$#' => ModerateController::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class,
+            '#^/forum$#' => ForumHomeController::class,
+            '#^/forum/board/([a-zA-Z0-9\-]+)$#' => BoardViewController::class,
+            '#^/forum/thread/([a-zA-Z0-9\-]+)$#' => ThreadViewController::class,
+            '#^/forum/board/([a-zA-Z0-9\-]+)/create$#' => ThreadCreateController::class,
+            '#^/forum/thread/([a-zA-Z0-9\-]+)/reply$#' => ReplyCreateController::class,
+            '#^/forum/thread/([a-zA-Z0-9\-]+)/moderate$#' => ModerateController::class,
         ];
     }
 
@@ -154,24 +104,9 @@ class,
     public function init()
     {
         App::registerThemeFallback('forum');
-        App::registerModel('forum_boards', Models\ForumBoard::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class);
-        App::registerModel('forum_threads', Models\ForumThread::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class);
-        App::registerModel('forum_posts', Models\ForumPost::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class);
+        App::registerModel('forum_boards', Models\ForumBoard::class);
+        App::registerModel('forum_threads', Models\ForumThread::class);
+        App::registerModel('forum_posts', Models\ForumPost::class);
 
         App::registerAdminSidebarSection('forum', [
             'title' => 'Forum Management',

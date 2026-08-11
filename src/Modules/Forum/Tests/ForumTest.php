@@ -2,7 +2,7 @@
 // tests/ForumTest.php
 // Unit and integration tests for the Forum module, models, and multi-tenant isolation
 
-require_once __DIR__ . '/bootstrap.php';
+require_once dirname(dirname(dirname(__DIR__))) . '/Support/TestBootstrap.php';
 
 use Zero\Core\App;
 use Zero\Database\DB;

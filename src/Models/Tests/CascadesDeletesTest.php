@@ -2,7 +2,7 @@
 // tests/CascadesDeletesTest.php
 // Unit tests for the new CascadesDeletes Core Model Trait
 
-require_once __DIR__ . '/bootstrap.php';
+require_once dirname(dirname(__DIR__)) . '/Support/TestBootstrap.php';
 
 use Zero\Core\App;
 use Zero\Database\DB;

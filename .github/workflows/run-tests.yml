@@ -43,4 +43,4 @@ jobs:
           DB_PASS: ""
           DB_NAME: cms
           STORAGE_DRIVER: local
-        run: php tests/run.php
+        run: bin/test

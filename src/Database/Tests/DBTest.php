@@ -2,7 +2,7 @@
 // tests/DBTest.php
 // Unit tests for central Database Engine (Zero\Database\DB)
 
-require_once __DIR__ . '/bootstrap.php';
+require_once dirname(dirname(__DIR__)) . '/Support/TestBootstrap.php';
 
 use Zero\Database\DB;
 

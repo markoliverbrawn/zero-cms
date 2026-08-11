@@ -65,7 +65,7 @@ trait Searchable
             foreach ($decoded as $block) {
                 $type = $block['type'] ?? '';
                 // Resolve StudlyCase class name from snake_case block type, e.g. text_image -> TextImageBlock
-                $className = '\\Zero\\Blocks\\' . \str_replace(' ', '', \ucwords(\str_replace('_', ' ', $type))) . 'Block';
+                $className = '\\Zero\\Support\\Blocks\\' . \str_replace(' ', '', \ucwords(\str_replace('_', ' ', $type))) . 'Block';
 
                 if (\class_exists($className) && \is_subclass_of($className, '\\Zero\\Interfaces\\BlockHelperInterface')) {
                     $helper = new $className($block);
@@ -137,19 +137,9 @@ trait Searchable
             return;
         }
 
-        $modelType = \property_exists(static::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class, 'modelType') ? static::$modelType : null;
+        $modelType = \property_exists(static::class, 'modelType') ? static::$modelType : null;
         if (empty($modelType)) {
-            $parts = \explode('\\', static::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class);
+            $parts = \explode('\\', static::class);
             $modelType = \strtolower(\end($parts));
         }
 
@@ -171,19 +161,9 @@ class);
             return;
         }
 
-        $modelType = \property_exists(static::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class, 'modelType') ? static::$modelType : null;
+        $modelType = \property_exists(static::class, 'modelType') ? static::$modelType : null;
         if (empty($modelType)) {
-            $parts = \explode('\\', static::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class);
+            $parts = \explode('\\', static::class);
             $modelType = \strtolower(\end($parts));
         }
 

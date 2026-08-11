@@ -2,7 +2,7 @@
 // tests/ValidatorTest.php
 // Unit tests for the extensible Core Validator (Zero\Core\Validator)
 
-require_once __DIR__ . '/bootstrap.php';
+require_once dirname(dirname(__DIR__)) . '/Support/TestBootstrap.php';
 
 use Zero\Core\Validator;
 

@@ -2,7 +2,7 @@
 // tests/LoggerTest.php
 // Unit tests for dynamic central Audit Logger (Zero\Support\Logger)
 
-require_once __DIR__ . '/bootstrap.php';
+require_once dirname(dirname(__DIR__)) . '/Support/TestBootstrap.php';
 
 use Zero\Support\Logger;
 use Zero\Database\DB;

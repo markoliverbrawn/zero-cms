@@ -2,7 +2,7 @@
 // tests/AiImageTest.php
 // Unit tests for the new AI Image Generation capability inside AiService
 
-require_once __DIR__ . '/bootstrap.php';
+require_once dirname(dirname(__DIR__)) . '/Support/TestBootstrap.php';
 
 use Zero\Services\AiService;
 use Zero\Services\Ai\Providers\MockProvider;

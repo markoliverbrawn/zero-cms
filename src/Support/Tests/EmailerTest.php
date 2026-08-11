@@ -43,7 +43,7 @@ namespace Zero\Support {
 }
 
 namespace {
-    require_once __DIR__ . '/bootstrap.php';
+    require_once dirname(dirname(__DIR__)) . '/Support/TestBootstrap.php';
 
     use Zero\Support\Emailer;
     use Zero\Support\MockSmtpState;
@@ -53,7 +53,7 @@ namespace {
 
     // This test specifically exercises Emailer::send()'s real code path (SMTP handshake, audit
     // logging, PII masking), so it opts out of the test-suite-wide mock enabled by
-    // tests/bootstrap.php. This is still fully safe: the fsockopen/fgets/fputs/fclose functions
+    // src/Support/TestBootstrap.php. This is still fully safe: the fsockopen/fgets/fputs/fclose functions
     // are shadowed above in the Zero\Support namespace, so no real socket is ever opened.
     Emailer::disableTestMode();
 

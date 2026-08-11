@@ -62,12 +62,7 @@ class Module implements ModuleInterface
     public function getRoutes(): array
     {
         return [
-            '#^/api/v1/demo/create$#' => DemoController::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class
+            '#^/api/v1/demo/create$#' => DemoController::class
         ];
     }
 

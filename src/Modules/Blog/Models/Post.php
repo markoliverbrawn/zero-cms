@@ -39,12 +39,7 @@ class Post extends Page
     protected static $modelType = 'post'; // Define type for Post model
     protected static $fillable = ['title', 'summary', 'slug', 'content', 'status', 'allow_comments', 'comment_notifiers', 'featured_image', 'exclude_from_search'];
     protected static array $cascadeDeletes = [
-        Comment::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class => 'post_id'
+        Comment::class => 'post_id'
     ];
 
     public $comment_count = 0;

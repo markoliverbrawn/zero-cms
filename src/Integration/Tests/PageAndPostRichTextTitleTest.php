@@ -3,7 +3,7 @@
 // Integration test to verify that Page and Blog Post model schemas configure title fields as standard text,
 // and that edit forms successfully render a standard input box for the title.
 
-require_once __DIR__ . '/bootstrap.php';
+require_once dirname(dirname(__DIR__)) . '/Support/TestBootstrap.php';
 
 use Zero\Core\App;
 use Zero\Core\Template;

@@ -2,7 +2,7 @@
 // tests/TemplateTest.php
 // Unit tests for template compilation engine (Zero\Core\Template)
 
-require_once __DIR__ . '/bootstrap.php';
+require_once dirname(dirname(__DIR__)) . '/Support/TestBootstrap.php';
 
 use Zero\Core\Template;
 

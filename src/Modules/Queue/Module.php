@@ -73,12 +73,7 @@ class Module implements ModuleInterface
     public function getRoutes(): array
     {
         return [
-            '#^/api/v1/queue/process$#' => QueueApiController::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class
+            '#^/api/v1/queue/process$#' => QueueApiController::class
         ];
     }
 
@@ -89,20 +84,10 @@ class
      */
     public function init()
     {
-        App::registerModel('queue_jobs', QueueJob::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class);
+        App::registerModel('queue_jobs', QueueJob::class);
 
         // Register hourly scheduled task to automatically purge old tenant audit logs (older than 1 year)
-        Scheduler::register(PurgeOldLogsJob::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class, [], 'hourly');
+        Scheduler::register(PurgeOldLogsJob::class, [], 'hourly');
 
         App::registerAdminSidebarSection('queue', [
             'title' => 'Job Queue',

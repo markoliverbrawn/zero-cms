@@ -89,55 +89,20 @@ class Module implements ModuleInterface
     public function init()
     {
         // Register the modular active record models dynamically on bootstrap
-        App::registerModel('audit_logs', AuditLog::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class);
-        App::registerModel('security_audits', SecurityAudit::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class);
+        App::registerModel('audit_logs', AuditLog::class);
+        App::registerModel('security_audits', SecurityAudit::class);
 
         // Explicitly register our security controllers under 'admin' context to bypass DB enabled_modules constraints
         Router::register([
-            '#^/admin/change-password$#' => ChangePasswordController::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class,
-            '#^/admin/list/security_audits$#' => SecurityAuditController::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class,
-            '#^/admin/security/audit$#' => SecurityAuditController::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class,
+            '#^/admin/change-password$#' => ChangePasswordController::class,
+            '#^/admin/list/security_audits$#' => SecurityAuditController::class,
+            '#^/admin/security/audit$#' => SecurityAuditController::class,
         ], null, 'admin');
 
         // Register dynamic automated security audit job if backend Scheduler is present
-        if (\class_exists(Scheduler::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class)) {
+        if (\class_exists(Scheduler::class)) {
             $schedule = Env::get('SECURITY_AUDIT_SCHEDULE', 'daily');
-            Scheduler::register(SecurityAuditJob::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class, [], $schedule);
+            Scheduler::register(SecurityAuditJob::class, [], $schedule);
         }
     }
 }

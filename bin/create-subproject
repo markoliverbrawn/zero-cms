@@ -116,6 +116,7 @@ mkdir -p "$TARGET"/public/assets
 mkdir -p "$TARGET"/src/Controllers
 mkdir -p "$TARGET"/src/Models
 mkdir -p "$TARGET"/src/Views
+mkdir -p "$TARGET"/src/Support
 mkdir -p "$TARGET"/src/Modules/Records/Database/Migrations
 mkdir -p "$TARGET"/tests
 mkdir -p "$TARGET"/storage/private
@@ -130,6 +131,10 @@ cat > "$TARGET/public/index.php" <<'PHP_EOF'
  * public/index.php
  * Front Controller and Autoloader bootstrapper for this sub-project.
  */
+
+use Zero\Core\App;
+use Zero\Core\Env;
+use Zero\Core\Storage\Storage;
 
 define('REQUEST_START_TIME', microtime(true));
 
@@ -147,7 +152,9 @@ define('APP_ROOT', SUBPROJECT_ROOT);
 define('VIEWS_DIR', SUBPROJECT_ROOT . '/src/Views'); // Custom sub-project view overrides directory
 
 // 2. Register the Zero Core (Zero\ -> CORE_ROOT/src) and Sub-Project (App\ -> APP_ROOT/src)
-// namespace autoloaders via Core's shared Autoloader.
+// namespace autoloaders via Core's shared Autoloader. Autoloader itself is the one class this
+// project always references fully-qualified: it must be require()'d and invoked before any
+// autoloading exists at all, so there's nothing a `use` import could resolve yet.
 require_once CORE_ROOT . '/src/Core/Autoloader.php';
 \Zero\Core\Autoloader::init();
 \Zero\Core\Autoloader::registerNamespace('App\\', APP_ROOT . '/src');
@@ -155,15 +162,12 @@ require_once CORE_ROOT . '/src/Core/Autoloader.php';
 // Keep all local storage (public tenant uploads, private files) physically inside this
 // sub-project's own root instead of the read-only zero-core submodule -- paired with
 // bin/setup-symlinks, which points public/storage at ../storage so public URLs stay stable.
-\Zero\Core\Storage\Storage::setRoot(APP_ROOT);
+Storage::setRoot(APP_ROOT);
 
 // Let this sub-project's own src/Modules/ contribute modules and migrations the same way
 // Core's own src/Modules/ does (see bin/seed and src/Modules/Records/Database/Migrations/
 // for a real example) -- must be registered before App::bootstrap().
-\Zero\Core\App::registerModulePath(APP_ROOT . '/src/Modules', 'App\\Modules\\');
-
-use Zero\Core\Env;
-use Zero\Core\App;
+App::registerModulePath(APP_ROOT . '/src/Modules', 'App\\Modules\\');
 
 // Load environment configuration from this sub-project's own root
 Env::load(APP_ROOT);
@@ -198,6 +202,11 @@ cat > "$TARGET/tests/bootstrap.php" <<'PHP_EOF'
  * Common bootstrapping and namespace autoloader for sub-project tests.
  */
 
+use App\Support\TestRunner;
+use Zero\Core\App;
+use Zero\Core\Env;
+use Zero\Core\Storage\Storage;
+
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
@@ -216,10 +225,8 @@ define('TEST_SUITE_RUNNING', true);
 require_once CORE_ROOT . '/src/Core/Autoloader.php';
 \Zero\Core\Autoloader::init();
 \Zero\Core\Autoloader::registerNamespace('App\\', APP_ROOT . '/src');
-\Zero\Core\Storage\Storage::setRoot(APP_ROOT);
-\Zero\Core\App::registerModulePath(APP_ROOT . '/src/Modules', 'App\\Modules\\');
-
-use Zero\Core\Env;
+Storage::setRoot(APP_ROOT);
+App::registerModulePath(APP_ROOT . '/src/Modules', 'App\\Modules\\');
 
 Env::load(APP_ROOT);
 
@@ -245,77 +252,133 @@ try {
 }
 
 /**
- * Light-weight test assertion helper. Exits 1 on failure to signal the test runner.
+ * Light-weight test assertion helper. Delegates to App\Support\TestRunner so every test file's
+ * assert_test() call and this sub-project's bin/test share the exact same pass/fail behavior.
  */
 function assert_test(bool $condition, string $message) {
-    if ($condition) {
-        echo "  \033[32m\xE2\x9C\x85 PASS:\033[0m {$message}\n";
-    } else {
-        echo "  \033[31m\xE2\x9D\x8C FAIL:\033[0m {$message}\n";
-        exit(1);
-    }
+    TestRunner::assertTest($condition, $message);
 }
 PHP_EOF
 
-cat > "$TARGET/tests/run.php" <<'PHP_EOF'
+cat > "$TARGET/src/Support/TestRunner.php" <<'PHP_EOF'
 <?php
 /**
- * tests/run.php
- * Discovers and runs all *Test.php files in this directory sequentially.
+ * src/Support/TestRunner.php
+ * Discovers and runs all tests/*Test.php files sequentially, each in its own subprocess.
  */
 
-define('TESTS_ROOT', __DIR__);
+namespace App\Support;
 
-$testFiles = glob(TESTS_ROOT . '/*Test.php');
-sort($testFiles);
+class TestRunner
+{
+    /**
+     * Discover, run, and report on every *Test.php file under $testsRoot. Echoes progress
+     * directly and returns the process exit code (0 on full success, 1 if any suite failed).
+     *
+     * @param string $testsRoot
+     * @return int
+     */
+    public static function run(string $testsRoot): int
+    {
+        $testFiles = glob($testsRoot . '/*Test.php');
+        sort($testFiles);
 
-echo "==================================================\n";
-echo "       SUB-PROJECT UNIT TEST RUNNER          \n";
-echo "==================================================\n\n";
+        echo "==================================================\n";
+        echo "       SUB-PROJECT UNIT TEST RUNNER          \n";
+        echo "==================================================\n\n";
 
-if (empty($testFiles)) {
-    echo "No test files found matching *Test.php.\n";
-    exit(0);
-}
+        if (empty($testFiles)) {
+            echo "No test files found matching *Test.php.\n";
+            return 0;
+        }
 
-echo "Found " . count($testFiles) . " test suite file(s).\n\n";
+        echo "Found " . count($testFiles) . " test suite file(s).\n\n";
 
-$passed = 0;
-$failed = 0;
-$failedSuites = [];
+        $passed = 0;
+        $failed = 0;
+        $failedSuites = [];
 
-foreach ($testFiles as $file) {
-    $suiteName = basename($file);
-    echo "Running {$suiteName}...\n";
+        foreach ($testFiles as $file) {
+            $suiteName = basename($file);
+            echo "Running {$suiteName}...\n";
 
-    exec("php " . escapeshellarg($file), $output, $exitCode);
-    foreach ($output as $line) {
-        echo "  " . $line . "\n";
+            exec("php " . escapeshellarg($file), $output, $exitCode);
+            foreach ($output as $line) {
+                echo "  " . $line . "\n";
+            }
+
+            if ($exitCode === 0) {
+                $passed++;
+                echo "--> {$suiteName} PASSED\n\n";
+            } else {
+                $failed++;
+                $failedSuites[] = $suiteName;
+                echo "--> {$suiteName} FAILED\n\n";
+            }
+            $output = [];
+        }
+
+        echo "==================================================\n";
+        echo "Passed: {$passed}   Failed: {$failed}\n";
+        echo "==================================================\n";
+
+        if ($failed > 0) {
+            foreach ($failedSuites as $suite) {
+                echo "  - {$suite}\n";
+            }
+            return 1;
+        }
+        return 0;
     }
 
-    if ($exitCode === 0) {
-        $passed++;
-        echo "--> {$suiteName} PASSED\n\n";
-    } else {
-        $failed++;
-        $failedSuites[] = $suiteName;
-        echo "--> {$suiteName} FAILED\n\n";
+    /**
+     * Light-weight test assertion helper, called by every test file via the global assert_test()
+     * wrapper defined in tests/bootstrap.php. Exits the current subprocess with status code 1 on
+     * failure, which is what run()'s exit-code-based pass/fail detection relies on.
+     *
+     * @param bool $condition
+     * @param string $message
+     * @return void
+     */
+    public static function assertTest(bool $condition, string $message): void
+    {
+        if ($condition) {
+            echo "  \033[32m\xE2\x9C\x85 PASS:\033[0m {$message}\n";
+        } else {
+            echo "  \033[31m\xE2\x9D\x8C FAIL:\033[0m {$message}\n";
+            exit(1);
+        }
     }
-    $output = [];
 }
-
-echo "==================================================\n";
-echo "Passed: {$passed}   Failed: {$failed}\n";
-echo "==================================================\n";
-
-if ($failed > 0) {
-    foreach ($failedSuites as $suite) {
-        echo "  - {$suite}\n";
-    }
-    exit(1);
-}
-exit(0);
 PHP_EOF
+
+cat > "$TARGET/bin/test" <<'PHP_EOF'
+#!/usr/bin/env php
+<?php
+/**
+ * bin/test
+ * Discovers and runs all *Test.php files under tests/ via App\Support\TestRunner.
+ */
+
+define('SUBPROJECT_ROOT', dirname(__DIR__));
+
+$corePath = SUBPROJECT_ROOT . '/zero-core';
+if (!file_exists($corePath) && file_exists(dirname(dirname(SUBPROJECT_ROOT)) . '/src/Core/App.php')) {
+    $corePath = dirname(dirname(SUBPROJECT_ROOT));
+}
+define('APPLICATION_ROOT', $corePath);
+define('CORE_ROOT', APPLICATION_ROOT);
+define('APP_ROOT', SUBPROJECT_ROOT);
+
+require_once CORE_ROOT . '/src/Core/Autoloader.php';
+\Zero\Core\Autoloader::init();
+\Zero\Core\Autoloader::registerNamespace('App\\', APP_ROOT . '/src');
+
+use App\Support\TestRunner;
+
+exit(TestRunner::run(APP_ROOT . '/tests'));
+PHP_EOF
+chmod +x "$TARGET/bin/test"
 
 cat > "$TARGET/tests/ExampleTest.php" <<'PHP_EOF'
 <?php
@@ -324,17 +387,18 @@ cat > "$TARGET/tests/ExampleTest.php" <<'PHP_EOF'
  * Example unit test verifying the sub-project's own model and controller load correctly.
  */
 
-require_once __DIR__ . '/bootstrap.php';
-
-use App\Models\CustomModel;
 use App\Controllers\HomeController;
+use App\Models\CustomModel;
+use Zero\Interfaces\Controller;
+
+require_once __DIR__ . '/bootstrap.php';
 
 $config = CustomModel::getConfig();
 assert_test(is_array($config), "CustomModel::getConfig() returns an array");
 assert_test(isset($config['name']) && $config['name']['required'] === true, "CustomModel 'name' field is required");
 
 $controller = new HomeController();
-assert_test($controller instanceof \Zero\Interfaces\Controller, "HomeController implements Zero\\Interfaces\\Controller");
+assert_test($controller instanceof Controller, "HomeController implements Zero\\Interfaces\\Controller");
 
 echo "Example sub-project tests completed.\n";
 PHP_EOF
@@ -354,8 +418,9 @@ cat > "$TARGET/src/Modules/Records/Database/Migrations/0001_CreateCustomRecordsT
 namespace App\Modules\Records\Database\Migrations;
 
 use Zero\Database\DB;
+use Zero\Database\Migration;
 
-class CreateCustomRecordsTable extends \Zero\Database\Migration
+class CreateCustomRecordsTable extends Migration
 {
     public function up(): void
     {
@@ -389,6 +454,12 @@ cat > "$TARGET/bin/seed" <<'PHP_EOF'
  * src/Modules, e.g. src/Modules/Records/Database/Migrations) and seeds an example record.
  */
 
+use App\Models\CustomModel;
+use Zero\Core\App;
+use Zero\Core\Env;
+use Zero\Core\Storage\Storage;
+use Zero\Database\MigrationManager;
+
 define('SUBPROJECT_ROOT', dirname(__DIR__));
 
 $corePath = SUBPROJECT_ROOT . '/zero-core';
@@ -402,13 +473,8 @@ define('APP_ROOT', SUBPROJECT_ROOT);
 require_once CORE_ROOT . '/src/Core/Autoloader.php';
 \Zero\Core\Autoloader::init();
 \Zero\Core\Autoloader::registerNamespace('App\\', APP_ROOT . '/src');
-\Zero\Core\Storage\Storage::setRoot(APP_ROOT);
-\Zero\Core\App::registerModulePath(APP_ROOT . '/src/Modules', 'App\\Modules\\');
-
-use Zero\Core\Env;
-use Zero\Core\App;
-use Zero\Database\MigrationManager;
-use App\Models\CustomModel;
+Storage::setRoot(APP_ROOT);
+App::registerModulePath(APP_ROOT . '/src/Modules', 'App\\Modules\\');
 
 Env::load(APP_ROOT);
 App::bootstrap();
@@ -622,7 +688,7 @@ entirely separate from this sub-project's own code, views, storage, and uploads.
    \`\`\`
 4. Run the test suite:
    \`\`\`
-   php tests/run.php
+   bin/test
    \`\`\`
 5. Point your web server's document root at \`public/\`, or for local dev:
    \`\`\`
@@ -637,7 +703,7 @@ entirely separate from this sub-project's own code, views, storage, and uploads.
 - \`src/Modules/Records\` -- an example self-contained module (own migration under
   \`Database/Migrations/\`), showing how to add real modules the same way Core's own
   bundled modules are structured -- add more alongside it the same way
-- \`bin/seed\`, \`tests/\` -- your own setup script and tests
+- \`bin/seed\`, \`bin/test\`, \`tests/\` -- your own setup script, test runner, and tests
 - \`storage/\` -- private files and logs, kept outside \`${SUBMODULE_PATH}/\`
 
 ## Updating Core
@@ -667,7 +733,7 @@ echo "Next steps:"
 echo "  cd $TARGET"
 echo "  \$EDITOR .env                 # set your real DB credentials"
 echo "  bin/seed                      # migrate Core + this sub-project's tables, seed an example"
-echo "  php tests/run.php             # run the sub-project test suite"
+echo "  bin/test                      # run the sub-project test suite"
 echo "  git commit -m 'Initial sub-project scaffold'"
 echo
 

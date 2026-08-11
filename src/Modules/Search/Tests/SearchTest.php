@@ -2,7 +2,7 @@
 // tests/SearchTest.php
 // Unit tests for the new global site Search module & SearchService
 
-require_once __DIR__ . '/bootstrap.php';
+require_once dirname(dirname(dirname(__DIR__))) . '/Support/TestBootstrap.php';
 
 use Zero\Core\App;
 use Zero\Database\DB;

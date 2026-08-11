@@ -15,7 +15,7 @@ namespace Zero\Core;
  * Class Autoloader
  *
  * This file cannot be autoloaded itself — it must be require()'d directly by whichever entry
- * point bootstraps the application (public/index.php, tests/bootstrap.php, a seeder script, or a
+ * point bootstraps the application (public/index.php, src/Support/TestBootstrap.php, a seeder script, or a
  * host project's own front controller) before any Zero\ class is referenced.
  */
 class Autoloader

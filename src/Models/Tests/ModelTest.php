@@ -2,7 +2,7 @@
 // tests/ModelTest.php
 // Unit and integration tests for Active Record Model Engine (Zero\Models\Traits\IsModel)
 
-require_once __DIR__ . '/bootstrap.php';
+require_once dirname(dirname(__DIR__)) . '/Support/TestBootstrap.php';
 
 use Zero\Models\Page;
 use Zero\Database\DB;

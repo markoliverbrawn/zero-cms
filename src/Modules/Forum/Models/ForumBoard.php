@@ -36,12 +36,7 @@ class ForumBoard implements ModelInterface
     protected static $fillable = ['site_id', 'title', 'slug', 'description', 'precedence'];
     protected static $modelType = 'forum_board';
     protected static array $cascadeDeletes = [
-        ForumThread::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class => 'board_id'
+        ForumThread::class => 'board_id'
     ];
 
     public $id;

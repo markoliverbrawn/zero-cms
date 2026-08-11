@@ -60,12 +60,7 @@ class Module implements ModuleInterface
      */
     public function getMigrationClass(): ?string
     {
-        return Database\Migrations\CreateFormBuilderTables::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class;
+        return Database\Migrations\CreateFormBuilderTables::class;
     }
 
     /**
@@ -76,12 +71,7 @@ class;
     public function getRoutes(): array
     {
         return [
-            '#^/api/v1/contact/submit$#' => FormApiController::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class
+            '#^/api/v1/contact/submit$#' => FormApiController::class
         ];
     }
 
@@ -101,12 +91,7 @@ class
             'bypass_preview_sanitizer' => true
         ]);
 
-        App::registerModel('submissions', Submission::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class);
+        App::registerModel('submissions', Submission::class);
 
         App::registerAdminSidebarLink('content', [
             'title' => 'Form Submissions',

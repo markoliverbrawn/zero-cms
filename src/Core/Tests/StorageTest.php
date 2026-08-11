@@ -2,7 +2,7 @@
 // tests/StorageTest.php
 // Integration test to verify the Storage Driver framework and LocalStorageDriver behaviors.
 
-require_once __DIR__ . '/bootstrap.php';
+require_once dirname(dirname(__DIR__)) . '/Support/TestBootstrap.php';
 
 use Zero\Core\Storage\Storage;
 use Zero\Models\Media;

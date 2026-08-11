@@ -62,7 +62,7 @@ function openssl_sign($data, &$signature, $private_key, $algorithm = "SHA256") {
 // 2. Main Test Runner Execution Context (switching back to global test context)
 namespace GlobalContext;
 
-require_once __DIR__ . '/bootstrap.php';
+require_once dirname(dirname(__DIR__)) . '/Support/TestBootstrap.php';
 
 use Zero\Core\Storage\GoogleCloudStorageDriver;
 

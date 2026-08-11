@@ -2,7 +2,7 @@
 // tests/SecureUploadTest.php
 // Integration test to verify secure private uploads and gated streaming downloads.
 
-require_once __DIR__ . '/bootstrap.php';
+require_once dirname(dirname(__DIR__)) . '/Support/TestBootstrap.php';
 
 use Zero\Core\App;
 use Zero\Core\Storage\Storage;

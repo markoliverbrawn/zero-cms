@@ -2,7 +2,7 @@
 // tests/HasSlugTest.php
 // Unit and integration tests for HasSlug Active Record Trait (Zero\Models\Traits\HasSlug)
 
-require_once __DIR__ . '/bootstrap.php';
+require_once dirname(dirname(__DIR__)) . '/Support/TestBootstrap.php';
 
 use Zero\Models\Page;
 use Zero\Database\DB;

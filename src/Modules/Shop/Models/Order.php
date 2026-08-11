@@ -34,12 +34,7 @@ class Order implements Model
     protected static $modelType = 'order';
     protected static $fillable = ['site_id', 'customer_name', 'customer_email', 'total_price', 'status', 'shipping_address'];
     protected static array $cascadeDeletes = [
-        OrderItem::/**
- * Class 
- *
- * Provides structural platform implementation and operational encapsulation.
- */
-class => 'order_id'
+        OrderItem::class => 'order_id'
     ];
 
     public $id;
