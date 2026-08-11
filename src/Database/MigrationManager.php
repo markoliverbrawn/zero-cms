@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Zero\Database;
 
+use Zero\Core\App;
 use Zero\Database\DB;
 
 /**
@@ -121,24 +122,32 @@ class MigrationManager
             }
         }
 
-        // 2. Discover Extensible Module Migrations on disk
-        $modulePath = APPLICATION_ROOT . '/src/Modules/*/Database/Migrations/[0-9]*_*.php';
-        $moduleFiles = \glob($modulePath);
-        if (\is_array($moduleFiles)) {
+        // 2. Discover Extensible Module Migrations on disk, across the bundled src/Modules
+        // directory and any directories contributed via App::registerModulePath() — so a
+        // host-registered module's migrations are discovered exactly like its Module class is.
+        foreach (App::getModuleSearchPaths() as $modulesDir => $namespacePrefix) {
+            $moduleFiles = \glob($modulesDir . '/*/Database/Migrations/[0-9]*_*.php');
+            if (!\is_array($moduleFiles)) {
+                continue;
+            }
+
             foreach ($moduleFiles as $file) {
                 $filename = \basename($file, '.php'); // e.g. "0002_CreateBlogTables"
                 $className = \preg_replace('/^\d+_/', '', $filename);
 
-                // Extract module name dynamically from path to construct correct PSR-4 namespace
-                if (\preg_match('/src\/Modules\/([a-zA-Z0-9]+)\//', $file, $matches)) {
-                    $moduleName = $matches[1];
-                    $classNamespace = "\\Zero\\Modules\\{$moduleName}\\Database\\Migrations\\" . $className;
-
-                    $migrations[$filename] = [
-                        'file' => $file,
-                        'class' => $classNamespace
-                    ];
+                // Derive the module folder name from the path segment right after $modulesDir
+                $relative = \substr($file, \strlen($modulesDir) + 1);
+                $moduleName = \strstr($relative, '/', true);
+                if ($moduleName === false) {
+                    continue;
                 }
+
+                $classNamespace = '\\' . $namespacePrefix . $moduleName . '\\Database\\Migrations\\' . $className;
+
+                $migrations[$filename] = [
+                    'file' => $file,
+                    'class' => $classNamespace
+                ];
             }
         }
 

@@ -49,6 +49,8 @@ class App
     protected static $registeredModels = [];
     protected static $themeFallbacks = [];
     protected static $themePaths = [];
+    protected static $themeStylesheetFiles = [];
+    protected static $modulePaths = [];
     protected static $adminSidebarSections = [];
     protected static $themeStylesheets = [];
     protected static $nonce = '';
@@ -498,25 +500,63 @@ class);
             return;
         }
 
-        $modulesDir = APPLICATION_ROOT . '/src/Modules';
-        if (!\is_dir($modulesDir)) {
-            return;
-        }
-
-        $folders = \scandir($modulesDir);
-        foreach ($folders as $folder) {
-            if ($folder === '.' || $folder === '..') {
+        foreach (self::getModuleSearchPaths() as $modulesDir => $namespacePrefix) {
+            if (!\is_dir($modulesDir)) {
                 continue;
             }
 
-            $className = "Zero\\Modules\\{$folder}\\Module";
-            if (\class_exists($className)) {
-                $module = new $className();
-                if ($module instanceof ModuleInterface) {
-                    self::$modules[$module->getId()] = $module;
+            $folders = \scandir($modulesDir);
+            foreach ($folders as $folder) {
+                if ($folder === '.' || $folder === '..') {
+                    continue;
+                }
+
+                $className = $namespacePrefix . $folder . '\\Module';
+                if (\class_exists($className)) {
+                    $module = new $className();
+                    if ($module instanceof ModuleInterface) {
+                        self::$modules[$module->getId()] = $module;
+                    }
                 }
             }
         }
+    }
+
+    /**
+     * Register an additional directory to scan for modules during discoverModules(), alongside
+     * the bundled src/Modules directory. Each subfolder found is expected to contain a
+     * `Module.php` implementing ModuleInterface at `<namespacePrefix><FolderName>\Module`.
+     *
+     * Lets a host project embedding Zero as a git submodule contribute its own modules from
+     * outside this repo. The host is responsible for making that namespace loadable (e.g. its
+     * own spl_autoload_register callback) — this registry only tells discoverModules() where
+     * to look and which namespace to probe. discoverModules() runs once and caches its result,
+     * so this must be called before App::bootstrap().
+     *
+     * @param string $absoluteDir
+     * @param string $namespacePrefix e.g. 'Acme\\Modules\\'
+     * @return void
+     */
+    public static function registerModulePath(string $absoluteDir, string $namespacePrefix): void
+    {
+        self::$modulePaths[\rtrim($absoluteDir, '/')] = \rtrim($namespacePrefix, '\\') . '\\';
+    }
+
+    /**
+     * Get every module search path (the bundled src/Modules directory plus any directories
+     * contributed via registerModulePath()), keyed by absolute directory with its associated
+     * namespace prefix as the value. Shared by discoverModules() and MigrationManager so both
+     * see the exact same set of module roots — a host-registered module's migrations are
+     * discovered the same way its Module class is.
+     *
+     * @return array<string, string>
+     */
+    public static function getModuleSearchPaths(): array
+    {
+        return \array_merge(
+            [APPLICATION_ROOT . '/src/Modules' => 'Zero\\Modules\\'],
+            self::$modulePaths
+        );
     }
 
     /**
@@ -750,6 +790,42 @@ class);
             return $path;
         }
         return null;
+    }
+
+    /**
+     * Register the absolute filesystem path to a theme's source stylesheet, taking precedence
+     * over the bundled convention path (public/assets/css/themes/<theme>/<theme>.css) when
+     * CssBundleController compiles the theme's CSS bundle. Complements registerThemePath(): that
+     * registry covers a theme's PHP view files, this one covers its source CSS file — letting a
+     * host project keep both entirely outside the Zero submodule.
+     *
+     * This is distinct from registerThemeStylesheet(), which registers a public URL for the
+     * admin preview link rather than a filesystem path the CSS compiler reads from.
+     *
+     * @param string $themeName
+     * @param string $absoluteFilePath
+     * @return void
+     */
+    public static function registerThemeStylesheetFile(string $themeName, string $absoluteFilePath): void
+    {
+        self::$themeStylesheetFiles[$themeName] = $absoluteFilePath;
+    }
+
+    /**
+     * Resolve the absolute filesystem path to a theme's source stylesheet, preferring a path
+     * registered via registerThemeStylesheetFile() over the bundled convention path.
+     *
+     * @param string $themeName
+     * @return string|null
+     */
+    public static function resolveThemeStylesheetFile(string $themeName): ?string
+    {
+        if (isset(self::$themeStylesheetFiles[$themeName])) {
+            return self::$themeStylesheetFiles[$themeName];
+        }
+
+        $bundled = APPLICATION_ROOT . "/public/assets/css/themes/{$themeName}/{$themeName}.css";
+        return \file_exists($bundled) ? $bundled : null;
     }
 
     /**

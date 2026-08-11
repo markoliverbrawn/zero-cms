@@ -75,13 +75,14 @@ $shouldOmitTitle = !empty($post->omit_title) || $hasHeroBlock;
         $type = $block['type'] ?? '';
         $theme = App::getCurrentSite()->theme ?? 'default';
         
-        $blockPath = APPLICATION_ROOT . '/src/Views/themes/' . $theme . '/blocks/' . $type . '.php';
+        $themeBlocksDir = App::resolveThemeDir($theme);
+        $blockPath = $themeBlocksDir !== null ? $themeBlocksDir . '/blocks/' . $type . '.php' : '';
         if (!file_exists($blockPath)) {
             $registeredBlock = App::getRegisteredBlocks()[$type] ?? [];
             if (!empty($registeredBlock['frontend_view']) && file_exists($registeredBlock['frontend_view'])) {
                 $blockPath = $registeredBlock['frontend_view'];
             } else {
-                $blockPath = APPLICATION_ROOT . '/src/Views/themes/default/blocks/' . $type . '.php';
+                $blockPath = App::resolveThemeFile('default', 'blocks/' . $type . '.php') ?? '';
             }
         }
         if (file_exists($blockPath)) {

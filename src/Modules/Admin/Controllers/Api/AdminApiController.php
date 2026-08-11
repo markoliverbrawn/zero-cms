@@ -231,13 +231,14 @@ class AdminApiController extends ApiController
         // 1. Check if the active theme overrides this block: src/Views/themes/{theme}/blocks/{type}.php
         // 2. Check if the block has a registered, module-owned 'frontend_view' path.
         // 3. Graceful legacy fallback.
-        $blockPath = APPLICATION_ROOT . '/src/Views/themes/' . $theme . '/blocks/' . $type . '.php';
+        $themeBlocksDir = App::resolveThemeDir($theme);
+        $blockPath = $themeBlocksDir !== null ? $themeBlocksDir . '/blocks/' . $type . '.php' : '';
         if (!\file_exists($blockPath)) {
             $registeredBlock = App::getRegisteredBlocks()[$type] ?? [];
             if (!empty($registeredBlock['frontend_view']) && \file_exists($registeredBlock['frontend_view'])) {
                 $blockPath = $registeredBlock['frontend_view'];
             } else {
-                $blockPath = APPLICATION_ROOT . '/src/Views/themes/default/blocks/' . $type . '.php';
+                $blockPath = App::resolveThemeFile('default', 'blocks/' . $type . '.php') ?? '';
             }
         }
 
@@ -293,16 +294,11 @@ class AdminApiController extends ApiController
                 $themeStylesheets[] = $blockCss;
             }
 
-            // Resolve theme main stylesheet dynamically
+            // Resolve theme main stylesheet dynamically (registry lookup, falling back to the
+            // bundled convention path internally)
             $themeStylesheet = App::getThemeStylesheet($theme);
             if (!empty($themeStylesheet)) {
                 $themeStylesheets[] = $themeStylesheet;
-            } else {
-                // Fallback to convention-based path
-                $fallbackPath = '/assets/css/themes/' . $theme . '/' . $theme . '.css';
-                if (\file_exists(APPLICATION_ROOT . '/public' . $fallbackPath)) {
-                    $themeStylesheets[] = $fallbackPath;
-                }
             }
 
             $this->respond([

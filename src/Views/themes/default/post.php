@@ -81,13 +81,14 @@ $shouldOmitTitle = !empty($post->omit_title) || $hasHeroBlock;
         // 1. Check if the active theme overrides this block: src/Views/themes/{theme}/blocks/{type}.php
         // 2. Check if the block has a registered, module-owned 'frontend_view' path.
         // 3. Graceful legacy fallback.
-        $blockPath = APPLICATION_ROOT . '/src/Views/themes/' . $theme . '/blocks/' . $type . '.php';
+        $themeBlocksDir = App::resolveThemeDir($theme);
+        $blockPath = $themeBlocksDir !== null ? $themeBlocksDir . '/blocks/' . $type . '.php' : '';
         if (!file_exists($blockPath)) {
             $registeredBlock = App::getRegisteredBlocks()[$type] ?? [];
             if (!empty($registeredBlock['frontend_view']) && file_exists($registeredBlock['frontend_view'])) {
                 $blockPath = $registeredBlock['frontend_view'];
             } else {
-                $blockPath = APPLICATION_ROOT . '/src/Views/themes/default/blocks/' . $type . '.php';
+                $blockPath = App::resolveThemeFile('default', 'blocks/' . $type . '.php') ?? '';
             }
         }
         if (file_exists($blockPath)) {

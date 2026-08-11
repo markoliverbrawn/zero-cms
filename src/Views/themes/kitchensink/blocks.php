@@ -184,13 +184,14 @@ if (json_last_error() === JSON_ERROR_NONE && is_array($decodedBlocks)): ?>
           default:
               // Dynamic Cascading Block View Resolution for custom/modular blocks
               $theme = App::getCurrentSite()->theme ?? 'default';
-              $blockPath = APPLICATION_ROOT . '/src/Views/themes/' . $theme . '/blocks/' . $blockType . '.php';
+              $themeBlocksDir = App::resolveThemeDir($theme);
+              $blockPath = $themeBlocksDir !== null ? $themeBlocksDir . '/blocks/' . $blockType . '.php' : '';
               if (!file_exists($blockPath)) {
                   $registeredBlock = App::getRegisteredBlocks()[$blockType] ?? [];
                   if (!empty($registeredBlock['frontend_view']) && file_exists($registeredBlock['frontend_view'])) {
                       $blockPath = $registeredBlock['frontend_view'];
                   } else {
-                      $blockPath = APPLICATION_ROOT . '/src/Views/themes/default/blocks/' . $blockType . '.php';
+                      $blockPath = App::resolveThemeFile('default', 'blocks/' . $blockType . '.php') ?? '';
                   }
               }
               if (file_exists($blockPath)) {

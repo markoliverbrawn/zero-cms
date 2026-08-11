@@ -52,44 +52,48 @@ class CssBundleController implements Controller
             exit;
         }
 
-        // 3. Define the exact files and load sequence (preserving styling dependencies)
-        $cssFiles = [
-            // Fonts & Layouts
-            '/public/assets/css/fonts.css',
-            "/public/assets/css/themes/{$theme}/{$theme}.css"
-        ];
+        // 3. Define the exact files and load sequence (preserving styling dependencies).
+        // The theme stylesheet is resolved via App::resolveThemeStylesheetFile() so a host
+        // project can register its own theme's CSS from outside this repo.
+        $cssFiles = [APPLICATION_ROOT . '/public/assets/css/fonts.css'];
+        $themeStylesheetFile = App::resolveThemeStylesheetFile($theme);
+        if ($themeStylesheetFile !== null) {
+            $cssFiles[] = $themeStylesheetFile;
+        }
 
         // Dynamically append block-specific stylesheets if those modules are active on the current site
         $site = App::getCurrentSite();
         if ($site) {
             // A. Core Block Stylesheets (Core-level layout blocks available to any site)
-            $cssFiles = \array_merge($cssFiles, [
-                '/public/assets/css/blocks/text.css',
-                '/public/assets/css/blocks/text_image.css',
-                '/public/assets/css/blocks/gallery.css',
-                '/public/assets/css/blocks/masonry.css',
-                '/public/assets/css/blocks/testimonials.css',
-                '/public/assets/css/blocks/code.css',
-                '/public/assets/css/blocks/chart.css',
-                '/public/assets/css/blocks/grid.css'
-            ]);
+            $cssFiles = \array_merge($cssFiles, \array_map(
+                fn($f) => APPLICATION_ROOT . $f,
+                [
+                    '/public/assets/css/blocks/text.css',
+                    '/public/assets/css/blocks/text_image.css',
+                    '/public/assets/css/blocks/gallery.css',
+                    '/public/assets/css/blocks/masonry.css',
+                    '/public/assets/css/blocks/testimonials.css',
+                    '/public/assets/css/blocks/code.css',
+                    '/public/assets/css/blocks/chart.css',
+                    '/public/assets/css/blocks/grid.css'
+                ]
+            ));
 
             // B. FormBuilder Module Block Stylesheets
             if ($site->isModuleEnabled('formbuilder')) {
-                $cssFiles[] = '/public/assets/css/blocks/form_builder.css';
+                $cssFiles[] = APPLICATION_ROOT . '/public/assets/css/blocks/form_builder.css';
             }
 
             // C. Blog Module Block Stylesheets
             if ($site->isModuleEnabled('blog')) {
-                $cssFiles[] = '/public/assets/css/blocks/latest_articles.css';
-                $cssFiles[] = '/public/assets/css/blocks/sub_pages.css';
+                $cssFiles[] = APPLICATION_ROOT . '/public/assets/css/blocks/latest_articles.css';
+                $cssFiles[] = APPLICATION_ROOT . '/public/assets/css/blocks/sub_pages.css';
             }
         }
 
         $combinedCss = '';
 
-        foreach ($cssFiles as $f) {
-            $fullPath = APPLICATION_ROOT . $f;
+        foreach ($cssFiles as $fullPath) {
             if (\file_exists($fullPath)) {
                 $content = \file_get_contents($fullPath);
                 if ($content === false) {
