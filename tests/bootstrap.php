@@ -9,23 +9,9 @@ if (session_status() === PHP_SESSION_NONE) {
 define('APPLICATION_ROOT', dirname(__DIR__));
 define('TEST_SUITE_RUNNING', true);
 
-// Register PSR-4 Namespace Autoloader for Zero namespace mapping
-spl_autoload_register(function ($class) {
-    $prefix = 'Zero\\';
-    $base_dir = APPLICATION_ROOT . '/src/';
-
-    $len = strlen($prefix);
-    if (strncmp($prefix, $class, $len) !== 0) {
-        return;
-    }
-
-    $relative_class = substr($class, $len);
-    $file = $base_dir . str_replace('\\', '/', $relative_class) . '.php';
-
-    if (file_exists($file)) {
-        require_once $file;
-    }
-});
+// Register the Zero\ -> src/ namespace autoloader (shared by every entry point)
+require_once APPLICATION_ROOT . '/src/Core/Autoloader.php';
+\Zero\Core\Autoloader::init();
 
 use Zero\Core\Env;
 use Zero\Database\DB;
