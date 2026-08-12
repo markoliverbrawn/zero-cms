@@ -17,6 +17,8 @@ use Zero\Core\App;
 use Zero\Interfaces\Module as ModuleInterface;
 use Zero\Modules\DemoGenerator\Controllers\AdminCreateDemoSiteController;
 use Zero\Modules\DemoGenerator\Controllers\DemoController;
+use Zero\Modules\DemoGenerator\Jobs\TeardownExpiredDemosJob;
+use Zero\Modules\Queue\Support\Scheduler;
 
 /**
  * Class Module
@@ -89,5 +91,10 @@ class Module implements ModuleInterface
             'module_dependency' => $this->getId(),
             'precedence' => 10
         ]);
+
+        // Sweep and permanently purge any demo sites past their expires_at, hourly. The job's own
+        // query is global (not scoped to the current tenant), matching every other Scheduler-
+        // registered job's per-site dispatch pattern but with an inherently cross-tenant sweep.
+        Scheduler::register(TeardownExpiredDemosJob::class, [], 'hourly');
     }
 }

@@ -195,8 +195,8 @@ $uploadDir = APPLICATION_ROOT . '/public/storage/uploads/' . $testSiteId;
 @mkdir($uploadDir, 0775, true);
 $cropsDir = $uploadDir . '/_crops';
 @mkdir($cropsDir, 0775, true);
-$tempFile1 = $uploadDir . '/file1.jpg';
-$tempFile2 = $cropsDir . '/crop1.jpg';
+$tempFile1 = confine_test_path($uploadDir . '/file1.jpg', $uploadDir);
+$tempFile2 = confine_test_path($cropsDir . '/crop1.jpg', $cropsDir);
 file_put_contents($tempFile1, 'mock JPEG data');
 file_put_contents($tempFile2, 'mock crop JPEG data');
 

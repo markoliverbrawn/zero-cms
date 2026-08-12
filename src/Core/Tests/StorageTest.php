@@ -44,6 +44,7 @@ if ($driverName === 'gcs') {
     assert_test(strpos($resolvedUrl, '/storage/uploads/') === 0, "Resolved URL matches correct local public layout: {$resolvedUrl}");
     $physicalPath = APPLICATION_ROOT . '/public/storage/uploads/' . $testSiteId . '/' . $testFile;
     assert_test(file_exists($physicalPath), "Physical file exists on local disk inside site folder: {$physicalPath}");
+    $physicalPath = confine_test_path($physicalPath, APPLICATION_ROOT . '/public/storage/uploads');
     assert_test(file_get_contents($physicalPath) === $testContent, "Physical file content matches payload");
 }
 
@@ -134,6 +135,7 @@ $mediaPublicPath = '/storage/uploads/' . $mediaRelativePath;
 // Write physical file to disk using the specific path directly
 $physicalPath = APPLICATION_ROOT . '/public/storage/uploads/' . $mediaRelativePath;
 @mkdir(dirname($physicalPath), 0775, true);
+$physicalPath = confine_test_path($physicalPath, APPLICATION_ROOT . '/public/storage/uploads');
 file_put_contents($physicalPath, "tenant test content");
 assert_test(file_exists($physicalPath), "Physical file successfully written to storage for other tenant: {$physicalPath}");
 
@@ -194,7 +196,7 @@ if (extension_loaded('gd')) {
     assert_test($savedInfo[1] <= 1200, "Height of saved image is resized to no larger than 1200px (Actual height: {$savedInfo[1]}px)");
     
     // Cleanup
-    @unlink($tmpImgPath);
+    @unlink(confine_test_path($tmpImgPath, sys_get_temp_dir()));
     Storage::delete($targetImgPath);
 } else {
     echo "    Skipping image optimization test (GD extension not loaded).\n";

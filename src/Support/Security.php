@@ -275,6 +275,56 @@ class Security {
     }
 
     /**
+     * Validate a string is safe to interpolate directly into raw SQL as a table or column
+     * identifier. Table/column names can't be bound via PDO placeholders the way values can,
+     * so any code path that must build a query around a dynamic identifier (e.g. cascade-delete
+     * child table/foreign-key metadata resolved via reflection) should reject anything that
+     * doesn't match this strict allowlist before interpolating it.
+     */
+    public static function isSafeSqlIdentifier(string $identifier): bool
+    {
+        return (bool)\preg_match('/^[a-zA-Z0-9_]+$/', $identifier);
+    }
+
+    /**
+     * Strict allow-list check: confirm $table actually exists in the connected database's live
+     * schema (via SHOW TABLES, cached for the process lifetime) before it's interpolated into raw
+     * SQL. Ties the identifier to ground truth rather than trusting character-class shape alone --
+     * use alongside isSafeSqlIdentifier(), not instead of it.
+     */
+    public static function isKnownSqlTable(string $table): bool
+    {
+        static $tables = null;
+        if ($tables === null) {
+            try {
+                $tables = DB::query('SHOW TABLES')->fetchAll(\PDO::FETCH_COLUMN);
+            } catch (\Exception $e) {
+                $tables = [];
+            }
+        }
+        return \in_array($table, $tables, true);
+    }
+
+    /**
+     * Strict allow-list check: confirm $column is an actual column of $table (via SHOW COLUMNS,
+     * cached per table for the process lifetime). $table must already be validated via
+     * isKnownSqlTable() before calling this, since it's interpolated into the SHOW COLUMNS query.
+     */
+    public static function isKnownSqlColumn(string $table, string $column): bool
+    {
+        static $columnsByTable = [];
+        if (!isset($columnsByTable[$table])) {
+            try {
+                $rows = DB::query("SHOW COLUMNS FROM `{$table}`")->fetchAll(\PDO::FETCH_ASSOC);
+                $columnsByTable[$table] = \array_column($rows, 'Field');
+            } catch (\Exception $e) {
+                $columnsByTable[$table] = [];
+            }
+        }
+        return \in_array($column, $columnsByTable[$table], true);
+    }
+
+    /**
      * Parse and sanitize XML/SVG files to strip active scripting vectors, dangerous elements, and CSS/style overrides (Stored XSS mitigation).
      */
     public static function sanitizeSvg(string $filePath): bool

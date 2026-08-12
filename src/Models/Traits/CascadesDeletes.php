@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Zero\Models\Traits;
 
 use Zero\Database\DB;
+use Zero\Support\Security;
 
 /**
  * Trait CascadesDeletes
@@ -37,6 +38,18 @@ trait CascadesDeletes
                     $prop = $reflector->getProperty('tableName');
                     $prop->setAccessible(true);
                     $tableName = $prop->getValue();
+
+                    // Defense-in-depth: $tableName/$foreignKey come from hardcoded $cascadeDeletes
+                    // class metadata, never from request input, but table/column identifiers can't
+                    // be bound via PDO placeholders -- so validate both are plain SQL identifiers
+                    // AND that they match the live schema's actual table/column allow-list before
+                    // interpolating them.
+                    if (
+                        !Security::isSafeSqlIdentifier($tableName) || !Security::isSafeSqlIdentifier($foreignKey)
+                        || !Security::isKnownSqlTable($tableName) || !Security::isKnownSqlColumn($tableName, $foreignKey)
+                    ) {
+                        continue;
+                    }
 
                     $stmt = DB::query("SELECT id FROM {$tableName} WHERE {$foreignKey} = ? AND deleted_at IS NULL", [$this->id]);
                     $ids = $stmt->fetchAll(\PDO::FETCH_COLUMN);
@@ -70,6 +83,18 @@ trait CascadesDeletes
                     $prop = $reflector->getProperty('tableName');
                     $prop->setAccessible(true);
                     $tableName = $prop->getValue();
+
+                    // Defense-in-depth: $tableName/$foreignKey come from hardcoded $cascadeDeletes
+                    // class metadata, never from request input, but table/column identifiers can't
+                    // be bound via PDO placeholders -- so validate both are plain SQL identifiers
+                    // AND that they match the live schema's actual table/column allow-list before
+                    // interpolating them.
+                    if (
+                        !Security::isSafeSqlIdentifier($tableName) || !Security::isSafeSqlIdentifier($foreignKey)
+                        || !Security::isKnownSqlTable($tableName) || !Security::isKnownSqlColumn($tableName, $foreignKey)
+                    ) {
+                        continue;
+                    }
 
                     $stmt = DB::query("SELECT id FROM {$tableName} WHERE {$foreignKey} = ?", [$this->id]);
                     $ids = $stmt->fetchAll(\PDO::FETCH_COLUMN);

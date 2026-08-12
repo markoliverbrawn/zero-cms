@@ -23,7 +23,7 @@ if (!file_exists($uploadsDir)) {
     mkdir($uploadsDir, 0755, true);
 }
 
-$physicalPath = APPLICATION_ROOT . '/public' . $testPath;
+$physicalPath = confine_test_path(APPLICATION_ROOT . '/public' . $testPath, $uploadsDir);
 
 // Create a 100x200 portrait canvas
 $img = imagecreatetruecolor(100, 200);
@@ -53,6 +53,7 @@ assert_test(strpos($cropUrl, '/_crops/') !== false, "Crop path contains _crops f
 
 $croppedPhysicalPath = APPLICATION_ROOT . '/public' . $cropUrl;
 assert_test(file_exists($croppedPhysicalPath), "Cropped image physically exists on disk");
+$croppedPhysicalPath = confine_test_path($croppedPhysicalPath, APPLICATION_ROOT . '/public/storage/uploads/default/_crops');
 
 $croppedImg = imagecreatefromjpeg($croppedPhysicalPath);
 assert_test(imagesx($croppedImg) === 50, "Cropped image width is exactly 50px");
@@ -78,7 +79,7 @@ $files = glob($pattern);
 assert_test(count($files) > 0, "Discovered active cached crop files before reset");
 
 foreach ($files as $f) {
-    @unlink($f);
+    @unlink(confine_test_path($f, $cropsDir));
 }
 
 $filesAfter = glob($pattern);

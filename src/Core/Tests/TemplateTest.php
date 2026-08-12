@@ -11,7 +11,8 @@ echo "=== Template Component Tests ===\n";
 // 1. Create a temporary PHP template file
 $tempDir = __DIR__ . '/temp_tpl_' . bin2hex(random_bytes(4));
 mkdir($tempDir);
-$tplFile = $tempDir . '/mock_view.php';
+$tempDir = confine_test_path($tempDir, __DIR__);
+$tplFile = confine_test_path($tempDir . '/mock_view.php', $tempDir);
 
 $tplContent = '
 <?php

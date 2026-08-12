@@ -15,6 +15,7 @@ assert_test($fallback === 'fallback_val', "Env::get returns fallback value if ke
 // 2. Test raw .env file parsing manually on a temp folder
 $tempDir = __DIR__ . '/temp_env_' . bin2hex(random_bytes(4));
 mkdir($tempDir);
+$tempDir = confine_test_path($tempDir, __DIR__);
 
 $envContent = "
 # This is a comment
@@ -26,7 +27,8 @@ INVALID_LINE_NO_EQUALS
 COMPLEX_VAL=foo=bar
 ";
 
-file_put_contents($tempDir . '/.env', $envContent);
+$envFile = confine_test_path($tempDir . '/.env', $tempDir);
+file_put_contents($envFile, $envContent);
 
 // Reset self::$data via reflection to force a fresh load of our temporary .env
 try {
@@ -50,7 +52,7 @@ try {
     
 } finally {
     // Clean up temporary files
-    @unlink($tempDir . '/.env');
+    @unlink(confine_test_path($tempDir . '/.env', $tempDir));
     @rmdir($tempDir);
 }
 

@@ -55,3 +55,35 @@ Emailer::enableTestMode();
 function assert_test(bool $condition, string $message) {
     TestRunner::assertTest($condition, $message);
 }
+
+/**
+ * Resolve a filesystem path a test is about to read/write/delete and confirm it stays inside
+ * a safe base directory (e.g. this file's own temp fixture dir, or APPLICATION_ROOT's storage
+ * folder), rejecting anything that escapes it via '..' segments or a symlink. Test fixture paths
+ * are always built from hardcoded prefixes plus the test's own self-generated random suffixes
+ * rather than external input, but every test performing filesystem I/O should still route its
+ * target path through here as an explicit, auditable confinement check rather than an implicit
+ * assumption.
+ *
+ * Resolves realpath() on the deepest already-existing ancestor directory, since realpath()
+ * itself returns false for a path that doesn't exist yet (the common case right before a file
+ * is created).
+ */
+function confine_test_path(string $path, string $safeBaseDir): string
+{
+    $safeBaseReal = realpath($safeBaseDir);
+    if ($safeBaseReal === false) {
+        throw new \RuntimeException("confine_test_path: safe base directory does not exist: {$safeBaseDir}");
+    }
+
+    $dirReal = realpath(dirname($path));
+    if ($dirReal === false) {
+        throw new \RuntimeException("confine_test_path: parent directory does not exist: " . dirname($path));
+    }
+
+    if ($dirReal !== $safeBaseReal && strpos($dirReal, $safeBaseReal . DIRECTORY_SEPARATOR) !== 0) {
+        throw new \RuntimeException("confine_test_path: '{$path}' escapes safe base '{$safeBaseDir}'");
+    }
+
+    return $dirReal . DIRECTORY_SEPARATOR . basename($path);
+}

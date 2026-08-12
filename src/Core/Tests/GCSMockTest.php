@@ -69,7 +69,7 @@ use Zero\Core\Storage\GoogleCloudStorageDriver;
 echo "=== Mocked Google Cloud Storage (GCS) Driver Tests ===\n";
 
 // Ensure mock key file exists for instantiation
-$mockKeyFile = sys_get_temp_dir() . '/gcs-credentials-mock.json';
+$mockKeyFile = confine_test_path(sys_get_temp_dir() . '/gcs-credentials-mock.json', sys_get_temp_dir());
 if (!file_exists($mockKeyFile)) {
     // Generate empty mock JSON key file if missing to allow instantiation
     file_put_contents($mockKeyFile, json_encode([
