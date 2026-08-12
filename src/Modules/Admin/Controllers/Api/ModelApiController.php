@@ -120,6 +120,14 @@ class ModelApiController extends AdminApiControllerBase
                         $prop->setAccessible(true);
                         $childTable = $prop->getValue();
 
+                        // Defense-in-depth: $childTable/$foreignKey come from hardcoded
+                        // $cascadeDeletes class metadata, never from request input, but table/
+                        // column identifiers can't be bound via PDO placeholders -- so validate
+                        // both are plain SQL identifiers before interpolating them.
+                        if (!\preg_match('/^[a-zA-Z0-9_]+$/', $childTable) || !\preg_match('/^[a-zA-Z0-9_]+$/', $foreignKey)) {
+                            continue;
+                        }
+
                         // Count matching child records that are not soft-deleted
                         $count = (int)DB::query("
                             SELECT COUNT(*) FROM {$childTable}
