@@ -24,12 +24,9 @@ $themePreset = $userPrefs['theme_preset'] ?? 'default';
 // Resolve active site theme favicon for Admin Console layout header
 $activeSite = App::getCurrentSite();
 $activeTheme = $activeSite ? ($activeSite->theme ?? 'default') : 'default';
-if ($activeTheme === 'default') {
-    $activeTheme = 'corporate';
-}
 $adminFavicon = '/assets/favicons/' . $activeTheme . '.svg';
 if (!file_exists(APPLICATION_ROOT . '/public' . $adminFavicon)) {
-    $adminFavicon = '/assets/favicons/corporate.svg';
+    $adminFavicon = '/assets/favicons/default.svg';
 }
 ?>
 <!doctype html>
