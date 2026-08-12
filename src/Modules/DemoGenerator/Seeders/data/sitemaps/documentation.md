@@ -1,6 +1,6 @@
 # 🗺️ Zero CMS Guide Site Sitemap (Technical Developer Docs)
 
-This document contains a comprehensive, multi-layered sitemap representation of the **Zero CMS Technical Developer Docs** guide site (seeded natively via `seeders/data/documentation.json` and hosted on the `d6laptop.zero.guide` tenant domain). 
+This document contains a comprehensive, multi-layered sitemap representation of the **Zero CMS Technical Developer Docs** guide site (seeded natively via `src/Modules/DemoGenerator/Seeders/documentation.php` and hosted on the `d6laptop.zero.guide` tenant domain). 
 
 It models the precise page structures, parent-child relationships, sub-page branches, and navigation visibility gates.
 

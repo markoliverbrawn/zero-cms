@@ -9,20 +9,11 @@ use Zero\Models\Site;
 use Zero\Models\User;
 use Zero\Models\Page;
 use Zero\Models\Media;
-use Zero\Modules\DemoGenerator\Controllers\DemoController;
 use Zero\Modules\DemoGenerator\Jobs\TeardownExpiredDemosJob;
+use Zero\Modules\DemoGenerator\Services\DemoSiteFactory;
 use Zero\Core\Storage\Storage;
 
 echo "=== Sandbox Demo Generator Lifecycle Integration Tests ===\n";
-
-// Subclass the DemoController to expose protected seeding & creation methods for unit testing
-class TestDemoController extends DemoController
-{
-    public function testCreateDemoSite(string $email, string $preset): array
-    {
-        return $this->createDemoSite($email, $preset);
-    }
-}
 
 // Ensure clean environment for testing
 $testEmail = 'sandbox-test-runner@zero.guide';
@@ -43,8 +34,8 @@ foreach ($existingUsers as $siteId) {
 DB::query("DELETE FROM users WHERE email = ?", [$testEmail]);
 
 echo "  1. Simulating Demo Sandbox Site Creation...\n";
-$controller = new TestDemoController();
-$result = $controller->testCreateDemoSite($testEmail, $preset);
+$factory = new DemoSiteFactory();
+$result = $factory->createDemoSite($testEmail, $preset);
 
 $domain = $result['domain'];
 $password = $result['password'];

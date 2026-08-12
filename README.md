@@ -96,9 +96,7 @@ Zero CMS is divided into fully decoupled, modular plug-ins:
 │   ├── css/                      # Modular style files (admin.css, shop.css, forum.css)
 │   │   └── admin/                # Decoupled admin views CSS imports (block-builder, components)
 │   └── svgs/                     # Vector icons
-├── seeders/                      # Database seeders
-│   ├── seeder.php                # Master seeder executor
-│   └── data/                     # Multitenant JSON records (documentation, shop, kitchensink)
+├── bin/                          # CLI entry points (bin/seed, bin/test, bin/migrate, etc.)
 ├── src/                          # OOP core framework engine
 │   ├── Core/                     # Kernel, Bootstrapping, App, Env, Validator
 │   ├── Database/                 # Connection, Migrations, DB, Migration

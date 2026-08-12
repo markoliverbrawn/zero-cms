@@ -13,6 +13,7 @@ namespace Zero\Models\Traits;
 
 use Zero\Core\App;
 use Zero\Database\DB;
+use Zero\Support\I18n;
 use Zero\Support\Security;
 
 /**
@@ -54,7 +55,7 @@ trait IsModel
             if (\property_exists($this, $baseField)) {
                 $val = $this->$baseField;
                 if (!empty($val)) {
-                    return \Zero\Support\I18n::localizeDateTime($val);
+                    return I18n::localizeDateTime($val);
                 }
             }
         }

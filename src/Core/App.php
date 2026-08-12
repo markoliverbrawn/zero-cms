@@ -24,6 +24,7 @@ use Zero\Core\Concerns\HasUtilityHelpers;
 use Zero\Core\Concerns\ManagesAdminSidebar;
 use Zero\Core\Concerns\ManagesBlocksAndModels;
 use Zero\Core\Concerns\ManagesCurrentContext;
+use Zero\Core\Concerns\ManagesModelListActions;
 use Zero\Core\Concerns\ManagesModules;
 use Zero\Core\Concerns\ManagesThemes;
 use Zero\Core\Concerns\RendersViews;
@@ -44,6 +45,7 @@ class App
     use ManagesThemes;
     use ManagesAdminSidebar;
     use ManagesBlocksAndModels;
+    use ManagesModelListActions;
     use ManagesCurrentContext;
     use RendersViews;
     use HasUtilityHelpers;

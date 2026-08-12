@@ -15,6 +15,7 @@ namespace Zero\Modules\DemoGenerator;
 
 use Zero\Core\App;
 use Zero\Interfaces\Module as ModuleInterface;
+use Zero\Modules\DemoGenerator\Controllers\AdminCreateDemoSiteController;
 use Zero\Modules\DemoGenerator\Controllers\DemoController;
 
 /**
@@ -62,7 +63,8 @@ class Module implements ModuleInterface
     public function getRoutes(): array
     {
         return [
-            '#^/api/v1/demo/create$#' => DemoController::class
+            '#^/api/v1/demo/create$#' => DemoController::class,
+            '#^/api/v1/admin/demo/create$#' => AdminCreateDemoSiteController::class
         ];
     }
 
@@ -77,6 +79,15 @@ class Module implements ModuleInterface
             'icon' => 'zap',
             'admin_view' => \dirname(__FILE__) . '/Views/blocks/admin/demo_creator.php',
             'frontend_view' => \dirname(__FILE__) . '/Views/blocks/frontend/demo_creator.php'
+        ]);
+
+        App::registerModelListAction('sites', [
+            'label' => 'Create Demo Site',
+            'url' => '/api/v1/admin/demo/create',
+            'method' => 'post',
+            'confirm' => 'Create a new kitchensink demo site? It will be seeded with sample content and expire automatically in 24 hours.',
+            'module_dependency' => $this->getId(),
+            'precedence' => 10
         ]);
     }
 }

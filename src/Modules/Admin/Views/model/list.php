@@ -1,7 +1,12 @@
 <?php
-use Zero\Support\Str; use Zero\Support\I18n; ?>
+use Zero\Core\App;
+use Zero\Core\Template;
+use Zero\Support\Str;
+use Zero\Support\I18n;
+?>
 <div class="listrecords">
   <?php
+  $site = App::getCurrentSite();
   $titleKey = strtolower($modelName ?? '');
   $translatedTitle = I18n::t($titleKey);
   $displayName = ($translatedTitle !== $titleKey) ? $translatedTitle : ucwords(str_replace('_', ' ', $modelName ?? ''));
@@ -25,7 +30,7 @@ use Zero\Support\Str; use Zero\Support\I18n; ?>
   }
 
   // Pre-load cascading relationships schemas for this model class once
-  $modelClass = \Zero\Core\App::getModelClass($modelName ?? '');
+  $modelClass = App::getModelClass($modelName ?? '');
   $editLabel = 'Edit';
   if ($modelClass && method_exists($modelClass, 'getEditLabel')) {
       $editLabel = $modelClass::getEditLabel();
@@ -64,15 +69,28 @@ use Zero\Support\Str; use Zero\Support\I18n; ?>
     <div class="list-action-btn-wrapper">
       <?php if ($modelName !== 'audit_logs'): ?>
           <a href="/admin/edit/<?php echo Str::escape($modelName ?? ''); ?>/new" class="btn btn-save">New</a>
+          <?php foreach (App::getModelListActions($modelName ?? '') as $listAction): ?>
+            <?php if (App::isModelListActionVisible($listAction, $site)): ?>
+              <?php if (($listAction['method'] ?? 'get') === 'post'): ?>
+                <button type="button" class="btn btn-continue list-registered-action-btn"
+                        data-url="<?php echo Str::escape($listAction['url']); ?>"
+                        data-csrf="<?php echo Str::escape($csrf ?? ''); ?>"
+                        data-label="<?php echo Str::escape($listAction['label']); ?>"
+                        data-confirm="<?php echo Str::escape($listAction['confirm']); ?>"><?php echo Str::escape($listAction['label']); ?></button>
+              <?php else: ?>
+                <a href="<?php echo Str::escape($listAction['url']); ?>" class="btn btn-continue"><?php echo Str::escape($listAction['label']); ?></a>
+              <?php endif; ?>
+            <?php endif; ?>
+          <?php endforeach; ?>
       <?php else: ?>
           <a href="/admin/export/<?php echo Str::escape($modelName ?? ''); ?>" class="btn btn-continue">Export CSV</a>
-          <button type="button" id="btn-purge-logs" class="btn btn-danger" data-csrf="<?php echo Str::escape($csrf ?? ''); ?>" data-is-super="<?php echo (\Zero\Core\App::getCurrentUserRole() === 'super_admin') ? '1' : '0'; ?>">Purge Logs</button>
+          <button type="button" id="btn-purge-logs" class="btn btn-danger" data-csrf="<?php echo Str::escape($csrf ?? ''); ?>" data-is-super="<?php echo (App::getCurrentUserRole() === 'super_admin') ? '1' : '0'; ?>">Purge Logs</button>
       <?php endif; ?>
     </div>
   </div>
 
   <?php if (empty($records)): ?>
-    <p class="text-muted"><?php echo \Zero\Support\I18n::t('no_records_found'); ?></p>
+    <p class="text-muted"><?php echo I18n::t('no_records_found'); ?></p>
   <?php else: ?>
     <table>
       <thead>
@@ -122,7 +140,7 @@ use Zero\Support\Str; use Zero\Support\I18n; ?>
                     <?php 
                       $viewPath = APPLICATION_ROOT . '/src/Modules/Admin/Views/' . $fieldConfig['listView'] . '.php';
                       if (file_exists($viewPath)) {
-                          echo \Zero\Core\Template::renderFile($viewPath, ['value' => $record->{$field}, 'record' => $record]);
+                          echo Template::renderFile($viewPath, ['value' => $record->{$field}, 'record' => $record]);
                       } else {
                           echo Str::escape($record->{$field} ?? '');
                       }
@@ -204,7 +222,7 @@ use Zero\Support\Str; use Zero\Support\I18n; ?>
 </div>
 
 <?php if (($isOrderable ?? false) && $status === 'active'): ?>
-<script nonce="<?php echo \Zero\Core\App::getNonce(); ?>">
+<script nonce="<?php echo App::getNonce(); ?>">
 window.ADMIN_MODEL_NAME = "<?php echo Str::escape($modelName ?? ''); ?>";
 </script>
 <?php endif; ?>

@@ -30,7 +30,7 @@ function run_seeder_test_proc(string $args = '', array $envOverrides = []): stri
         $envPrefix .= "{$key}=" . escapeshellarg($value) . " ";
     }
     
-    $cmd = "{$envPrefix} {$phpBinary} " . escapeshellarg(APPLICATION_ROOT . '/seeders/seeder.php') . " {$args} 2>&1";
+    $cmd = "{$envPrefix} {$phpBinary} " . escapeshellarg(APPLICATION_ROOT . '/bin/seed') . " {$args} 2>&1";
     return (string) shell_exec($cmd);
 }
 

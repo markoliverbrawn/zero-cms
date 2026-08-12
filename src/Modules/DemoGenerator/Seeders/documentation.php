@@ -482,7 +482,7 @@ Percentage of the requests served within a certain time (ms)
                     'type' => 'code',
                     'title' => 'Execute Database Seeder',
                     'language' => 'bash',
-                    'code' => 'php seeders/seeder.php',
+                    'code' => 'bin/seed',
                 ],
             ],
             'type' => 'page',
@@ -746,13 +746,13 @@ class MyCustomSeeder implements SeederInterface
                 [
                     'type' => 'text',
                     'title' => '3. Auto-Discovery and Execution',
-                    'content' => '<p>Zero CMS features an automatic discovery engine. On bootstrap, the master CLI runner (<code>seeders/seeder.php</code>) scans active modular directories for dataset blueprints and seeder classes. It priority-orders them (lower numbers running first, e.g. Blog priority 10, Forum priority 20, Shop priority 30) and sequentially compiles, migrates, and executes the entire system in under 3 seconds!</p><p>To run the database schemas handshake and re-seed all multi-tenant domains in development, execute:</p>',
+                    'content' => '<p>Zero CMS features an automatic discovery engine. On bootstrap, the master CLI runner (<code>bin/seed</code>, backed by <code>Zero\\Support\\SeederRunner</code>) scans active modular directories for dataset blueprints and seeder classes. It priority-orders them (lower numbers running first, e.g. Blog priority 10, Forum priority 20, Shop priority 30) and sequentially compiles, migrates, and executes the entire system in under 3 seconds!</p><p>To run the database schemas handshake and re-seed all multi-tenant domains in development, execute:</p>',
                 ],
                 [
                     'type' => 'code',
                     'title' => 'CLI Command to Re-Seed All Tenants',
                     'language' => 'bash',
-                    'code' => 'docker exec -w /data/misc/zero php83 php seeders/seeder.php',
+                    'code' => 'docker exec -w /data/misc/zero php83 bin/seed',
                 ],
             ],
             'type' => 'page',
@@ -2271,7 +2271,7 @@ GCS_BUCKET=your-custom-gcs-bucket-name',
                     'code' => 'gcloud run jobs create zerocms-seed-job \\
   --image gcr.io/YOUR_PROJECT_ID/zerocms-app:v1 \\
   --command="php" \\
-  --args="seeders/seeder.php" \\
+  --args="bin/seed" \\
   --set-env-vars="DB_SOCKET=/cloudsql/YOUR_PROJECT_ID:YOUR_REGION:YOUR_INSTANCE_NAME,DB_USER=...,DB_PASS=...,DB_NAME=..." \\
   --set-cloudsql-instances="YOUR_PROJECT_ID:YOUR_REGION:YOUR_INSTANCE_NAME"
 

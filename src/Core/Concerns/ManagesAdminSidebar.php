@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace Zero\Core\Concerns;
 
+use Zero\Support\I18n;
+
 /**
  * Trait ManagesAdminSidebar
  */
@@ -53,7 +55,7 @@ trait ManagesAdminSidebar
     {
         // Standalone Dashboard
         self::registerAdminSidebarSection('dashboard', [
-            'title' => \Zero\Support\I18n::t('admin_dashboard'),
+            'title' => I18n::t('admin_dashboard'),
             'url' => '/admin/dashboard',
             'icon' => 'dashboard',
             'precedence' => 10
@@ -61,21 +63,21 @@ trait ManagesAdminSidebar
 
         // Collapsible Content Management
         self::registerAdminSidebarSection('content', [
-            'title' => \Zero\Support\I18n::t('content_management'),
+            'title' => I18n::t('content_management'),
             'icon' => 'book-open',
             'precedence' => 100
         ]);
 
         // Core Content Links
         self::registerAdminSidebarLink('content', [
-            'title' => \Zero\Support\I18n::t('manage_pages'),
+            'title' => I18n::t('manage_pages'),
             'url' => '/admin/list/pages',
             'icon' => 'file',
             'precedence' => 40
         ]);
 
         self::registerAdminSidebarLink('content', [
-            'title' => \Zero\Support\I18n::t('media_library'),
+            'title' => I18n::t('media_library'),
             'url' => '/admin/list/files',
             'icon' => 'image',
             'precedence' => 50
@@ -93,7 +95,7 @@ trait ManagesAdminSidebar
 
         // Collapsible Security Management (System, Super Admin only)
         self::registerAdminSidebarSection('security', [
-            'title' => \Zero\Support\I18n::t('security'),
+            'title' => I18n::t('security'),
             'icon' => 'shield',
             'super_admin_only' => true,
             'is_system' => true,
@@ -101,7 +103,7 @@ trait ManagesAdminSidebar
         ]);
 
         self::registerAdminSidebarLink('security', [
-            'title' => \Zero\Support\I18n::t('manage_users'),
+            'title' => I18n::t('manage_users'),
             'url' => '/admin/list/users',
             'icon' => 'user',
             'precedence' => 10

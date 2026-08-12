@@ -203,9 +203,9 @@ class Seeder
                 unset($row['content_base64']);
             } elseif (isset($row['filename']) && ($row['mime'] ?? '') !== 'directory') {
                 $filename = $row['filename'];
-                $seedImgPath = APPLICATION_ROOT . '/seeders/data/images/' . $filename;
+                $seedImgPath = APPLICATION_ROOT . '/src/Modules/DemoGenerator/Seeders/data/images/' . $filename;
                 if (!\file_exists($seedImgPath)) {
-                    $seedImgPath = APPLICATION_ROOT . '/seeders/data/videos/' . $filename;
+                    $seedImgPath = APPLICATION_ROOT . '/src/Modules/DemoGenerator/Seeders/data/videos/' . $filename;
                 }
                 
                 if (\file_exists($seedImgPath)) {
