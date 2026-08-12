@@ -63,6 +63,10 @@ graph TD
     search_arch["🔍 Search Index & Driver Architecture<br/><i>(Slug: 'docs/how-tos/search-architecture')</i>"]
     deploy["☁️ Serverless Deployments & low-cost Cloud Run<br/><i>(Slug: 'docs/how-tos/deploy-cloud-run')</i>"]
     standalone_projects["📦 Standalone Project Creation & Core Syncing<br/><i>(Slug: 'docs/how-tos/standalone-projects')</i>"]
+    list_actions["🔘 Registering Custom Admin List Actions<br/><i>(Slug: 'docs/how-tos/list-actions')</i>"]
+    migrations_page["🧬 Writing Database Migrations<br/><i>(Slug: 'docs/how-tos/migrations')</i>"]
+    testing_page["🧪 Automated Test Suite Conventions<br/><i>(Slug: 'docs/how-tos/testing')</i>"]
+    oauth_page["🔑 Google OAuth 2.0 Single Sign-On<br/><i>(Slug: 'docs/how-tos/oauth')</i>"]
     
     how_tos --> models
     how_tos --> views
@@ -82,6 +86,10 @@ graph TD
     how_tos --> search_arch
     how_tos --> deploy
     how_tos --> standalone_projects
+    how_tos --> list_actions
+    how_tos --> migrations_page
+    how_tos --> testing_page
+    how_tos --> oauth_page
     
     %% Platform Modules Hub
     modules["📦 Platform Modules Directory<br/><i>(Slug: 'docs/modules')</i>"]
@@ -129,7 +137,7 @@ graph TD
     class home home;
     class contact,blog,docs nav;
     class benchmarks,intro,framework,limitations,getting_started,core_components,bootstrap page;
-    class how_tos,models,views,seeder,middleware,controllers,uuidv7,emailer,multitenancy,security_hard,custom_views,custom_blocks,supervisor,gcs,secure_uploads,s3,search_arch,standalone_projects howto;
+    class how_tos,models,views,seeder,middleware,controllers,uuidv7,emailer,multitenancy,security_hard,custom_views,custom_blocks,supervisor,gcs,secure_uploads,s3,search_arch,standalone_projects,list_actions,migrations_page,testing_page,oauth_page howto;
     class modules,mod_create,mod_blog,mod_shop,mod_form,mod_forum,mod_jobs,mod_security,form_advanced module;
     class blog_triggers,jobs_tutorials,form_custom_fields,form_save_submissions tutorial;
 ```
@@ -155,7 +163,7 @@ The table below catalogs every page record compiled on seed bootstrap, capturing
 | **Core Components and Core Helpers** | `docs/core-components` | Docs | No (`0`) | `text` (App Bootstrapper, DB PDO Prepared Wrapper) |
 | **Single-Query Bootstrap and Performance** | `docs/bootstrap` | Docs | No (`0`) | `text`, `code` (Consolidated SQL UNION query, static singleton latch) |
 | **How To's** | `docs/how-tos` | Docs / Sub-Hub | No (`0`) | `sub_pages` (Filtered Technical Guides list) |
-| **Database Models and Active Record Traits** | `docs/how-tos/models` | How-Tos | No (`0`) | `text` (creating model, form configurations) |
+| **Database Models and Active Record Traits** | `docs/how-tos/models` | How-Tos | No (`0`) | `text`, `code` (creating models, form configurations, `CascadesDeletes` + SQL identifier validation) |
 | **How to Create Views** | `docs/how-tos/views` | How-Tos | No (`0`) | `text` (Template fallbacks, buffering, layout nesting) |
 | **How to Create a Custom Seeder** | `docs/how-tos/seeder` | How-Tos | No (`0`) | `text` (JSON architecture, running imports) |
 | **How to Create Middleware** | `docs/how-tos/middleware` | How-Tos | No (`0`) | `text`, `code` (Auth onion-pipeline handler) |
@@ -171,12 +179,16 @@ The table below catalogs every page record compiled on seed bootstrap, capturing
 | **Secure Frontend Uploads & Private Storage** | `docs/how-tos/secure-uploads` | How-Tos | No (`0`) | `text` (binaries obfuscation, secure download route stream) |
 | **Configuring AWS S3 Storage (Zero Dependencies)** | `docs/how-tos/aws-s3-setup` | How-Tos | No (`0`) | `text` (SigV4 cryptographic hmac signature generation) |
 | **Standalone Project Creation & Core Syncing** | `docs/how-tos/standalone-projects` | How-Tos | No (`0`) | `text`, `code` (git commands & best practices) |
+| **Registering Custom Admin List Actions** | `docs/how-tos/list-actions` | How-Tos | No (`0`) | `text`, `code` (`ManagesModelListActions`, `registerModelListAction()`, worked "Create Demo Site" example) |
+| **Writing Database Migrations** | `docs/how-tos/migrations` | How-Tos | No (`0`) | `text`, `code` (`Migration` base class, `MigrationManager` discovery/numbering, `bin/migrate`) |
+| **Automated Test Suite Conventions** | `docs/how-tos/testing` | How-Tos | No (`0`) | `text`, `code` (per-component `Tests/` layout, `TestRunner` subprocess isolation, `bin/test`) |
+| **Google OAuth 2.0 Single Sign-On** | `docs/how-tos/oauth` | How-Tos | No (`0`) | `text`, `code` (`GoogleAuthController`, anti-CSRF state token, multi-tenant scoping check) |
 | **Search Index & Decoupled Driver Architecture** | `docs/how-tos/search-architecture` | How-Tos | No (`0`) | `text`, `code` (database search driver, block helpers, N+1 preventions) |
 | **Serverless Blueprints: Google Cloud Run & Cloud SQL Setup** | `docs/how-tos/deploy-cloud-run` | How-Tos | No (`0`) | `text`, `code` (Stateless architecture, low-cost db-f1-micro instance/bucket creation, DB_SOCKET connection) |
 | **Modules** | `docs/modules` | Docs / Sub-Hub | No (`0`) | `sub_pages` (Decoupled system modules list) |
 | **How to Create Modules** | `docs/modules/how-to-create` | Modules | No (`0`) | `text` (Hot-swappable toggle structures, widgets) |
 | **Blog & Commenting Module** | `docs/modules/blog` | Modules | No (`0`) | `text` (moderation flow), `code` (comment model), `sub_pages` (tutorials) |
-| **Shop & E-Commerce Module** | `docs/modules/shop` | Modules | No (`0`) | `text` (capabilities), `code` (product/variant/order models, ACID FOR UPDATE lock) |
+| **Shop & E-Commerce Module** | `docs/modules/shop` | Modules | No (`0`) | `text` (capabilities), `code` (product/variant/order models, session-cart checkout -- honestly flags the missing row-lock on stock decrement) |
 | **FormBuilder & Submissions Module** | `docs/modules/formbuilder` | Modules | No (`0`) | `text` (JSON archival storage), `code` (schema model), `sub_pages` (tutorials) |
 | **Developer How-To** | `docs/modules/formbuilder/advanced` | Modules / FormBuilder | No (`0`) | `sub_pages` (Extensibility tutorials directory) |
 | **Tutorial: Programmatically Extending Validator Rules** | `docs/modules/formbuilder/custom-fields` | Modules / FormBuilder | No (`0`) | `code` (Extending custom lambda rules at runtime) |

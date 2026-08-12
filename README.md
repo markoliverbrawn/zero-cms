@@ -47,17 +47,19 @@ Zero CMS routes and resolves multi-tenant contexts in a single, highly optimized
 ```
 
 ### Single-Query UNION ALL Bootstrapping
-On bootstrap, Zero CMS resolves the active tenant Site details (via `HTTP_HOST`) and the logged-in User profile (via session `user_id`) in a **single-query database roundtrip** using a consolidated `UNION ALL` query, avoiding redundant TCP connection overhead:
+On bootstrap, Zero CMS resolves the active tenant Site details (via `HTTP_HOST`) and the logged-in User profile (via session `user_id`) in a **single-query database roundtrip** using a consolidated `UNION ALL` query, avoiding redundant TCP connection overhead. `App.php` is a thin shell composed of focused traits under `src/Core/Concerns/`; the query itself lives in `ResolvesTenantContext::bootstrapFetchSiteAndUser()` (inside `src/Core/Concerns/ResolvesTenantContext.php`):
 
 ```sql
 SELECT
     'site' AS record_type, id, name, domain, theme, enabled_modules,
+    homepage_id, timezone, default_language,
     NULL AS email, NULL AS password_hash, NULL AS role, NULL AS site_id, NULL AS preferences,
     created_at, updated_at
 FROM sites WHERE domain = ?
 UNION ALL
 SELECT
     'user' AS record_type, id, username AS name, NULL AS domain, NULL AS theme, NULL AS enabled_modules,
+    NULL AS homepage_id, NULL AS timezone, NULL AS default_language,
     email, password_hash, role, site_id, preferences,
     created_at, updated_at
 FROM users WHERE id = ?
@@ -67,20 +69,26 @@ FROM users WHERE id = ?
 
 ## 2. Platform Modules
 
-Zero CMS is divided into fully decoupled, modular plug-ins:
+Zero CMS is divided into fully decoupled, modular plug-ins under `src/Modules/`:
 
-1. **Pages & Dynamic Layout Block Builder:**
-   Pages are stored in the database as serialized JSON arrays of content blocks (e.g. Accordions, Galleries, Testimonials, Sub-Pages). Adding an block admin view automatically registers editing schemas generically in the back-office, while custom blocks render on the frontend cascadingly.
-2. **Luxe E-Commerce Store:**
-   Manages product catalogs, parent categories, and SKU matrices. Checkout operations utilize **ACID row-level database locks (`FOR UPDATE`)** to prevent inventory double-selling under high concurrency.
-3. **Form Builder & archival Submissions:**
+1. **Pages & Dynamic Layout Block Builder (`Admin`):**
+   Pages are stored in the database as serialized JSON arrays of content blocks (e.g. Accordions, Galleries, Testimonials, Sub-Pages). Adding a block admin view automatically registers editing schemas generically in the back-office, while custom blocks render on the frontend cascadingly.
+2. **Luxe E-Commerce Store (`Shop`):**
+   Manages product catalogs, parent categories, and SKU/variant matrices. Checkout (`CheckoutController`) decrements variant stock and writes order/order-item records; note there is currently **no row-level locking (`FOR UPDATE`)** around the stock decrement, so concurrent checkouts against the same low-stock variant are a known gap rather than a solved one.
+3. **Form Builder & archival Submissions (`FormBuilder`):**
    Enables designers to construct customized forms inside the page builder dynamically. Submissions are validated through `Validator` and archived securely as dynamic JSON structures, preserving exact submission history even if the source page or form is later deleted.
-4. **Blog & relational Comments with SMTP Emailer:**
+4. **Blog & relational Comments with SMTP Emailer (`Blog`):**
    Classic publishing module supporting secure comments with dynamic moderation lists. Selected administrative users receive instant comment notifications dispatched directly on raw TCP mail sockets (removing standard email dependency wrappers).
-5. Community Forum:**
+5. **Community Forum (`Forum`):**
    Features localized discussion boards, threads, and infinite recursive replies mapping via self-referencing `parent_id` foreign keys.
-6. **Platform Security Hardening & AI Auditing:**
+6. **Platform Security Hardening & AI Auditing (`Security`):**
    Integrates globally enforced Content Security Policy (CSP), defensive HTTP shielding, secure forced password updates, security audit logging, and automated telemetry threat-modeling with Google's generative AI.
+7. **Background Jobs & Task Scheduler (`Queue`):**
+   Dispatches and processes queued jobs (e.g. `PurgeOldLogsJob`) via `QueueManager` and a cron-driven `Scheduler`, run out-of-band through the `bin/queue-runner` and `bin/scheduler` CLI entry points rather than inline on the request path.
+8. **Site Search (`Search`):**
+   Decoupled search-driver architecture (`SearchDriverInterface`) with a `DatabaseSearchDriver` implementation, exposed via `SearchController`/`SearchService` and a `Searchable` model trait.
+9. **On-Demand Demo Site Generator (`DemoGenerator`):**
+   Lets a super-admin provision a fully-seeded demo tenant on demand (`AdminCreateDemoSiteController` + `DemoSiteFactory`), and seeds the public technical documentation site itself via declarative seed datasets under `src/Modules/DemoGenerator/Seeders/`.
 
 ---
 
@@ -89,29 +97,36 @@ Zero CMS is divided into fully decoupled, modular plug-ins:
 ```text
 /data/misc/zero/
 ├── GEMINI.md                    # System guidelines, coding standards, and developer rules
-├── index.php                     # Central Front-Controller Gateway
-├── etc/                          # Secure configuration and setup files (Deny from all)
-│   └── install.php               # Secure database schema builder & admin creator (CLI-only)
-├── assets/                       # Publicly accessible static assets
-│   ├── css/                      # Modular style files (admin.css, shop.css, forum.css)
-│   │   └── admin/                # Decoupled admin views CSS imports (block-builder, components)
-│   └── svgs/                     # Vector icons
-├── bin/                          # CLI entry points (bin/seed, bin/test, bin/migrate, etc.)
+├── public/                       # Webroot (document root points here)
+│   ├── index.php                 # Central Front-Controller Gateway
+│   ├── assets/                   # Publicly accessible static assets
+│   │   └── css/                  # Modular style files (admin.css, shop.css, forum.css)
+│   └── storage/                  # Public-facing symlink/passthrough for uploaded media
+├── bin/                          # CLI entry points (bin/seed, bin/test, bin/migrate, bin/queue-runner, bin/scheduler, etc.)
+├── storage/                      # Private file storage (uploads, logs)
 ├── src/                          # OOP core framework engine
-│   ├── Core/                     # Kernel, Bootstrapping, App, Env, Validator
-│   ├── Database/                 # Connection, Migrations, DB, Migration
+│   ├── Core/                     # Kernel, Bootstrapping (App.php + Concerns/ traits), Env, Validator, Storage/ drivers (local, AWS S3, Google Cloud Storage)
+│   ├── Database/                 # Connection (DB.php), Migration/MigrationManager, numbered Migrations/
 │   ├── Http/                     # HTTP infrastructure, Router, Middleware, Controllers
+│   ├── Integration/               # Cross-module integration test suite (Tests/ only)
 │   ├── Interfaces/               # Strict OOP contracts
+│   ├── Lang/                     # i18n translation tables (en.php, es.php, hr.php, mi.php)
 │   ├── Models/                   # Core active-record entities (Media, Page, Site, User)
-│   └── Modules/                  # Decoupled extensible modules
-│       ├── Admin/                # Unified Back-Office dashboard controller & views
-│       ├── Blog/                 # Classic publishing and Commenting Module
-│       ├── FormBuilder/          # Dynamic forms creation and submission logs module
-│       ├── Forum/                # Community Forum (boards, threads, nested posts)
-│       ├── Security/             # Platform security hardening & AI threat auditing module
-│       └── Shop/                 # Luxe E-Commerce transactional checkout storefront
-└── tests/                        # Zero-dependency Automated Testing Suite
+│   ├── Modules/                  # Decoupled extensible modules
+│   │   ├── Admin/                # Unified Back-Office dashboard controller & views
+│   │   ├── Blog/                 # Classic publishing and Commenting Module
+│   │   ├── DemoGenerator/        # On-demand demo tenant provisioning & docs seeding
+│   │   ├── FormBuilder/          # Dynamic forms creation and submission logs module
+│   │   ├── Forum/                # Community Forum (boards, threads, nested posts)
+│   │   ├── Queue/                # Background job queue & cron-style scheduler
+│   │   ├── Search/               # Decoupled site search driver architecture
+│   │   ├── Security/             # Platform security hardening & AI threat auditing module
+│   │   └── Shop/                 # Luxe E-Commerce transactional checkout storefront
+│   ├── Services/                 # Cross-cutting services (e.g. AiService + Ai/Providers)
+│   ├── Support/                  # Security, Logger, Emailer, Seeder/SeederRunner, TestRunner, Str, I18n
+│   └── Views/                    # Cascading theme templates (themes/{site theme}/, themes/default/)
 ```
+Per-component tests live alongside the code they cover (e.g. `src/Core/Tests/`, `src/Modules/Blog/Tests/`) rather than in a single top-level `tests/` directory — see Section 5.
 
 ---
 
@@ -135,7 +150,7 @@ flowchart TD
     end
 
     subgraph AUTH_ZONE [Trust Boundary: Auth & Isolation Check]
-        G[AuthMiddleware] -- "Check session user_id" --> H[RoleMiddleware]
+        G[AuthMiddleware] -- "Check session user_id" --> H["App::applyRoleMiddleware()"]
         H -- "Restrict to editor/super_admin" --> I[Site Isolation Check]
         I -- "site_id == CurrentSiteId" --> J[Active Record Operations]
     end
@@ -147,7 +162,7 @@ flowchart TD
 
     A -- "1. POST Request" --> B
     B -- "CSRF Mismatch" --> B_ERR[Wipe Session & Redirect to Login]
-    C -- "Rate Limit Exceeded (503)" --> C_ERR[Logger::log audit trail]
+    C -- "Rate Limit Exceeded (429 + Retry-After)" --> C_ERR[Logger::log audit trail]
     F -- "2. Scope Active Tenant" --> G
     J -- "3. Query via IsModel active-record trait" --> K
     J -- "4. Dispatch Notifications" --> L
@@ -160,11 +175,11 @@ Zero CMS is engineered under a strict, zero-trust security blueprint. Below is t
 | Threat Category | Specific System Risk | Direct Source Code Mitigation & Remediation |
 | :--- | :--- | :--- |
 | **S**poofing | **CSRF & Session Hijacking:** Attackers executing forged cross-site POST/PUT/DELETE requests or hijacking admin authentication maps. | * Cryptographic CSRF token generation and validation verified natively via `Zero\Support\Security::csrfToken()` and `Zero\Support\Security::csrfVerify()` (inside `src/Support/Security.php`).<br>* Globally enforced on all state-changing requests by `Zero\Http\Middleware\CsrfMiddleware` (inside `src/Http/Middleware/CsrfMiddleware.php`).<br>* Existing sessions and cached tokens are cleanly wiped on GET error fallbacks inside `LoginController::handle()` (inside `src/Modules/Admin/Controllers/LoginController.php`) to prevent cross-site leaks. |
-| **T**ampering | **SQL Injection (SQLi), Cross-Site Scripting (XSS), & Parameter Tampering:** Injecting malformed query variables, persistent script blocks, or un-declared posted form fields. | * **SQLi Prevention:** Raw prepared statement parameter bindings enforced globally via the central database transceiver `Zero\Database\DB::query()` (inside `src/Database/DB.php`), guaranteeing 100% prepared statement execution.<br>* **XSS Mitigation:** Public payloads cleaned recursively on boot via `Zero\Support\Security::sanitizeInput()` and advanced interactive block text rendering validated by the raw HTML sanitizer `Zero\Support\Security::sanitizeHtml()` (inside `src/Support/Security.php`), stripping malformed characters, dangerous script tags, and `javascript:` / `data:` protocols.<br>* **Parameter Tampering Prevention:** Form and model data verified against declarative schemas compiled by the core `Zero\Core\Validator` engine (inside `src/Core/Validator.php`), which strictly filters out non-declared fields using `$validator->getValidatedData()` before database writes. |
+| **T**ampering | **SQL Injection (SQLi), Cross-Site Scripting (XSS), & Parameter Tampering:** Injecting malformed query variables, persistent script blocks, or un-declared posted form fields. | * **SQLi Prevention:** Raw prepared statement parameter bindings enforced globally via the central database transceiver `Zero\Database\DB::query()` (inside `src/Database/DB.php`), guaranteeing 100% prepared statement execution. Identifiers that can't be parameter-bound (table/column names interpolated into cascade-delete SQL) are constrained to `^[a-zA-Z0-9_]+$` before use in `ModelApiController` (inside `src/Modules/Admin/Controllers/Api/ModelApiController.php`).<br>* **XSS Mitigation:** Public payloads cleaned recursively on boot via `Zero\Support\Security::sanitizeInput()` and advanced interactive block text rendering validated by the raw HTML sanitizer `Zero\Support\Security::sanitizeHtml()` (inside `src/Support/Security.php`), stripping malformed characters, dangerous script tags, and `javascript:` / `data:` protocols.<br>* **Parameter Tampering Prevention:** Form and model data verified against declarative schemas compiled by the core `Zero\Core\Validator` engine (inside `src/Core/Validator.php`), which strictly filters out non-declared fields using `$validator->getValidatedData()` before database writes. |
 | **R**epudiation | **Audit Trail Failures:** Privileged administrators or rogue users executing state-changing operations (e.g. deleting pages, modifying variant stock) without persistent, un-mutilated audit logs. | * Dynamic, non-repudiable audit logging handled globally by `Zero\Support\Logger::log()` (inside `src/Support/Logger.php`), which records the triggering user's UUID, the specific action category, the targeted table, the target record ID, and serializes metadata (including the caller's IP address) as structured JSON directly into the persistent `audit_logs` database table. |
 | **I**nformation Disclosure | **Multi-Tenant Data Leaks:** Rogue site tenants or external crawlers attempting to query, modify, or leak sensitive records (categories, pages, media, orders) belonging to other brands. | * Zero-trust multi-tenant isolation enforced natively by the ActiveRecord trait `Zero\Models\Traits\IsModel` (inside `src/Models/Traits/IsModel.php`).<br>* All read, save, and soft-delete statements (specifically `IsModel::all()` and `IsModel::save()`) automatically append active tenant scoping filters (`site_id = ?` based on `App::getCurrentSiteId()`), completely blocking cross-tenant boundaries on the database level. |
-| **D**enial of Service | **Botnet Portal Flooding & Login Brute-Forcing:** Automated scripts flooding contact gateways with spam, brute-forcing back-office logins, or exhausting DB connections. | * **Spam Mitigation:** Forms utilize zero-friction hidden input fields named `website_url` styled with invisible classes (e.g. `.website-field-wrapper` inside `assets/css/blocks/form_builder.css`). Automated spambots are completely fooled into populating this decoy field. If populated, `FormApiController` (inside `src/Modules/FormBuilder/Controllers/FormApiController.php`) and `CommentsController` (inside `src/Modules/Blog/Controllers/Api/CommentsController.php`) silently drop the submission without DB writes.<br>* **Brute-Force Throttling:** Strict rate-limiting enforced globally via `Zero\Http\Middleware\RateLimitMiddleware` (inside `src/Http/Middleware/RateLimitMiddleware.php`) using custom sliding-window limits. Failed logins are further throttled using exact 1-second system `sleep(1)` delays inside `LoginController` (inside `src/Modules/Admin/Controllers/LoginController.php`) and `ForgotController` (inside `src/Modules/Admin/Controllers/ForgotController.php`) to completely eliminate timing analysis leakage vectors. |
-| **E**levation of Privilege | **Administrative Role Bypass:** Normal editors or guest visitor sessions attempting to execute restricted administrative commands or modify other user profiles. | * Absolute boundary protection enforced via a dynamic declarative role verification pipeline (`App::applyRoleMiddleware('super_admin')` / `App::applyAuthMiddleware()`), evaluated natively inside individual back-office controllers (such as `AdminApiController.php` inside `src/Modules/Admin/Controllers/Api/AdminApiController.php`) to block non-super_admin sessions before data execution. |
+| **D**enial of Service | **Botnet Portal Flooding & Login Brute-Forcing:** Automated scripts flooding contact gateways with spam, brute-forcing back-office logins, or exhausting DB connections. | * **Spam Mitigation:** Forms utilize zero-friction hidden input fields named `website_url` styled with invisible classes (e.g. `.website-field-wrapper` inside `assets/css/blocks/form_builder.css`). Automated spambots are completely fooled into populating this decoy field. If populated, `FormApiController` (inside `src/Modules/FormBuilder/Controllers/FormApiController.php`) and `CommentsController` (inside `src/Modules/Blog/Controllers/Api/CommentsController.php`) silently drop the submission without DB writes.<br>* **Brute-Force Throttling:** Strict rate-limiting enforced globally via `Zero\Http\Middleware\RateLimitMiddleware` (inside `src/Http/Middleware/RateLimitMiddleware.php`) using custom sliding-window limits and a `429` + `Retry-After` response. Failed admin logins are further throttled with an exact 1-second `sleep(1)` delay inside `LoginController` (inside `src/Modules/Admin/Controllers/LoginController.php`); the password-reset flow in `ForgotController` (inside `src/Modules/Admin/Controllers/ForgotController.php`) uses a lighter 250ms `usleep(250000)` delay to reduce (not eliminate) timing analysis leakage. |
+| **E**levation of Privilege | **Administrative Role Bypass:** Normal editors or guest visitor sessions attempting to execute restricted administrative commands or modify other user profiles. | * Absolute boundary protection enforced via a dynamic declarative role verification pipeline (`App::applyRoleMiddleware('super_admin')` / `App::applyAuthMiddleware()`), evaluated natively inside individual back-office controllers (such as `ModelApiController.php` inside `src/Modules/Admin/Controllers/Api/ModelApiController.php`, which extends the shared `AdminApiControllerBase`) to block non-super_admin sessions before data execution. |
 
 ---
 

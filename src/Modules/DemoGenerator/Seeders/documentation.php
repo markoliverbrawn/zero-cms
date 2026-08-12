@@ -617,6 +617,32 @@ class Post implements Model {
     ];
 }</code></pre>',
                 ],
+                [
+                    'type' => 'text',
+                    'title' => 'Cascading Soft-Deletes (CascadesDeletes)',
+                    'content' => '<p>A model that owns child records (e.g. a Site owning Pages, or a Product owning Variants) can declare a static <code>$cascadeDeletes</code> property mapping each child model class to the foreign key column that links back to the parent. When an admin soft-deletes the parent record, every matching child row is soft-deleted (or force-deleted, for a permanent purge) automatically.</p><p>Before the delete confirmation is shown, the admin listing calls a <code>cascade-check</code> API endpoint (<code>ModelApiController</code>) which counts affected child rows per model and surfaces them in the confirmation dialog, so an admin never soft-deletes a Site without knowing it will also take down its Pages, Media, and Orders.</p>',
+                ],
+                [
+                    'type' => 'code',
+                    'title' => 'Declaring Cascade Relationships',
+                    'language' => 'php',
+                    'code' => 'class Site implements Model {
+    use IsModel, CascadesDeletes;
+
+    protected static $tableName = \'sites\';
+
+    protected static $cascadeDeletes = [
+        \\Zero\\Models\\Page::class => \'site_id\',
+        \\Zero\\Models\\Media::class => \'site_id\',
+        \\Zero\\Models\\User::class => \'site_id\',
+    ];
+}',
+                ],
+                [
+                    'type' => 'text',
+                    'title' => 'Defense-in-Depth: Validating SQL Identifiers',
+                    'content' => '<p>Table and column names can\'t be bound as PDO placeholders the way values can, so wherever a child table/foreign-key pair from <code>$cascadeDeletes</code> is interpolated directly into raw SQL, <code>ModelApiController</code> first validates both strings against <code>^[a-zA-Z0-9_]+$</code> and silently skips the count if either fails. The values are always hardcoded class metadata rather than request input, but the check is kept anyway as a defense-in-depth guard against a future refactor accidentally routing untrusted input through the same code path.</p>',
+                ],
             ],
             'type' => 'page',
             'show_in_nav' => '0',
@@ -1170,6 +1196,176 @@ if (!is_array($modules)) {
             'show_in_nav' => '0',
         ],
         [
+            'title' => 'Registering Custom Admin List Actions',
+            'slug' => 'docs/how-tos/list-actions',
+            'status' => 'published',
+            'site_domain' => 'd6laptop.zero.guide',
+            'content' => [
+                [
+                    'type' => 'text',
+                    'title' => 'Introduction',
+                    'content' => '<p>Beyond the standard "New" button, a module can contribute its own action buttons to a specific model\'s admin listing page &mdash; for example, a "Create Demo Site" button on the Sites listing. This is handled by the <code>ManagesModelListActions</code> trait on <code>App</code>, via <code>App::registerModelListAction()</code>.</p>',
+                ],
+                [
+                    'type' => 'code',
+                    'title' => 'Registering an Action (DemoGenerator\\Module::init)',
+                    'language' => 'php',
+                    'code' => 'App::registerModelListAction(\'sites\', [
+    \'label\' => \'Create Demo Site\',
+    \'url\' => \'/api/v1/admin/demo/create\',
+    \'method\' => \'post\',
+    \'confirm\' => \'Create a new kitchensink demo site? It will be seeded with sample content and expire automatically in 24 hours.\',
+    \'module_dependency\' => $this->getId(),
+    \'precedence\' => 10,
+]);',
+                ],
+                [
+                    'type' => 'text',
+                    'title' => 'Action Config Fields & Visibility Gating',
+                    'content' => '<p><code>method =&gt; \'get\'</code> renders a plain link; <code>method =&gt; \'post\'</code> renders a confirm+fetch button that shows the <code>confirm</code> prompt before firing. <code>module_dependency</code> hides the button unless that module is enabled for the active site, and <code>super_admin_only</code> hides it from non-super_admin roles. Actions are sorted by ascending <code>precedence</code> (default <code>100</code>) before rendering.</p><p>Deliberately, <code>isModelListActionVisible()</code> does <em>not</em> reuse the admin sidebar\'s super_admin bypass on <code>module_dependency</code> &mdash; a list action gated to a module should only ever appear when that module is genuinely active for the current site. Reusing the sidebar\'s bypass would make the gate a no-op on any model whose listing page is itself super_admin-only, since only super admins could ever reach it.</p>',
+                ],
+                [
+                    'type' => 'code',
+                    'title' => 'Handling the Action (AdminCreateDemoSiteController)',
+                    'language' => 'php',
+                    'code' => 'public function handle($matches): void
+{
+    App::applyAuthMiddleware();
+    App::applyRoleMiddleware(\'super_admin\');
+    App::applyCsrfMiddleware();
+
+    $demo = (new DemoSiteFactory())->createDemoSite($syntheticEmail, \'kitchensink\');
+
+    Logger::log($userId, \'admin_demo_site_created\', \'sites\', null, [\'domain\' => $demo[\'domain\']]);
+
+    echo json_encode([
+        \'success\' => true,
+        \'message\' => "Demo site created: http://{$demo[\'domain\']} (login: {$syntheticEmail} / password: {$demo[\'password\']}). It expires automatically in 24 hours."
+    ]);
+}',
+                ],
+            ],
+            'type' => 'page',
+            'show_in_nav' => '0',
+        ],
+        [
+            'title' => 'Writing Database Migrations',
+            'slug' => 'docs/how-tos/migrations',
+            'status' => 'published',
+            'site_domain' => 'd6laptop.zero.guide',
+            'content' => [
+                [
+                    'type' => 'text',
+                    'title' => 'Introduction',
+                    'content' => '<p>Zero CMS has no ORM schema-sync step &mdash; every schema change is a hand-written, numbered migration class extending the abstract <code>Zero\\Database\\Migration</code>, implementing <code>up()</code> and <code>down()</code>. <code>MigrationManager</code> discovers migration files by globbing <code>src/Database/Migrations/[0-9]*_*.php</code> for core, and <code>src/Modules/*/Database/Migrations/[0-9]*_*.php</code> for every module, then runs every not-yet-applied file across <em>both</em> sets in a single flat numeric order, tracking progress in a <code>migrations</code> table (<code>migration</code>, <code>batch</code>, <code>run_at</code>).</p>',
+                ],
+                [
+                    'type' => 'code',
+                    'title' => 'A Real Migration (0029_AddExpiresAtToSitesTable.php)',
+                    'language' => 'php',
+                    'code' => 'namespace Zero\\Database\\Migrations;
+
+use Zero\\Database\\DB;
+
+class AddExpiresAtToSitesTable extends \\Zero\\Database\\Migration
+{
+    public function up(): void
+    {
+        DB::query("ALTER TABLE sites ADD COLUMN expires_at DATETIME NULL");
+    }
+
+    public function down(): void
+    {
+        DB::query("ALTER TABLE sites DROP COLUMN expires_at");
+    }
+}',
+                ],
+                [
+                    'type' => 'text',
+                    'title' => 'Numbering & Running Migrations',
+                    'content' => '<p>Because core and module migrations share one flat numeric order, always check the highest existing migration number across <em>every</em> <code>Database/Migrations/</code> folder in the repo before adding a new one &mdash; not just your own module\'s folder. Every table follows the same conventions: a <code>VARCHAR(36)</code> UUIDv7 primary key, a nullable <code>site_id</code> for tenant scoping, and a soft-delete <code>deleted_at</code> column.</p>',
+                ],
+                [
+                    'type' => 'code',
+                    'title' => 'Applying Migrations',
+                    'language' => 'bash',
+                    'code' => 'docker exec -w /data/misc/zero php83 bin/migrate',
+                ],
+            ],
+            'type' => 'page',
+            'show_in_nav' => '0',
+        ],
+        [
+            'title' => 'Automated Test Suite Conventions',
+            'slug' => 'docs/how-tos/testing',
+            'status' => 'published',
+            'site_domain' => 'd6laptop.zero.guide',
+            'content' => [
+                [
+                    'type' => 'text',
+                    'title' => 'Zero-Dependency Test Layout',
+                    'content' => '<p>Rather than pull in PHPUnit or Pest, Zero CMS ships a small custom test runner. There is no root <code>tests/</code> directory &mdash; every test file lives directly alongside the code it tests: component tests under <code>src/&lt;Component&gt;/Tests/*Test.php</code> (e.g. <code>src/Core/Tests/</code>, <code>src/Database/Tests/</code>), module tests under <code>src/Modules/&lt;Module&gt;/Tests/*Test.php</code>, and cross-cutting tests that don\'t belong to one component under <code>src/Integration/Tests/</code>.</p>',
+                ],
+                [
+                    'type' => 'code',
+                    'title' => 'Minimal Test File',
+                    'language' => 'php',
+                    'code' => '<?php
+// src/Modules/Blog/Tests/PostSlugTest.php
+require dirname(dirname(dirname(__DIR__))) . \'/Support/TestBootstrap.php\'; // 3 levels for module Tests/
+
+$post = new \\Zero\\Modules\\Blog\\Models\\Post([\'title\' => \'Hello World\']);
+assert_test($post->slug === \'hello-world\', \'Post slug should be auto-generated from title\');',
+                ],
+                [
+                    'type' => 'text',
+                    'title' => 'Execution Model',
+                    'content' => '<p><code>bin/test</code> recursively scans <code>src/</code> for every <code>*Test.php</code> file and hands each one to <code>Zero\\Support\\TestRunner</code>, which runs it in its own isolated PHP subprocess via <code>proc_open</code> &mdash; never sequential <code>exec()</code>. A small pool of <code>TEST_TOKEN</code> worker slots (sized to detected CPU cores, capped at 8) is reused across the queue, so several subprocesses run concurrently, each against its own isolated test database (<code>{db}_test_{token}</code>). <code>[PASS]</code>/<code>[FAIL]</code> lines print in completion order, not queue order, followed by a final summary box and a <code>GRAND STATUS: SUCCESS</code>/<code>FAILURE</code> banner.</p>',
+                ],
+                [
+                    'type' => 'code',
+                    'title' => 'Running the Suite',
+                    'language' => 'bash',
+                    'code' => 'docker exec -w /data/misc/zero php83 bin/test',
+                ],
+            ],
+            'type' => 'page',
+            'show_in_nav' => '0',
+        ],
+        [
+            'title' => 'Google OAuth 2.0 Single Sign-On',
+            'slug' => 'docs/how-tos/oauth',
+            'status' => 'published',
+            'site_domain' => 'd6laptop.zero.guide',
+            'content' => [
+                [
+                    'type' => 'text',
+                    'title' => 'A Zero-Dependency SSO Flow',
+                    'content' => '<p>To offer modern Single-Sign-On without a vendor SDK, <code>GoogleAuthController</code> (inside <code>src/Modules/Admin/Controllers/GoogleAuthController.php</code>) implements the OAuth 2.0 authorization-code flow using raw PHP <code>cURL</code> calls. Before redirecting to Google\'s authorization page, a random state token is stored in <code>$_SESSION[\'_csrf_token\']</code> via <code>Security::csrfToken()</code>; Google echoes it back in the callback\'s <code>state</code> parameter, and the callback verifies it with <code>Security::csrfVerify()</code> before proceeding, mitigating CSRF hijacking of the login flow.</p>',
+                ],
+                [
+                    'type' => 'code',
+                    'title' => 'Exchanging the Authorization Code',
+                    'language' => 'php',
+                    'code' => '$ch = curl_init(\'https://oauth2.googleapis.com/token\');
+// POST payload: client_id, client_secret, redirect_uri, code
+curl_setopt($ch, CURLOPT_POST, true);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+$tokenResponse = json_decode(curl_exec($ch), true);
+
+// Then fetch the verified profile email with the access token:
+// GET https://www.googleapis.com/oauth2/v3/userinfo (Authorization: Bearer ...)',
+                ],
+                [
+                    'type' => 'text',
+                    'title' => 'Multi-Tenant Scoping on Login',
+                    'content' => '<p>Once the Google account\'s email is resolved, the matching <code>users</code> row is looked up. To prevent an OAuth login from crossing tenant boundaries, the resolved user must either be a global <code>super_admin</code>, or their <code>site_id</code> must match <code>App::getCurrentSiteId()</code> for the domain being logged into. Failing this check redirects back to the login page with an isolation-mismatch warning instead of granting a session.</p>',
+                ],
+            ],
+            'type' => 'page',
+            'show_in_nav' => '0',
+        ],
+        [
             'title' => 'Creating Custom Page Builder Blocks',
             'slug' => 'docs/how-tos/custom-blocks',
             'status' => 'published',
@@ -1303,7 +1499,7 @@ class Comment implements Model
                 [
                     'type' => 'text',
                     'title' => '1. Deep Dive: Luxe E-Commerce & Transaction Engine',
-                    'content' => '<p>The Shop Module transforms Zero CMS into a robust, high-performance transactional storefront. Engineered on strict multi-tenant isolation, the module manages a fully relational catalog, variant-level stock parameters, and orders processing pipelines with **100% zero package dependencies**.</p><h4>System Capabilities</h4><ul><li><strong>Relational Categories & Catalog:</strong> Groups products into multi-tenant categories with clean SEO slug generation.</li><li><strong>Product Variants & Stock Mapping:</strong> Maps unique SKUs, pricing overrides, and isolated stock parameters directly per variant option (e.g. Size, Color).</li><li><strong>ACID Transactional Checkout:</strong> Prevents inventory double-selling under high concurrency using row-level database locks (<code>FOR UPDATE</code>).</li><li><strong>Relational Orders Tracking:</strong> Records detailed customer meta-headers and tracks relational order item lists inside historical ledger tables.</li></ul>',
+                    'content' => '<p>The Shop Module transforms Zero CMS into a robust, high-performance transactional storefront. Engineered on strict multi-tenant isolation, the module manages a fully relational catalog, variant-level stock parameters, and orders processing pipelines with **100% zero package dependencies**.</p><h4>System Capabilities</h4><ul><li><strong>Relational Categories & Catalog:</strong> Groups products into multi-tenant categories with clean SEO slug generation.</li><li><strong>Product Variants & Stock Mapping:</strong> Maps unique SKUs, pricing overrides, and isolated stock parameters directly per variant option (e.g. Size, Color).</li><li><strong>Session-Cart Checkout:</strong> Persists the order and its order items, then decrements each purchased variant\'s stock via <code>ProductVariant::save()</code>. Note this is a known concurrency gap rather than a solved one: there is currently no row-level locking (<code>FOR UPDATE</code>) or transaction wrapping the stock read-and-decrement, so two simultaneous checkouts against the same low-stock variant can still oversell it.</li><li><strong>Relational Orders Tracking:</strong> Records detailed customer meta-headers and tracks relational order item lists inside historical ledger tables.</li></ul>',
                 ],
                 [
                     'type' => 'text',
@@ -1371,44 +1567,45 @@ class OrderItem implements Model
                 ],
                 [
                     'type' => 'code',
-                    'title' => 'ACID Transaction & Stock Locking Checkout Workflow',
+                    'title' => 'Session-Cart Checkout Workflow (CheckoutController.php)',
                     'language' => 'php',
                     'code' => 'namespace Zero\\Modules\\Shop\\Controllers;
 
-class CheckoutController
+class CheckoutController implements Controller
 {
-    public function processCheckout(array $cartItems, array $customerData)
+    public function handle($param)
     {
-        $pdo = DB::getPDO();
-        $pdo->beginTransaction(); // Open ACID Transaction block
-        
-        try {
-            $totalPrice = 0.00;
-            $orderItems = [];
-            
-            foreach ($cartItems as $item) {
-                // 1. Row-level Lock \'FOR UPDATE\' to prevent inventory overselling
-                $sql = "SELECT stock, price, title FROM shop_product_variants WHERE id = ? FOR UPDATE";
-                $variant = DB::query($sql, [$item[\'variant_id\']])->fetch();
-                
-                if (!$variant || $variant[\'stock\'] < $item[\'quantity\']) {
-                    throw new Exception("Requested quantity of " . ($variant[\'title\'] ?? \'item\') . " is unavailable.");
+        $cart = $_SESSION[\'cart\'] ?? [];
+        // ... validate name/email/address, then:
+
+        $order = new Order([
+            \'id\' => $orderId,
+            \'site_id\' => App::getCurrentSiteId(),
+            \'customer_name\' => $name,
+            \'customer_email\' => $email,
+            \'total_price\' => $subtotal,
+            \'status\' => \'paid\', // Marked paid immediately -- demo checkout simulation, no payment gateway
+            \'shipping_address\' => $address,
+        ]);
+        $order->save();
+
+        foreach ($cart as $item) {
+            (new OrderItem([/* ... */]))->save();
+
+            // Inventory deduction -- NOT locked or transaction-wrapped. Two concurrent
+            // checkouts against the same low-stock variant can both read the stale stock
+            // value before either writes, oversells the variant, and neither call raises
+            // an error -- a known gap, not a solved race condition.
+            if (!empty($item[\'variant_id\'])) {
+                $variant = ProductVariant::find($item[\'variant_id\']);
+                if ($variant) {
+                    $variant->stock = max(0, $variant->stock - $item[\'quantity\']);
+                    $variant->save();
                 }
-                
-                // 2. Decrement inventory securely
-                $newStock = $variant[\'stock\'] - $item[\'quantity\'];
-                DB::query("UPDATE shop_product_variants SET stock = ? WHERE id = ?", [$newStock, $item[\'variant_id\']]);
-                
-                $totalPrice += $variant[\'price\'] * $item[\'quantity\'];
             }
-            
-            // 3. Commit order and items...
-            $pdo->commit();
-            return true;
-        } catch (Exception $e) {
-            $pdo->rollBack(); // Safe rollback
-            return false;
         }
+
+        $_SESSION[\'cart\'] = [];
     }
 }',
                 ],
