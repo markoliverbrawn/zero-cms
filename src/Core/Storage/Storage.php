@@ -29,9 +29,9 @@ class Storage
      * `<root>/public/storage/uploads` for public tenant uploads, `<root>/storage/private` for
      * non-web-accessible private storage. Defaults to APPLICATION_ROOT.
      *
-     * Lets a host project embedding Zero as a git submodule keep every uploaded file entirely
-     * outside the submodule (e.g. registered as its own project root) instead of writing runtime
-     * user data into a git-tracked vendor directory.
+     * Lets a host project that installs Zero CMS Core via Composer keep every uploaded file
+     * entirely outside the vendor package (e.g. registered as its own project root) instead of
+     * writing runtime user data into a git-tracked vendor directory.
      *
      * @param string $absoluteDir
      * @return void

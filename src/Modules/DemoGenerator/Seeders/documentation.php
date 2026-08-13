@@ -426,7 +426,7 @@ Percentage of the requests served within a certain time (ms)
                 [
                     'type' => 'text',
                     'title' => '1. Development Velocity vs. Zero Dependencies',
-                    'content' => '<p>Because Zero CMS rejects 100% of third-party PHP packages (no Composer directory, no external vendor libraries), you cannot resolve problems by simply running <code>composer require</code>. For example:</p><ul><li><strong>OAuth/Social Login</strong>: Must be written manually with raw curl or curl-free PHP sockets and manual crypto signature verification.</li><li><strong>Payment Gateways</strong>: Integrations (e.g. Stripe, PayPal) require writing direct HTTP API requests, parsing responses, and checking signatures natively.</li><li><strong>Image Manipulation</strong>: Restricted to PHP\'s native GD or Imagick extensions without modern wrapper libraries.</li></ul>',
+                    'content' => '<p>Because Zero CMS rejects 100% of third-party <em>runtime</em> PHP packages, you cannot resolve problems by simply running <code>composer require some/library</code>. (Composer itself is only ever used to install Zero CMS Core into a host project as a versioned package -- see <code>bin/create-project</code> -- never to pull in third-party runtime dependencies.) For example:</p><ul><li><strong>OAuth/Social Login</strong>: Must be written manually with raw curl or curl-free PHP sockets and manual crypto signature verification.</li><li><strong>Payment Gateways</strong>: Integrations (e.g. Stripe, PayPal) require writing direct HTTP API requests, parsing responses, and checking signatures natively.</li><li><strong>Image Manipulation</strong>: Restricted to PHP\'s native GD or Imagick extensions without modern wrapper libraries.</li></ul>',
                 ],
                 [
                     'type' => 'text',
@@ -2199,52 +2199,53 @@ if (Storage::exists(\'uploads/contracts/agreement-123.txt\')) {
                 [
                     'type' => 'text',
                     'title' => '1. High-Level Architectural Summary',
-                    'content' => '<p>When starting a new project from Zero CMS, developers often want to create a standalone, separate project that has its own custom modules, layouts, and public styles in addition to the core bundles. However, you still want to benefit from ongoing performance optimizations, security patches, and core kernel updates to Zero CMS in the future.</p><p>Because Zero CMS strictly follows the <strong>Loose Coupling & Modular Registration (Rule 2)</strong>, all custom features, modules, themes, and views are designed to be completely hot-swappable and separated from the system <code>Core</code>. This allows us to cleanly separate custom code from the platform kernel, enabling seamless upstream syncs with absolutely zero merge conflicts.</p>',
+                    'content' => '<p>When starting a new project from Zero CMS, developers often want to create a standalone, separate project that has its own custom modules, layouts, and public styles in addition to the core bundles. However, you still want to benefit from ongoing performance optimizations, security patches, and core kernel updates to Zero CMS in the future.</p><p>Because Zero CMS strictly follows the <strong>Loose Coupling & Modular Registration (Rule 2)</strong>, all custom features, modules, themes, and views are designed to be completely hot-swappable and separated from the system <code>Core</code>. Zero CMS Core itself is installed as a versioned Composer package (<code>markoliverbrawn/zero-cms-core</code>) rather than copied or cloned into your project, cleanly separating your custom code from the platform kernel and enabling conflict-free core updates.</p>',
                 ],
                 [
                     'type' => 'text',
-                    'title' => '2. Initializing a Standalone Project via Upstream Tracking Fork',
-                    'content' => '<p>To establish a standalone project with continuous core sync capabilities, use the <strong>Upstream Tracking Fork</strong> design pattern. This configures your custom repo to pull from your standalone origin, while tracking the master Zero CMS repository as an upstream source.</p><p>Execute the following step-by-step commands to initialize your new workspace repository:</p>',
+                    'title' => '2. Scaffolding a New Sub-Project via bin/create-project',
+                    'content' => '<p>To establish a standalone project, use the <code>bin/create-project</code> bootstrapper -- a single, self-contained bash script that needs no existing Zero CMS checkout. Save it anywhere and run it directly: it writes a <code>composer.json</code> requiring Zero CMS Core from its private VCS repository, runs <code>composer install</code> to pull Core into <code>vendor/markoliverbrawn/zero-cms-core/</code>, scaffolds your project\'s own <code>public/</code>, <code>src/</code>, <code>tests/</code>, and <code>storage/</code> folders, and then deletes itself once finished.</p>',
                 ],
                 [
                     'type' => 'code',
-                    'title' => 'Initial Git Repository Setup Commands',
+                    'title' => 'Scaffolding a New Sub-Project',
                     'language' => 'bash',
-                    'code' => '# 1. Clone the core Zero CMS repository into your standalone project directory
-git clone git@github.com:markoliverbrawn/zero-cms.git standalone-project
-cd standalone-project
+                    'code' => '# 1. Fetch the standalone bootstrapper script (no existing checkout required)
+curl -O https://raw.githubusercontent.com/markoliverbrawn/zero-cms/dev/bin/create-project
+chmod +x create-project
 
-# 2. Rename the main remote from \'origin\' to \'upstream\' (to track Zero CMS core updates)
-git remote rename origin upstream
+# 2. Scaffold a new sub-project -- writes composer.json, runs composer install (pulling
+#    Zero CMS Core into vendor/markoliverbrawn/zero-cms-core/), and self-deletes when done
+./create-project ../my-website --branch dev
 
-# 3. Add your new, private standalone project repository as \'origin\'
-git remote add origin git@github.com:your-org/standalone-project-name.git
-
-# 4. Push your branches cleanly to your private repository
-git push -u origin dev',
+# 3. Finish setup inside the new project
+cd ../my-website
+$EDITOR .env
+bin/seed
+bin/test',
                 ],
                 [
                     'type' => 'text',
                     'title' => '3. Standalone Development Best Practices (Preventing Conflicts)',
-                    'content' => '<p>To ensure that you can merge core framework updates automatically without any manual merge conflicts, standalone developers MUST strictly adhere to the following decoupling mandates:</p><ul><li><strong>Never Modify the Core (<code>src/Core/</code>)</strong>: Keep all kernel bootstrapping, app singletons, routing transceivers, and base storage drivers completely untouched.</li><li><strong>Custom Modules in `src/Modules/`</strong>: Store your project-specific modules inside their own, decoupled folders (e.g. <code>src/Modules/CustomFeature/</code>) and register their custom routing, blocks, and listeners dynamically inside their <code>init()</code> hooks.</li><li><strong>Custom Layouts in `src/Views/themes/`</strong>: Place all project-specific visual styles, cascading grids, and layout templates inside a dedicated theme folder (e.g. <code>src/Views/themes/custom-theme/</code>) rather than editing the core <code>default</code> templates.</li><li><strong>Dynamic Theme Fallbacks</strong>: Inherit core templates dynamically. If your custom theme only needs to override <code>layout.php</code>, register your theme and the core will automatically fall back to <code>default</code> templates for all missing view templates, keeping your theme directory clean and lightweight!</li></ul>',
+                    'content' => '<p>To ensure that <code>composer update</code> never produces conflicts, standalone developers MUST strictly adhere to the following decoupling mandates:</p><ul><li><strong>Never Modify Core (<code>vendor/markoliverbrawn/zero-cms-core/src/Core/</code>)</strong>: This entire package is Composer-managed and gets overwritten on every <code>composer update</code> -- treat it as read-only.</li><li><strong>Custom Modules in your own `src/Modules/`</strong>: Store your project-specific modules inside their own, decoupled folders (e.g. <code>src/Modules/CustomFeature/</code>) and register their custom routing, blocks, and listeners dynamically inside their <code>init()</code> hooks -- your project\'s <code>public/index.php</code> registers this path via <code>App::registerModulePath()</code>.</li><li><strong>Custom Layouts in your own `src/Views/`</strong>: Place all project-specific visual styles, cascading grids, and layout templates inside your own <code>src/Views/</code> (registered via <code>App::registerViewDir(\'app\', ...)</code>) rather than editing the vendor package\'s templates.</li><li><strong>Dynamic Theme Fallbacks</strong>: Inherit core templates dynamically. If your custom theme only needs to override <code>layout.php</code>, register your theme and the core will automatically fall back to <code>default</code> templates for all missing view templates, keeping your theme directory clean and lightweight!</li></ul>',
                 ],
                 [
                     'type' => 'text',
-                    'title' => '4. Pulling Upstream Core Updates & Verifying',
-                    'content' => '<p>Whenever a core framework optimization or security hardening patch is committed to the main Zero CMS repository, merging those updates into your standalone project is quick, safe, and automated:</p>',
+                    'title' => '4. Updating Core via Composer',
+                    'content' => '<p>Whenever a core framework optimization or security hardening patch is committed to the main Zero CMS repository, pulling those updates into your standalone project is a single command -- no manual merges, no conflicts:</p>',
                 ],
                 [
                     'type' => 'code',
-                    'title' => 'Git Upstream Merge and Test Runner Verification',
+                    'title' => 'Composer Update and Test Runner Verification',
                     'language' => 'bash',
-                    'code' => '# 1. Fetch any new changes and core updates from the upstream Zero CMS repository
-git fetch upstream
+                    'code' => '# 1. Pull the latest commit on the tracked branch and re-lock the installed version
+composer update markoliverbrawn/zero-cms-core
 
-# 2. Merge upstream core changes into your active development/production branch
-git merge upstream/dev
+# 2. Always execute the isolated subprocess test runner to verify 100% regression-free stability
+bin/test
 
-# 3. Always execute the isolated subprocess test runner to verify 100% regression-free stability
-docker exec -w /data/misc/zero php83 bin/test',
+# composer.lock pins the installed Core version -- commit it alongside composer.json so
+# teammates and deploys reproduce the exact same vendor/ checkout via `composer install`.',
                 ],
             ],
             'type' => 'page',

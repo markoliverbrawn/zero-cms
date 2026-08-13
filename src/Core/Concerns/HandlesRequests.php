@@ -32,8 +32,8 @@ trait HandlesRequests
      * the end into a final 404), matching the original inline public/index.php control flow this
      * was extracted from -- it does not return control to the caller under normal operation.
      *
-     * Extracted out of public/index.php so a host project embedding Zero as a git submodule can
-     * reuse the exact same request-handling logic from its own front controller instead of
+     * Extracted out of public/index.php so a host project that installs Zero CMS Core via Composer
+     * can reuse the exact same request-handling logic from its own front controller instead of
      * hand-copying it (and risking drift, e.g. missing the admin-route or static-asset fallback).
      *
      * @param string $publicDir Absolute path to the calling front controller's own public/

@@ -40,8 +40,8 @@ class Autoloader
 
     /**
      * Register an additional PSR-4-style namespace-to-directory mapping. Lets a host project
-     * embedding Zero as a git submodule autoload its own classes (e.g. modules contributed via
-     * App::registerModulePath()) with one call instead of hand-rolling its own
+     * that installs Zero CMS Core via Composer autoload its own classes (e.g. modules contributed
+     * via App::registerModulePath()) with one call instead of hand-rolling its own
      * spl_autoload_register callback.
      *
      * @param string $namespacePrefix e.g. 'Acme\\Modules\\'

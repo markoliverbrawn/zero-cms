@@ -321,7 +321,7 @@ class Site implements Model
             }
         }
         // Include themes registered dynamically via App::registerThemePath() (e.g. contributed
-        // by a host project embedding Zero as a git submodule) that don't live in this repo.
+        // by a host project that installs Zero CMS Core via Composer) that don't live in this repo.
         foreach (App::getRegisteredThemeNames() as $folder) {
             if (!isset($options[$folder])) {
                 $options[$folder] = \ucwords(\str_replace(['-', '_'], ' ', $folder)) . ' Theme';

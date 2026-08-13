@@ -6,4 +6,5 @@ _archive
 *.bak
 .vscode/
 /*.json
+!/composer.json
 /deployments

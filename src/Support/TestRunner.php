@@ -16,7 +16,7 @@ namespace Zero\Support;
  *
  * Discovers and runs every *Test.php file under a given set of directories, each in its own
  * subprocess, running up to N concurrently. Extracted out of the former tests/run.php (now
- * bin/test) so a host project embedding Zero as a git submodule can reuse the exact same
+ * bin/test) so a host project that installs Zero CMS Core via Composer can reuse the exact same
  * discovery/execution/reporting logic from its own test runner instead of hand-copying it.
  */
 class TestRunner

@@ -5,8 +5,8 @@ declare(strict_types=1);
 /**
  * File: src/Core/Concerns/ManagesThemes.php
  * Architectural Purpose: The theme-path/theme-stylesheet registry and resolution chain (requested
- * theme -> 'default' -> registered fallbacks), letting a host project embedding Zero as a git
- * submodule register its own themes from outside this repo. Extracted out of App.php.
+ * theme -> 'default' -> registered fallbacks), letting a host project that installs Zero CMS Core
+ * via Composer register its own themes from outside this repo. Extracted out of App.php.
  * Package: Zero\Core\Concerns
  */
 
@@ -46,7 +46,7 @@ trait ManagesThemes
      * over the bundled convention path (public/assets/css/themes/<theme>/<theme>.css) when
      * CssBundleController compiles the theme's CSS bundle. Complements registerThemePath(): that
      * registry covers a theme's PHP view files, this one covers its source CSS file — letting a
-     * host project keep both entirely outside the Zero submodule.
+     * host project keep both entirely outside the Zero vendor package.
      *
      * This is distinct from registerThemeStylesheet(), which registers a public URL for the
      * admin preview link rather than a filesystem path the CSS compiler reads from.
@@ -91,9 +91,9 @@ trait ManagesThemes
     /**
      * Register an absolute filesystem directory as the source for a theme name, taking
      * precedence over the bundled theme of the same name shipped inside this repo. Lets a
-     * host project embedding Zero as a git submodule keep its own themes entirely in its own
-     * tree (e.g. registered from the host's own bootstrap, before App::bootstrap() runs)
-     * instead of committing them inside the submodule.
+     * host project that installs Zero CMS Core via Composer keep its own themes entirely in its
+     * own tree (e.g. registered from the host's own bootstrap, before App::bootstrap() runs)
+     * instead of committing them inside the vendor package.
      *
      * @param string $themeName
      * @param string $absoluteDir

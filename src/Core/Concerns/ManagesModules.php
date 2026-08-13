@@ -91,7 +91,7 @@ trait ManagesModules
      * the bundled src/Modules directory. Each subfolder found is expected to contain a
      * `Module.php` implementing ModuleInterface at `<namespacePrefix><FolderName>\Module`.
      *
-     * Lets a host project embedding Zero as a git submodule contribute its own modules from
+     * Lets a host project that installs Zero CMS Core via Composer contribute its own modules from
      * outside this repo. The host is responsible for making that namespace loadable (e.g. its
      * own spl_autoload_register callback) — this registry only tells discoverModules() where
      * to look and which namespace to probe. discoverModules() runs once and caches its result,

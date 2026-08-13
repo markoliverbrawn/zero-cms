@@ -178,7 +178,7 @@ The table below catalogs every page record compiled on seed bootstrap, capturing
 | **Configuring Google Cloud Storage (Zero Dependencies)** | `docs/how-tos/gcs-setup` | How-Tos | No (`0`) | `text` (Uniform vs ACL buckets, .env setup, Storage API) |
 | **Secure Frontend Uploads & Private Storage** | `docs/how-tos/secure-uploads` | How-Tos | No (`0`) | `text` (binaries obfuscation, secure download route stream) |
 | **Configuring AWS S3 Storage (Zero Dependencies)** | `docs/how-tos/aws-s3-setup` | How-Tos | No (`0`) | `text` (SigV4 cryptographic hmac signature generation) |
-| **Standalone Project Creation & Core Syncing** | `docs/how-tos/standalone-projects` | How-Tos | No (`0`) | `text`, `code` (git commands & best practices) |
+| **Standalone Project Creation & Core Syncing** | `docs/how-tos/standalone-projects` | How-Tos | No (`0`) | `text`, `code` (`bin/create-project` Composer bootstrap, `composer update` core syncing, best practices) |
 | **Registering Custom Admin List Actions** | `docs/how-tos/list-actions` | How-Tos | No (`0`) | `text`, `code` (`ManagesModelListActions`, `registerModelListAction()`, worked "Create Demo Site" example) |
 | **Writing Database Migrations** | `docs/how-tos/migrations` | How-Tos | No (`0`) | `text`, `code` (`Migration` base class, `MigrationManager` discovery/numbering, `bin/migrate`) |
 | **Automated Test Suite Conventions** | `docs/how-tos/testing` | How-Tos | No (`0`) | `text`, `code` (per-component `Tests/` layout, `TestRunner` subprocess isolation, `bin/test`) |
