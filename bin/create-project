@@ -323,10 +323,10 @@ $testsBootstrap = <<<'PHP'
  * Common bootstrapping and namespace autoloader for sub-project tests.
  */
 
-use App\Support\TestRunner;
 use Zero\Core\App;
 use Zero\Core\Env;
 use Zero\Core\Storage\Storage;
+use Zero\Support\TestRunner;
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -368,8 +368,10 @@ try {
 }
 
 /**
- * Light-weight test assertion helper. Delegates to App\Support\TestRunner so every test file's
- * assert_test() call and this sub-project's bin/test share the exact same pass/fail behavior.
+ * Light-weight test assertion helper. Delegates to Core's own Zero\Support\TestRunner (already
+ * fully generic over an arbitrary test directory) so every test file's assert_test() call and
+ * this sub-project's bin/test share the exact same pass/fail behavior, with no local copy to
+ * drift out of sync with Core's.
  */
 function assert_test(bool $condition, string $message) {
     TestRunner::assertTest($condition, $message);
@@ -378,106 +380,13 @@ function assert_test(bool $condition, string $message) {
 PHP;
 writeFile("{$target}/tests/bootstrap.php", str_replace('__VENDOR_DIR__', $vendorDir, $testsBootstrap));
 
-$testRunnerPhp = <<<'PHP'
-<?php
-/**
- * src/Support/TestRunner.php
- * Discovers and runs all tests/*Test.php files sequentially, each in its own subprocess.
- */
-
-namespace App\Support;
-
-class TestRunner
-{
-    /**
-     * Discover, run, and report on every *Test.php file under $testsRoot. Echoes progress
-     * directly and returns the process exit code (0 on full success, 1 if any suite failed).
-     *
-     * @param string $testsRoot
-     * @return int
-     */
-    public static function run(string $testsRoot): int
-    {
-        $testFiles = glob($testsRoot . '/*Test.php');
-        sort($testFiles);
-
-        echo "==================================================\n";
-        echo "       SUB-PROJECT UNIT TEST RUNNER          \n";
-        echo "==================================================\n\n";
-
-        if (empty($testFiles)) {
-            echo "No test files found matching *Test.php.\n";
-            return 0;
-        }
-
-        echo "Found " . count($testFiles) . " test suite file(s).\n\n";
-
-        $passed = 0;
-        $failed = 0;
-        $failedSuites = [];
-
-        foreach ($testFiles as $file) {
-            $suiteName = basename($file);
-            echo "Running {$suiteName}...\n";
-
-            exec("php " . escapeshellarg($file), $output, $exitCode);
-            foreach ($output as $line) {
-                echo "  " . $line . "\n";
-            }
-
-            if ($exitCode === 0) {
-                $passed++;
-                echo "--> {$suiteName} PASSED\n\n";
-            } else {
-                $failed++;
-                $failedSuites[] = $suiteName;
-                echo "--> {$suiteName} FAILED\n\n";
-            }
-            $output = [];
-        }
-
-        echo "==================================================\n";
-        echo "Passed: {$passed}   Failed: {$failed}\n";
-        echo "==================================================\n";
-
-        if ($failed > 0) {
-            foreach ($failedSuites as $suite) {
-                echo "  - {$suite}\n";
-            }
-            return 1;
-        }
-        return 0;
-    }
-
-    /**
-     * Light-weight test assertion helper, called by every test file via the global assert_test()
-     * wrapper defined in tests/bootstrap.php. Exits the current subprocess with status code 1 on
-     * failure, which is what run()'s exit-code-based pass/fail detection relies on.
-     *
-     * @param bool $condition
-     * @param string $message
-     * @return void
-     */
-    public static function assertTest(bool $condition, string $message): void
-    {
-        if ($condition) {
-            echo "  \033[32m\xE2\x9C\x85 PASS:\033[0m {$message}\n";
-        } else {
-            echo "  \033[31m\xE2\x9D\x8C FAIL:\033[0m {$message}\n";
-            exit(1);
-        }
-    }
-}
-
-PHP;
-writeFile("{$target}/src/Support/TestRunner.php", $testRunnerPhp);
-
 $testPhp = <<<'PHP'
 #!/usr/bin/env php
 <?php
 /**
  * bin/test
- * Discovers and runs all *Test.php files under tests/ via App\Support\TestRunner.
+ * Discovers and runs all *Test.php files under tests/ via Core's own Zero\Support\TestRunner
+ * (already fully generic over an arbitrary test directory -- no local copy needed here).
  */
 
 define('SUBPROJECT_ROOT', dirname(__DIR__));
@@ -489,7 +398,7 @@ require_once CORE_ROOT . '/src/Core/Autoloader.php';
 \Zero\Core\Autoloader::init();
 \Zero\Core\Autoloader::registerNamespace('App\\', APP_ROOT . '/src');
 
-use App\Support\TestRunner;
+use Zero\Support\TestRunner;
 
 exit(TestRunner::run(APP_ROOT . '/tests'));
 
@@ -583,6 +492,7 @@ use Zero\Core\App;
 use Zero\Core\Env;
 use Zero\Core\Storage\Storage;
 use Zero\Database\MigrationManager;
+use Zero\Models\Site;
 
 define('SUBPROJECT_ROOT', dirname(__DIR__));
 define('APPLICATION_ROOT', SUBPROJECT_ROOT . '/__VENDOR_DIR__');
@@ -608,13 +518,29 @@ try {
     echo "Migrations up to date.\n\n";
 
     $siteId = App::getCurrentSiteId();
+
+    // bin/seed runs from the CLI, where there is no HTTP_HOST for App::bootstrap() to match
+    // against a `sites` row -- it always falls back to the literal host 'localhost'. If a site
+    // already exists (e.g. created through the dev-mode Setup Wizard by visiting the site in a
+    // browser first), fall back to it directly via App::setCurrentSite() instead of depending on
+    // that host match, mirroring how Zero\Support\Seeder manages tenant context for CLI seeding.
+    if (empty($siteId)) {
+        $existingSite = Site::all()[0] ?? null;
+        if ($existingSite) {
+            App::setCurrentSite($existingSite);
+            $siteId = $existingSite->id;
+        }
+    }
+
     if (!empty($siteId)) {
         echo "Seeding an example record...\n";
         (new CustomModel(['site_id' => $siteId, 'name' => 'First Custom Record', 'description' => 'Seeded example record.']))->save();
         echo "Done.\n";
     } else {
-        echo "No active site tenant resolved for this HTTP_HOST -- skipping example record seed.\n";
-        echo "(Register a site for this domain in the admin back-office first.)\n";
+        echo "No site tenant exists yet -- skipping example record seed.\n";
+        echo "Set ENVIRONMENT=dev in .env, then visit this site in a browser to run the Setup\n";
+        echo "Wizard and create your first site + admin user. Re-run bin/seed afterward to seed\n";
+        echo "the example record for that site.\n";
     }
 
     echo "\n\xE2\x9C\x85 SETUP COMPLETE\n";
@@ -815,19 +741,25 @@ storage, and uploads.
    ```
    ./bin/setup-symlinks
    ```
-2. Edit `.env` with your real database credentials.
+2. Edit `.env` with your real database credentials. For local development, also set
+   `ENVIRONMENT=dev` (the copied `.env.example` default is `production`).
 3. Run every pending migration (Core's own, plus this sub-project's own under
-   `src/Modules/*/Database/Migrations/`) and seed an example record:
+   `src/Modules/*/Database/Migrations/`):
    ```
    bin/seed
    ```
-4. Run the test suite:
-   ```
-   bin/test
-   ```
-5. Point your web server's document root at `public/`, or for local dev:
+   A brand-new database has no site tenant yet, so this only runs migrations -- it prints a
+   note and skips seeding the example record until a site exists.
+4. Point your web server's document root at `public/`, or for local dev:
    ```
    php -S localhost:8000 public/index.php
+   ```
+   With `ENVIRONMENT=dev` set, visiting the site with no site tenant yet automatically shows
+   the **Setup Wizard**, which creates your first site and admin user.
+5. Re-run `bin/seed` to seed the example record against the site you just created, then run
+   the test suite:
+   ```
+   bin/test
    ```
 
 ## Layout
