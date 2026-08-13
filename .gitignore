@@ -1,6 +1,8 @@
 _archive
-/storage
-/public/storage
+/storage/*
+!/storage/.htaccess
+/public/storage/*
+!/public/storage/.htaccess
 .env
 .env.backup
 *.bak
