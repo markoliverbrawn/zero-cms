@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/sh
 # create-project
 #
 # Standalone bootstrapper: save this one file anywhere and run it on its own (no existing Zero
@@ -22,12 +22,13 @@
 #   create-project ../acme-website --branch main
 #   create-project ../acme-website --remote git@github.com:acme/zero-fork.git --branch main
 
-set -euo pipefail
+set -eu
 
 # Resolve this script's own absolute path up front, before anything below can cd elsewhere --
 # needed so the self-delete step at the end can find it reliably regardless of how deep the
-# scaffolding process changes the working directory.
-SELF_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/$(basename "${BASH_SOURCE[0]}")"
+# scaffolding process changes the working directory. Uses $0 (not bash's ${BASH_SOURCE[0]})
+# so this runs under any POSIX sh (e.g. Alpine's ash/busybox), not just bash.
+SELF_PATH="$(cd "$(dirname "$0")" && pwd)/$(basename "$0")"
 
 DEFAULT_REMOTE="git@github.com:markoliverbrawn/zero-cms.git"
 PACKAGE_NAME="markoliverbrawn/zero-cms-core"
@@ -632,14 +633,14 @@ PHP_EOF
 
 # --- 7. Generate the asset/storage symlink setup script ---
 cat > "$TARGET/bin/setup-symlinks" <<BASH_EOF
-#!/usr/bin/env bash
+#!/bin/sh
 # bin/setup-symlinks
 # Set up symbolic links pointing from this sub-project's public assets to the Zero Core
 # vendor package's own assets, and from public/storage to this sub-project's own storage/
 # directory (keeping uploaded files entirely outside the read-only vendor package).
 set -e
 
-SUBPROJECT_ROOT=\$(cd "\$(dirname "\${BASH_SOURCE[0]}")/.." && pwd)
+SUBPROJECT_ROOT=\$(cd "\$(dirname "\$0")/.." && pwd)
 
 echo "Setting up Zero CMS Core asset symlinks..."
 
