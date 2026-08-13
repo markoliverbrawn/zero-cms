@@ -120,6 +120,34 @@ function writeFile(string $path, string $contents): void
     }
 }
 
+/**
+ * Recursively copies a directory tree, used to pull Core's own dev tooling (e.g. its
+ * docker-compose.yml + docker/ folder) out of the read-only vendor package and into this
+ * sub-project's own root, the same way individual files like .htaccess are copied below.
+ *
+ * @param string $source
+ * @param string $destination
+ * @return void
+ */
+function copyDir(string $source, string $destination): void
+{
+    if (!is_dir($destination) && !mkdir($destination, 0777, true) && !is_dir($destination)) {
+        fail("could not create directory: {$destination}");
+    }
+    foreach (scandir($source) as $item) {
+        if ($item === '.' || $item === '..') {
+            continue;
+        }
+        $from = "{$source}/{$item}";
+        $to = "{$destination}/{$item}";
+        if (is_dir($from)) {
+            copyDir($from, $to);
+        } elseif (copy($from, $to) === false) {
+            fail("could not copy file: {$from} -> {$to}");
+        }
+    }
+}
+
 // --- 1. Parse CLI arguments ---
 $args = array_slice($argv, 1);
 
@@ -735,6 +763,21 @@ if (file_exists("{$target}/{$vendorDir}/public/.htaccess")) {
 if (file_exists("{$target}/{$vendorDir}/storage/.htaccess")) {
     copy("{$target}/{$vendorDir}/storage/.htaccess", "{$target}/storage/.htaccess");
     echo "-> Copied {$vendorDir}/storage/.htaccess to storage/.htaccess\n";
+}
+
+// Copy Core's local docker-compose setup (mysql + mailpit + php83-apache) out of the read-only
+// vendor package and into this sub-project's own root. It has to live here, not in vendor/ --
+// `context: .` and the `.:/var/www/html` bind mount are written relative to wherever
+// docker-compose.yml itself sits, so run from inside the vendor package it would only ever
+// mount Core's own package tree into the container instead of this sub-project's public/,
+// bin/, storage/ and .env.
+if (file_exists("{$target}/{$vendorDir}/docker-compose.yml")) {
+    copy("{$target}/{$vendorDir}/docker-compose.yml", "{$target}/docker-compose.yml");
+    echo "-> Copied {$vendorDir}/docker-compose.yml to docker-compose.yml\n";
+}
+if (is_dir("{$target}/{$vendorDir}/docker")) {
+    copyDir("{$target}/{$vendorDir}/docker", "{$target}/docker");
+    echo "-> Copied {$vendorDir}/docker/ to docker/\n";
 }
 
 // --- 10. .gitignore ---

@@ -1,0 +1,63 @@
+# Self-contained local dev stack for Zero CMS.
+#
+#   docker compose up -d --build
+#
+# First boot automatically runs `bin/migrate` + `bin/seed` (see
+# docker/entrypoint.sh), then the site is live at http://localhost:2370
+# (admin login at /admin using ADMIN_USER / ADMIN_PASS below). Outgoing
+# mail is caught by Mailpit - view it at http://localhost:8026.
+services:
+  mysql:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: zero_cms
+    volumes:
+      - zero_mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "root", "-prootpassword"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  mailpit:
+    image: axllent/mailpit
+    restart: unless-stopped
+    ports:
+      - "8026:8025"
+
+  app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+      mailpit:
+        condition: service_started
+    ports:
+      - "2370:80"
+    environment:
+      ENVIRONMENT: dev
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: zero_cms
+      DB_USER: root
+      DB_PASS: rootpassword
+      ADMIN_USER: admin
+      ADMIN_PASS: password
+      BASE_URL: http://localhost:2370
+      BENCHMARKING: "false"
+      STORAGE_DRIVER: local
+      QUEUE_TRIGGER_TOKEN: dev_queue_trigger_token_change_me
+      SMTP_HOST: mailpit
+      SMTP_PORT: 1025
+      SMTP_FROM_EMAIL: noreply@zero.shop
+      SMTP_FROM_NAME: Zero CMS
+    volumes:
+      - .:/var/www/html
+
+volumes:
+  zero_mysql_data:
