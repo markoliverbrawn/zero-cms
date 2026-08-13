@@ -2204,7 +2204,7 @@ if (Storage::exists(\'uploads/contracts/agreement-123.txt\')) {
                 [
                     'type' => 'text',
                     'title' => '2. Scaffolding a New Sub-Project via bin/create-project',
-                    'content' => '<p>To establish a standalone project, use the <code>bin/create-project</code> bootstrapper -- a single, self-contained bash script that needs no existing Zero CMS checkout. Save it anywhere and run it directly: it writes a <code>composer.json</code> requiring Zero CMS Core from its private VCS repository, runs <code>composer install</code> to pull Core into <code>vendor/markoliverbrawn/zero-cms-core/</code>, scaffolds your project\'s own <code>public/</code>, <code>src/</code>, <code>tests/</code>, and <code>storage/</code> folders, and then deletes itself once finished.</p>',
+                    'content' => '<p>To establish a standalone project, use the <code>bin/create-project</code> bootstrapper -- a single, self-contained PHP script (not bash, so it runs anywhere <code>composer</code> and <code>php</code> are available, with no bash/ash/dash shell-portability gap) that needs no existing Zero CMS checkout. Save it anywhere and run it directly: it writes a <code>composer.json</code> requiring Zero CMS Core from its public VCS repository, runs <code>composer install</code> to pull Core into <code>vendor/markoliverbrawn/zero-cms-core/</code>, scaffolds your project\'s own <code>public/</code>, <code>src/</code>, <code>tests/</code>, and <code>storage/</code> folders, and then deletes itself once finished.</p>',
                 ],
                 [
                     'type' => 'code',

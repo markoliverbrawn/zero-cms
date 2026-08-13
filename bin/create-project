@@ -5,7 +5,7 @@
  *
  * Standalone bootstrapper: save this one file anywhere and run it on its own (no existing Zero
  * CMS checkout required). It writes a composer.json into a new sub-project directory requiring
- * Zero CMS Core from a private VCS repository and runs `composer install`, which pulls Core into
+ * Zero CMS Core from its public VCS repository and runs `composer install`, which pulls Core into
  * vendor/markoliverbrawn/zero-cms-core/. It also lays down a basic public/src/bin/tests/storage
  * folder structure for the sub-project's own files, and then deletes itself once the sub-project
  * is fully scaffolded.
@@ -34,7 +34,7 @@
  *   create-project ../acme-website --remote git@github.com:acme/zero-fork.git --branch main
  */
 
-const DEFAULT_REMOTE = 'git@github.com:markoliverbrawn/zero-cms.git';
+const DEFAULT_REMOTE = 'https://github.com/markoliverbrawn/zero-cms.git';
 const PACKAGE_NAME = 'markoliverbrawn/zero-cms-core';
 
 const USAGE = <<<'TXT'
@@ -42,7 +42,7 @@ create-project
 
 Standalone bootstrapper: save this one file anywhere and run it on its own (no existing Zero
 CMS checkout required). It writes a composer.json into a new sub-project directory requiring
-Zero CMS Core from a private VCS repository and runs `composer install`, which pulls Core into
+Zero CMS Core from its public VCS repository and runs `composer install`, which pulls Core into
 vendor/markoliverbrawn/zero-cms-core/. It also lays down a basic public/src/bin/tests/storage
 folder structure for the sub-project's own files, and then deletes itself once the sub-project
 is fully scaffolded.
