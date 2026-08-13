@@ -228,7 +228,7 @@ runOrFail(['composer', 'install', '--working-dir', $target, '--no-interaction'])
 // --- 3. Scaffold the sub-project's own folder structure ---
 echo "-> Creating sub-project folder structure\n";
 foreach ([
-    "{$target}/public/assets",
+    "{$target}/public",
     "{$target}/src/Controllers",
     "{$target}/src/Models",
     "{$target}/src/Views",
@@ -685,24 +685,33 @@ writeFile("{$target}/src/Views/home.php", $homeViewPhp);
 $setupSymlinksSh = <<<'SH'
 #!/bin/sh
 # bin/setup-symlinks
-# Set up symbolic links pointing from this sub-project's public assets to the Zero Core
-# vendor package's own assets, and from public/storage to this sub-project's own storage/
-# directory (keeping uploaded files entirely outside the read-only vendor package).
+# Set up symbolic links pointing from this sub-project's public/ to the Zero Core vendor
+# package's own assets, and from public/storage to this sub-project's own storage/ directory
+# (keeping uploaded files entirely outside the read-only vendor package).
+#
+# public/assets is symlinked as a WHOLE directory (not nested under a subfolder alias) because
+# Core's own view templates (e.g. the admin panel) reference asset URLs as document-root-relative
+# literal paths like `/assets/css/admin.css` -- App::handleRequest()'s static-file fallback
+# resolves these against *this* project's own public/ directory, not the vendor package's, so
+# public/assets has to actually be Core's asset directory for those paths to resolve. Because of
+# that, this sub-project's own custom assets shouldn't be dropped directly into public/assets/ --
+# add them via a theme under src/Views/themes/<theme>/ instead (see Zero CMS's theme/CSS-bundler
+# docs), which is resolved dynamically against APPLICATION_ROOT regardless of document root.
 set -e
 
 SUBPROJECT_ROOT=$(cd "$(dirname "$0")/.." && pwd)
 
 echo "Setting up Zero CMS Core asset symlinks..."
 
-mkdir -p "${SUBPROJECT_ROOT}/public/assets"
+mkdir -p "${SUBPROJECT_ROOT}/public"
 mkdir -p "${SUBPROJECT_ROOT}/storage/private"
 mkdir -p "${SUBPROJECT_ROOT}/storage/logs"
 
-ln -sfn "../../__VENDOR_DIR__/public/assets" "${SUBPROJECT_ROOT}/public/assets/zero-core"
+ln -sfn "../__VENDOR_DIR__/public/assets" "${SUBPROJECT_ROOT}/public/assets"
 ln -sfn "../storage" "${SUBPROJECT_ROOT}/public/storage"
 
 echo "Symlinks established:"
-echo "  - Core assets:   public/assets/zero-core/"
+echo "  - Core assets:    public/assets/ -> __VENDOR_DIR__/public/assets/"
 echo "  - Public uploads: public/storage/ -> storage/"
 
 SH;
@@ -713,6 +722,19 @@ chmod("{$target}/bin/setup-symlinks", 0755);
 if (file_exists("{$target}/{$vendorDir}/.env.example")) {
     copy("{$target}/{$vendorDir}/.env.example", "{$target}/.env");
     echo "-> Copied {$vendorDir}/.env.example to .env (edit DB credentials before running the seeder)\n";
+}
+
+// Copy Core's own .htaccess files as-is rather than re-authoring their rewrite/hardening rules
+// here -- this project's public/ and storage/ are separate physical directories from the vendor
+// package's, so they need their own copies to get the same mod_rewrite front-controller routing
+// and storage execution/listing hardening Core relies on when run standalone.
+if (file_exists("{$target}/{$vendorDir}/public/.htaccess")) {
+    copy("{$target}/{$vendorDir}/public/.htaccess", "{$target}/public/.htaccess");
+    echo "-> Copied {$vendorDir}/public/.htaccess to public/.htaccess\n";
+}
+if (file_exists("{$target}/{$vendorDir}/storage/.htaccess")) {
+    copy("{$target}/{$vendorDir}/storage/.htaccess", "{$target}/storage/.htaccess");
+    echo "-> Copied {$vendorDir}/storage/.htaccess to storage/.htaccess\n";
 }
 
 // --- 10. .gitignore ---
