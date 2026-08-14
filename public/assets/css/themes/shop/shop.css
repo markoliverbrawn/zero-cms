@@ -64,6 +64,18 @@
                 text-decoration: none;
                 display: block;
                 transition: color 0.15s ease;
+                color: var(--text-muted);
+                font-weight: 500;
+
+                &.active {
+                    color: var(--accent-color);
+                    font-weight: bold;
+                }
+            }
+
+            .sidebar-link-all {
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
             }
         }
 
@@ -84,6 +96,10 @@
                 display: flex;
                 gap: 10px;
                 align-items: center;
+
+                .price-range-sep {
+                    color: var(--border-color);
+                }
             }
 
             .filter-select {
@@ -94,6 +110,18 @@
                 background: #000000;
                 color: #ffffff;
                 font-size: 0.9rem;
+            }
+        }
+
+        .filter-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+
+            .btn-luxe, .btn-luxe-outline {
+                width: 100%;
+                display: block;
+                text-align: center;
             }
         }
     }
@@ -826,6 +854,263 @@
                 color: var(--accent-color);
                 font-family: monospace;
             }
+        }
+    }
+}
+
+/* Shared page chrome (cart/checkout/account) */
+.shop-page-title {
+    font-size: 1.8rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    border-bottom: 2px solid var(--border-color);
+    padding-bottom: 12px;
+    margin-top: 0;
+    margin-bottom: 35px;
+}
+
+/* Reused for any empty-state placeholder (empty cart, no addresses, no orders) --
+   visually identical to .results-empty from the catalog grid. */
+.empty-state-box {
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 80px 40px;
+    text-align: center;
+    color: var(--text-muted);
+    background: var(--card-bg);
+
+    .empty-state-icon {
+        margin-bottom: 20px;
+        color: var(--accent-color);
+    }
+
+    .empty-state-title {
+        margin: 0 0 5px 0;
+        font-size: 1.1rem;
+        font-weight: bold;
+        color: #ffffff;
+    }
+
+    .empty-state-desc {
+        margin: 0 0 25px 0;
+        font-size: 0.9rem;
+    }
+}
+
+/* Inline notification banners (form success/error feedback) */
+.alert-box {
+    padding: 12px;
+    border-radius: var(--border-radius);
+    margin-bottom: 25px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    text-align: center;
+    border: 1px solid transparent;
+
+    &.alert-success {
+        background-color: #1b2c1f;
+        border-color: #223c26;
+        color: #4ade80;
+    }
+
+    &.alert-error {
+        background-color: #2d1818;
+        border-color: #452222;
+        color: #f87171;
+    }
+}
+
+/* Generic accent-colored pill, reused for cart/checkout item variants, address labels, and
+   order statuses. */
+.badge {
+    font-size: 0.7rem;
+    background-color: #222222;
+    border: 1px solid var(--border-color);
+    color: var(--accent-color);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    display: inline-block;
+}
+
+/* Generic form field styling, shared by checkout's billing form and account's profile/address
+   forms -- named generically since none of these fields are checkout-specific in appearance. */
+.form-field {
+    margin-bottom: 25px;
+
+    .form-label {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 0.8rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--text-muted);
+    }
+
+    .form-input, .form-textarea {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        background: #000000;
+        color: #ffffff;
+        font-size: 0.95rem;
+    }
+
+    .form-textarea {
+        font-family: inherit;
+        resize: vertical;
+    }
+}
+
+/* Small icon-only button, e.g. deleting a saved address */
+.icon-btn-danger {
+    background: none;
+    border: none;
+    color: #ef4444;
+    cursor: pointer;
+    padding: 4px;
+}
+
+/* My Account page: two-column profile/addresses + order history layout */
+.account-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    margin-bottom: 50px;
+}
+
+.account-column {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+}
+
+.account-card {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 30px;
+    height: fit-content;
+
+    .account-card-title {
+        margin-top: 0;
+        margin-bottom: 20px;
+        font-size: 1.05rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 10px;
+        color: #ffffff;
+    }
+}
+
+.address-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.address-card {
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 15px;
+    background-color: #000000;
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+
+    .address-name {
+        margin: 8px 0 4px 0;
+        font-size: 0.9rem;
+        color: #ffffff;
+        font-weight: bold;
+    }
+
+    .address-text {
+        margin: 0;
+        font-size: 0.85rem;
+        color: var(--text-muted);
+    }
+}
+
+.address-add-toggle {
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: bold;
+    color: var(--accent-color);
+    outline: none;
+
+    summary {
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        list-style: none;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .address-add-panel {
+        margin-top: 20px;
+        cursor: default;
+        background: #000000;
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        padding: 20px;
+    }
+}
+
+.order-history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.order-card {
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 20px;
+    background-color: #000000;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    .order-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+    }
+
+    .order-id {
+        margin: 6px 0 0 0;
+        font-size: 0.8rem;
+        font-family: monospace;
+        color: var(--text-muted);
+    }
+
+    .order-date {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+    }
+
+    .order-total {
+        text-align: right;
+
+        .order-total-val {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--accent-color);
+            font-family: monospace;
+            display: block;
+            margin-bottom: 6px;
         }
     }
 }

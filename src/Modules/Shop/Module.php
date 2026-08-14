@@ -115,9 +115,13 @@ class Module implements ModuleInterface
         // The module's own generic default templates for /shop/catalog, /shop/product/:slug,
         // /shop/cart, /shop/checkout, /shop/success, /shop/account -- backing the 'shop' theme
         // fallback name registered above with this module's own Views/ folder instead of a
-        // bundled src/Views/themes/shop/ directory, so a host project can override any single
-        // one of these by shipping its own file at that path in its active theme first.
-        App::registerThemePath('shop', \dirname(__FILE__) . '/Views');
+        // bundled src/Views/themes/shop/ directory. Only registered if a host project hasn't
+        // already claimed 'shop' via its own pre-bootstrap App::registerThemePath('shop', ...)
+        // call -- Module::init() runs inside App::bootstrap(), which is necessarily after that,
+        // so registering unconditionally here would silently clobber a host's override.
+        if (!\in_array('shop', App::getRegisteredThemeNames(), true)) {
+            App::registerThemePath('shop', \dirname(__FILE__) . '/Views');
+        }
         App::registerModuleStylesheet('shop', APPLICATION_ROOT . '/public/assets/css/themes/shop/shop.css');
 
         App::registerModel('products', Product::class);
