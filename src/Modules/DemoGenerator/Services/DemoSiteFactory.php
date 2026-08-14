@@ -252,11 +252,23 @@ class DemoSiteFactory
         // priority-ordering mechanism bin/seed uses (Zero\Support\SeederRunner), so any future
         // module's Seeders/*Seeder.php class automatically gains demo-site support with no changes
         // needed here.
+        //
+        // These seeder classes were written for bin/seed's CLI context and echo verbose progress
+        // output directly -- fine on a terminal, but this method also runs synchronously inside
+        // live HTTP requests (DemoController, AdminCreateDemoSiteController), where that output
+        // would otherwise leak into the response body ahead of the controller's own json_encode
+        // payload and break JSON parsing on the client. Buffer and discard it here rather than
+        // touching every seeder's own CLI-oriented echo calls.
         $classSeeders = SeederRunner::discoverClassSeeders(APPLICATION_ROOT . '/src/Modules');
-        foreach ($classSeeders as $oopSeeder) {
-            if (\in_array($oopSeeder->getModuleId(), $enabledModules, true)) {
-                $oopSeeder->run($siteId, Storage::getUploadsRoot());
+        \ob_start();
+        try {
+            foreach ($classSeeders as $oopSeeder) {
+                if (\in_array($oopSeeder->getModuleId(), $enabledModules, true)) {
+                    $oopSeeder->run($siteId, Storage::getUploadsRoot());
+                }
             }
+        } finally {
+            \ob_end_clean();
         }
     }
 }

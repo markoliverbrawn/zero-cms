@@ -98,6 +98,9 @@ class Module implements ModuleInterface
         // Register daily scheduled task to automatically purge rejected or spam comments (older than 7 days)
         Scheduler::register(Jobs\PurgeOldCommentsJob::class, [], 'daily');
 
+        App::registerModuleStylesheet('blog', APPLICATION_ROOT . '/public/assets/css/blocks/latest_articles.css');
+        App::registerModuleStylesheet('blog', APPLICATION_ROOT . '/public/assets/css/blocks/sub_pages.css');
+
         App::registerAdminSidebarLink('content', [
             'title' => I18n::t('manage_posts'),
             'url' => '/admin/list/posts',

@@ -35,7 +35,15 @@ DB::query("DELETE FROM users WHERE email = ?", [$testEmail]);
 
 echo "  1. Simulating Demo Sandbox Site Creation...\n";
 $factory = new DemoSiteFactory();
+
+// Guard against the class seeders' verbose CLI-oriented echo() output (from BlogArticleSeeder,
+// ShopSeeder, ForumPostSeeder) leaking out of createDemoSite() -- fine on bin/seed's terminal, but
+// fatal for the admin/public HTTP controllers that call this same method and immediately
+// json_encode a response afterward.
+ob_start();
 $result = $factory->createDemoSite($testEmail, $preset);
+$leakedOutput = ob_get_clean();
+assert_test($leakedOutput === '', "createDemoSite() produces no stray output that would corrupt an HTTP JSON response (leaked " . strlen($leakedOutput) . " bytes)");
 
 $domain = $result['domain'];
 $password = $result['password'];

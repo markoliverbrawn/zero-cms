@@ -21,6 +21,34 @@ trait ManagesThemes
     protected static $themePaths = [];
     protected static $themeStylesheetFiles = [];
     protected static $themeStylesheets = [];
+    protected static $moduleStylesheets = [];
+
+    /**
+     * Register an absolute filesystem path to a module's own frontend stylesheet, to be appended
+     * to CssBundleController's compiled bundle whenever $moduleId is enabled for the requesting
+     * site. Lets a module (e.g. Shop) contribute CSS the same dynamic way it already contributes
+     * blocks/routes/views/theme-fallbacks, instead of CssBundleController hardcoding a per-module
+     * conditional and file path for every module that needs frontend styling.
+     *
+     * @param string $moduleId
+     * @param string $absoluteFilePath
+     * @return void
+     */
+    public static function registerModuleStylesheet(string $moduleId, string $absoluteFilePath): void
+    {
+        self::$moduleStylesheets[] = ['module' => $moduleId, 'path' => $absoluteFilePath];
+    }
+
+    /**
+     * Get every registered module stylesheet, e.g. for CssBundleController to filter by
+     * $site->isModuleEnabled() and append to its compiled bundle.
+     *
+     * @return array<int, array{module: string, path: string}>
+     */
+    public static function getRegisteredModuleStylesheets(): array
+    {
+        return self::$moduleStylesheets;
+    }
 
     /**
      * Get the registered stylesheet path for a theme.

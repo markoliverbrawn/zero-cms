@@ -91,6 +91,8 @@ class Module implements ModuleInterface
             'bypass_preview_sanitizer' => true
         ]);
 
+        App::registerModuleStylesheet('formbuilder', APPLICATION_ROOT . '/public/assets/css/blocks/form_builder.css');
+
         App::registerModel('submissions', Submission::class);
 
         App::registerAdminSidebarLink('content', [

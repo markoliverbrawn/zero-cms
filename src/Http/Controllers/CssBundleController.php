@@ -79,15 +79,13 @@ class CssBundleController implements Controller
                 ]
             ));
 
-            // B. FormBuilder Module Block Stylesheets
-            if ($site->isModuleEnabled('formbuilder')) {
-                $cssFiles[] = APPLICATION_ROOT . '/public/assets/css/blocks/form_builder.css';
-            }
-
-            // C. Blog Module Block Stylesheets
-            if ($site->isModuleEnabled('blog')) {
-                $cssFiles[] = APPLICATION_ROOT . '/public/assets/css/blocks/latest_articles.css';
-                $cssFiles[] = APPLICATION_ROOT . '/public/assets/css/blocks/sub_pages.css';
+            // B. Module-contributed stylesheets, registered dynamically via
+            // App::registerModuleStylesheet() (e.g. FormBuilder, Blog, Shop) -- only appended
+            // when that module is actually enabled for the requesting site.
+            foreach (App::getRegisteredModuleStylesheets() as $moduleStylesheet) {
+                if ($site->isModuleEnabled($moduleStylesheet['module'])) {
+                    $cssFiles[] = $moduleStylesheet['path'];
+                }
             }
         }
 
