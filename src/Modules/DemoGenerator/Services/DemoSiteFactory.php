@@ -46,9 +46,16 @@ class DemoSiteFactory
         if ($preset === 'shop') {
             $enabledModules[] = 'shop';
         } elseif ($preset === 'kitchensink') {
+            // Mirrors kitchensink.php's own 'enabled_modules' list exactly -- a demo site created
+            // from this preset should have parity with the CLI-seeded kitchensink site, not a
+            // narrower subset (previously missing security/queue/site-search entirely, which is
+            // why e.g. site search 404s on every demo-created kitchensink site).
             $enabledModules[] = 'shop';
             $enabledModules[] = 'forum';
             $enabledModules[] = 'formbuilder';
+            $enabledModules[] = 'security';
+            $enabledModules[] = 'queue';
+            $enabledModules[] = 'site-search';
         }
 
         DB::getPDO()->beginTransaction();
@@ -177,8 +184,8 @@ class DemoSiteFactory
                 }
 
                 DB::query("
-                    INSERT INTO pages (id, site_id, title, slug, content, type, status, precedence, created_at, updated_at)
-                    VALUES (?, ?, ?, ?, ?, ?, 'published', ?, NOW(), NOW())
+                    INSERT INTO pages (id, site_id, title, slug, content, type, controller, view, summary, omit_title, show_in_nav, status, precedence, created_at, updated_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'published', ?, NOW(), NOW())
                 ", [
                     $pageId,
                     $siteId,
@@ -186,6 +193,11 @@ class DemoSiteFactory
                     $page['slug'],
                     $contentJson,
                     $page['type'] ?? 'page',
+                    $page['controller'] ?? null,
+                    $page['view'] ?? null,
+                    $page['summary'] ?? null,
+                    $page['omit_title'] ?? 0,
+                    $page['show_in_nav'] ?? 1,
                     $page['precedence'] ?? 0
                 ]);
             }
@@ -287,6 +299,24 @@ class DemoSiteFactory
             }
         } finally {
             \ob_end_clean();
+        }
+
+        // 5. Index this site's freshly-seeded content into search_index, scoped to just this
+        // site. Every insert above used raw DB::query() rather than the ActiveRecord ->save()
+        // path, so none of it went through IsModel's automatic indexInSearch() hook -- without
+        // this, a demo site with 'site-search' enabled would stop 404ing but silently return zero
+        // results for everything.
+        if (\in_array('site-search', $enabledModules, true) && \class_exists('\\Zero\\Modules\\Search\\Services\\SearchService')) {
+            foreach (\array_keys(\Zero\Modules\Search\Services\SearchService::getSearchables()) as $modelClass) {
+                if (\class_exists($modelClass)) {
+                    $tableName = $modelClass::getTableName();
+                    $rows = DB::query("SELECT * FROM {$tableName} WHERE site_id = ? AND deleted_at IS NULL", [$siteId])->fetchAll();
+                    foreach ($rows as $row) {
+                        $model = new $modelClass($row);
+                        $model->indexInSearch();
+                    }
+                }
+            }
         }
     }
 }
