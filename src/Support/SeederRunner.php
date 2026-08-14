@@ -125,12 +125,14 @@ class SeederRunner
     /**
      * Dynamic Class Seeder Auto-Discovery Engine (OOP Seeders). Scans every module's own
      * Seeders/ folder for classes named *Seeder.php (excluding the base Seeder.php itself)
-     * implementing SeederInterface, sorted by getPriority().
+     * implementing SeederInterface, sorted by getPriority(). Public so DemoSiteFactory can reuse
+     * the exact same discovery+priority mechanism when seeding an on-demand sandbox site, instead
+     * of hardcoding a duplicate list of module seeder class names.
      *
      * @param string $modulesDir
      * @return SeederInterface[]
      */
-    private static function discoverClassSeeders(string $modulesDir): array
+    public static function discoverClassSeeders(string $modulesDir): array
     {
         $classSeeders = [];
 

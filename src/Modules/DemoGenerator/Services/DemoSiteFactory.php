@@ -17,6 +17,7 @@ use Exception;
 use Zero\Core\Storage\Storage;
 use Zero\Database\DB;
 use Zero\Support\Security;
+use Zero\Support\SeederRunner;
 
 /**
  * Class DemoSiteFactory
@@ -79,7 +80,7 @@ class DemoSiteFactory
             ]);
 
             // 3. Seed from blueprint
-            $this->seedFromBlueprint($siteId, $preset);
+            $this->seedFromBlueprint($siteId, $preset, $userId, $enabledModules);
 
             DB::getPDO()->commit();
 
@@ -98,9 +99,12 @@ class DemoSiteFactory
      *
      * @param string $siteId
      * @param string $preset
+     * @param string $adminUserId The sandbox's own super_admin user, attributed as the author of
+     *   any seeded sample content (e.g. forum threads) that requires a valid user_id.
+     * @param string[] $enabledModules
      * @return void
      */
-    protected function seedFromBlueprint(string $siteId, string $preset): void
+    protected function seedFromBlueprint(string $siteId, string $preset, string $adminUserId, array $enabledModules): void
     {
         $blueprintPath = APPLICATION_ROOT . "/src/Modules/DemoGenerator/Seeders/{$preset}.php";
         if (!\file_exists($blueprintPath)) {
@@ -192,82 +196,66 @@ class DemoSiteFactory
             DB::query("UPDATE sites SET homepage_id = ? WHERE id = ?", [$pagesMap[''], $siteId]);
         }
 
-        // 3. Copy Shop Categories
-        if (isset($data['shop_categories']) && \is_array($data['shop_categories'])) {
-            foreach ($data['shop_categories'] as $cat) {
-                $catImage = $cat['image'] ?? null;
-                if (!empty($catImage)) {
-                    $filename = \basename($catImage);
-                    $catImage = '/storage/uploads/' . $siteId . '/' . $filename;
+        // 3. Copy Forum boards/threads (if declared by this preset). Each row gets a freshly
+        // generated ID -- the blueprint's own hardcoded IDs are shared across every demo instance
+        // cloned from it, so reusing them verbatim would collide on a table with a global (not
+        // per-site) primary key the second time this preset is seeded. This only lays down the
+        // boards/threads shell; ForumPostSeeder (invoked generically below) requires at least one
+        // thread to already exist before it will populate any replies.
+        $boardIdMap = [];
+        if (isset($data['forum_boards']) && \is_array($data['forum_boards'])) {
+            foreach ($data['forum_boards'] as $board) {
+                $newBoardId = Security::uuidv7();
+                if (isset($board['id'])) {
+                    $boardIdMap[$board['id']] = $newBoardId;
                 }
 
                 DB::query("
-                    INSERT INTO shop_categories (id, site_id, title, slug, description, image, created_at, updated_at)
+                    INSERT INTO forum_boards (id, site_id, title, slug, description, precedence, created_at, updated_at)
                     VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())
                 ", [
-                    Security::uuidv7(),
+                    $newBoardId,
                     $siteId,
-                    $cat['title'],
-                    $cat['slug'],
-                    $cat['description'] ?? null,
-                    $catImage
+                    $board['title'],
+                    $board['slug'],
+                    $board['description'] ?? null,
+                    $board['precedence'] ?? 0
                 ]);
             }
         }
 
-        // 4. Copy Shop Products and variants
-        if (isset($data['shop_products']) && \is_array($data['shop_products'])) {
-            foreach ($data['shop_products'] as $prod) {
-                $prodId = Security::uuidv7();
-
-                $mainImage = $prod['main_image'] ?? null;
-                if (!empty($mainImage)) {
-                    $filename = \basename($mainImage);
-                    $mainImage = '/storage/uploads/' . $siteId . '/' . $filename;
-                }
-
-                // Rewrite any media IDs in product gallery
-                $mediaIds = $prod['media_ids'] ?? null;
-                if (!empty($mediaIds)) {
-                    foreach ($mediaIdMap as $oldId => $newId) {
-                        $mediaIds = \str_replace($oldId, $newId, $mediaIds);
-                    }
+        if (isset($data['forum_threads']) && \is_array($data['forum_threads'])) {
+            foreach ($data['forum_threads'] as $thread) {
+                $boardId = $boardIdMap[$thread['board_id']] ?? null;
+                if (!$boardId) {
+                    continue; // Skip threads referencing a board that wasn't seeded above
                 }
 
                 DB::query("
-                    INSERT INTO shop_products (id, site_id, title, slug, sku, description, price, compare_at_price, main_image, media_ids, status, created_at, updated_at)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+                    INSERT INTO forum_threads (id, site_id, board_id, user_id, title, slug, status, views_count, created_at, updated_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
                 ", [
-                    $prodId,
+                    Security::uuidv7(),
                     $siteId,
-                    $prod['title'],
-                    $prod['slug'],
-                    $prod['sku'] ?? null,
-                    $prod['description'] ?? null,
-                    $prod['price'] ?? 0.00,
-                    $prod['compare_at_price'] ?? null,
-                    $mainImage,
-                    $mediaIds,
-                    $prod['status'] ?? 'published'
+                    $boardId,
+                    $adminUserId, // Attribute seeded sample threads to the sandbox's own admin user
+                    $thread['title'],
+                    $thread['slug'],
+                    $thread['status'] ?? 'published',
+                    $thread['views_count'] ?? 0
                 ]);
+            }
+        }
 
-                // Copy variants if present
-                if (isset($prod['variants']) && \is_array($prod['variants'])) {
-                    foreach ($prod['variants'] as $v) {
-                        DB::query("
-                            INSERT INTO shop_product_variants (id, site_id, product_id, title, sku, price, stock, created_at, updated_at)
-                            VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
-                        ", [
-                            Security::uuidv7(),
-                            $siteId,
-                            $prodId,
-                            $v['title'],
-                            $v['sku'],
-                            $v['price'] ?? 0.00,
-                            $v['stock'] ?? 0
-                        ]);
-                    }
-                }
+        // 4. Run every module's dynamic class seeder (e.g. BlogArticleSeeder, ShopSeeder,
+        // ForumPostSeeder) whose module is enabled for this site -- the exact same discovery and
+        // priority-ordering mechanism bin/seed uses (Zero\Support\SeederRunner), so any future
+        // module's Seeders/*Seeder.php class automatically gains demo-site support with no changes
+        // needed here.
+        $classSeeders = SeederRunner::discoverClassSeeders(APPLICATION_ROOT . '/src/Modules');
+        foreach ($classSeeders as $oopSeeder) {
+            if (\in_array($oopSeeder->getModuleId(), $enabledModules, true)) {
+                $oopSeeder->run($siteId, Storage::getUploadsRoot());
             }
         }
     }
