@@ -15,7 +15,7 @@ use Zero\Support\Str;
             <ul class="sidebar-list">
                 <li>
                     <a href="/shop/catalog?search=<?php echo urlencode($search); ?>&min_price=<?php echo $minPrice ?: ''; ?>&max_price=<?php echo $maxPrice ?: ''; ?>&sort=<?php echo $sort; ?>" class="sidebar-link sidebar-link-all<?php echo empty($categorySlug) ? ' active' : ''; ?>">
-                        &#10022; All Collections
+                        All Collections
                     </a>
                 </li>
                 <?php foreach ($categories as $cat): ?>
