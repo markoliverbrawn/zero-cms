@@ -306,7 +306,7 @@ class ModelApiController extends AdminApiControllerBase
             try {
                 $record->save();
             } catch (\PDOException $e) {
-                $this->respondToSaveConflict($e);
+                $this->respondToSaveConflict($e, $model);
             }
 
             Logger::log($_SESSION['user_id'] ?? null, 'update', $modelName, $id, [
@@ -324,7 +324,7 @@ class ModelApiController extends AdminApiControllerBase
             try {
                 $newId = $record->save();
             } catch (\PDOException $e) {
-                $this->respondToSaveConflict($e);
+                $this->respondToSaveConflict($e, $model);
             }
 
             Logger::log($_SESSION['user_id'] ?? null, 'create', $modelName, $newId, [
@@ -344,19 +344,54 @@ class ModelApiController extends AdminApiControllerBase
      * username that must be unique) -- rethrows anything else, since only a duplicate-key
      * violation is a normal, expected admin-input mistake rather than a real server fault.
      *
+     * Several unique columns (sites.domain, users.username/email) have no soft-delete-aware
+     * partial index -- MySQL has no such thing, and the default delete action only sets
+     * deleted_at rather than removing the row -- so a soft-deleted record's unique value stays
+     * permanently reserved and invisible in every normal listing. Without this check, an admin
+     * hits this exact conflict forever with no way to tell why, since the colliding record isn't
+     * visible anywhere. So: parse the offending value/column out of the driver's own error
+     * message and check whether the conflicting row is soft-deleted, and say so explicitly.
+     *
      * @param \PDOException $e
+     * @param string $modelClass Fully-qualified model class, to resolve its table for the lookup.
      * @return void
      * @throws \PDOException
      */
-    protected function respondToSaveConflict(\PDOException $e): void
+    protected function respondToSaveConflict(\PDOException $e, string $modelClass): void
     {
         if ($e->getCode() !== '23000') {
             throw $e;
         }
 
-        $this->respond([
-            'success' => false,
-            'error' => 'Save failed: a record with one of these unique field values (e.g. domain, username, email, or slug) already exists.'
-        ], 409);
+        $genericMessage = 'Save failed: a record with one of these unique field values (e.g. domain, username, email, or slug) already exists.';
+
+        if (\preg_match("/Duplicate entry '(.*)' for key '(?:\\w+\\.)?(\\w+)'/", $e->getMessage(), $matches)) {
+            $conflictValue = $matches[1];
+            $conflictColumn = $matches[2];
+
+            if (Security::isSafeSqlIdentifier($conflictColumn)) {
+                try {
+                    $reflector = new \ReflectionClass($modelClass);
+                    $prop = $reflector->getProperty('tableName');
+                    $prop->setAccessible(true);
+                    $tableName = $prop->getValue();
+
+                    if (Security::isKnownSqlTable($tableName) && Security::isKnownSqlColumn($tableName, $conflictColumn)) {
+                        $conflictRow = DB::query("SELECT deleted_at FROM {$tableName} WHERE {$conflictColumn} = ? LIMIT 1", [$conflictValue])->fetch();
+
+                        if ($conflictRow && !empty($conflictRow['deleted_at'])) {
+                            $this->respond([
+                                'success' => false,
+                                'error' => "Save failed: a previously deleted record already uses this {$conflictColumn} ('{$conflictValue}'). It's hidden from normal listings but still reserves that value -- permanently delete it via Trash first, or choose a different value."
+                            ], 409);
+                        }
+                    }
+                } catch (\ReflectionException $re) {
+                    // Fall through to the generic message below
+                }
+            }
+        }
+
+        $this->respond(['success' => false, 'error' => $genericMessage], 409);
     }
 }
