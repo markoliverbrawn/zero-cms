@@ -378,6 +378,33 @@
     }
 }
 
+.variant-chip-label {
+    cursor: pointer;
+}
+
+.thumb-box.active {
+    border-color: var(--accent-color);
+}
+
+.variant-chip.selected {
+    border-color: var(--accent-color);
+    background-color: var(--accent-color);
+    color: #000000;
+}
+
+.stock-status {
+    font-weight: 800;
+    color: var(--accent-color);
+}
+
+/* Wide variant of .btn-luxe for the full-width Add To Cart submit button */
+.btn-wide {
+    flex-grow: 1;
+    height: 50px;
+    font-size: 0.85rem;
+    letter-spacing: 0.15em;
+}
+
 /* Shopping Cart View */
 .cart-layout {
     display: grid;
@@ -514,6 +541,10 @@
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
+
+                &.discount {
+                    color: var(--accent-color);
+                }
 
                 .cart-summary-label {
                     color: var(--text-muted);
@@ -703,11 +734,27 @@
             margin-bottom: 25px;
         }
 
+        .checkout-summary-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 25px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 20px;
+            max-height: 250px;
+            overflow-y: auto;
+        }
+
         .checkout-summary-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
             font-size: 0.85rem;
+
+            .checkout-summary-item-info {
+                display: flex;
+                flex-direction: column;
+            }
 
             .checkout-summary-title {
                 font-weight: 700;
@@ -800,6 +847,17 @@
             border-bottom: 1px solid var(--border-color);
             padding-bottom: 10px;
             color: #ffffff;
+
+            &.receipt-section-title-sm {
+                font-size: 0.85rem;
+            }
+        }
+
+        .receipt-rows {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 25px;
         }
 
         .receipt-row {
@@ -809,6 +867,12 @@
 
             .receipt-label {
                 color: var(--text-muted);
+            }
+
+            .receipt-val.mono-accent {
+                color: var(--accent-color);
+                font-family: monospace;
+                font-size: 0.8rem;
             }
 
             .receipt-val {
@@ -868,6 +932,13 @@
     padding-bottom: 12px;
     margin-top: 0;
     margin-bottom: 35px;
+}
+
+.text-muted-italic {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    margin-bottom: 25px;
+    font-style: italic;
 }
 
 /* Reused for any empty-state placeholder (empty cart, no addresses, no orders) --
