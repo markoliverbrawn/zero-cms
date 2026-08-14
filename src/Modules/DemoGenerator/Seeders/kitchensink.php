@@ -335,8 +335,8 @@ return [
             'title' => 'Luxe Shop',
             'slug' => 'shop',
             'status' => 'published',
-            'controller' => 'Zero\\Modules\\Shop\\Controllers\\ShopHomeController',
-            'view' => 'shop',
+            'controller' => 'Zero\\Modules\\Shop\\Controllers\\CatalogController',
+            'view' => 'catalog',
             'site_domain' => 'd6laptop.zero.kitchensink',
             'content' => [
             ],

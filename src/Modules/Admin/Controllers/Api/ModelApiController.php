@@ -302,7 +302,13 @@ class ModelApiController extends AdminApiControllerBase
             foreach ($data as $key => $value) {
                 $record->$key = $value;
             }
-            $record->save();
+
+            try {
+                $record->save();
+            } catch (\PDOException $e) {
+                $this->respondToSaveConflict($e);
+            }
+
             Logger::log($_SESSION['user_id'] ?? null, 'update', $modelName, $id, [
                 'title' => $data['title'] ?? ($data['filename'] ?? ($data['username'] ?? ''))
             ]);
@@ -314,7 +320,12 @@ class ModelApiController extends AdminApiControllerBase
         } else {
             // Create new record
             $record = new $model($data);
-            $newId = $record->save();
+
+            try {
+                $newId = $record->save();
+            } catch (\PDOException $e) {
+                $this->respondToSaveConflict($e);
+            }
 
             Logger::log($_SESSION['user_id'] ?? null, 'create', $modelName, $newId, [
                 'title' => $data['title'] ?? ($data['filename'] ?? ($data['username'] ?? ''))
@@ -325,5 +336,27 @@ class ModelApiController extends AdminApiControllerBase
                 'id' => $newId
             ]);
         }
+    }
+
+    /**
+     * Translate a save-time PDOException into a clean 409 JSON error response when it's a
+     * duplicate-key integrity constraint violation (SQLSTATE 23000, e.g. a site domain or
+     * username that must be unique) -- rethrows anything else, since only a duplicate-key
+     * violation is a normal, expected admin-input mistake rather than a real server fault.
+     *
+     * @param \PDOException $e
+     * @return void
+     * @throws \PDOException
+     */
+    protected function respondToSaveConflict(\PDOException $e): void
+    {
+        if ($e->getCode() !== '23000') {
+            throw $e;
+        }
+
+        $this->respond([
+            'success' => false,
+            'error' => 'Save failed: a record with one of these unique field values (e.g. domain, username, email, or slug) already exists.'
+        ], 409);
     }
 }

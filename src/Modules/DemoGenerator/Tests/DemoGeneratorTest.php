@@ -75,6 +75,10 @@ assert_test($pagesCount > 0, "Pages populated successfully from blueprint: {$pag
 $mediaCount = intval(DB::query("SELECT COUNT(*) FROM media WHERE site_id = ?", [$siteId])->fetchColumn());
 assert_test($mediaCount > 0, "Media metadata records populated successfully: {$mediaCount} items found");
 
+// Verify FormBuilder sample submissions were cloned from the blueprint (a leaf table, no FK remapping needed)
+$submissionsCount = intval(DB::query("SELECT COUNT(*) FROM form_submissions WHERE site_id = ?", [$siteId])->fetchColumn());
+assert_test($submissionsCount > 0, "Form submissions seeded from blueprint: {$submissionsCount} submissions found");
+
 // Verify physical files were copied successfully to the tenant uploads directory
 $uploadDir = Storage::getUploadsRoot() . '/' . $siteId;
 assert_test(file_exists($uploadDir) && is_dir($uploadDir), "Tenant physical uploads directory created on disk");

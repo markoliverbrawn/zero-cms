@@ -196,6 +196,24 @@ class DemoSiteFactory
             DB::query("UPDATE sites SET homepage_id = ? WHERE id = ?", [$pagesMap[''], $siteId]);
         }
 
+        // 2b. Copy FormBuilder sample submissions (a leaf table -- no foreign keys to remap,
+        // unlike forum/blog content -- so this is safe to clone directly with fresh IDs).
+        if (isset($data['form_submissions']) && \is_array($data['form_submissions'])) {
+            foreach ($data['form_submissions'] as $submission) {
+                DB::query("
+                    INSERT INTO form_submissions (id, site_id, name, email, phone, message, created_at, updated_at)
+                    VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())
+                ", [
+                    Security::uuidv7(),
+                    $siteId,
+                    $submission['name'],
+                    $submission['email'],
+                    $submission['phone'] ?? null,
+                    $submission['message'] ?? ''
+                ]);
+            }
+        }
+
         // 3. Copy Forum boards/threads (if declared by this preset). Each row gets a freshly
         // generated ID -- the blueprint's own hardcoded IDs are shared across every demo instance
         // cloned from it, so reusing them verbatim would collide on a table with a global (not
