@@ -67,6 +67,9 @@ graph TD
     migrations_page["🧬 Writing Database Migrations<br/><i>(Slug: 'docs/how-tos/migrations')</i>"]
     testing_page["🧪 Automated Test Suite Conventions<br/><i>(Slug: 'docs/how-tos/testing')</i>"]
     oauth_page["🔑 Google OAuth 2.0 Single Sign-On<br/><i>(Slug: 'docs/how-tos/oauth')</i>"]
+    module_settings_page["🎛️ Per-Module Site Settings<br/><i>(Slug: 'docs/how-tos/module-settings')</i>"]
+    form_fields_page["🧾 The FormField Component System<br/><i>(Slug: 'docs/how-tos/form-fields')</i>"]
+    ci_cd_page["🚦 Continuous Integration & Automated Releases<br/><i>(Slug: 'docs/how-tos/ci-cd')</i>"]
     
     how_tos --> models
     how_tos --> views
@@ -90,6 +93,9 @@ graph TD
     how_tos --> migrations_page
     how_tos --> testing_page
     how_tos --> oauth_page
+    how_tos --> module_settings_page
+    how_tos --> form_fields_page
+    how_tos --> ci_cd_page
     
     %% Platform Modules Hub
     modules["📦 Platform Modules Directory<br/><i>(Slug: 'docs/modules')</i>"]
@@ -137,7 +143,7 @@ graph TD
     class home home;
     class contact,blog,docs nav;
     class benchmarks,intro,framework,limitations,getting_started,core_components,bootstrap page;
-    class how_tos,models,views,seeder,middleware,controllers,uuidv7,emailer,multitenancy,security_hard,custom_views,custom_blocks,supervisor,gcs,secure_uploads,s3,search_arch,standalone_projects,list_actions,migrations_page,testing_page,oauth_page howto;
+    class how_tos,models,views,seeder,middleware,controllers,uuidv7,emailer,multitenancy,security_hard,custom_views,custom_blocks,supervisor,gcs,secure_uploads,s3,search_arch,standalone_projects,list_actions,migrations_page,testing_page,oauth_page,module_settings_page,form_fields_page,ci_cd_page howto;
     class modules,mod_create,mod_blog,mod_shop,mod_form,mod_forum,mod_jobs,mod_security,form_advanced module;
     class blog_triggers,jobs_tutorials,form_custom_fields,form_save_submissions tutorial;
 ```
@@ -183,6 +189,9 @@ The table below catalogs every page record compiled on seed bootstrap, capturing
 | **Writing Database Migrations** | `docs/how-tos/migrations` | How-Tos | No (`0`) | `text`, `code` (`Migration` base class, `MigrationManager` discovery/numbering, `bin/migrate`) |
 | **Automated Test Suite Conventions** | `docs/how-tos/testing` | How-Tos | No (`0`) | `text`, `code` (per-component `Tests/` layout, `TestRunner` subprocess isolation, `bin/test`) |
 | **Google OAuth 2.0 Single Sign-On** | `docs/how-tos/oauth` | How-Tos | No (`0`) | `text`, `code` (`GoogleAuthController`, anti-CSRF state token, multi-tenant scoping check) |
+| **Per-Module Site Settings** | `docs/how-tos/module-settings` | How-Tos | No (`0`) | `text`, `code` (`App::registerModuleSettings()`, `sites.settings` JSON column, min/max clamping, generic `/admin/settings/{moduleId}` page) |
+| **The FormField Component System** | `docs/how-tos/form-fields` | How-Tos | No (`0`) | `text`, `code` (`Zero\Support\Forms`, `FormField` interface, `App::makeFormField()`, `castSubmittedValue()`, custom type registration) |
+| **Continuous Integration & Automated Releases** | `docs/how-tos/ci-cd` | How-Tos | No (`0`) | `text`, `code` (`run-tests.yml`, Conventional Commits, `bin/release`, `bin/check-commit-messages`, `workflow_run`-gated `release.yml`) |
 | **Search Index & Decoupled Driver Architecture** | `docs/how-tos/search-architecture` | How-Tos | No (`0`) | `text`, `code` (database search driver, block helpers, N+1 preventions) |
 | **Serverless Blueprints: Google Cloud Run & Cloud SQL Setup** | `docs/how-tos/deploy-cloud-run` | How-Tos | No (`0`) | `text`, `code` (Stateless architecture, low-cost db-f1-micro instance/bucket creation, DB_SOCKET connection) |
 | **Modules** | `docs/modules` | Docs / Sub-Hub | No (`0`) | `sub_pages` (Decoupled system modules list) |

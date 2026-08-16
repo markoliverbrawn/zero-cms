@@ -2494,6 +2494,161 @@ gcloud run jobs execute zerocms-seed-job',
             'type' => 'page',
         ],
         [
+            'title' => 'Per-Module Site Settings',
+            'slug' => 'docs/how-tos/module-settings',
+            'status' => 'published',
+            'site_domain' => 'd6laptop.zero.guide',
+            'content' => [
+                [
+                    'type' => 'text',
+                    'title' => 'Introduction',
+                    'content' => '<p>Every module inevitably ends up with a handful of small, per-site-configurable knobs &mdash; how many posts per page, how long to retain spam comments, what a rate limit should be. Rather than have each module hand-roll its own settings controller and view, <code>App::registerModuleSettings(string $moduleId, array $schema)</code> lets a module declare its settings the same declarative way it already declares a model\'s admin form via <code>getConfig()</code>, and get a fully-rendered, persisted settings page for free.</p><p>Values are stored per-<em>site</em>, not globally, inside a single <code>sites.settings</code> <code>TEXT</code> column (JSON-encoded, one top-level key per module) &mdash; so a multi-tenant install can have completely different Blog pagination or Forum moderation settings per tenant without any extra schema.</p>',
+                ],
+                [
+                    'type' => 'code',
+                    'title' => 'Registering a Schema (Blog Module.php::init())',
+                    'language' => 'php',
+                    'code' => 'App::registerModuleSettings(\'blog\', [
+    \'default_comment_status\' => [
+        \'type\' => \'select\',
+        \'label\' => \'Default Comment Status\',
+        \'options\' => [\'pending\' => \'Pending Review\', \'approved\' => \'Auto-Approved\'],
+        \'default\' => \'pending\',
+        \'required\' => true,
+    ],
+    \'spam_retention_days\' => [
+        \'type\' => \'number\',
+        \'label\' => \'Spam/Rejected Comment Retention (Days)\',
+        \'default\' => 7,
+        \'required\' => true,
+        \'min\' => 1,
+        \'helper_text\' => \'Rejected or spam-flagged comments older than this are permanently purged automatically.\',
+    ],
+    \'posts_per_page\' => [
+        \'type\' => \'number\',
+        \'label\' => \'Blog Posts Per Page\',
+        \'default\' => 6,
+        \'required\' => true,
+        \'min\' => 1,
+    ],
+]);',
+                ],
+                [
+                    'type' => 'text',
+                    'title' => 'Schema Shape & Automatic Validation',
+                    'content' => '<p>Each field mirrors <code>getConfig()</code>\'s shape: <code>type</code> (<code>text</code>|<code>number</code>|<code>select</code>|<code>checkbox</code>|<code>textarea</code>), <code>label</code>, <code>default</code>, <code>required</code>, <code>options</code> (for <code>select</code>), and <code>helper_text</code>. Number fields additionally accept <code>min</code>/<code>max</code> bounds, which the generic <code>ModuleSettingsController</code> enforces server-side by clamping any out-of-range submission &mdash; this closes off a whole class of bug at the source: a <code>0</code> or negative rate-limit-seconds value silently disabling rate limiting entirely, or a negative pagination size producing a SQL <code>LIMIT -5</code> syntax error. Registering a schema with a sensible <code>min</code> is enough; no controller ever needs its own bounds-checking code.</p>',
+                ],
+                [
+                    'type' => 'code',
+                    'title' => 'Reading a Setting Back',
+                    'language' => 'php',
+                    'code' => '// Inside any controller/model that needs the current site\'s value:
+$postsPerPage = (int)App::getModuleSetting(\'blog\', \'posts_per_page\', 6);
+
+// Equivalent, when you already have a Site instance in hand:
+$postsPerPage = (int)$site->getModuleSetting(\'blog\', \'posts_per_page\', 6);',
+                ],
+                [
+                    'type' => 'text',
+                    'title' => 'The Generated Admin Page',
+                    'content' => '<p>Registering a schema automatically adds a sidebar link and a working settings page at <code>/admin/settings/{moduleId}</code> &mdash; restricted to <code>super_admin</code>, CSRF-protected, and rendered/validated entirely by the shared <code>ModuleSettingsController</code> and its generic view. A module never writes its own settings controller or template.</p>',
+                ],
+            ],
+            'type' => 'page',
+            'show_in_nav' => '0',
+        ],
+        [
+            'title' => 'The FormField Component System',
+            'slug' => 'docs/how-tos/form-fields',
+            'status' => 'published',
+            'site_domain' => 'd6laptop.zero.guide',
+            'content' => [
+                [
+                    'type' => 'text',
+                    'title' => 'Introduction',
+                    'content' => '<p>Every form-control render (the admin model edit form, the module settings page, and public FormBuilder contact forms) used to be its own hand-rolled <code>if/elseif</code> chain of raw HTML, each with its own slightly different value-casting logic. <code>Zero\\Support\\Forms</code> unifies all three behind one small set of PHP classes &mdash; <code>TextInput</code>, <code>NumberInput</code>, <code>Select</code>, <code>Checkbox</code>, <code>Textarea</code>, and others &mdash; each of which both renders itself (via <code>Template::renderFile()</code> against a template in <code>src/Views/components/forms/</code>) and owns its own submitted-value casting, so every caller gets identical, correct behavior for free instead of re-implementing it.</p>',
+                ],
+                [
+                    'type' => 'code',
+                    'title' => 'The FormField Contract',
+                    'language' => 'php',
+                    'code' => 'namespace Zero\\Interfaces;
+
+interface FormField
+{
+    public function __construct(string $name, array $config);
+
+    // Reads its own $name key out of $source ($_POST, or a decoded JSON payload) and returns
+    // the correctly-typed PHP value -- e.g. a checkbox\'s absence means false, a number is
+    // clamped to its configured min/max, a select is validated against its options allow-list.
+    public function castSubmittedValue(array $source);
+
+    public function render(): string;
+}',
+                ],
+                [
+                    'type' => 'code',
+                    'title' => 'Rendering a Field in a View',
+                    'language' => 'php',
+                    'code' => 'echo App::makeFormField(\'number\', \'posts_per_page\', [
+    \'label\' => \'Posts Per Page\',
+    \'value\' => $currentValue,
+    \'min\' => 1,
+    \'max\' => 100,
+    \'required\' => true,
+])->render();',
+                ],
+                [
+                    'type' => 'text',
+                    'title' => 'Casting on Submission',
+                    'content' => '<p>A controller collecting POST data does the same thing regardless of which model, module, or form it\'s handling:</p><pre><code class="language-php">$field = App::makeFormField($fieldConfig[\'type\'], $fieldName, $fieldConfig);
+$value = $field-&gt;castSubmittedValue($_POST);</code></pre><p>This is exactly what <code>ModelController</code>, <code>ModuleSettingsController</code>, and FormBuilder\'s <code>FormApiController</code> each do internally &mdash; one shared implementation instead of three that could quietly drift apart.</p>',
+                ],
+                [
+                    'type' => 'text',
+                    'title' => 'Registering a Custom Field Type',
+                    'content' => '<p>The type registry follows the same <code>App::registerX()</code> pattern used by blocks and models. Core types are registered once during bootstrap; a module can register its own additional type from inside its own <code>Module::init()</code>:</p><pre><code class="language-php">App::registerFormFieldType(\'sku_lookup\', \\Zero\\Modules\\Shop\\Support\\Forms\\SkuLookupField::class);</code></pre><p>Any class implementing <code>Zero\\Interfaces\\FormField</code> works &mdash; see <a href="/docs/how-tos/module-settings">Per-Module Site Settings</a> for the array-config schema shape a field\'s constructor receives.</p>',
+                ],
+            ],
+            'type' => 'page',
+            'show_in_nav' => '0',
+        ],
+        [
+            'title' => 'Continuous Integration & Automated Releases',
+            'slug' => 'docs/how-tos/ci-cd',
+            'status' => 'published',
+            'site_domain' => 'd6laptop.zero.guide',
+            'content' => [
+                [
+                    'type' => 'text',
+                    'title' => 'Continuous Integration',
+                    'content' => '<p><code>.github/workflows/run-tests.yml</code> runs the full <a href="/docs/how-tos/testing">automated test suite</a> on every push and pull request targeting <code>main</code> or <code>dev</code>, against a real MySQL 8.0 service container on PHP 8.3 &mdash; the exact same <code>bin/test</code> command a developer runs locally, so CI can never diverge from the local dev workflow.</p>',
+                ],
+                [
+                    'type' => 'text',
+                    'title' => 'Automated Semantic Versioning &mdash; Zero Node, Zero npm',
+                    'content' => '<p>Every merge to <code>main</code> is automatically versioned and published, in keeping with the project\'s zero third-party-runtime-dependency ethos: no Node, no npm, no third-party release tooling. Two small PHP scripts under <code>bin/</code>, plus git and GitHub\'s own <code>gh</code> CLI (already present on every Actions runner), do the whole job.</p><p>Every commit subject must follow <a href="https://www.conventionalcommits.org/" target="_blank" rel="noopener">Conventional Commits</a>: <code>type(scope): description</code>. The type determines the version bump:</p><pre><code class="language-text">feat(auth): add OAuth login support        -&gt; minor bump
+fix: correct off-by-one in pagination      -&gt; patch bump
+
+feat!: remove legacy API endpoint          -&gt; major bump
+BREAKING CHANGE: the /v1/legacy endpoint has been removed entirely.</code></pre>',
+                ],
+                [
+                    'type' => 'code',
+                    'title' => 'Previewing the Next Release Locally',
+                    'language' => 'bash',
+                    'code' => 'bin/release --dry-run',
+                ],
+                [
+                    'type' => 'text',
+                    'title' => 'How the Two Release Workflows Fit Together',
+                    'content' => '<p><code>.github/workflows/lint-commit-messages.yml</code> runs <code>bin/check-commit-messages</code> on every pull request, so a malformed commit subject is caught immediately instead of silently producing no release later.</p><p><code>.github/workflows/release.yml</code> is triggered by <code>workflow_run</code> &mdash; it only fires <em>after</em> <code>Run Automated Tests (CI)</code> has already succeeded on <code>main</code>, so a broken commit is never tagged or published. When it runs, <code>bin/release</code> reads every commit since the last <code>v*</code> tag, computes the next version, appends a <code>CHANGELOG.md</code> section, tags the release, and publishes it with <code>gh release create</code>.</p>',
+                ],
+            ],
+            'type' => 'page',
+            'show_in_nav' => '0',
+        ],
+        [
             'title' => 'Zero CMS On-Demand Sandbox Demo Generator',
             'slug' => 'docs/demo',
             'status' => 'published',
