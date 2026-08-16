@@ -61,8 +61,11 @@ class CommentsController implements Controller
             exit;
         }
 
-        // DYNAMIC RATE LIMITER MIDDLEWARE: Prevent comment flood abuse (limit to 1 request per 10 seconds per session)
-        App::applyRateLimitMiddleware('comments_submission', 10);
+        $site = App::getCurrentSite();
+
+        // DYNAMIC RATE LIMITER MIDDLEWARE: Prevent comment flood abuse (site-configurable window)
+        $rateLimitSeconds = $site ? (int)$site->getModuleSetting('blog', 'comment_rate_limit_seconds', 10) : 10;
+        App::applyRateLimitMiddleware('comments_submission', $rateLimitSeconds);
 
         // Perform validation using the Core Validator
         $rules = [
@@ -107,18 +110,20 @@ class CommentsController implements Controller
 
         // Insert new comment record
         $commentId = Security::uuidv7();
+        $defaultStatus = $site ? $site->getModuleSetting('blog', 'default_comment_status', 'pending') : 'pending';
 
         try {
             DB::query("
                 INSERT INTO blog_comments (id, site_id, post_id, author_name, author_email, content, status, created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, 'pending', NOW(), NOW())
+                VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
             ", [
                 $commentId,
                 $siteId,
                 $validated['post_id'],
                 $validated['author_name'],
                 $validated['author_email'],
-                $validated['content']
+                $validated['content'],
+                $defaultStatus
             ]);
 
             // Dispatch notification emails if comment_notifiers is set
@@ -160,7 +165,7 @@ class CommentsController implements Controller
                     'author_name' => Str::escape($validated['author_name']),
                     'content' => \nl2br(Str::escape($validated['content'])),
                     'created_at' => \date('F d, Y \a\t g:i A'),
-                    'status' => 'pending'
+                    'status' => $defaultStatus
                 ]
             ]);
             exit;

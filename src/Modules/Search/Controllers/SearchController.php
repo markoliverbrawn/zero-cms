@@ -32,7 +32,8 @@ class SearchController implements Controller
     {
         $q = \trim(\strval($_GET['q'] ?? ''));
         $currentPage = isset($_GET['page']) ? \max(1, \intval($_GET['page'])) : 1;
-        $perPage = 10;
+        $site = App::getCurrentSite();
+        $perPage = $site ? (int)$site->getModuleSetting('site-search', 'results_per_page', 10) : 10;
         $offset = ($currentPage - 1) * $perPage;
 
         $searchData = SearchService::search($q, [

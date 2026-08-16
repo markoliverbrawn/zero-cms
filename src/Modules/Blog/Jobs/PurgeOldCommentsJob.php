@@ -23,7 +23,8 @@ use Zero\Interfaces\Job;
 class PurgeOldCommentsJob implements Job
 {
     /**
-     * Execute the job to automatically purge rejected or spam comments more than 7 days old.
+     * Execute the job to automatically purge rejected or spam comments older than the site's
+     * configured 'spam_retention_days' setting (default 7 days).
      *
      * @param array $payload
      * @return void
@@ -35,15 +36,17 @@ class PurgeOldCommentsJob implements Job
             return;
         }
 
-        $sevenDaysAgo = \gmdate('Y-m-d H:i:s', \strtotime('-7 days'));
+        $site = App::getCurrentSite();
+        $retentionDays = $site ? (int)$site->getModuleSetting('blog', 'spam_retention_days', 7) : 7;
+        $cutoff = \gmdate('Y-m-d H:i:s', \strtotime("-{$retentionDays} days"));
 
         $pdo = DB::getPDO();
         $stmt = $pdo->prepare("
-            DELETE FROM blog_comments 
-            WHERE site_id = ? 
-              AND status IN ('rejected', 'spam') 
+            DELETE FROM blog_comments
+            WHERE site_id = ?
+              AND status IN ('rejected', 'spam')
               AND created_at < ?
         ");
-        $stmt->execute([$siteId, $sevenDaysAgo]);
+        $stmt->execute([$siteId, $cutoff]);
     }
 }

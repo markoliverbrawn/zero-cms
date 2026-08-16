@@ -122,6 +122,16 @@ class Module implements ModuleInterface
      */
     public function init()
     {
+        App::registerModuleSettings('admin', [
+            'password_reset_expiry_minutes' => [
+                'type' => 'number',
+                'label' => 'Password Reset Link Expiry (Minutes)',
+                'default' => 60,
+                'required' => true,
+                'helper_text' => 'How long a password reset link remains valid after being requested.'
+            ]
+        ]);
+
         App::registerBlock('baseline', [
             'label' => 'Baseline Hero Block',
             'description' => 'A bold headline hero block featuring an H1 title and content paragraphs.',

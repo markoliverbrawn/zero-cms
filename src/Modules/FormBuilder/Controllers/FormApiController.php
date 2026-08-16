@@ -61,8 +61,10 @@ class FormApiController implements Controller
             exit;
         }
 
-        // DYNAMIC RATE LIMITER MIDDLEWARE: Prevent form submission flood abuse (limit to 1 request per 10 seconds per session)
-        App::applyRateLimitMiddleware('form_submission', 10);
+        // DYNAMIC RATE LIMITER MIDDLEWARE: Prevent form submission flood abuse (site-configurable window)
+        $site = App::getCurrentSite();
+        $rateLimitSeconds = $site ? (int)$site->getModuleSetting('formbuilder', 'submission_rate_limit_seconds', 10) : 10;
+        App::applyRateLimitMiddleware('form_submission', $rateLimitSeconds);
 
         $siteId = App::getCurrentSiteId();
         $blockId = $json['block_id'] ?? '';

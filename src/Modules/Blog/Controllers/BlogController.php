@@ -44,9 +44,11 @@ class BlogController implements Controller
         // Load current page from query string (default to 1)
         $currentPage = isset($_GET['page']) ? \max(1, \intval($_GET['page'])) : 1;
 
-        // Leverage the standard Paginates trait of Post model
-        // 6 posts per page is visually spectacular for masonry grids or vertical card flows
-        $pagination = Post::paginate($currentPage, 6);
+        // Leverage the standard Paginates trait of Post model, using the site's configured
+        // posts-per-page setting (default 6, visually spectacular for masonry grids)
+        $site = App::getCurrentSite();
+        $postsPerPage = $site ? (int)$site->getModuleSetting('blog', 'posts_per_page', 6) : 6;
+        $pagination = Post::paginate($currentPage, $postsPerPage);
 
         // Render the dedicated "blog" landing page view
         App::render('blog', [

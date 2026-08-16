@@ -46,8 +46,11 @@ class ForgotController implements Controller
             $user = DB::query('SELECT * FROM users WHERE username = ? LIMIT 1', [$username])->fetch();
             
             if ($user && !empty($user['email'])) {
+                $site = App::getCurrentSite();
+                $expiryMinutes = $site ? (int)$site->getModuleSetting('admin', 'password_reset_expiry_minutes', 60) : 60;
+
                 $token = \bin2hex(\random_bytes(16));
-                $expires = \gmdate('Y-m-d H:i:s', \time() + 3600);
+                $expires = \gmdate('Y-m-d H:i:s', \time() + ($expiryMinutes * 60));
                 $resetId = Security::uuidv7();
                 
                 // Track reset token in database
@@ -71,7 +74,8 @@ class ForgotController implements Controller
                 $htmlBody = Template::renderFile(APPLICATION_ROOT . '/src/Views/emails/forgot-password.php', [
                     'username' => $user['username'],
                     'siteName' => App::getCurrentSite()->name,
-                    'link' => $link
+                    'link' => $link,
+                    'expiryMinutes' => $expiryMinutes
                 ]);
                 
                 // Send Recovery Email via dynamic Mailpit SMTP helper!

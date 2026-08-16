@@ -93,6 +93,16 @@ class Module implements ModuleInterface
 
         App::registerModuleStylesheet('formbuilder', APPLICATION_ROOT . '/public/assets/css/blocks/form_builder.css');
 
+        App::registerModuleSettings('formbuilder', [
+            'submission_rate_limit_seconds' => [
+                'type' => 'number',
+                'label' => 'Form Submission Rate Limit (Seconds)',
+                'default' => 10,
+                'required' => true,
+                'helper_text' => 'Minimum seconds between form submissions per visitor, to prevent flood abuse.'
+            ]
+        ]);
+
         App::registerModel('submissions', Submission::class);
 
         App::registerAdminSidebarLink('content', [

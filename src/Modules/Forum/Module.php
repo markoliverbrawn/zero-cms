@@ -108,6 +108,24 @@ class Module implements ModuleInterface
         App::registerModel('forum_threads', Models\ForumThread::class);
         App::registerModel('forum_posts', Models\ForumPost::class);
 
+        App::registerModuleSettings('forum', [
+            'default_post_status' => [
+                'type' => 'select',
+                'label' => 'Default New Thread/Reply Status',
+                'options' => ['approved' => 'Auto-Approved', 'pending' => 'Pending Review'],
+                'default' => 'approved',
+                'required' => true,
+                'helper_text' => 'Whether new threads and replies are published immediately or held for moderation.'
+            ],
+            'reply_rate_limit_seconds' => [
+                'type' => 'number',
+                'label' => 'Reply Submission Rate Limit (Seconds)',
+                'default' => 5,
+                'required' => true,
+                'helper_text' => 'Minimum seconds between reply submissions per member, to prevent flood abuse.'
+            ]
+        ]);
+
         App::registerAdminSidebarSection('forum', [
             'title' => 'Forum Management',
             'icon' => 'users',

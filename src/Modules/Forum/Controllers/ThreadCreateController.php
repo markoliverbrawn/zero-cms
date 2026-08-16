@@ -102,6 +102,8 @@ class ThreadCreateController implements Controller
 
             // 2. Create the original post associated with the thread
             $postId = Security::uuidv7();
+            $site = App::getCurrentSite();
+            $defaultStatus = $site ? $site->getModuleSetting('forum', 'default_post_status', 'approved') : 'approved';
             $post = new ForumPost([
                 'id' => $postId,
                 'site_id' => $siteId,
@@ -109,7 +111,7 @@ class ThreadCreateController implements Controller
                 'user_id' => $user->id,
                 'content' => $validated['content'],
                 'parent_id' => null,
-                'status' => 'approved'
+                'status' => $defaultStatus
             ]);
             $post->save();
 

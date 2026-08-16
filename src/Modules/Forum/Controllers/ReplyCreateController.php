@@ -63,8 +63,11 @@ class ReplyCreateController implements Controller
             exit;
         }
 
+        $site = App::getCurrentSite();
+
         App::applyCsrfMiddleware();
-        App::applyRateLimitMiddleware('forum_reply', 5);
+        $rateLimitSeconds = $site ? (int)$site->getModuleSetting('forum', 'reply_rate_limit_seconds', 5) : 5;
+        App::applyRateLimitMiddleware('forum_reply', $rateLimitSeconds);
 
         $rules = [
             'content' => 'required|min:5'
@@ -102,6 +105,7 @@ class ReplyCreateController implements Controller
         }
 
         $postId = Security::uuidv7();
+        $defaultStatus = $site ? $site->getModuleSetting('forum', 'default_post_status', 'approved') : 'approved';
         $post = new ForumPost([
             'id' => $postId,
             'site_id' => $siteId,
@@ -109,7 +113,7 @@ class ReplyCreateController implements Controller
             'user_id' => $user->id,
             'content' => $validated['content'],
             'parent_id' => $parentId,
-            'status' => 'approved'
+            'status' => $defaultStatus
         ]);
         $post->save();
 

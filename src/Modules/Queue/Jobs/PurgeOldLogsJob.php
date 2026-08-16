@@ -23,7 +23,8 @@ use Zero\Interfaces\Job;
 class PurgeOldLogsJob implements Job
 {
     /**
-     * Execute the job to purge old audit log entries for the current tenant.
+     * Execute the job to purge old audit log entries for the current tenant, older than the
+     * site's configured 'audit_log_retention_days' setting (default 365 days).
      *
      * @param array $payload
      * @return void
@@ -35,13 +36,15 @@ class PurgeOldLogsJob implements Job
             return;
         }
 
-        $oneYearAgo = \gmdate('Y-m-d H:i:s', \strtotime('-1 year'));
+        $site = App::getCurrentSite();
+        $retentionDays = $site ? (int)$site->getModuleSetting('queue', 'audit_log_retention_days', 365) : 365;
+        $cutoff = \gmdate('Y-m-d H:i:s', \strtotime("-{$retentionDays} days"));
 
         $pdo = DB::getPDO();
         $stmt = $pdo->prepare("
-            DELETE FROM audit_logs 
+            DELETE FROM audit_logs
             WHERE site_id = ? AND created_at < ?
         ");
-        $stmt->execute([$siteId, $oneYearAgo]);
+        $stmt->execute([$siteId, $cutoff]);
     }
 }

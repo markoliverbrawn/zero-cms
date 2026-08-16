@@ -86,8 +86,19 @@ class Module implements ModuleInterface
     {
         App::registerModel('queue_jobs', QueueJob::class);
 
-        // Register hourly scheduled task to automatically purge old tenant audit logs (older than 1 year)
+        // Register hourly scheduled task to automatically purge old tenant audit logs (retention
+        // window configurable via the 'audit_log_retention_days' site setting below)
         Scheduler::register(PurgeOldLogsJob::class, [], 'hourly');
+
+        App::registerModuleSettings('queue', [
+            'audit_log_retention_days' => [
+                'type' => 'number',
+                'label' => 'Audit Log Retention (Days)',
+                'default' => 365,
+                'required' => true,
+                'helper_text' => 'Audit log entries older than this are permanently purged automatically. Adjust to match your compliance/retention requirements.'
+            ]
+        ]);
 
         App::registerAdminSidebarSection('queue', [
             'title' => 'Job Queue',

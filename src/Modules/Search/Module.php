@@ -85,6 +85,16 @@ class Module implements ModuleInterface
      */
     public function init()
     {
+        App::registerModuleSettings('site-search', [
+            'results_per_page' => [
+                'type' => 'number',
+                'label' => 'Search Results Per Page',
+                'default' => 10,
+                'required' => true,
+                'helper_text' => 'Number of results shown per page on the site search results screen.'
+            ]
+        ]);
+
         // Register core Pages searchable
         SearchService::register(\Zero\Models\Page::class, [
             'type_label' => 'Page',

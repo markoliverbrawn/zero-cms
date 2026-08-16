@@ -95,8 +95,41 @@ class Module implements ModuleInterface
         App::registerModel('posts', Post::class);
         App::registerModel('comments', Comment::class);
 
-        // Register daily scheduled task to automatically purge rejected or spam comments (older than 7 days)
+        // Register daily scheduled task to automatically purge rejected or spam comments (retention
+        // window configurable via the 'spam_retention_days' site setting below)
         Scheduler::register(Jobs\PurgeOldCommentsJob::class, [], 'daily');
+
+        App::registerModuleSettings('blog', [
+            'default_comment_status' => [
+                'type' => 'select',
+                'label' => 'Default Comment Status',
+                'options' => ['pending' => 'Pending Review', 'approved' => 'Auto-Approved'],
+                'default' => 'pending',
+                'required' => true,
+                'helper_text' => 'Whether newly submitted comments are held for moderation or published immediately.'
+            ],
+            'spam_retention_days' => [
+                'type' => 'number',
+                'label' => 'Spam/Rejected Comment Retention (Days)',
+                'default' => 7,
+                'required' => true,
+                'helper_text' => 'Rejected or spam-flagged comments older than this are permanently purged automatically.'
+            ],
+            'posts_per_page' => [
+                'type' => 'number',
+                'label' => 'Blog Posts Per Page',
+                'default' => 6,
+                'required' => true,
+                'helper_text' => 'Number of articles shown per page on the blog index.'
+            ],
+            'comment_rate_limit_seconds' => [
+                'type' => 'number',
+                'label' => 'Comment Submission Rate Limit (Seconds)',
+                'default' => 10,
+                'required' => true,
+                'helper_text' => 'Minimum seconds between comment submissions per visitor, to prevent flood abuse.'
+            ]
+        ]);
 
         App::registerModuleStylesheet('blog', APPLICATION_ROOT . '/public/assets/css/blocks/latest_articles.css');
         App::registerModuleStylesheet('blog', APPLICATION_ROOT . '/public/assets/css/blocks/sub_pages.css');
