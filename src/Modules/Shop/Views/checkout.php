@@ -2,6 +2,9 @@
 // src/Modules/Shop/Views/checkout.php
 
 use Zero\Support\Str;
+
+$qualifiesForFreeShipping = $subtotal >= $freeShippingThreshold;
+$shippingCost = $qualifiesForFreeShipping ? 0 : $standardShippingCost;
 ?>
 <h2 class="shop-page-title">Secure Checkout</h2>
 
@@ -58,7 +61,7 @@ use Zero\Support\Str;
                         <?php endif; ?>
                         <span class="checkout-summary-qty">Qty: <?php echo $item['quantity']; ?></span>
                     </div>
-                    <span class="checkout-summary-price">$<?php echo number_format($item['price'] * $item['quantity'], 2); ?></span>
+                    <span class="checkout-summary-price"><?php echo Str::escape($currencySymbol); ?><?php echo number_format($item['price'] * $item['quantity'], 2); ?></span>
                 </div>
             <?php endforeach; ?>
         </div>
@@ -66,17 +69,17 @@ use Zero\Support\Str;
         <div class="cart-summary-box">
             <div class="cart-summary-row">
                 <span class="cart-summary-label">Cart Subtotal:</span>
-                <span class="cart-summary-val">$<?php echo number_format($subtotal, 2); ?></span>
+                <span class="cart-summary-val"><?php echo Str::escape($currencySymbol); ?><?php echo number_format($subtotal, 2); ?></span>
             </div>
             <div class="cart-summary-row">
                 <span class="cart-summary-label">Shipping Delivery:</span>
-                <span class="cart-summary-val text-accent"><?php echo $subtotal >= 150 ? 'FREE' : '$15.00'; ?></span>
+                <span class="cart-summary-val text-accent"><?php echo $qualifiesForFreeShipping ? 'FREE' : Str::escape($currencySymbol) . number_format($standardShippingCost, 2); ?></span>
             </div>
         </div>
 
         <div class="cart-summary-total">
             <span>Total Charge:</span>
-            <span class="receipt-total-val">$<?php echo number_format($subtotal + ($subtotal >= 150 ? 0 : 15), 2); ?></span>
+            <span class="receipt-total-val"><?php echo Str::escape($currencySymbol); ?><?php echo number_format($subtotal + $shippingCost, 2); ?></span>
         </div>
     </aside>
 

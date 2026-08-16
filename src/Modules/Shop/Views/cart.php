@@ -15,6 +15,8 @@ if ($coupon === 'ZERO_LUXE') {
     $discountMsg = 'Invalid coupon code.';
 }
 $total = $subtotal - $discount;
+$qualifiesForFreeShipping = $subtotal >= $freeShippingThreshold;
+$shippingCost = $qualifiesForFreeShipping ? 0 : $standardShippingCost;
 ?>
 <h2 class="shop-page-title">Shopping Cart</h2>
 
@@ -50,7 +52,7 @@ $total = $subtotal - $discount;
                     </div>
                     <!-- Quantity & Price Form -->
                     <div class="cart-item-actions">
-                        <span class="cart-item-price">$<?php echo number_format($item['price'], 2); ?></span>
+                        <span class="cart-item-price"><?php echo Str::escape($currencySymbol); ?><?php echo number_format($item['price'], 2); ?></span>
 
                         <!-- Update Qty Form -->
                         <form method="post" action="/shop/cart" class="cart-qty-form">
@@ -86,17 +88,17 @@ $total = $subtotal - $discount;
             <div class="cart-summary-box">
                 <div class="cart-summary-row">
                     <span class="cart-summary-label">Cart Subtotal:</span>
-                    <span class="cart-summary-val">$<?php echo number_format($subtotal, 2); ?></span>
+                    <span class="cart-summary-val"><?php echo Str::escape($currencySymbol); ?><?php echo number_format($subtotal, 2); ?></span>
                 </div>
                 <?php if ($discount > 0): ?>
                     <div class="cart-summary-row discount">
                         <span>Coupon Discount:</span>
-                        <span class="cart-summary-val">-$<?php echo number_format($discount, 2); ?></span>
+                        <span class="cart-summary-val">-<?php echo Str::escape($currencySymbol); ?><?php echo number_format($discount, 2); ?></span>
                     </div>
                 <?php endif; ?>
                 <div class="cart-summary-row">
                     <span class="cart-summary-label">Shipping Delivery:</span>
-                    <span class="cart-summary-val text-accent"><?php echo $subtotal >= 150 ? 'FREE' : '$15.00'; ?></span>
+                    <span class="cart-summary-val text-accent"><?php echo $qualifiesForFreeShipping ? 'FREE' : Str::escape($currencySymbol) . number_format($standardShippingCost, 2); ?></span>
                 </div>
             </div>
 
@@ -114,7 +116,7 @@ $total = $subtotal - $discount;
 
             <div class="cart-summary-total">
                 <span>Total Amount:</span>
-                <span class="receipt-total-val">$<?php echo number_format($total + ($subtotal >= 150 ? 0 : 15), 2); ?></span>
+                <span class="receipt-total-val"><?php echo Str::escape($currencySymbol); ?><?php echo number_format($total + $shippingCost, 2); ?></span>
             </div>
 
             <a href="/shop/checkout" class="btn-luxe">Proceed to Checkout</a>

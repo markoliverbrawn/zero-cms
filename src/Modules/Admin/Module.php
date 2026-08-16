@@ -84,6 +84,7 @@ class Module implements ModuleInterface
             '#^/admin/files/([a-zA-Z0-9_-]+)$#' => Controllers\FilesController::class,
             '#^/admin/secure-download/([a-zA-Z0-9\-]+)$#' => Controllers\SecureDownloadController::class,
             '#^/admin/preferences$#' => Controllers\PreferencesController::class,
+            '#^/admin/settings/([a-zA-Z0-9_-]+)$#' => Controllers\ModuleSettingsController::class,
             '#^/admin/theme-switcher$#' => Controllers\ThemeSwitcherController::class,
             '#^/admin/google-callback$#' => Controllers\GoogleAuthController::class,
 

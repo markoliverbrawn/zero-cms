@@ -47,21 +47,28 @@ class CheckoutController implements Controller
             $subtotal += $item['price'] * $item['quantity'];
         }
 
+        $site = App::getCurrentSite();
+        $shopSettings = [
+            'currencySymbol' => $site ? $site->getModuleSetting('shop', 'currency_symbol', '$') : '$',
+            'freeShippingThreshold' => $site ? (float)$site->getModuleSetting('shop', 'free_shipping_threshold', 150) : 150,
+            'standardShippingCost' => $site ? (float)$site->getModuleSetting('shop', 'standard_shipping_cost', 15) : 15
+        ];
+
         $method = $_SERVER['REQUEST_METHOD'];
 
         if ($method === 'POST') {
             App::applyCsrfMiddleware();
-            
+
             $name = $_POST['name'] ?? '';
             $email = $_POST['email'] ?? '';
             $address = $_POST['address'] ?? '';
 
             if (empty($name) || empty($email) || empty($address)) {
-                App::render('checkout', [
+                App::render('checkout', \array_merge($shopSettings, [
                     'cart' => $cart,
                     'subtotal' => $subtotal,
                     'error' => 'Please fill out all required fields.'
-                ]);
+                ]));
                 exit;
             }
 
@@ -118,10 +125,10 @@ class CheckoutController implements Controller
             exit;
         }
 
-        App::render('checkout', [
+        App::render('checkout', \array_merge($shopSettings, [
             'cart' => $cart,
             'subtotal' => $subtotal
-        ]);
+        ]));
         exit;
     }
 }

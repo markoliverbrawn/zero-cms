@@ -124,6 +124,30 @@ class Module implements ModuleInterface
         }
         App::registerModuleStylesheet('shop', APPLICATION_ROOT . '/public/assets/css/themes/shop/shop.css');
 
+        App::registerModuleSettings('shop', [
+            'currency_symbol' => [
+                'type' => 'text',
+                'label' => 'Currency Symbol',
+                'default' => '$',
+                'required' => true,
+                'helper_text' => 'Prepended to every price shown in the catalog, cart, and checkout.'
+            ],
+            'free_shipping_threshold' => [
+                'type' => 'number',
+                'label' => 'Free Shipping Threshold',
+                'default' => 150,
+                'required' => true,
+                'helper_text' => 'Orders with a subtotal at or above this amount qualify for free shipping.'
+            ],
+            'standard_shipping_cost' => [
+                'type' => 'number',
+                'label' => 'Standard Shipping Cost',
+                'default' => 15,
+                'required' => true,
+                'helper_text' => 'Flat shipping cost charged on orders below the free-shipping threshold.'
+            ]
+        ]);
+
         App::registerModel('products', Product::class);
         App::registerModel('productvariants', ProductVariant::class);
         App::registerModel('orders', Order::class);

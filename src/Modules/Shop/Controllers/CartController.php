@@ -99,9 +99,14 @@ class CartController implements Controller
             $subtotal += $item['price'] * $item['quantity'];
         }
 
+        $site = App::getCurrentSite();
+
         App::render('cart', [
             'cart' => $_SESSION['cart'],
-            'subtotal' => $subtotal
+            'subtotal' => $subtotal,
+            'currencySymbol' => $site ? $site->getModuleSetting('shop', 'currency_symbol', '$') : '$',
+            'freeShippingThreshold' => $site ? (float)$site->getModuleSetting('shop', 'free_shipping_threshold', 150) : 150,
+            'standardShippingCost' => $site ? (float)$site->getModuleSetting('shop', 'standard_shipping_cost', 15) : 15
         ]);
         exit;
     }

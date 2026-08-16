@@ -26,6 +26,7 @@ use Zero\Core\Concerns\ManagesBlocksAndModels;
 use Zero\Core\Concerns\ManagesCurrentContext;
 use Zero\Core\Concerns\ManagesModelListActions;
 use Zero\Core\Concerns\ManagesModules;
+use Zero\Core\Concerns\ManagesModuleSettings;
 use Zero\Core\Concerns\ManagesThemes;
 use Zero\Core\Concerns\RendersViews;
 use Zero\Core\Concerns\ResolvesTenantContext;
@@ -46,6 +47,7 @@ class App
     use ManagesAdminSidebar;
     use ManagesBlocksAndModels;
     use ManagesModelListActions;
+    use ManagesModuleSettings;
     use ManagesCurrentContext;
     use RendersViews;
     use HasUtilityHelpers;

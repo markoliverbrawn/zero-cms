@@ -122,6 +122,16 @@ trait ManagesAdminSidebar
             'icon' => 'clipboard',
             'precedence' => 30
         ]);
+
+        // Collapsible Module Settings (populated dynamically as each module calls
+        // registerModuleSettings() during its own init() -- see ManagesModuleSettings)
+        self::registerAdminSidebarSection('module_settings', [
+            'title' => 'Module Settings',
+            'icon' => 'settings',
+            'super_admin_only' => true,
+            'is_system' => true,
+            'precedence' => 420
+        ]);
     }
 
     /**

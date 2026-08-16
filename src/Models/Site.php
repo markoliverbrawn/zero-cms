@@ -37,7 +37,7 @@ class Site implements Model
 
     protected static $tableName = 'sites';
     protected static $modelType = null;
-    protected static $fillable = ['name', 'domain', 'theme', 'enabled_modules', 'timezone', 'default_language', 'homepage_id', 'expires_at'];
+    protected static $fillable = ['name', 'domain', 'theme', 'enabled_modules', 'timezone', 'default_language', 'homepage_id', 'expires_at', 'settings'];
     protected static $systemModules = ['admin', 'queue', 'security'];
     protected static array $cascadeDeletes = [
         User::class => 'site_id',
@@ -63,6 +63,7 @@ class Site implements Model
     public $default_language = 'en';
     public $homepage_id;
     public $expires_at;
+    public $settings;
     public $created_at;
     public $updated_at;
     public $deleted_at;
@@ -363,6 +364,70 @@ class Site implements Model
             return true;
         }
         return \in_array($module, $modules);
+    }
+
+    /**
+     * Get every configured setting value for a module on this site, merged over that module's
+     * registered schema defaults (App::registerModuleSettings()) so a freshly-enabled module with
+     * no saved settings yet still returns sensible values.
+     *
+     * @param string $moduleId
+     * @return array
+     */
+    public function getModuleSettings(string $moduleId): array
+    {
+        $stored = [];
+        if (!empty($this->settings)) {
+            $decoded = \json_decode($this->settings, true);
+            if (\is_array($decoded) && isset($decoded[$moduleId]) && \is_array($decoded[$moduleId])) {
+                $stored = $decoded[$moduleId];
+            }
+        }
+
+        $result = [];
+        foreach (App::getModuleSettingsSchema($moduleId) as $key => $fieldConfig) {
+            $result[$key] = \array_key_exists($key, $stored) ? $stored[$key] : ($fieldConfig['default'] ?? null);
+        }
+        return $result;
+    }
+
+    /**
+     * Get a single setting value for a module on this site, falling back to that field's
+     * registered schema default (or $default if the field isn't registered at all).
+     *
+     * @param string $moduleId
+     * @param string $key
+     * @param mixed $default
+     * @return mixed
+     */
+    public function getModuleSetting(string $moduleId, string $key, $default = null)
+    {
+        $settings = $this->getModuleSettings($moduleId);
+        return \array_key_exists($key, $settings) ? $settings[$key] : $default;
+    }
+
+    /**
+     * Save a module's settings for this site, persisting into the shared 'settings' JSON column
+     * alongside every other module's own settings (each module gets its own top-level key, so
+     * saving one module's settings never touches another's).
+     *
+     * @param string $moduleId
+     * @param array $values
+     * @return void
+     */
+    public function saveModuleSettings(string $moduleId, array $values): void
+    {
+        $all = [];
+        if (!empty($this->settings)) {
+            $decoded = \json_decode($this->settings, true);
+            if (\is_array($decoded)) {
+                $all = $decoded;
+            }
+        }
+
+        $all[$moduleId] = $values;
+        $this->settings = \json_encode($all);
+        $this->save();
     }
 
     /**
