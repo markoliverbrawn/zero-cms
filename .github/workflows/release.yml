@@ -1,0 +1,38 @@
+name: Automated Semantic Release
+
+# Fires after the test suite finishes running on main, and only tags/publishes a release if that
+# run succeeded -- a broken commit on main never gets released. Deliberately not triggered
+# directly on `push` so it can never race ahead of (or run instead of) the test gate.
+on:
+  workflow_run:
+    workflows: ["Run Automated Tests (CI)"]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Tag and Publish Release
+    runs-on: ubuntu-latest
+    if: >
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_branch == 'main'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Set up PHP 8.3 Environment
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: none
+
+      - name: Compute next version and publish release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: bin/release

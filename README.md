@@ -195,3 +195,12 @@ Run the automated unit testing suite inside the container before staging or depl
 ```bash
 docker exec -w /data/misc/zero php83 bin/test
 ```
+
+### Automated Semantic Versioning & Releases
+
+Every merge to `main` is automatically versioned and published — **no Node/npm, no third-party release tooling**, just two small zero-dependency PHP scripts under `bin/` and git/`gh` (GitHub's own CLI, already present on every Actions runner):
+
+* **Commit convention:** Every commit subject must follow [Conventional Commits](https://www.conventionalcommits.org/): `type(scope): description`, e.g. `feat(auth): add OAuth login support` or `fix: correct off-by-one in pagination`. A `!` after the type/scope (`feat!: ...`) or a `BREAKING CHANGE:` footer marks a breaking change.
+* **`.github/workflows/lint-commit-messages.yml`** runs `bin/check-commit-messages` on every pull request, failing fast if any commit's subject line doesn't match the convention above.
+* **`.github/workflows/release.yml`** runs `bin/release` after `Run Automated Tests (CI)` succeeds on `main` — it never releases a commit the test suite hasn't already passed. It reads every commit since the last `v*` tag, computes the next version (`feat` → minor, `fix`/`perf` → patch, any breaking change → major), appends a `CHANGELOG.md` section, tags the release, and publishes it via `gh release create`.
+* Run `bin/release --dry-run` at any time locally to preview the next version and changelog without tagging, committing, or publishing anything.
