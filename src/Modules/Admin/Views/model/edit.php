@@ -3,6 +3,7 @@
 
 use Zero\Core\App;
 use Zero\Core\Template;
+use Zero\Database\DB;
 use Zero\Models\Media;
 use Zero\Models\User;
 use Zero\Support\I18n;
