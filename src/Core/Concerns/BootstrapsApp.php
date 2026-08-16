@@ -76,7 +76,11 @@ trait BootstrapsApp
             }
         }
 
-        $host = \explode(':', $_SERVER['HTTP_HOST'] ?? 'localhost')[0];
+        // Pass the full Host header (including port, if any) through as-is -- a site's domain may
+        // now optionally include a port (e.g. 'test.localhost:8370'), and
+        // bootstrapFetchSiteAndUser() itself falls back to the bare hostname if nothing matches
+        // the exact host:port.
+        $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
         $userId = $_SESSION['user_id'] ?? null;
 
         $userFound = self::bootstrapFetchSiteAndUser($host, $userId);

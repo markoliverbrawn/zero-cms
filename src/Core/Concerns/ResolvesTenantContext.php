@@ -61,12 +61,14 @@ trait ResolvesTenantContext
         }
 
         $userFound = false;
+        $siteFound = false;
         try {
             $stmt = DB::query($sql, $params);
             $rows = $stmt->fetchAll();
-            
+
             foreach ($rows as $row) {
                 if ($row['record_type'] === 'site') {
+                    $siteFound = true;
                     $siteData = [
                         'id' => $row['id'],
                         'name' => $row['name'],
@@ -102,6 +104,14 @@ trait ResolvesTenantContext
             }
         } catch (\Exception $e) {
             // Safe fallback during seeding or database initialization
+        }
+
+        // A site's domain may optionally include a port (e.g. 'test.localhost:8370'), to
+        // disambiguate a docker-compose dev setup exposed on a non-standard port. If nothing
+        // matched the exact Host header (including port), retry once against the bare hostname,
+        // so a site registered WITHOUT a port still resolves normally when accessed on one.
+        if (!$siteFound && \strpos($host, ':') !== false) {
+            return self::bootstrapFetchSiteAndUser(\explode(':', $host)[0], $userId);
         }
 
         return $userFound;

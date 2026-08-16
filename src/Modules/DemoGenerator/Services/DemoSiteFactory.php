@@ -38,7 +38,7 @@ class DemoSiteFactory
     {
         $siteId = Security::uuidv7();
         $demoId = \substr(\md5($siteId), 0, 8);
-        $domain = "demo-{$demoId}.d6laptop.zero";
+        $domain = self::buildDemoDomain($demoId);
         $password = \bin2hex(\random_bytes(4)); // Secure temporary 8-char password
 
         // Build active modules list based on preset
@@ -99,6 +99,29 @@ class DemoSiteFactory
             DB::getPDO()->rollBack();
             throw $e;
         }
+    }
+
+    /**
+     * Build the new demo site's domain. When the CURRENT request itself arrived on a
+     * non-standard port (e.g. a local docker-compose dev setup exposed as
+     * 'test.localhost:8370'), generate an equally port-addressable '*.localhost' domain so the
+     * new sandbox is immediately reachable with no DNS/hosts-file setup -- every modern browser
+     * and OS resolver treats any '*.localhost' subdomain as loopback natively. Otherwise (a real
+     * domain-based deployment with no port in the request), keep the existing wildcard-subdomain
+     * convention.
+     *
+     * @param string $demoId
+     * @return string
+     */
+    protected static function buildDemoDomain(string $demoId): string
+    {
+        $currentHost = $_SERVER['HTTP_HOST'] ?? '';
+        if (\strpos($currentHost, ':') !== false) {
+            $port = \explode(':', $currentHost)[1];
+            return "demo-{$demoId}.localhost:{$port}";
+        }
+
+        return "demo-{$demoId}.d6laptop.zero";
     }
 
     /**
