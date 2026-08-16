@@ -58,9 +58,14 @@ class SeederRunner
             echo "\n--> Target: Sequentially initializing all multi-tenant domains...\n\n";
         }
 
-        // Run migrations Down then Up to reconstruct all database schemas cleanly (First core
-        // tables, then each module sequentially!)
-        MigrationManager::down();
+        // Fully unwind the schema to empty (looping down() across every batch, not just the
+        // latest one) before rebuilding it from scratch via up(). The seeder engine assumes a
+        // truly empty database -- only 'sites' rows are upserted by domain, every other table
+        // (users, pages, media, ...) is an unconditional INSERT, so a partial reset here would
+        // resurface as a duplicate-key error the moment seeding actually runs.
+        do {
+            MigrationManager::down();
+        } while (MigrationManager::hasBatches());
         MigrationManager::up();
 
         $modulesDir = APPLICATION_ROOT . '/src/Modules';

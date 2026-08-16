@@ -158,6 +158,22 @@ class MigrationManager
     }
 
     /**
+     * Whether there is currently any migration batch recorded -- i.e. whether calling down()
+     * would have anything left to revert. Lets a caller fully unwind the schema to empty (looping
+     * down() until this returns false) rather than reverting only the single latest batch.
+     *
+     * @return bool
+     */
+    public static function hasBatches(): bool
+    {
+        $hasTable = DB::query("SHOW TABLES LIKE 'migrations'")->fetch();
+        if (!$hasTable) {
+            return false;
+        }
+        return (bool) DB::query("SELECT COUNT(*) FROM migrations")->fetchColumn();
+    }
+
+    /**
      * Run all pending dynamic sequential migrations up.
      */
     public static function up()
