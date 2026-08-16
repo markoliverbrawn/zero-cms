@@ -133,6 +133,10 @@ trait ResolvesTenantContext
         self::registerModel('sites', Site::class);
         self::registerModel('users', User::class);
 
+        // Register core form-field component types before any module's own init() runs, so a
+        // module can safely register additional custom types without an ordering hazard.
+        self::registerCoreFormFieldTypes();
+
         // Populate standard core dashboard, content, and security sidebar items
         self::initializeDefaultSidebar();
 

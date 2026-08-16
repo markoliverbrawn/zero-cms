@@ -63,7 +63,7 @@ class ForumPost implements ModelInterface
                 'listDisplay' => true,
                 'listView' => 'fields/forum_user'
             ],
-            'content' => ['type' => 'textarea', 'label' => 'Content', 'editable' => true, 'required' => true, 'listDisplay' => true],
+            'content' => ['type' => 'rich_text_editor', 'label' => 'Content', 'editable' => true, 'required' => true, 'listDisplay' => true],
             'parent_id' => [
                 'type' => 'readonly', 
                 'label' => 'In Reply To', 

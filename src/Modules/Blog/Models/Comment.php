@@ -76,7 +76,7 @@ class Comment implements Model
             'post_title' => ['type' => 'text', 'label' => 'Post', 'editable' => false, 'listDisplay' => true, 'searchable' => true],
             'author_name' => ['type' => 'text', 'label' => 'Author Name', 'editable' => true, 'listDisplay' => true, 'searchable' => true],
             'author_email' => ['type' => 'text', 'label' => 'Author Email', 'editable' => true, 'listDisplay' => true, 'searchable' => true],
-            'content' => ['type' => 'textarea', 'label' => 'Comment', 'editable' => true, 'listDisplay' => false],
+            'content' => ['type' => 'rich_text_editor', 'label' => 'Comment', 'editable' => true, 'listDisplay' => false],
             'status' => [
                 'type' => 'select',
                 'label' => 'Status',

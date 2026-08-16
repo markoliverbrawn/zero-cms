@@ -2,10 +2,8 @@
 // src/Modules/Admin/Views/model/edit.php
 
 use Zero\Core\App;
-use Zero\Core\Template;
-use Zero\Database\DB;
-use Zero\Models\Media;
 use Zero\Models\User;
+use Zero\Services\AiService;
 use Zero\Support\I18n;
 use Zero\Support\Str;
 
@@ -57,231 +55,55 @@ foreach ($config as $field => $fieldConfig) {
     }
 }
 
-// Decoupled Form Field Pre-Renderer Lambda Function to preserve strict OOP DRY constraints
-$renderField = function($field, $fieldConfig) use ($record, $modelName, $csrf, $usesBlockBuilder, $blockBuilderField) {
-    ?>
-    <?php if (!$usesBlockBuilder || $field !== $blockBuilderField): ?>
-        <?php if ($field === 'summary' && \Zero\Services\AiService::isAvailable()): ?>
-            <div class="form-label-row">
-                <label><?php echo Str::escape($fieldConfig['label'] ?? ''); ?></label>
-                <button type="button" class="btn-ai-generate-icon" id="btn-ai-generate-summary" title="Auto Generate Summary with AI">
-                    <?php echo \Zero\Core\App::svg('ai'); ?>
-                </button>
-            </div>
-        <?php else: ?>
+// Decoupled Form Field Pre-Renderer Lambda Function to preserve strict OOP DRY constraints.
+// Delegates the actual markup generation to the FormField component system (Zero\Support\Forms)
+// -- this closure's only remaining job is resolving the handful of per-record decisions a static
+// getConfig() schema can't express by itself (which concrete record is being edited, whether it
+// uses the block builder, and the pages.parent_path circular-reference guard).
+$renderField = function ($field, $fieldConfig) use ($record, $modelName, $csrf, $usesBlockBuilder, $blockBuilderField) {
+    $type = $fieldConfig['type'];
+    $config = $fieldConfig;
+    $config['value'] = $record->{$field} ?? '';
+    $config['record'] = $record;
+
+    if ($field === 'summary' && AiService::isAvailable()) {
+        ?>
+        <div class="form-label-row">
             <label><?php echo Str::escape($fieldConfig['label'] ?? ''); ?></label>
-        <?php endif; ?>
-    <?php endif; ?>
-    <?php if ($fieldConfig['type'] === "rich_text"): ?>
-        <div class="editor">
-            <div class="toolbar">
-                <button type="button" data-cmd="bold"><strong>B</strong></button>
-                <button type="button" data-cmd="italic"><em>I</em></button>
-                <button type="button" data-cmd="insertSmall">Small</button>
-                <button type="button" data-cmd="removeFormat">Clear</button>
-            </div>
-            <div class="editor-area block-editor-area block-title-rich-editor" contenteditable="true"><?php echo $record->{$field} ?? ''; ?></div>
-            <input type="hidden" name="<?php echo Str::escape($field ?? ''); ?>" class="content-input" value="<?php echo Str::escape($record->{$field} ?? ''); ?>" />
+            <button type="button" class="btn-ai-generate-icon" id="btn-ai-generate-summary" title="Auto Generate Summary with AI">
+                <?php echo App::svg('ai'); ?>
+            </button>
         </div>
-    <?php elseif ($fieldConfig['type'] === "text"): ?>
-        <?php if ($field === 'media_ids'): ?>
-          <?php
-          $secondaryImages = [];
-          if (!empty($record->media_ids)) {
-              $ids = array_filter(array_map('trim', explode(',', $record->media_ids)));
-              if (!empty($ids)) {
-                  $placeholders = implode(',', array_fill(0, count($ids), '?'));
-                  $secondaryImages = DB::query("SELECT id, path FROM media WHERE id IN ($placeholders)", $ids)->fetchAll();
-              }
-          }
-          ?>
-          <div class="gallery-picker-wrapper">
-              <div class="gallery-picker-controls">
-                  <input type="hidden" id="product-media-ids-input" name="<?php echo Str::escape($field ?? ''); ?>" value="<?php echo Str::escape($record->{$field} ?? ''); ?>" />
-                  <button type="button" id="product-gallery-picker-btn" class="btn-luxe-outline">Choose Gallery Images</button>
-              </div>
-              <!-- Gallery Grid Preview Area -->
-              <div id="product-gallery-preview-grid" class="gallery-thumbnails-grid">
-                  <?php foreach ($secondaryImages as $img): ?>
-                      <div class="gallery-thumb-card" data-id="<?php echo Str::escape($img['id']); ?>">
-                          <img src="<?php echo Str::escape($img['path']); ?>" />
-                          <button type="button" class="gallery-thumb-remove-btn" title="Remove image">&times;</button>
-                      </div>
-                  <?php endforeach; ?>
-              </div>
-          </div>
-        <?php else: ?>
-          <input name="<?php echo Str::escape($field ?? ''); ?>" value="<?php echo Str::escape($record->{$field} ?? ''); ?>" <?php echo $fieldConfig['required'] ? 'required' : ''; ?> />
-        <?php endif; ?>
-    <?php elseif ($fieldConfig['type'] === "image"): ?>
-          <?php
-            $mediaIdValue = $record->{$field . '_id'} ?? '';
-            $mediaPathValue = $record->{$field} ?? '';
-            
-            if (empty($mediaIdValue) && !empty($mediaPathValue) && strlen($mediaPathValue) === 36) {
-                $mediaIdValue = $mediaPathValue;
-                $media = Media::find($mediaIdValue);
-                $mediaPathValue = $media ? $media->path : '';
-            }
-          ?>
-          <div class="image-picker-container" data-field="<?php echo Str::escape($field); ?>">
-              <div class="image-picker-row">
-                  <input class="image-picker-input" name="<?php echo Str::escape($field ?? ''); ?>" value="<?php echo Str::escape($mediaIdValue); ?>" <?php echo $fieldConfig['required'] ? 'required' : ''; ?> />
-                  <button type="button" class="btn-luxe-outline media-picker-trigger-btn">Choose Image</button>
-              </div>
-              <!-- Dynamic Thumbnail Preview Area -->
-              <div class="image-picker-preview-box <?php echo !empty($mediaPathValue) ? 'has-preview' : ''; ?>">
-                  <img class="image-picker-preview" src="<?php echo Str::escape($mediaPathValue ?? ''); ?>" />
-              </div>
-          </div>
-    <?php elseif ($fieldConfig['type'] == "modules"): ?>
-        <?php 
-        $activeModules = json_decode($record->{$field} ?? '[]', true);
-        if (!is_array($activeModules)) $activeModules = ['blog', 'shop'];
-        ?>
-        <div class="admin-modules-container">
-            <?php foreach (App::getModules() as $module): ?>
-                <?php
-                $id = $module->getId();
-                // Skip system modules from the site-level toggle checklist
-                if ($id === 'admin' || $id === 'queue') {
-                    continue;
-                }
-                
-                // Retrieve friendly name and brief description
-                $name = '';
-                $desc = '';
-                if ($id === 'blog') {
-                    $name = 'Blog Module';
-                    $desc = 'Articles, Posts, Feeds';
-                } elseif ($id === 'shop') {
-                    $name = 'Luxe E-Commerce Store';
-                    $desc = 'Catalog, Products, Variants, Cart, Checkout';
-                } elseif ($id === 'formbuilder') {
-                    $name = 'Form Builder';
-                    $desc = 'Dynamic Custom Contact Forms';
-                } elseif ($id === 'forum') {
-                    $name = 'Community Forum';
-                    $desc = 'Discussions, Boards, Threads, Replies';
-                } elseif ($id === 'site-search') {
-                    $name = 'Search';
-                    $desc = 'Page and Posts';
-                } elseif ($id === 'security') {
-                    $name = 'Security';
-                    $desc = 'Hardening & AI threat auditing';
-                } elseif ($id === 'demogenerator') {
-                    $name = 'Demo Generator';
-                    $desc = 'Sandbox site creator form block';
-                } else {
-                    $name = ucwords(str_replace('-', ' ', $id));
-                    $desc = 'Additional addon capability';
-                }
-                ?>
-                <label class="admin-modules-label">
-                    <input type="checkbox" name="enabled_modules[]" value="<?php echo Str::escape($id); ?>" <?php echo in_array($id, $activeModules) ? 'checked' : ''; ?> class="admin-modules-input">
-                    <span><strong><?php echo Str::escape($name); ?></strong> (<?php echo Str::escape($desc); ?>)</span>
-                </label>
-            <?php endforeach; ?>
-        </div>
-    <?php elseif ($fieldConfig['type'] == "textarea"): ?>
-        <?php if ($usesBlockBuilder && $field === $blockBuilderField): ?>
-            <?php include APPLICATION_ROOT . '/src/Modules/Admin/Views/block_builder.php'; ?>
-        <?php elseif ($field == "content" || $field == "description"): ?>
-            <?php include APPLICATION_ROOT . '/src/Modules/Admin/Views/editor.php'; ?>
-        <?php else: ?>
-          <textarea name="<?php echo Str::escape($field ?? ''); ?>" <?php echo $fieldConfig['required'] ? 'required' : ''; ?>><?php echo Str::escape($record->{$field} ?? ''); ?></textarea>
-        <?php endif; ?>
-    <?php elseif ($fieldConfig['type'] == "select"): ?>
-        <?php 
-        $isMultiple = $fieldConfig['multiple'] ?? false; 
-        $currentVal = $record->{$field} ?? '';
-        $selectedVals = [];
-        if (!empty($currentVal)) {
-            if (is_array($currentVal)) {
-                $selectedVals = $currentVal;
-            } else {
-                $decoded = json_decode($currentVal, true);
-                if (is_array($decoded)) {
-                    $selectedVals = $decoded;
-                } else {
-                    $selectedVals = [$currentVal];
-                }
-            }
-        }
-        ?>
-        <select name="<?php echo Str::escape($field ?? ''); ?><?php echo $isMultiple ? '[]' : ''; ?>" class="<?php echo $isMultiple ? 'form-multiselect' : ''; ?>" <?php echo $isMultiple ? 'multiple' : ''; ?> <?php echo $fieldConfig['required'] ? 'required' : ''; ?>>
-          <?php foreach ($fieldConfig['options'] as $val => $label): ?>
-            <?php 
-            // Support explicit associative integer keys (like 1 => 'Yes', 0 => 'No') while cleanly falling back for sequential arrays
-            $isSequential = (is_int($val) && array_keys($fieldConfig['options']) === range(0, count($fieldConfig['options']) - 1));
-            $optionVal = $isSequential ? $label : $val; 
-            
-            // Circular Loop Protection: Prevent nesting a page under itself or under any of its own children!
-            if ($modelName === 'pages' && $field === 'parent_path' && !empty($record->slug)) {
-                if ($optionVal === $record->slug) {
-                    continue; // Skip self
-                }
-                if (strpos($optionVal, $record->slug . '/') === 0) {
-                    continue; // Skip child descendant pages recursively
-                }
-            }
-            ?>
-            <option value="<?php echo Str::escape($optionVal ?? ''); ?>" <?php echo in_array($optionVal, $selectedVals) ? 'selected' : ''; ?>>
-              <?php echo Str::escape($label ?? ''); ?>
-            </option>
-          <?php endforeach; ?>
-        </select>
-        <?php if ($isMultiple): ?>
-          <small class="field-help-text">Tip: Hold Ctrl (Windows) or Cmd (Mac) to select multiple users.</small>
-        <?php endif; ?>
-    <?php elseif ($fieldConfig['type'] == "int"): ?>
-        <input type="number" name="<?php echo Str::escape($field ?? ''); ?>" value="<?php echo Str::escape($record->{$field} ?? ''); ?>" <?php echo $fieldConfig['required'] ? 'required' : ''; ?> />
-    <?php elseif ($fieldConfig['type'] == "datetime"): ?>
-        <input type="datetime-local" name="<?php echo Str::escape($field ?? ''); ?>" value="<?php echo Str::escape($record->{$field} ?? ''); ?>" <?php echo $fieldConfig['required'] ? 'required' : ''; ?> />
-    <?php elseif ($fieldConfig['type'] == "readonly"): ?>
-        <div class="readonly-field-card">
-            <?php 
-              if (!empty($fieldConfig['listView'])) {
-                  $viewPath = APPLICATION_ROOT . '/src/Modules/Admin/Views/' . $fieldConfig['listView'] . '.php';
-                  if (file_exists($viewPath)) {
-                      echo Template::renderFile($viewPath, ['value' => $record->{$field}, 'record' => $record]);
-                  } else {
-                      echo Str::escape($record->{$field} ?? '');
-                  }
-              } else {
-                  echo Str::escape($record->{$field} ?? '');
-              }
-            ?>
-        </div>
-        <input type="hidden" name="<?php echo Str::escape($field ?? ''); ?>" value="<?php echo Str::escape($record->{$field} ?? ''); ?>">
-    <?php else: ?>
-        <input name="<?php echo Str::escape($field ?? ''); ?>" value="<?php echo Str::escape($record->{$field} ?? ''); ?>" <?php echo $fieldConfig['required'] ? 'required' : ''; ?> />
-    <?php endif; ?>
-    <?php
-    // Dynamically retrieve field helper text from translation files or field config with fallback
-    $helperText = '';
-    if (isset($fieldConfig['helper_text'])) {
-        $helperText = I18n::t($fieldConfig['helper_text']);
-    } elseif (isset($fieldConfig['description']) && $fieldConfig['type'] !== 'textarea') {
-        // Exclude textarea type default description as that is handled by editor layout
-        $helperText = I18n::t($fieldConfig['description']);
-    } else {
-        $helpKey = $field . '_help';
-        $descKey = $field . '_desc';
-        $translatedHelp = I18n::t($helpKey);
-        $translatedDesc = I18n::t($descKey);
-        
-        if ($translatedHelp !== $helpKey) {
-            $helperText = $translatedHelp;
-        } elseif ($translatedDesc !== $descKey) {
-            $helperText = $translatedDesc;
-        }
+        <?php
+        $config['showLabel'] = false;
     }
 
-    if (!empty($helperText)): ?>
-        <small class="field-help-text"><?php echo Str::escape($helperText); ?></small>
-    <?php endif; ?>
-    <?php
+    if ($usesBlockBuilder && $field === $blockBuilderField) {
+        // Page-builder block editor -- only resolvable per-record (usesBlockBuilder() is a
+        // runtime method call), so it can never be a static getConfig() type value.
+        $type = 'block_builder';
+        $config['modelName'] = $modelName;
+        $config['csrf'] = $csrf;
+    } elseif ($type === 'image') {
+        $config['mediaId'] = $record->{$field . '_id'} ?? '';
+    } elseif ($type === 'select' && $modelName === 'pages' && $field === 'parent_path' && !empty($record->slug)) {
+        // Circular Loop Protection: Prevent nesting a page under itself or under any of its own
+        // children -- depends on the specific record being edited, so it stays a per-record
+        // pre-filter rather than a static schema value.
+        $options = $config['options'] ?? [];
+        $isSequential = (\array_keys($options) === \range(0, \count($options) - 1));
+        $filteredOptions = [];
+        foreach ($options as $key => $label) {
+            $optionVal = $isSequential ? $label : $key;
+            if ($optionVal === $record->slug || \strpos((string)$optionVal, $record->slug . '/') === 0) {
+                continue;
+            }
+            $filteredOptions[$key] = $label;
+        }
+        $config['options'] = $filteredOptions;
+    }
+
+    echo App::makeFormField($type, $field, $config)->render();
 };
 ?>
 

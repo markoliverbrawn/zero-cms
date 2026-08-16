@@ -161,6 +161,47 @@ $spamData = json_decode($spamJson, true);
 $isSpam = !empty($spamData['website_url']);
 assert_test($isSpam === true, "Honeypot detector identifies spam submission successfully");
 
+// 6. FormField component system migration: frontend rendering
+echo "Testing frontend form_builder.php rendering via the FormField component system...\n";
+$viewPath = APPLICATION_ROOT . '/src/Modules/FormBuilder/Views/blocks/frontend/form_builder.php';
+$mockBlock = [
+    'id' => 'blk-test',
+    'content' => '',
+    'items' => [
+        ['name' => 'sender_email', 'label' => 'Email', 'type' => 'email', 'required' => '1'],
+        ['name' => 'sender_phone', 'label' => 'Phone', 'type' => 'tel', 'required' => '0'],
+        ['name' => 'plan', 'label' => 'Plan', 'type' => 'select', 'options' => 'Basic, Pro', 'required' => '0'],
+        ['name' => 'interests', 'label' => 'Interests', 'type' => 'checkbox', 'options' => 'News, Offers', 'required' => '0'],
+        ['name' => 'size', 'label' => 'Size', 'type' => 'radio', 'options' => 'S, M, L', 'required' => '1'],
+    ],
+];
+$renderedForm = \Zero\Core\Template::renderFile($viewPath, ['block' => $mockBlock]);
+
+assert_test(\strpos($renderedForm, 'type="email"') !== false, "Email field renders type=\"email\"");
+assert_test(\strpos($renderedForm, 'type="tel"') !== false, "Tel field renders type=\"tel\" (not lost as a generic text input)");
+assert_test(\strpos($renderedForm, 'field-help-text') === false, "No i18n helper text leaks into a public contact form field (e.g. an 'email'-named field must not surface the unrelated admin User.email_help string)");
+assert_test(\strpos($renderedForm, '-- Select Option --') !== false, "Select field still renders its blank placeholder option");
+assert_test(\substr_count($renderedForm, 'name="size"') >= 3, "Radio group renders one input per option");
+$sizeGroupStart = \strpos($renderedForm, 'name="size"');
+$sizeGroupHtml = \substr($renderedForm, $sizeGroupStart - 200, 700);
+assert_test(\substr_count($sizeGroupHtml, 'required') === 1, "Radio group puts 'required' on exactly one input, not every option (preserved HTML semantics)");
+
+// 7. FormField component system migration: submission casting (mirrors FormApiController's own logic)
+echo "Testing FormApiController-style submission casting via the FormField component system...\n";
+
+$checkboxField = App::makeFormField('checkbox_group', 'interests', ['options' => []]);
+$castedCheckbox = $checkboxField->castSubmittedValue(['interests' => ['News', 'Tampered Value']]);
+assert_test($castedCheckbox === ['News', 'Tampered Value'], "Checkbox group casting does not filter against options (deliberately deferred -- a security-tightening change kept separate from this rendering migration)");
+
+$radioField = App::makeFormField('radio_group', 'size', ['options' => []]);
+assert_test($radioField->castSubmittedValue(['size' => 'XL']) === 'XL', "Radio group casting does not filter against options either, for the same deliberate deferral reason");
+
+$selectOptions = ['' => '-- Select Option --'] + \array_combine(['Basic', 'Pro'], ['Basic', 'Pro']);
+$selectField = App::makeFormField('select', 'plan', ['options' => $selectOptions]);
+assert_test($selectField->castSubmittedValue(['plan' => '']) === '', "An intentionally-unselected optional dropdown casts through as '' rather than being rejected by the options allow-list");
+assert_test($selectField->castSubmittedValue(['plan' => 'Pro']) === 'Pro', "A legitimately-selected dropdown option casts through unchanged");
+assert_test($selectField->castSubmittedValue(['plan' => 'Tampered']) === null, "A tampered, never-rendered option value is rejected (no 'default' configured here, so it falls back to null)");
+
 // Clean up
 DB::query("DELETE FROM form_submissions WHERE id = ?", [$subId]);
 DB::query("DELETE FROM pages WHERE id = ?", [$mockPageId]);

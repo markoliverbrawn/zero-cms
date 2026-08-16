@@ -75,8 +75,10 @@ class ModuleSettingsController implements Controller
     }
 
     /**
-     * Collect and lightly validate/cast POST values against a settings schema, so every field
-     * type is stored as a consistent, predictable PHP type regardless of what was submitted.
+     * Collect and cast POST values against a settings schema via the FormField component system,
+     * so every field type is stored as a consistent, predictable PHP type regardless of what was
+     * submitted -- the same casting rules (checkbox presence, number min/max clamping, select
+     * allow-listing) are shared with every other schema-driven form in the admin.
      *
      * @param array $schema
      * @return array
@@ -86,32 +88,8 @@ class ModuleSettingsController implements Controller
         $values = [];
 
         foreach ($schema as $key => $fieldConfig) {
-            $type = $fieldConfig['type'] ?? 'text';
-            $default = $fieldConfig['default'] ?? null;
-
-            if ($type === 'checkbox') {
-                // Unchecked HTML checkboxes are simply absent from $_POST entirely.
-                $values[$key] = isset($_POST[$key]);
-            } elseif ($type === 'number') {
-                $value = isset($_POST[$key]) && $_POST[$key] !== '' ? (float)$_POST[$key] : $default;
-
-                // Clamp to the field's declared bounds so an unvalidated 0/negative/oversized
-                // submission can never reach a module in a range it never accounted for (e.g. a
-                // negative retention day count, or a zero rate-limit that silently disables it).
-                if ($value !== null && isset($fieldConfig['min']) && $value < $fieldConfig['min']) {
-                    $value = $fieldConfig['min'];
-                }
-                if ($value !== null && isset($fieldConfig['max']) && $value > $fieldConfig['max']) {
-                    $value = $fieldConfig['max'];
-                }
-
-                $values[$key] = $value;
-            } elseif ($type === 'select' && !empty($fieldConfig['options'])) {
-                $posted = $_POST[$key] ?? $default;
-                $values[$key] = \array_key_exists($posted, $fieldConfig['options']) ? $posted : $default;
-            } else {
-                $values[$key] = $_POST[$key] ?? $default;
-            }
+            $field = App::makeFormField($fieldConfig['type'] ?? 'text', $key, $fieldConfig);
+            $values[$key] = $field->castSubmittedValue($_POST);
         }
 
         return $values;

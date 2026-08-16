@@ -60,7 +60,7 @@ class ForumBoard implements ModelInterface
             'id' => ['type' => 'text', 'label' => 'ID', 'editable' => false, 'listDisplay' => false],
             'title' => ['type' => 'text', 'label' => 'Board Title', 'editable' => true, 'required' => true, 'listDisplay' => true, 'searchable' => true],
             'slug' => ['type' => 'text', 'label' => 'Slug', 'editable' => false, 'listDisplay' => true],
-            'description' => ['type' => 'textarea', 'label' => 'Description', 'editable' => true, 'required' => false, 'listDisplay' => true],
+            'description' => ['type' => 'rich_text_editor', 'label' => 'Description', 'editable' => true, 'required' => false, 'listDisplay' => true],
             'precedence' => ['type' => 'number', 'label' => 'Precedence', 'editable' => true, 'required' => true, 'listDisplay' => true]
         ];
     }

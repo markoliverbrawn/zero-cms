@@ -158,9 +158,28 @@ class FormApiController implements Controller
             $name = $fieldObj['name'] ?? '';
             $label = $fieldObj['label'] ?? '';
             $type = $fieldObj['type'] ?? 'text';
-            $val = $json[$name] ?? null;
 
             if (empty($name)) continue;
+
+            // Translate FormBuilder's own vocabulary to the FormField registry's distinct group
+            // types (its 'checkbox' means a GROUP of checkboxes, not a single boolean toggle),
+            // and reshape a configured select's plain option-string list into the associative
+            // value=>label shape (with a blank placeholder) so an intentionally-unselected
+            // optional dropdown still casts through as a valid submission.
+            $resolvedType = $type;
+            $fieldOptions = [];
+            if ($type === 'checkbox') {
+                $resolvedType = 'checkbox_group';
+            } elseif ($type === 'radio') {
+                $resolvedType = 'radio_group';
+            } elseif ($type === 'select') {
+                $optionsStr = $fieldObj['options'] ?? '';
+                $options = !empty($optionsStr) ? \array_map('trim', \explode(',', $optionsStr)) : [];
+                $fieldOptions = ['' => '-- Select Option --'] + \array_combine($options, $options);
+            }
+
+            $field = App::makeFormField($resolvedType, $name, ['options' => $fieldOptions]);
+            $val = $field->castSubmittedValue($json);
 
             // Map standard column fields dynamically
             if ($type === 'email' && !empty($val)) {

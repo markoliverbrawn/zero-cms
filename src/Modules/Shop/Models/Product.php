@@ -249,8 +249,8 @@ class Product implements Model
             'price' => ['type' => 'number', 'label' => 'Price', 'editable' => true, 'required' => true, 'listDisplay' => true, 'width' => 'half'],
             'compare_at_price' => ['type' => 'number', 'label' => I18n::t('compare_at_price'), 'editable' => true, 'required' => false, 'listDisplay' => false, 'width' => 'half'],
             'main_image' => ['type' => 'image', 'label' => I18n::t('primary_image_path'), 'editable' => true, 'required' => false, 'listDisplay' => true, 'section' => 'side', 'width' => 'full'],
-            'media_ids' => ['type' => 'text', 'label' => 'Media IDs (comma separated)', 'editable' => true, 'required' => false, 'listDisplay' => false, 'section' => 'side', 'width' => 'full'],
-            'description' => ['type' => 'textarea', 'label' => I18n::t('rich_description'), 'editable' => true, 'required' => false, 'listDisplay' => false, 'width' => 'full'],
+            'media_ids' => ['type' => 'gallery_picker', 'label' => 'Media IDs (comma separated)', 'editable' => true, 'required' => false, 'listDisplay' => false, 'section' => 'side', 'width' => 'full'],
+            'description' => ['type' => 'rich_text_editor', 'label' => I18n::t('rich_description'), 'editable' => true, 'required' => false, 'listDisplay' => false, 'width' => 'full'],
             'status' => [
                 'type' => 'select',
                 'label' => 'Status',

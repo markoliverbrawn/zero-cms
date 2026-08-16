@@ -163,7 +163,8 @@ class ModelController implements Controller
             $data = [];
             foreach ($config as $field => $fieldConfig) {
                 if ($fieldConfig['editable'] ?? false) {
-                    $val = $_POST[$field] ?? '';
+                    $formField = App::makeFormField($fieldConfig['type'] ?? 'text', $field, $fieldConfig);
+                    $val = $formField->castSubmittedValue($_POST);
                     // Automatically json_encode array values (such as enabled_modules checkbox arrays!)
                     if (\is_array($val)) {
                         $val = \json_encode($val);

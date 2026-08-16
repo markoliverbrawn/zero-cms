@@ -21,41 +21,8 @@ use Zero\Support\Str;
     <input type="hidden" name="csrf" value="<?php echo Str::escape($csrf ?? ''); ?>">
 
     <?php foreach ($schema as $key => $fieldConfig): ?>
-      <?php
-        $type = $fieldConfig['type'] ?? 'text';
-        $label = $fieldConfig['label'] ?? \ucwords(\str_replace('_', ' ', $key));
-        $value = $values[$key] ?? ($fieldConfig['default'] ?? '');
-        $required = !empty($fieldConfig['required']);
-        $helperText = $fieldConfig['helper_text'] ?? ($fieldConfig['description'] ?? '');
-      ?>
       <div class="form-field-wrapper field-width-<?php echo Str::escape($fieldConfig['width'] ?? 'full'); ?>">
-        <?php if ($type === 'checkbox'): ?>
-          <label class="settings-checkbox-label">
-            <input type="checkbox" name="<?php echo Str::escape($key); ?>" value="1" <?php echo !empty($value) ? 'checked' : ''; ?>>
-            <?php echo Str::escape($label); ?>
-          </label>
-        <?php else: ?>
-          <label><?php echo Str::escape($label); ?></label>
-          <?php if ($type === 'select'): ?>
-            <select name="<?php echo Str::escape($key); ?>" <?php echo $required ? 'required' : ''; ?>>
-              <?php foreach (($fieldConfig['options'] ?? []) as $optionVal => $optionLabel): ?>
-                <option value="<?php echo Str::escape((string)$optionVal); ?>" <?php echo (string)$optionVal === (string)$value ? 'selected' : ''; ?>>
-                  <?php echo Str::escape($optionLabel); ?>
-                </option>
-              <?php endforeach; ?>
-            </select>
-          <?php elseif ($type === 'textarea'): ?>
-            <textarea name="<?php echo Str::escape($key); ?>" <?php echo $required ? 'required' : ''; ?>><?php echo Str::escape((string)$value); ?></textarea>
-          <?php elseif ($type === 'number'): ?>
-            <input type="number" step="any" name="<?php echo Str::escape($key); ?>" value="<?php echo Str::escape((string)$value); ?>" <?php echo isset($fieldConfig['min']) ? 'min="' . Str::escape((string)$fieldConfig['min']) . '"' : ''; ?> <?php echo isset($fieldConfig['max']) ? 'max="' . Str::escape((string)$fieldConfig['max']) . '"' : ''; ?> <?php echo $required ? 'required' : ''; ?>>
-          <?php else: ?>
-            <input type="text" name="<?php echo Str::escape($key); ?>" value="<?php echo Str::escape((string)$value); ?>" <?php echo $required ? 'required' : ''; ?>>
-          <?php endif; ?>
-        <?php endif; ?>
-
-        <?php if (!empty($helperText)): ?>
-          <small class="field-help-text"><?php echo Str::escape($helperText); ?></small>
-        <?php endif; ?>
+        <?php echo App::makeFormField($fieldConfig['type'] ?? 'text', $key, $fieldConfig + ['value' => $values[$key] ?? ($fieldConfig['default'] ?? '')])->render(); ?>
       </div>
     <?php endforeach; ?>
 
