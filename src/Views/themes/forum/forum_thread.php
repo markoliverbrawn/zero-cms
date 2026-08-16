@@ -1,6 +1,7 @@
 <?php
 // src/Views/themes/forum/forum_thread.php
 
+use Zero\Core\App;
 use Zero\Modules\Forum\Models\ForumPost;
 use Zero\Support\Security;
 use Zero\Support\Str;
@@ -146,7 +147,13 @@ if (!empty($replyParentId)) {
                     </div>
 
                     <div class="form-group form-group-editor">
-                        <textarea name="content" rows="6" placeholder="Write your reply here..." required><?php echo Str::escape($replyQuickContentDraft ?? ''); ?></textarea>
+                        <?php echo App::makeFormField('textarea', 'content', [
+                            'value' => $replyQuickContentDraft ?? '',
+                            'required' => true,
+                            'attributes' => ['rows' => 6, 'placeholder' => 'Write your reply here...'],
+                            'showLabel' => false,
+                            'guessHelperTextKey' => false,
+                        ])->render(); ?>
                     </div>
                     
                     <button type="submit" class="btn-submit">Submit Reply</button>
@@ -180,7 +187,13 @@ if (!empty($replyParentId)) {
                 </div>
 
                 <div class="form-group form-group-editor">
-                    <textarea name="content" rows="5" placeholder="Write your nested response..." required><?php echo Str::escape($replyContentDraft ?? ''); ?></textarea>
+                    <?php echo App::makeFormField('textarea', 'content', [
+                        'value' => $replyContentDraft ?? '',
+                        'required' => true,
+                        'attributes' => ['rows' => 5, 'placeholder' => 'Write your nested response...'],
+                        'showLabel' => false,
+                        'guessHelperTextKey' => false,
+                    ])->render(); ?>
                 </div>
                 
                 <button type="submit" class="btn-submit">Post Nested Reply</button>

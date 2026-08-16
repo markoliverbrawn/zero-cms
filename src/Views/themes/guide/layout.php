@@ -59,7 +59,13 @@ $isHomepage = (isset($post) && property_exists($post, 'slug') && $post->slug ===
         <div style="display: flex; align-items: center; gap: 24px;">
             <!-- Search bar -->
             <form method="get" action="/search" class="nav-search-form">
-                <input type="text" name="q" placeholder="Search docs..." class="nav-search-input" value="<?php echo Str::escape($_GET['q'] ?? ''); ?>" required>
+                <?php echo App::makeFormField('text', 'q', [
+                    'value' => $_GET['q'] ?? '',
+                    'required' => true,
+                    'attributes' => ['class' => 'nav-search-input', 'placeholder' => 'Search docs...'],
+                    'showLabel' => false,
+                    'guessHelperTextKey' => false,
+                ])->render(); ?>
                 <span class="material-symbols-outlined search-icon">search</span>
             </form>
             
@@ -140,7 +146,13 @@ $isHomepage = (isset($post) && property_exists($post, 'slug') && $post->slug ===
         <aside class="docs-sidebar">
             <!-- Search Widget (Mobile fallback) -->
             <form method="get" action="/search" class="mobile-search-form">
-                <input type="text" name="q" placeholder="Search..." class="nav-search-input" value="<?php echo Str::escape($_GET['q'] ?? ''); ?>" required>
+                <?php echo App::makeFormField('text', 'q', [
+                    'value' => $_GET['q'] ?? '',
+                    'required' => true,
+                    'attributes' => ['class' => 'nav-search-input', 'placeholder' => 'Search...'],
+                    'showLabel' => false,
+                    'guessHelperTextKey' => false,
+                ])->render(); ?>
                 <span class="material-symbols-outlined search-icon">search</span>
             </form>
 

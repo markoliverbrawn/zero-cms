@@ -61,7 +61,12 @@ use Zero\Support\I18n;
 
   <div class="list-actions-bar">
     <form method="get" action="/admin/list/<?php echo Str::escape($modelName ?? ''); ?>" class="search-form">
-      <input type="text" name="q" placeholder="Search..." value="<?php echo Str::escape($q ?? ''); ?>" class="admin-search-input" />
+      <?php echo App::makeFormField('text', 'q', [
+          'value' => $q ?? '',
+          'attributes' => ['class' => 'admin-search-input', 'placeholder' => 'Search...'],
+          'showLabel' => false,
+          'guessHelperTextKey' => false,
+      ])->render(); ?>
       <input type="hidden" name="status" value="<?php echo Str::escape($status ?? 'active'); ?>" />
       <button type="submit">Search</button>
     </form>

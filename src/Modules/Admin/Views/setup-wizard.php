@@ -1,6 +1,7 @@
 <?php
 // src/Modules/Admin/Views/setup-wizard.php
 
+use Zero\Core\App;
 use Zero\Support\Str;
 ?>
 <!DOCTYPE html>
@@ -219,25 +220,47 @@ use Zero\Support\Str;
             <div class="form-grid">
                 <div class="form-group">
                     <label for="username">Username</label>
-                    <input type="text" id="username" name="username" value="<?php echo Str::escape($inputs['username'] ?? ''); ?>" required autocomplete="off">
+                    <?php echo App::makeFormField('text', 'username', [
+                        'value' => $inputs['username'] ?? '',
+                        'required' => true,
+                        'attributes' => ['id' => 'username', 'autocomplete' => 'off'],
+                        'showLabel' => false,
+                        'guessHelperTextKey' => false,
+                    ])->render(); ?>
                     <span class="help-text">Unique name for back-office authentication.</span>
                 </div>
-                
+
                 <div class="form-group">
                     <label for="email">Email Address</label>
-                    <input type="email" id="email" name="email" value="<?php echo Str::escape($inputs['email'] ?? ''); ?>" required autocomplete="off">
+                    <?php echo App::makeFormField('email', 'email', [
+                        'value' => $inputs['email'] ?? '',
+                        'required' => true,
+                        'attributes' => ['id' => 'email', 'autocomplete' => 'off'],
+                        'showLabel' => false,
+                        'guessHelperTextKey' => false,
+                    ])->render(); ?>
                     <span class="help-text">Used for account recovery and SMTP logs.</span>
                 </div>
 
                 <div class="form-group">
                     <label for="password">Password</label>
-                    <input type="password" id="password" name="password" required minlength="8">
+                    <?php echo App::makeFormField('password', 'password', [
+                        'required' => true,
+                        'attributes' => ['id' => 'password', 'minlength' => 8],
+                        'showLabel' => false,
+                        'guessHelperTextKey' => false,
+                    ])->render(); ?>
                     <span class="help-text">At least 8 characters.</span>
                 </div>
 
                 <div class="form-group">
                     <label for="password_confirmation">Confirm Password</label>
-                    <input type="password" id="password_confirmation" name="password_confirmation" required minlength="8">
+                    <?php echo App::makeFormField('password', 'password_confirmation', [
+                        'required' => true,
+                        'attributes' => ['id' => 'password_confirmation', 'minlength' => 8],
+                        'showLabel' => false,
+                        'guessHelperTextKey' => false,
+                    ])->render(); ?>
                     <span class="help-text">Re-enter your admin password.</span>
                 </div>
             </div>
@@ -247,45 +270,66 @@ use Zero\Support\Str;
             <div class="form-grid">
                 <div class="form-group grid-span-2">
                     <label for="site_name">Site Title</label>
-                    <input type="text" id="site_name" name="site_name" value="<?php echo Str::escape($inputs['site_name'] ?? 'Zero CMS Portal'); ?>" required autocomplete="off">
+                    <?php echo App::makeFormField('text', 'site_name', [
+                        'value' => $inputs['site_name'] ?? 'Zero CMS Portal',
+                        'required' => true,
+                        'attributes' => ['id' => 'site_name', 'autocomplete' => 'off'],
+                        'showLabel' => false,
+                        'guessHelperTextKey' => false,
+                    ])->render(); ?>
                     <span class="help-text">The display name of your main tenant website.</span>
                 </div>
 
                 <div class="form-group">
                     <label for="site_domain">Primary Domain Name</label>
-                    <input type="text" id="site_domain" name="site_domain" value="<?php echo Str::escape($inputs['site_domain'] ?? 'localhost'); ?>" required autocomplete="off">
+                    <?php echo App::makeFormField('text', 'site_domain', [
+                        'value' => $inputs['site_domain'] ?? 'localhost',
+                        'required' => true,
+                        'attributes' => ['id' => 'site_domain', 'autocomplete' => 'off'],
+                        'showLabel' => false,
+                        'guessHelperTextKey' => false,
+                    ])->render(); ?>
                     <span class="help-text">e.g. "localhost", "d6laptop.zero" or "myportal.local"</span>
                 </div>
 
                 <div class="form-group">
                     <label for="site_theme">Active Layout Theme</label>
-                    <select id="site_theme" name="site_theme">
-                        <option value="default" <?php echo $inputs['site_theme'] === 'default' ? 'selected' : ''; ?>>Default Theme</option>
-                        <option value="guide" <?php echo $inputs['site_theme'] === 'guide' ? 'selected' : ''; ?>>Developer Guide Theme</option>
-                        <option value="kitchensink" <?php echo $inputs['site_theme'] === 'kitchensink' ? 'selected' : ''; ?>>Kitchen Sink Showroom</option>
-                    </select>
+                    <?php echo App::makeFormField('select', 'site_theme', [
+                        'value' => $inputs['site_theme'],
+                        'options' => ['default' => 'Default Theme', 'guide' => 'Developer Guide Theme', 'kitchensink' => 'Kitchen Sink Showroom'],
+                        'attributes' => ['id' => 'site_theme'],
+                        'showLabel' => false,
+                        'guessHelperTextKey' => false,
+                    ])->render(); ?>
                     <span class="help-text">Governs view templates and stylesheets.</span>
                 </div>
 
                 <div class="form-group">
                     <label for="site_timezone">Site Timezone</label>
-                    <select id="site_timezone" name="site_timezone">
-                        <option value="Pacific/Auckland" <?php echo $inputs['site_timezone'] === 'Pacific/Auckland' ? 'selected' : ''; ?>>Auckland (UTC+12)</option>
-                        <option value="UTC" <?php echo $inputs['site_timezone'] === 'UTC' ? 'selected' : ''; ?>>Coordinated Universal Time (UTC)</option>
-                        <option value="Europe/London" <?php echo $inputs['site_timezone'] === 'Europe/London' ? 'selected' : ''; ?>>London (GMT/BST)</option>
-                        <option value="America/New_York" <?php echo $inputs['site_timezone'] === 'America/New_York' ? 'selected' : ''; ?>>New York (EST/EDT)</option>
-                    </select>
+                    <?php echo App::makeFormField('select', 'site_timezone', [
+                        'value' => $inputs['site_timezone'],
+                        'options' => [
+                            'Pacific/Auckland' => 'Auckland (UTC+12)',
+                            'UTC' => 'Coordinated Universal Time (UTC)',
+                            'Europe/London' => 'London (GMT/BST)',
+                            'America/New_York' => 'New York (EST/EDT)',
+                        ],
+                        'attributes' => ['id' => 'site_timezone'],
+                        'showLabel' => false,
+                        'guessHelperTextKey' => false,
+                    ])->render(); ?>
                     <span class="help-text">Determines canonical audit and content timestamps.</span>
                 </div>
 
                 <div class="form-group">
                     <label for="site_language">Default Language</label>
-                    <select id="site_language" name="site_language">
-                        <option value="en" <?php echo $inputs['site_language'] === 'en' ? 'selected' : ''; ?>>English (EN)</option>
-                        <option value="es" <?php echo $inputs['site_language'] === 'es' ? 'selected' : ''; ?>>Español (ES)</option>
-                        <option value="hr" <?php echo $inputs['site_language'] === 'hr' ? 'selected' : ''; ?>>Hrvatski (HR)</option>
-                        <option value="mi" <?php echo $inputs['site_language'] === 'mi' ? 'selected' : ''; ?>>Māori (MI)</option>
-                    </select>
+                    <?php echo App::makeFormField('select', 'site_language', [
+                        'value' => $inputs['site_language'],
+                        'options' => ['en' => 'English (EN)', 'es' => 'Español (ES)', 'hr' => 'Hrvatski (HR)', 'mi' => 'Māori (MI)'],
+                        'attributes' => ['id' => 'site_language'],
+                        'showLabel' => false,
+                        'guessHelperTextKey' => false,
+                    ])->render(); ?>
                     <span class="help-text">Sets default fallback localized text mappings.</span>
                 </div>
             </div>

@@ -18,6 +18,7 @@ use Zero\Support\Forms\Checkbox;
 use Zero\Support\Forms\CheckboxGroup;
 use Zero\Support\Forms\DateTimeInput;
 use Zero\Support\Forms\EmailInput;
+use Zero\Support\Forms\FileInput;
 use Zero\Support\Forms\GalleryPickerField;
 use Zero\Support\Forms\Hidden;
 use Zero\Support\Forms\ImagePickerField;
@@ -80,6 +81,7 @@ trait ManagesFormFields
         self::registerFormFieldType('checkbox_group', CheckboxGroup::class);
         self::registerFormFieldType('datetime', DateTimeInput::class);
         self::registerFormFieldType('email', EmailInput::class);
+        self::registerFormFieldType('file', FileInput::class);
         self::registerFormFieldType('gallery_picker', GalleryPickerField::class);
         self::registerFormFieldType('hidden', Hidden::class);
         self::registerFormFieldType('image', ImagePickerField::class);

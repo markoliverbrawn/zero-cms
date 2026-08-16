@@ -9,6 +9,7 @@ use Zero\Support\Forms\Checkbox;
 use Zero\Support\Forms\CheckboxGroup;
 use Zero\Support\Forms\DateTimeInput;
 use Zero\Support\Forms\EmailInput;
+use Zero\Support\Forms\FileInput;
 use Zero\Support\Forms\Hidden;
 use Zero\Support\Forms\ModulesGridField;
 use Zero\Support\Forms\NumberInput;
@@ -16,6 +17,7 @@ use Zero\Support\Forms\PasswordInput;
 use Zero\Support\Forms\RadioGroup;
 use Zero\Support\Forms\ReadonlyField;
 use Zero\Support\Forms\Select;
+use Zero\Support\Forms\TelInput;
 use Zero\Support\Forms\Textarea;
 use Zero\Support\Forms\TextInput;
 
@@ -140,5 +142,36 @@ $modulesHtml = $modulesField->render();
 assert_test(\strpos($modulesHtml, 'admin-modules-container') !== false, "ModulesGridField renders the module toggle grid");
 assert_test(\strpos($modulesHtml, 'value="admin"') === false, "ModulesGridField excludes the 'admin' system module from the toggle list");
 assert_test($modulesField->castSubmittedValue(['enabled_modules' => ['blog', 'shop']]) === ['blog', 'shop'], "ModulesGridField::castSubmittedValue() returns the submitted array unchanged");
+
+// 10. TelInput and FileInput
+echo "Testing TelInput and FileInput...\n";
+$tel = new TelInput('phone', ['label' => 'Phone']);
+assert_test(\strpos($tel->render(), 'type="tel"') !== false, "TelInput renders type=\"tel\"");
+
+$file = new FileInput('upload', ['label' => 'Upload']);
+$fileHtml = $file->render();
+assert_test(\strpos($fileHtml, 'type="file"') !== false, "FileInput renders type=\"file\"");
+assert_test($file->castSubmittedValue(['upload' => 'anything']) === 'anything', "FileInput::castSubmittedValue() is a pass-through formality (real data lives in \$_FILES)");
+
+// 11. Select -- arbitrary attribute passthrough (id/class/style), merged with the fixed multiselect class
+echo "Testing Select attribute passthrough...\n";
+$plainSelect = new Select('sort', [
+    'label' => 'Sort',
+    'options' => ['newest' => 'Newest', 'oldest' => 'Oldest'],
+    'attributes' => ['id' => 'sort-select', 'class' => 'filter-select', 'data-testid' => 'sort'],
+]);
+$plainSelectHtml = $plainSelect->render();
+assert_test(\strpos($plainSelectHtml, 'id="sort-select"') !== false, "Select renders a caller-supplied id attribute");
+assert_test(\strpos($plainSelectHtml, 'class="filter-select"') !== false, "Select renders a caller-supplied class attribute (non-multiple, no fixed class to merge)");
+assert_test(\strpos($plainSelectHtml, 'data-testid="sort"') !== false, "Select renders arbitrary passthrough attributes (e.g. data-*)");
+
+$multiSelectWithClass = new Select('tags', [
+    'label' => 'Tags',
+    'options' => ['a' => 'A', 'b' => 'B'],
+    'multiple' => true,
+    'attributes' => ['class' => 'custom-class'],
+]);
+$multiClassHtml = $multiSelectWithClass->render();
+assert_test(\strpos($multiClassHtml, 'class="form-multiselect custom-class"') !== false, "Select merges a caller-supplied class with the fixed 'form-multiselect' class rather than overwriting it");
 
 echo "FormField component system tests completed.\n\n";

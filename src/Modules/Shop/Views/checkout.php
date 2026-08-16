@@ -1,6 +1,7 @@
 <?php
 // src/Modules/Shop/Views/checkout.php
 
+use Zero\Core\App;
 use Zero\Support\Str;
 
 $qualifiesForFreeShipping = $subtotal >= $freeShippingThreshold;
@@ -25,19 +26,34 @@ $shippingCost = $qualifiesForFreeShipping ? 0 : $standardShippingCost;
         <!-- Full Name -->
         <div class="form-field">
             <label class="form-label">Full Name</label>
-            <input name="name" required placeholder="John Doe" class="form-input">
+            <?php echo App::makeFormField('text', 'name', [
+                'required' => true,
+                'attributes' => ['class' => 'form-input', 'placeholder' => 'John Doe'],
+                'showLabel' => false,
+                'guessHelperTextKey' => false,
+            ])->render(); ?>
         </div>
 
         <!-- Email Address -->
         <div class="form-field">
             <label class="form-label">Email Address</label>
-            <input name="email" type="email" required placeholder="john.doe@example.com" class="form-input">
+            <?php echo App::makeFormField('email', 'email', [
+                'required' => true,
+                'attributes' => ['class' => 'form-input', 'placeholder' => 'john.doe@example.com'],
+                'showLabel' => false,
+                'guessHelperTextKey' => false,
+            ])->render(); ?>
         </div>
 
         <!-- Shipping Address -->
         <div class="form-field">
             <label class="form-label">Shipping Address</label>
-            <textarea name="address" required rows="4" placeholder="123 Luxury Ave, Manhattan, NY 10001" class="form-textarea"></textarea>
+            <?php echo App::makeFormField('textarea', 'address', [
+                'required' => true,
+                'attributes' => ['rows' => 4, 'class' => 'form-textarea', 'placeholder' => '123 Luxury Ave, Manhattan, NY 10001'],
+                'showLabel' => false,
+                'guessHelperTextKey' => false,
+            ])->render(); ?>
         </div>
 
         <h3 class="checkout-section-title">Simulated Payment Info</h3>

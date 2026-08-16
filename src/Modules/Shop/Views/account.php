@@ -1,6 +1,7 @@
 <?php
 // src/Modules/Shop/Views/account.php
 
+use Zero\Core\App;
 use Zero\Support\Str;
 ?>
 <h2 class="shop-page-title">My Account Portal</h2>
@@ -32,11 +33,23 @@ use Zero\Support\Str;
 
                 <div class="form-field">
                     <label class="form-label">Username</label>
-                    <input name="username" value="<?php echo Str::escape($user->username); ?>" required class="form-input">
+                    <?php echo App::makeFormField('text', 'username', [
+                        'value' => $user->username,
+                        'required' => true,
+                        'attributes' => ['class' => 'form-input'],
+                        'showLabel' => false,
+                        'guessHelperTextKey' => false,
+                    ])->render(); ?>
                 </div>
                 <div class="form-field">
                     <label class="form-label">Email Address</label>
-                    <input name="email" type="email" value="<?php echo Str::escape($user->email); ?>" required class="form-input">
+                    <?php echo App::makeFormField('email', 'email', [
+                        'value' => $user->email,
+                        'required' => true,
+                        'attributes' => ['class' => 'form-input'],
+                        'showLabel' => false,
+                        'guessHelperTextKey' => false,
+                    ])->render(); ?>
                 </div>
 
                 <button type="submit" class="btn-luxe btn-wide">Save Changes</button>
@@ -90,15 +103,30 @@ use Zero\Support\Str;
 
                         <div class="form-field">
                             <label class="form-label">Address Label</label>
-                            <input name="label" required placeholder="Default Home / Studio Office" class="form-input">
+                            <?php echo App::makeFormField('text', 'label', [
+                                'required' => true,
+                                'attributes' => ['class' => 'form-input', 'placeholder' => 'Default Home / Studio Office'],
+                                'showLabel' => false,
+                                'guessHelperTextKey' => false,
+                            ])->render(); ?>
                         </div>
                         <div class="form-field">
                             <label class="form-label">Receiver Full Name</label>
-                            <input name="name" required placeholder="John Doe" class="form-input">
+                            <?php echo App::makeFormField('text', 'name', [
+                                'required' => true,
+                                'attributes' => ['class' => 'form-input', 'placeholder' => 'John Doe'],
+                                'showLabel' => false,
+                                'guessHelperTextKey' => false,
+                            ])->render(); ?>
                         </div>
                         <div class="form-field">
                             <label class="form-label">Shipping Address</label>
-                            <textarea name="address" required rows="3" placeholder="123 Luxury Ave, Manhattan, NY 10001" class="form-textarea"></textarea>
+                            <?php echo App::makeFormField('textarea', 'address', [
+                                'required' => true,
+                                'attributes' => ['rows' => 3, 'class' => 'form-textarea', 'placeholder' => '123 Luxury Ave, Manhattan, NY 10001'],
+                                'showLabel' => false,
+                                'guessHelperTextKey' => false,
+                            ])->render(); ?>
                         </div>
 
                         <button type="submit" class="btn-luxe btn-wide">Register Address</button>

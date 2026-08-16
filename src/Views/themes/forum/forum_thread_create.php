@@ -1,6 +1,7 @@
 <?php
 // src/Views/themes/forum/forum_thread_create.php
 
+use Zero\Core\App;
 use Zero\Support\Security;
 use Zero\Support\Str;
 
@@ -31,12 +32,24 @@ use Zero\Support\Str;
             
             <div class="form-group">
                 <label for="title">Thread Title</label>
-                <input type="text" name="title" id="title" placeholder="Enter a descriptive thread title..." value="<?php echo Str::escape($old_title ?? ''); ?>" required>
+                <?php echo App::makeFormField('text', 'title', [
+                    'value' => $old_title ?? '',
+                    'required' => true,
+                    'attributes' => ['id' => 'title', 'placeholder' => 'Enter a descriptive thread title...'],
+                    'showLabel' => false,
+                    'guessHelperTextKey' => false,
+                ])->render(); ?>
             </div>
 
             <div class="form-group">
                 <label for="content">Original Post Content</label>
-                <textarea name="content" id="content" rows="10" placeholder="Type your original topic content details here..." required><?php echo Str::escape($old_content ?? ''); ?></textarea>
+                <?php echo App::makeFormField('textarea', 'content', [
+                    'value' => $old_content ?? '',
+                    'required' => true,
+                    'attributes' => ['id' => 'content', 'rows' => 10, 'placeholder' => 'Type your original topic content details here...'],
+                    'showLabel' => false,
+                    'guessHelperTextKey' => false,
+                ])->render(); ?>
             </div>
 
             <button type="submit" class="btn-submit">Launch Thread</button>

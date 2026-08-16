@@ -73,16 +73,22 @@ class Select extends AbstractFormField
      */
     public function render(): string
     {
+        $isMultiple = $this->config['multiple'] ?? false;
+        $customClass = (string)($this->attributes['class'] ?? '');
+        $classAttr = \trim(($isMultiple ? 'form-multiselect' : '') . ' ' . $customClass);
+
         return Template::renderFile($this->getTemplatePath(), [
             'name' => $this->name,
             'label' => $this->label,
             'options' => $this->config['options'] ?? [],
-            'isMultiple' => $this->config['multiple'] ?? false,
+            'isMultiple' => $isMultiple,
             'selectedVals' => $this->resolveSelectedValues(),
             'required' => $this->required,
             'disabled' => $this->disabled,
             'helperText' => $this->helperText,
             'showLabel' => $this->showLabel,
+            'classAttr' => $classAttr,
+            'attributesHtml' => $this->renderAttributes(['class']),
         ]);
     }
 

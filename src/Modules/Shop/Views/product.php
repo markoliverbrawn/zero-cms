@@ -1,6 +1,7 @@
 <?php
 // src/Modules/Shop/Views/product.php
 
+use Zero\Core\App;
 use Zero\Support\Security;
 use Zero\Support\Str;
 ?>
@@ -96,7 +97,12 @@ use Zero\Support\Str;
             <div class="qty-add-row">
                 <div class="qty-picker">
                     <button type="button" id="qty-minus" class="qty-btn">-</button>
-                    <input id="qty-input" name="quantity" value="1" readonly class="qty-val">
+                    <?php echo App::makeFormField('text', 'quantity', [
+                        'value' => '1',
+                        'attributes' => ['id' => 'qty-input', 'class' => 'qty-val', 'readonly' => 'readonly'],
+                        'showLabel' => false,
+                        'guessHelperTextKey' => false,
+                    ])->render(); ?>
                     <button type="button" id="qty-plus" class="qty-btn">+</button>
                 </div>
 

@@ -1,4 +1,5 @@
 <?php
+use Zero\Core\App;
 use Zero\Support\Str;
 // src/Views/themes/default/forgot.php
 ?>
@@ -22,7 +23,12 @@ use Zero\Support\Str;
             
             <div class="auth-form-group-password">
                 <label class="auth-label">Account Username</label>
-                <input name="username" required placeholder="minimalist_stylist" class="auth-input">
+                <?php echo App::makeFormField('text', 'username', [
+                    'required' => true,
+                    'attributes' => ['class' => 'auth-input', 'placeholder' => 'minimalist_stylist'],
+                    'showLabel' => false,
+                    'guessHelperTextKey' => false,
+                ])->render(); ?>
             </div>
             
             <button type="submit" class="auth-btn">Request Recovery Link</button>

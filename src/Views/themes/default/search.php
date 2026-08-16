@@ -20,7 +20,13 @@ use Zero\Support\Str;
     </div>
 
     <form method="get" action="/search" class="search-form-inline">
-        <input type="text" name="q" placeholder="Search the site..." value="<?php echo Str::escape($q ?? ''); ?>" required>
+        <?php echo App::makeFormField('text', 'q', [
+            'value' => $q ?? '',
+            'required' => true,
+            'attributes' => ['placeholder' => 'Search the site...'],
+            'showLabel' => false,
+            'guessHelperTextKey' => false,
+        ])->render(); ?>
         <button type="submit">Search</button>
     </form>
 

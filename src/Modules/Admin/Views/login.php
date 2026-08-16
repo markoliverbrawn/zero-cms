@@ -1,6 +1,7 @@
 <?php
 // src/Modules/Admin/Views/login.php
 
+use Zero\Core\App;
 use Zero\Core\Env;
 use Zero\Support\Security;
 use Zero\Support\Str;
@@ -70,12 +71,22 @@ if ($googleEnabled) {
     
     <div class="auth-form-group">
       <label for="username">Username</label>
-      <input type="text" id="username" name="username" placeholder="Enter username" required autocomplete="username">
+      <?php echo App::makeFormField('text', 'username', [
+          'required' => true,
+          'attributes' => ['id' => 'username', 'placeholder' => 'Enter username', 'autocomplete' => 'username'],
+          'showLabel' => false,
+          'guessHelperTextKey' => false,
+      ])->render(); ?>
     </div>
-    
+
     <div class="auth-form-group">
       <label for="password">Password</label>
-      <input type="password" id="password" name="password" placeholder="Enter password" required autocomplete="current-password">
+      <?php echo App::makeFormField('password', 'password', [
+          'required' => true,
+          'attributes' => ['id' => 'password', 'placeholder' => 'Enter password', 'autocomplete' => 'current-password'],
+          'showLabel' => false,
+          'guessHelperTextKey' => false,
+      ])->render(); ?>
     </div>
     
     <button class="auth-btn-primary" type="submit">Login</button>

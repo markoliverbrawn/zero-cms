@@ -58,7 +58,13 @@ $createdAt = $file['created_at'] ?? '';
         
         <div class="form-group">
           <label for="title-input">Asset Title</label>
-          <input type="text" name="title" id="title-input" value="<?php echo Str::escape($titleValue); ?>" placeholder="Enter a descriptive title for this file..." required>
+          <?php echo App::makeFormField('text', 'title', [
+              'value' => $titleValue,
+              'required' => true,
+              'attributes' => ['id' => 'title-input', 'placeholder' => 'Enter a descriptive title for this file...'],
+              'showLabel' => false,
+              'guessHelperTextKey' => false,
+          ])->render(); ?>
           <span class="help-text">Used for accessibility alternative descriptions and back-office search indexing.</span>
         </div>
 
@@ -66,12 +72,28 @@ $createdAt = $file['created_at'] ?? '';
           <div class="form-group-row">
             <div class="form-group half">
               <label for="focus-x-input">Crop Focus X (%)</label>
-              <input type="number" name="focus_x" id="focus-x-input" min="0" max="100" value="<?php echo Str::escape($file['focus_x'] ?? 50); ?>" required>
+              <?php echo App::makeFormField('number', 'focus_x', [
+                  'value' => $file['focus_x'] ?? 50,
+                  'required' => true,
+                  'min' => 0,
+                  'max' => 100,
+                  'attributes' => ['id' => 'focus-x-input'],
+                  'showLabel' => false,
+                  'guessHelperTextKey' => false,
+              ])->render(); ?>
               <span class="help-text">Side-to-side alignment focusing.</span>
             </div>
             <div class="form-group half">
               <label for="focus-y-input">Crop Focus Y (%)</label>
-              <input type="number" name="focus_y" id="focus-y-input" min="0" max="100" value="<?php echo Str::escape($file['focus_y'] ?? 50); ?>" required>
+              <?php echo App::makeFormField('number', 'focus_y', [
+                  'value' => $file['focus_y'] ?? 50,
+                  'required' => true,
+                  'min' => 0,
+                  'max' => 100,
+                  'attributes' => ['id' => 'focus-y-input'],
+                  'showLabel' => false,
+                  'guessHelperTextKey' => false,
+              ])->render(); ?>
               <span class="help-text">Top-to-bottom alignment focusing.</span>
             </div>
           </div>
@@ -115,7 +137,11 @@ $createdAt = $file['created_at'] ?? '';
               </svg>
               <strong>Choose a new file to replace this asset</strong>
               <span>Select another file from your computer (optional)</span>
-              <input type="file" name="file" id="reupload-file-input">
+              <?php echo App::makeFormField('file', 'file', [
+                  'attributes' => ['id' => 'reupload-file-input'],
+                  'showLabel' => false,
+                  'guessHelperTextKey' => false,
+              ])->render(); ?>
             </label>
             <div id="selected-file-notice" class="file-notice" style="display: none;"></div>
           </div>

@@ -1,4 +1,5 @@
 <?php
+use Zero\Core\App;
 use Zero\Support\Str;
 // src/Views/themes/default/reset.php
 ?>
@@ -17,12 +18,22 @@ use Zero\Support\Str;
             
             <div class="auth-form-group">
                 <label class="auth-label">New Password</label>
-                <input name="password" type="password" required placeholder="••••••••" class="auth-input">
+                <?php echo App::makeFormField('password', 'password', [
+                    'required' => true,
+                    'attributes' => ['class' => 'auth-input', 'placeholder' => '••••••••'],
+                    'showLabel' => false,
+                    'guessHelperTextKey' => false,
+                ])->render(); ?>
             </div>
-            
+
             <div class="auth-form-group-password">
                 <label class="auth-label">Confirm New Password</label>
-                <input name="confirm_password" type="password" required placeholder="••••••••" class="auth-input">
+                <?php echo App::makeFormField('password', 'confirm_password', [
+                    'required' => true,
+                    'attributes' => ['class' => 'auth-input', 'placeholder' => '••••••••'],
+                    'showLabel' => false,
+                    'guessHelperTextKey' => false,
+                ])->render(); ?>
             </div>
             
             <button type="submit" class="auth-btn">Save &amp; Sign In</button>

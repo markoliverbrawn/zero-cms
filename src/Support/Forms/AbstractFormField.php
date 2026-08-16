@@ -84,12 +84,17 @@ abstract class AbstractFormField implements FormField
     /**
      * Build an escaped HTML attribute string from the passthrough $attributes array.
      *
+     * @param string[] $exclude Attribute names to skip (e.g. 'class', when a subclass merges it
+     * with a fixed class of its own rather than dumping it verbatim).
      * @return string
      */
-    protected function renderAttributes(): string
+    protected function renderAttributes(array $exclude = []): string
     {
         $parts = [];
         foreach ($this->attributes as $attr => $val) {
+            if (\in_array($attr, $exclude, true)) {
+                continue;
+            }
             $parts[] = Str::escape((string)$attr) . '="' . Str::escape((string)$val) . '"';
         }
         return \implode(' ', $parts);

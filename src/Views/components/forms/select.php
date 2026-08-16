@@ -8,10 +8,11 @@ $isSequential = (\array_keys($options) === \range(0, \count($options) - 1));
 <?php if ($showLabel): ?><label><?= Str::escape($label) ?></label><?php endif; ?>
 <select
     name="<?= Str::escape($name) ?><?= $isMultiple ? '[]' : '' ?>"
-    class="<?= $isMultiple ? 'form-multiselect' : '' ?>"
+    class="<?= Str::escape($classAttr) ?>"
     <?= $isMultiple ? 'multiple' : '' ?>
     <?= $required ? 'required' : '' ?>
     <?= $disabled ? 'disabled' : '' ?>
+    <?= $attributesHtml ?>
 >
     <?php foreach ($options as $key => $optionLabel): ?>
         <?php $optionVal = $isSequential ? $optionLabel : $key; ?>

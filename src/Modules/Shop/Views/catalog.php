@@ -38,27 +38,44 @@ use Zero\Support\Str;
                 <!-- Search -->
                 <div class="form-field">
                     <label class="form-label">Search</label>
-                    <input name="search" value="<?php echo Str::escape($search); ?>" placeholder="Keywords..." class="form-input">
+                    <?php echo App::makeFormField('text', 'search', [
+                        'value' => $search,
+                        'attributes' => ['class' => 'form-input', 'placeholder' => 'Keywords...'],
+                        'showLabel' => false,
+                        'guessHelperTextKey' => false,
+                    ])->render(); ?>
                 </div>
 
                 <!-- Price bounds -->
                 <div class="filter-form-group">
                     <label class="form-label">Price Range</label>
                     <div class="filter-price-range">
-                        <input name="min_price" value="<?php echo $minPrice > 0 ? $minPrice : ''; ?>" type="number" placeholder="Min" class="filter-input-text">
+                        <?php echo App::makeFormField('number', 'min_price', [
+                            'value' => $minPrice > 0 ? $minPrice : '',
+                            'attributes' => ['class' => 'filter-input-text', 'placeholder' => 'Min'],
+                            'showLabel' => false,
+                            'guessHelperTextKey' => false,
+                        ])->render(); ?>
                         <span class="price-range-sep">&mdash;</span>
-                        <input name="max_price" value="<?php echo $maxPrice > 0 ? $maxPrice : ''; ?>" type="number" placeholder="Max" class="filter-input-text">
+                        <?php echo App::makeFormField('number', 'max_price', [
+                            'value' => $maxPrice > 0 ? $maxPrice : '',
+                            'attributes' => ['class' => 'filter-input-text', 'placeholder' => 'Max'],
+                            'showLabel' => false,
+                            'guessHelperTextKey' => false,
+                        ])->render(); ?>
                     </div>
                 </div>
 
                 <!-- Sorting -->
                 <div class="filter-form-group">
                     <label class="form-label">Sort By</label>
-                    <select name="sort" class="filter-select">
-                        <option value="newest" <?php echo $sort === 'newest' ? 'selected' : ''; ?>>Newest Arrivals</option>
-                        <option value="price_asc" <?php echo $sort === 'price_asc' ? 'selected' : ''; ?>>Price: Low to High</option>
-                        <option value="price_desc" <?php echo $sort === 'price_desc' ? 'selected' : ''; ?>>Price: High to Low</option>
-                    </select>
+                    <?php echo App::makeFormField('select', 'sort', [
+                        'value' => $sort,
+                        'options' => ['newest' => 'Newest Arrivals', 'price_asc' => 'Price: Low to High', 'price_desc' => 'Price: High to Low'],
+                        'attributes' => ['class' => 'filter-select'],
+                        'showLabel' => false,
+                        'guessHelperTextKey' => false,
+                    ])->render(); ?>
                 </div>
 
                 <div class="filter-actions">

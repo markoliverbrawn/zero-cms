@@ -1,6 +1,7 @@
 <?php
 // src/Modules/Shop/Views/cart.php
 
+use Zero\Core\App;
 use Zero\Support\Str;
 
 // Apply promo code discount if entered in session
@@ -104,7 +105,12 @@ $shippingCost = $qualifiesForFreeShipping ? 0 : $standardShippingCost;
 
             <!-- Coupon Code Entry Form -->
             <form method="get" action="/shop/cart" class="coupon-entry-form">
-                <input name="coupon" value="<?php echo Str::escape($coupon); ?>" placeholder="Coupon Code" class="coupon-input">
+                <?php echo App::makeFormField('text', 'coupon', [
+                    'value' => $coupon,
+                    'attributes' => ['class' => 'coupon-input', 'placeholder' => 'Coupon Code'],
+                    'showLabel' => false,
+                    'guessHelperTextKey' => false,
+                ])->render(); ?>
                 <button type="submit" class="btn-apply-coupon">Apply</button>
             </form>
 
