@@ -36,8 +36,7 @@ class PurgeOldCommentsJob implements Job
             return;
         }
 
-        $site = App::getCurrentSite();
-        $retentionDays = $site ? (int)$site->getModuleSetting('blog', 'spam_retention_days', 7) : 7;
+        $retentionDays = (int)App::getModuleSetting('blog', 'spam_retention_days', 7);
         $cutoff = \gmdate('Y-m-d H:i:s', \strtotime("-{$retentionDays} days"));
 
         $pdo = DB::getPDO();

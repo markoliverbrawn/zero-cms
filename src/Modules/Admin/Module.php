@@ -128,6 +128,8 @@ class Module implements ModuleInterface
                 'label' => 'Password Reset Link Expiry (Minutes)',
                 'default' => 60,
                 'required' => true,
+                'min' => 1,
+                'max' => 1440,
                 'helper_text' => 'How long a password reset link remains valid after being requested.'
             ]
         ]);

@@ -36,8 +36,7 @@ class PurgeOldLogsJob implements Job
             return;
         }
 
-        $site = App::getCurrentSite();
-        $retentionDays = $site ? (int)$site->getModuleSetting('queue', 'audit_log_retention_days', 365) : 365;
+        $retentionDays = (int)App::getModuleSetting('queue', 'audit_log_retention_days', 365);
         $cutoff = \gmdate('Y-m-d H:i:s', \strtotime("-{$retentionDays} days"));
 
         $pdo = DB::getPDO();

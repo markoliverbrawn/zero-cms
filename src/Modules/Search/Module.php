@@ -91,6 +91,7 @@ class Module implements ModuleInterface
                 'label' => 'Search Results Per Page',
                 'default' => 10,
                 'required' => true,
+                'min' => 1,
                 'helper_text' => 'Number of results shown per page on the site search results screen.'
             ]
         ]);

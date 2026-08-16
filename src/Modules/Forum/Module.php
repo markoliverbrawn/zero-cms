@@ -122,6 +122,7 @@ class Module implements ModuleInterface
                 'label' => 'Reply Submission Rate Limit (Seconds)',
                 'default' => 5,
                 'required' => true,
+                'min' => 1,
                 'helper_text' => 'Minimum seconds between reply submissions per member, to prevent flood abuse.'
             ]
         ]);

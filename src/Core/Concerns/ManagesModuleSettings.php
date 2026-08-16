@@ -67,4 +67,20 @@ trait ManagesModuleSettings
     {
         return self::$moduleSettingsSchemas;
     }
+
+    /**
+     * Convenience accessor for reading a single module setting value off the current site,
+     * for the common case where a caller only needs one value and has no other use for the
+     * Site object. Falls back to $default when there is no current site (e.g. CLI context).
+     *
+     * @param string $moduleId
+     * @param string $key
+     * @param mixed $default
+     * @return mixed
+     */
+    public static function getModuleSetting(string $moduleId, string $key, $default = null)
+    {
+        $site = self::getCurrentSite();
+        return $site ? $site->getModuleSetting($moduleId, $key, $default) : $default;
+    }
 }

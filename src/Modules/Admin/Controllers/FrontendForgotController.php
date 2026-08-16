@@ -79,10 +79,10 @@ class FrontendForgotController implements Controller
                 $link = $scheme . '://' . $host . '/reset?token=' . $token;
                 
                 // Construct beautiful recovery email template
-                $subject = "Reset Your Password - " . App::getCurrentSite()->name;
+                $subject = "Reset Your Password - " . $site->name;
                 $htmlBody = Template::renderFile(APPLICATION_ROOT . '/src/Views/emails/forgot-password.php', [
                     'username' => $user['username'],
-                    'siteName' => App::getCurrentSite()->name,
+                    'siteName' => $site->name,
                     'link' => $link,
                     'expiryMinutes' => $expiryMinutes
                 ]);

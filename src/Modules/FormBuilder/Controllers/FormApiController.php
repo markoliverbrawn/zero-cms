@@ -62,8 +62,7 @@ class FormApiController implements Controller
         }
 
         // DYNAMIC RATE LIMITER MIDDLEWARE: Prevent form submission flood abuse (site-configurable window)
-        $site = App::getCurrentSite();
-        $rateLimitSeconds = $site ? (int)$site->getModuleSetting('formbuilder', 'submission_rate_limit_seconds', 10) : 10;
+        $rateLimitSeconds = (int)App::getModuleSetting('formbuilder', 'submission_rate_limit_seconds', 10);
         App::applyRateLimitMiddleware('form_submission', $rateLimitSeconds);
 
         $siteId = App::getCurrentSiteId();

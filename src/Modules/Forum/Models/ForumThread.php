@@ -110,7 +110,7 @@ class ForumThread implements ModelInterface
                 COUNT(CASE WHEN forum_posts.parent_id IS NOT NULL THEN 1 END) AS replies_count
             FROM forum_threads
             LEFT JOIN users ON forum_threads.user_id = users.id
-            LEFT JOIN forum_posts ON forum_posts.thread_id = forum_threads.id AND forum_posts.deleted_at IS NULL
+            LEFT JOIN forum_posts ON forum_posts.thread_id = forum_threads.id AND forum_posts.status = 'approved' AND forum_posts.deleted_at IS NULL
             WHERE forum_threads.board_id = ?
               AND forum_threads.site_id = ?
               AND forum_threads.deleted_at IS NULL
@@ -200,7 +200,7 @@ class ForumThread implements ModelInterface
     public function getPosts(): array
     {
         $postsData = DB::query(
-            "SELECT * FROM forum_posts WHERE thread_id = ? AND deleted_at IS NULL ORDER BY created_at ASC",
+            "SELECT * FROM forum_posts WHERE thread_id = ? AND status = 'approved' AND deleted_at IS NULL ORDER BY created_at ASC",
             [$this->id]
         )->fetchAll();
 
@@ -242,7 +242,7 @@ class ForumThread implements ModelInterface
             return (int)$this->replies_count;
         }
         $cnt = DB::query(
-            "SELECT COUNT(*) FROM forum_posts WHERE thread_id = ? AND parent_id IS NOT NULL AND deleted_at IS NULL",
+            "SELECT COUNT(*) FROM forum_posts WHERE thread_id = ? AND parent_id IS NOT NULL AND status = 'approved' AND deleted_at IS NULL",
             [$this->id]
         )->fetchColumn();
         $this->replies_count = \intval($cnt);

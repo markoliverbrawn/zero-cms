@@ -73,7 +73,7 @@ class ForgotController implements Controller
                 $subject = "Reset Your Password - Zero CMS";
                 $htmlBody = Template::renderFile(APPLICATION_ROOT . '/src/Views/emails/forgot-password.php', [
                     'username' => $user['username'],
-                    'siteName' => App::getCurrentSite()->name,
+                    'siteName' => $site->name,
                     'link' => $link,
                     'expiryMinutes' => $expiryMinutes
                 ]);

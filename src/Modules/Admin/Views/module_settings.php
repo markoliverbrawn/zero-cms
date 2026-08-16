@@ -47,7 +47,7 @@ use Zero\Support\Str;
           <?php elseif ($type === 'textarea'): ?>
             <textarea name="<?php echo Str::escape($key); ?>" <?php echo $required ? 'required' : ''; ?>><?php echo Str::escape((string)$value); ?></textarea>
           <?php elseif ($type === 'number'): ?>
-            <input type="number" step="any" name="<?php echo Str::escape($key); ?>" value="<?php echo Str::escape((string)$value); ?>" <?php echo $required ? 'required' : ''; ?>>
+            <input type="number" step="any" name="<?php echo Str::escape($key); ?>" value="<?php echo Str::escape((string)$value); ?>" <?php echo isset($fieldConfig['min']) ? 'min="' . Str::escape((string)$fieldConfig['min']) . '"' : ''; ?> <?php echo isset($fieldConfig['max']) ? 'max="' . Str::escape((string)$fieldConfig['max']) . '"' : ''; ?> <?php echo $required ? 'required' : ''; ?>>
           <?php else: ?>
             <input type="text" name="<?php echo Str::escape($key); ?>" value="<?php echo Str::escape((string)$value); ?>" <?php echo $required ? 'required' : ''; ?>>
           <?php endif; ?>

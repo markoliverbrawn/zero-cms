@@ -102,8 +102,7 @@ class ThreadCreateController implements Controller
 
             // 2. Create the original post associated with the thread
             $postId = Security::uuidv7();
-            $site = App::getCurrentSite();
-            $defaultStatus = $site ? $site->getModuleSetting('forum', 'default_post_status', 'approved') : 'approved';
+            $defaultStatus = App::getModuleSetting('forum', 'default_post_status', 'approved');
             $post = new ForumPost([
                 'id' => $postId,
                 'site_id' => $siteId,

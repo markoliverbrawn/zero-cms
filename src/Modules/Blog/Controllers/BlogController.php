@@ -46,8 +46,7 @@ class BlogController implements Controller
 
         // Leverage the standard Paginates trait of Post model, using the site's configured
         // posts-per-page setting (default 6, visually spectacular for masonry grids)
-        $site = App::getCurrentSite();
-        $postsPerPage = $site ? (int)$site->getModuleSetting('blog', 'posts_per_page', 6) : 6;
+        $postsPerPage = (int)App::getModuleSetting('blog', 'posts_per_page', 6);
         $pagination = Post::paginate($currentPage, $postsPerPage);
 
         // Render the dedicated "blog" landing page view

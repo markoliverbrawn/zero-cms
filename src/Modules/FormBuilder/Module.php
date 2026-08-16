@@ -99,6 +99,7 @@ class Module implements ModuleInterface
                 'label' => 'Form Submission Rate Limit (Seconds)',
                 'default' => 10,
                 'required' => true,
+                'min' => 1,
                 'helper_text' => 'Minimum seconds between form submissions per visitor, to prevent flood abuse.'
             ]
         ]);

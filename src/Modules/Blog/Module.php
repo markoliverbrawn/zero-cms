@@ -113,6 +113,7 @@ class Module implements ModuleInterface
                 'label' => 'Spam/Rejected Comment Retention (Days)',
                 'default' => 7,
                 'required' => true,
+                'min' => 1,
                 'helper_text' => 'Rejected or spam-flagged comments older than this are permanently purged automatically.'
             ],
             'posts_per_page' => [
@@ -120,6 +121,7 @@ class Module implements ModuleInterface
                 'label' => 'Blog Posts Per Page',
                 'default' => 6,
                 'required' => true,
+                'min' => 1,
                 'helper_text' => 'Number of articles shown per page on the blog index.'
             ],
             'comment_rate_limit_seconds' => [
@@ -127,6 +129,7 @@ class Module implements ModuleInterface
                 'label' => 'Comment Submission Rate Limit (Seconds)',
                 'default' => 10,
                 'required' => true,
+                'min' => 1,
                 'helper_text' => 'Minimum seconds between comment submissions per visitor, to prevent flood abuse.'
             ]
         ]);

@@ -93,7 +93,19 @@ class ModuleSettingsController implements Controller
                 // Unchecked HTML checkboxes are simply absent from $_POST entirely.
                 $values[$key] = isset($_POST[$key]);
             } elseif ($type === 'number') {
-                $values[$key] = isset($_POST[$key]) && $_POST[$key] !== '' ? (float)$_POST[$key] : $default;
+                $value = isset($_POST[$key]) && $_POST[$key] !== '' ? (float)$_POST[$key] : $default;
+
+                // Clamp to the field's declared bounds so an unvalidated 0/negative/oversized
+                // submission can never reach a module in a range it never accounted for (e.g. a
+                // negative retention day count, or a zero rate-limit that silently disables it).
+                if ($value !== null && isset($fieldConfig['min']) && $value < $fieldConfig['min']) {
+                    $value = $fieldConfig['min'];
+                }
+                if ($value !== null && isset($fieldConfig['max']) && $value > $fieldConfig['max']) {
+                    $value = $fieldConfig['max'];
+                }
+
+                $values[$key] = $value;
             } elseif ($type === 'select' && !empty($fieldConfig['options'])) {
                 $posted = $_POST[$key] ?? $default;
                 $values[$key] = \array_key_exists($posted, $fieldConfig['options']) ? $posted : $default;

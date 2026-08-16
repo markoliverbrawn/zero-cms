@@ -96,6 +96,7 @@ class Module implements ModuleInterface
                 'label' => 'Audit Log Retention (Days)',
                 'default' => 365,
                 'required' => true,
+                'min' => 1,
                 'helper_text' => 'Audit log entries older than this are permanently purged automatically. Adjust to match your compliance/retention requirements.'
             ]
         ]);
