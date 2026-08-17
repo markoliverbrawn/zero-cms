@@ -24,12 +24,9 @@ $themePreset = $userPrefs['theme_preset'] ?? 'default';
 // Resolve active site theme favicon for Admin Console layout header
 $activeSite = App::getCurrentSite();
 $activeTheme = $activeSite ? ($activeSite->theme ?? 'default') : 'default';
-if ($activeTheme === 'default') {
-    $activeTheme = 'corporate';
-}
 $adminFavicon = '/assets/favicons/' . $activeTheme . '.svg';
 if (!file_exists(APPLICATION_ROOT . '/public' . $adminFavicon)) {
-    $adminFavicon = '/assets/favicons/corporate.svg';
+    $adminFavicon = '/assets/favicons/default.svg';
 }
 ?>
 <!doctype html>
@@ -72,233 +69,76 @@ if (!file_exists(APPLICATION_ROOT . '/public' . $adminFavicon)) {
     <?php if (!empty($session['user_id'])): ?>
     <?php 
     $site = App::getCurrentSite(); 
-    
-    $otherSites = [];
-    if (App::getCurrentUserRole() === 'super_admin') {
-        $allSites = Site::all();
-        $currentSiteId = App::getCurrentSiteId();
-        foreach ($allSites as $s) {
-            if ($s->id !== $currentSiteId) {
-                $otherSites[] = $s;
-            }
-        }
-    }
-    
-    // Evaluate active states server-side to prevent client-side layout rendering flashing
-    $isContentActive = isActiveLink('/posts', $currentUri) || 
-                       isActiveLink('/pages', $currentUri) || 
-                       isActiveLink('/files', $currentUri) || 
-                       isActiveLink('/comments', $currentUri);
-                       
-    $isSecurityActive = isActiveLink('/users', $currentUri) || isActiveLink('/audit_logs', $currentUri) || isActiveLink('/security_audits', $currentUri);
-    
-    $isShopActive = isActiveLink('/products', $currentUri) || 
-                    isActiveLink('/categories', $currentUri) || 
-                    isActiveLink('/productvariants', $currentUri) || 
-                    isActiveLink('/orders', $currentUri);
+    $sections = App::getAdminSidebarSections();
     ?>
     <aside>
         <ul class="sidebar-menu">
-            <li class="sidebar-item">
-                <a href="/admin/dashboard"<?php echo isActiveLink('/admin/dashboard', $currentUri); ?> title="<?php echo Str::escape(I18n::t('admin_dashboard')); ?>">
-                    <span class="icon-svg sidebar-link-icon"><?php echo App::svg('dashboard'); ?></span>
-                    <span class="sidebar-link-text"><?php echo I18n::t('admin_dashboard'); ?></span>
-                </a>
-            </li>
-            
-            <!-- SECTION 1: Content Management -->
-            <li class="sidebar-section<?php echo $isContentActive ? '' : ' collapsed'; ?>">
-                <button type="button" class="sidebar-section-toggle" title="<?php echo Str::escape(I18n::t('content_management')); ?>">
-                    <span class="icon-svg sidebar-section-icon"><?php echo App::svg('book-open'); ?></span>
-                    <span class="sidebar-section-title"><?php echo I18n::t('content_management'); ?></span>
-                    <span class="icon-svg sidebar-section-arrow">
-                        <?php echo App::svg('chevron-right'); ?>
-                    </span>
-                </button>
-                <ul class="sidebar-submenu no-transition">
-                    <?php if ($site && $site->isModuleEnabled('blog')): ?>
-                        <li>
-                            <a href="/admin/list/posts"<?php echo isActiveLink('/posts', $currentUri); ?> title="<?php echo Str::escape(I18n::t('manage_posts')); ?>">
-                                <span class="icon-svg sidebar-link-icon"><?php echo App::svg('edit-3'); ?></span>
-                                <span class="sidebar-link-text"><?php echo I18n::t('manage_posts'); ?></span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="/admin/list/comments"<?php echo isActiveLink('/comments', $currentUri); ?> title="Manage Comments">
-                                <span class="icon-svg sidebar-link-icon"><?php echo App::svg('message-square'); ?></span>
-                                <span class="sidebar-link-text">Manage Comments</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="/admin/list/submissions"<?php echo isActiveLink('/submissions', $currentUri); ?> title="Form Submissions">
-                                <span class="icon-svg sidebar-link-icon"><?php echo App::svg('clipboard'); ?></span>
-                                <span class="sidebar-link-text">Form Submissions</span>
-                            </a>
-                        </li>
-                    <?php endif; ?>
-                    <li>
-                        <a href="/admin/list/pages"<?php echo isActiveLink('/pages', $currentUri); ?> title="<?php echo Str::escape(I18n::t('manage_pages')); ?>">
-                            <span class="icon-svg sidebar-link-icon"><?php echo App::svg('file'); ?></span>
-                            <span class="sidebar-link-text"><?php echo I18n::t('manage_pages'); ?></span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="/admin/list/files"<?php echo isActiveLink('/files', $currentUri); ?> title="<?php echo Str::escape(I18n::t('media_library')); ?>">
-                            <span class="icon-svg sidebar-link-icon"><?php echo App::svg('image'); ?></span>
-                            <span class="sidebar-link-text"><?php echo I18n::t('media_library'); ?></span>
-                        </a>
-                    </li>
-                </ul>
-            </li>
-
-            <!-- SECTION 3: Shop Management -->
-            <?php if ($site && $site->isModuleEnabled('shop')): ?>
-            <li class="sidebar-section<?php echo $isShopActive ? '' : ' collapsed'; ?>">
-                <button type="button" class="sidebar-section-toggle" title="Shop Management">
-                    <span class="icon-svg sidebar-section-icon"><?php echo App::svg('shop'); ?></span>
-                    <span class="sidebar-section-title">Shop Management</span>
-                    <span class="icon-svg sidebar-section-arrow">
-                        <?php echo App::svg('chevron-right'); ?>
-                    </span>
-                </button>
-                <ul class="sidebar-submenu no-transition">
-                    <li>
-                        <a href="/admin/list/products"<?php echo isActiveLink('/products', $currentUri); ?> title="Manage Products">
-                            <span class="icon-svg sidebar-link-icon"><?php echo App::svg('package'); ?></span>
-                            <span class="sidebar-link-text">Manage Products</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="/admin/list/categories"<?php echo isActiveLink('/categories', $currentUri); ?> title="Manage Categories">
-                            <span class="icon-svg sidebar-link-icon"><?php echo App::svg('tag'); ?></span>
-                            <span class="sidebar-link-text">Manage Categories</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="/admin/list/productvariants"<?php echo isActiveLink('/productvariants', $currentUri); ?> title="Manage Variants">
-                            <span class="icon-svg sidebar-link-icon"><?php echo App::svg('git-branch'); ?></span>
-                            <span class="sidebar-link-text">Manage Variants</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="/admin/list/orders"<?php echo isActiveLink('/orders', $currentUri); ?> title="Manage Orders">
-                            <span class="icon-svg sidebar-link-icon"><?php echo App::svg('shopping-cart'); ?></span>
-                            <span class="sidebar-link-text">Manage Orders</span>
-                        </a>
-                    </li>
-                </ul>
-            </li>
-            <?php endif; ?>
-
-            <!-- SECTION 4: Forum Management -->
-            <?php if ($site && ($site->isModuleEnabled('forum') || App::getCurrentUserRole() === 'super_admin')): ?>
             <?php
-            $isForumActive = isActiveLink('/forum_boards', $currentUri) || 
-                             isActiveLink('/forum_threads', $currentUri) || 
-                             isActiveLink('/forum_posts', $currentUri);
-            ?>
-            <li class="sidebar-section<?php echo $isForumActive ? '' : ' collapsed'; ?>">
-                <button type="button" class="sidebar-section-toggle" title="Forum Management">
-                    <span class="icon-svg sidebar-section-icon"><?php echo App::svg('users'); ?></span>
-                    <span class="sidebar-section-title">Forum Management</span>
-                    <span class="icon-svg sidebar-section-arrow">
-                        <?php echo App::svg('chevron-right'); ?>
-                    </span>
-                </button>
-                <ul class="sidebar-submenu no-transition">
-                    <li>
-                        <a href="/admin/list/forum_boards"<?php echo isActiveLink('/forum_boards', $currentUri); ?> title="Manage Boards">
-                            <span class="icon-svg sidebar-link-icon"><?php echo App::svg('layout'); ?></span>
-                            <span class="sidebar-link-text">Manage Boards</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="/admin/list/forum_threads"<?php echo isActiveLink('/forum_threads', $currentUri); ?> title="Manage Threads">
-                            <span class="icon-svg sidebar-link-icon"><?php echo App::svg('message-square'); ?></span>
-                            <span class="sidebar-link-text">Manage Threads</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="/admin/list/forum_posts"<?php echo isActiveLink('/forum_posts', $currentUri); ?> title="Manage Posts">
-                            <span class="icon-svg sidebar-link-icon"><?php echo App::svg('message-circle'); ?></span>
-                            <span class="sidebar-link-text">Manage Posts</span>
-                        </a>
-                    </li>
-                </ul>
-            </li>
-            <?php endif; ?>
+            $renderedSystemHeader = false;
+            foreach ($sections as $sectionId => $section):
+                if (!App::isSidebarItemVisible($section, $site)) {
+                    continue;
+                }
 
-            <!-- SYSTEM SECTION -->
-            <?php if (App::getCurrentUserRole() === 'super_admin' || ($site && $site->isModuleEnabled('queue'))): ?>
-            <li class="sidebar-divider"></li>
-            <li class="sidebar-section-header">System</li>
+                $visibleLinks = [];
+                if (!empty($section['links'])) {
+                    foreach ($section['links'] as $link) {
+                        if (App::isSidebarItemVisible($link, $site)) {
+                            $visibleLinks[] = $link;
+                        }
+                    }
+                }
 
-            <?php if (App::getCurrentUserRole() === 'super_admin'): ?>
-                <li class="sidebar-item">
-                    <a href="/admin/list/sites"<?php echo isActiveLink('/sites', $currentUri); ?> title="Manage Sites">
-                        <span class="icon-svg sidebar-link-icon"><?php echo App::svg('home'); ?></span>
-                        <span class="sidebar-link-text">Manage Sites</span>
-                    </a>
-                </li>
-            <?php endif; ?>
+                if (empty($section['url']) && empty($visibleLinks)) {
+                    continue;
+                }
 
-            <!-- SECTION 2: Security -->
-            <?php if (App::getCurrentUserRole() === 'super_admin'): ?>
-            <li class="sidebar-section<?php echo $isSecurityActive ? '' : ' collapsed'; ?>">
-                <button type="button" class="sidebar-section-toggle" title="<?php echo Str::escape(I18n::t('security')); ?>">
-                    <span class="icon-svg sidebar-section-icon"><?php echo App::svg('shield'); ?></span>
-                    <span class="sidebar-section-title"><?php echo I18n::t('security'); ?></span>
-                    <span class="icon-svg sidebar-section-arrow">
-                        <?php echo App::svg('chevron-right'); ?>
-                    </span>
-                </button>
-                <ul class="sidebar-submenu no-transition">
-                    <li>
-                        <a href="/admin/list/users"<?php echo isActiveLink('/users', $currentUri); ?> title="<?php echo Str::escape(I18n::t('manage_users')); ?>">
-                            <span class="icon-svg sidebar-link-icon"><?php echo App::svg('user'); ?></span>
-                            <span class="sidebar-link-text"><?php echo I18n::t('manage_users'); ?></span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="/admin/list/audit_logs"<?php echo isActiveLink('/audit_logs', $currentUri); ?> title="Security Logs">
-                            <span class="icon-svg sidebar-link-icon"><?php echo App::svg('clock'); ?></span>
-                            <span class="sidebar-link-text">Security Logs</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="/admin/list/security_audits"<?php echo isActiveLink('/security_audits', $currentUri); ?> title="Security Audits">
-                            <span class="icon-svg sidebar-link-icon"><?php echo App::svg('clipboard'); ?></span>
-                            <span class="sidebar-link-text">Security Audits</span>
-                        </a>
-                    </li>
-                </ul>
-            </li>
-            <?php endif; ?>
+                if (!empty($section['is_system']) && !$renderedSystemHeader) {
+                    echo '<li class="sidebar-divider"></li>';
+                    echo '<li class="sidebar-section-header">System</li>';
+                    $renderedSystemHeader = true;
+                }
 
-            <!-- SECTION 5: Job Queue -->
-            <?php if ($site && ($site->isModuleEnabled('queue') || App::getCurrentUserRole() === 'super_admin')): ?>
-            <?php
-            $isQueueActive = isActiveLink('/queue_jobs', $currentUri);
-            ?>
-            <li class="sidebar-section<?php echo $isQueueActive ? '' : ' collapsed'; ?>">
-                <button type="button" class="sidebar-section-toggle" title="Job Queue">
-                    <span class="icon-svg sidebar-section-icon"><?php echo App::svg('clock'); ?></span>
-                    <span class="sidebar-section-title">Job Queue</span>
-                    <span class="icon-svg sidebar-section-arrow">
-                        <?php echo App::svg('chevron-right'); ?>
-                    </span>
-                </button>
-                <ul class="sidebar-submenu no-transition">
-                    <li>
-                        <a href="/admin/list/queue_jobs"<?php echo isActiveLink('/queue_jobs', $currentUri); ?> title="Manage Queue">
-                            <span class="icon-svg sidebar-link-icon"><?php echo App::svg('clipboard'); ?></span>
-                            <span class="sidebar-link-text">Manage Queue</span>
+                if (!empty($section['url'])):
+                    $activeAttr = isActiveLink($section['url'], $currentUri);
+                    ?>
+                    <li class="sidebar-item">
+                        <a href="<?php echo Str::escape($section['url']); ?>"<?php echo $activeAttr; ?> title="<?php echo Str::escape($section['title']); ?>">
+                            <span class="icon-svg sidebar-link-icon"><?php echo App::svg($section['icon']); ?></span>
+                            <span class="sidebar-link-text"><?php echo Str::escape($section['title']); ?></span>
                         </a>
                     </li>
-                </ul>
-            </li>
-            <?php endif; ?>
-            <?php endif; ?>
+                <?php else:
+                    $isSectionActive = false;
+                    foreach ($visibleLinks as $link) {
+                        if (isActiveLink($link['url'], $currentUri) !== '') {
+                            $isSectionActive = true;
+                            break;
+                        }
+                    }
+                    ?>
+                    <li class="sidebar-section<?php echo $isSectionActive ? '' : ' collapsed'; ?>">
+                        <button type="button" class="sidebar-section-toggle" title="<?php echo Str::escape($section['title']); ?>">
+                            <span class="icon-svg sidebar-section-icon"><?php echo App::svg($section['icon']); ?></span>
+                            <span class="sidebar-section-title"><?php echo Str::escape($section['title']); ?></span>
+                            <span class="icon-svg sidebar-section-arrow">
+                                <?php echo App::svg('chevron-right'); ?>
+                            </span>
+                        </button>
+                        <ul class="sidebar-submenu no-transition">
+                            <?php foreach ($visibleLinks as $link): ?>
+                                <?php $activeAttr = isActiveLink($link['url'], $currentUri); ?>
+                                <li>
+                                    <a href="<?php echo Str::escape($link['url']); ?>"<?php echo $activeAttr; ?> title="<?php echo Str::escape($link['title']); ?>">
+                                        <span class="icon-svg sidebar-link-icon"><?php echo App::svg($link['icon']); ?></span>
+                                        <span class="sidebar-link-text"><?php echo Str::escape($link['title']); ?></span>
+                                    </a>
+                                </li>
+                            <?php endforeach; ?>
+                        </ul>
+                    </li>
+                <?php endif; ?>
+            <?php endforeach; ?>
             
             <li class="sidebar-divider"></li>
             <li class="sidebar-item">

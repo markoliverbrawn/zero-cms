@@ -1,12 +1,26 @@
 <?php
 
+declare(strict_types=1);
+
+/**
+ * File: src/Modules/Search/Module.php
+ * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
+ * Package: Zero\Modules\Search
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
 namespace Zero\Modules\Search;
 
+use Zero\Core\App;
 use Zero\Interfaces\Module as ModuleInterface;
 use Zero\Modules\Search\Controllers\SearchController;
 use Zero\Modules\Search\Services\SearchService;
-use Zero\Core\App;
 
+/**
+ * Class Module
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class Module implements ModuleInterface
 {
     /**
@@ -71,6 +85,17 @@ class Module implements ModuleInterface
      */
     public function init()
     {
+        App::registerModuleSettings('site-search', [
+            'results_per_page' => [
+                'type' => 'number',
+                'label' => 'Search Results Per Page',
+                'default' => 10,
+                'required' => true,
+                'min' => 1,
+                'helper_text' => 'Number of results shown per page on the site search results screen.'
+            ]
+        ]);
+
         // Register core Pages searchable
         SearchService::register(\Zero\Models\Page::class, [
             'type_label' => 'Page',

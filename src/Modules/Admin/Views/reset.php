@@ -1,4 +1,5 @@
 <?php
+use Zero\Core\App;
 use Zero\Support\Str;
 // src/Modules/Admin/Views/reset.php
 ?>
@@ -24,7 +25,12 @@ use Zero\Support\Str;
           
           <div class="auth-form-group">
               <label for="password">New Password</label>
-              <input type="password" id="password" name="password" required placeholder="Enter new password">
+              <?php echo App::makeFormField('password', 'password', [
+                  'required' => true,
+                  'attributes' => ['id' => 'password', 'placeholder' => 'Enter new password'],
+                  'showLabel' => false,
+                  'guessHelperTextKey' => false,
+              ])->render(); ?>
           </div>
           
           <button type="submit" class="auth-btn-primary">Reset Password</button>

@@ -1,5 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
+/**
+ * File: src/Modules/Admin/Controllers/Api/SendWelcomeController.php
+ * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
+ * Package: Zero\Modules\Admin\Controllers\Api
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
 namespace Zero\Modules\Admin\Controllers\Api;
 
 use Zero\Core\App;
@@ -11,6 +20,11 @@ use Zero\Support\Emailer;
 use Zero\Support\Security;
 use Zero\Support\Str;
 
+/**
+ * Class SendWelcomeController
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class SendWelcomeController implements Controller
 {
     /**
@@ -19,53 +33,53 @@ class SendWelcomeController implements Controller
     public function handle($param)
     {
         // Enforce JSON API response format
-        header('Content-Type: application/json');
+        \header('Content-Type: application/json');
 
         // Check if the user is authenticated (is a logged-in admin or editor)
         App::ensureSession();
         $currentUser = App::getCurrentUser();
         if (!$currentUser) {
-            http_response_code(401);
-            echo json_encode(['success' => false, 'message' => 'Unauthorized access. Please log in first.']);
+            \http_response_code(401);
+            echo \json_encode(['success' => false, 'message' => 'Unauthorized access. Please log in first.']);
             exit;
         }
 
         // Validate the request is POST
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            http_response_code(405);
-            echo json_encode(['success' => false, 'message' => 'Method not allowed.']);
+            \http_response_code(405);
+            echo \json_encode(['success' => false, 'message' => 'Method not allowed.']);
             exit;
         }
 
         // Parse JSON payload inputs
-        $input = json_decode(file_get_contents('php://input'), true) ?? [];
+        $input = \json_decode(\file_get_contents('php://input'), true) ?? [];
         $userId = $input['id'] ?? null;
         $csrfToken = $input['csrf'] ?? '';
 
         // Verify CSRF handshake to protect against state-changing forgery vectors
         if (empty($csrfToken) || !Security::csrfVerify($csrfToken)) {
-            http_response_code(403);
-            echo json_encode(['success' => false, 'message' => 'CSRF verification failed. Request declined.']);
+            \http_response_code(403);
+            echo \json_encode(['success' => false, 'message' => 'CSRF verification failed. Request declined.']);
             exit;
         }
 
         if (empty($userId)) {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'message' => 'User ID is required.']);
+            \http_response_code(400);
+            echo \json_encode(['success' => false, 'message' => 'User ID is required.']);
             exit;
         }
 
         // Find target user
         $user = User::find($userId);
         if (!$user) {
-            http_response_code(404);
-            echo json_encode(['success' => false, 'message' => 'Target user not found.']);
+            \http_response_code(404);
+            echo \json_encode(['success' => false, 'message' => 'Target user not found.']);
             exit;
         }
 
         if (empty($user->email)) {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'message' => 'Target user does not have a registered email address.']);
+            \http_response_code(400);
+            echo \json_encode(['success' => false, 'message' => 'Target user does not have a registered email address.']);
             exit;
         }
 
@@ -93,13 +107,13 @@ class SendWelcomeController implements Controller
         // Send welcome email via local socket Emailer
         try {
             Emailer::send($user->email, $subject, $htmlBody);
-            echo json_encode([
+            echo \json_encode([
                 'success' => true,
                 'message' => 'Welcome email dispatched successfully to ' . Str::escape($user->email) . '!'
             ]);
         } catch (\Exception $e) {
-            http_response_code(500);
-            echo json_encode([
+            \http_response_code(500);
+            echo \json_encode([
                 'success' => false,
                 'message' => 'Failed to dispatch email: ' . $e->getMessage()
             ]);

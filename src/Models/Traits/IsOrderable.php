@@ -1,12 +1,31 @@
 <?php
 
+declare(strict_types=1);
+
+/**
+ * File: src/Models/Traits/IsOrderable.php
+ * Architectural Purpose: Active Record data model or behavioral trait wrapping database schema representation with tenant-scoping.
+ * Package: Zero\Models\Traits
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
 namespace Zero\Models\Traits;
 
-use Zero\Database\DB;
 use Zero\Core\App;
+use Zero\Database\DB;
 
+/**
+ * Trait IsOrderable
+ *
+ * Defines systemic behavioral interface contract mechanisms.
+ */
 trait IsOrderable
 {
+    /**
+     * Is orderable processing implementation helper.
+     *
+     * @return bool Response output.
+     */
     public static function isOrderable(): bool
     {
         return true;
@@ -26,7 +45,7 @@ trait IsOrderable
 
         $precedence = 10;
         foreach ($ids as $id) {
-            $id = trim($id);
+            $id = \trim($id);
             if (empty($id)) continue;
 
             // Scope by site_id for tenant isolation (except sites table)

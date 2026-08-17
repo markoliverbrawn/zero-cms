@@ -1,5 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
+/**
+ * File: src/Modules/Shop/Models/Order.php
+ * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
+ * Package: Zero\Modules\Shop\Models
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
 namespace Zero\Modules\Shop\Models;
 
 use Zero\Interfaces\Model;
@@ -7,6 +16,11 @@ use Zero\Models\Traits\CascadesDeletes;
 use Zero\Models\Traits\IsModel;
 use Zero\Modules\Shop\Models\OrderItem;
 
+/**
+ * Class Order
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class Order implements Model
 {
     use IsModel, CascadesDeletes {
@@ -33,6 +47,11 @@ class Order implements Model
     public $created_at;
     public $updated_at;
 
+    /**
+     * Retrieves the config attribute value.
+     *
+     * @return mixed Response output.
+     */
     public static function getConfig(): array
     {
         return [

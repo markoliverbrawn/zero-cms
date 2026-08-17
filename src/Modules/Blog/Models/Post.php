@@ -1,4 +1,14 @@
 <?php
+
+declare(strict_types=1);
+
+/**
+ * File: src/Modules/Blog/Models/Post.php
+ * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
+ * Package: Zero\Modules\Blog\Models
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
 namespace Zero\Modules\Blog\Models;
 
 use Zero\Core\App;
@@ -11,6 +21,11 @@ use Zero\Modules\Blog\Models\Comment;
 use Zero\Modules\Search\Traits\Searchable;
 use Zero\Support\I18n;
 
+/**
+ * Class Post
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class Post extends Page
 {
     use HasFeaturedImage, IsModel, CascadesDeletes, Searchable {
@@ -35,6 +50,12 @@ class Post extends Page
     public $updated_at;
     public $deleted_at;
 
+    /**
+     * __construct processing implementation helper.
+     *
+     * @param mixed $data Argument descriptor.
+     * @return mixed Response output.
+     */
     public function __construct($data = [])
     {
         parent::__construct($data);
@@ -86,6 +107,11 @@ class Post extends Page
         }
     }
 
+    /**
+     * Retrieves the config attribute value.
+     *
+     * @return mixed Response output.
+     */
     public static function getConfig(): array
     {
         $config = parent::getConfig();
@@ -172,7 +198,7 @@ class Post extends Page
     public function getFrontendUrl(): string
     {
         $slug = $this->slug ?? '';
-        return '/post/' . ltrim($slug, '/');
+        return '/post/' . \ltrim($slug, '/');
     }
 
     /**
@@ -191,20 +217,20 @@ class Post extends Page
         $siteId = App::getCurrentSiteId();
         
         // Defensive whitelisting and column mapping of the ORDER BY clause
-        $orderByParts = explode(' ', trim($orderBy));
+        $orderByParts = \explode(' ', \trim($orderBy));
         $cleanOrderBy = 'blog_posts.created_at DESC'; // Fallback
 
         if (!empty($orderByParts)) {
             $column = $orderByParts[0];
-            $direction = isset($orderByParts[1]) ? strtoupper($orderByParts[1]) : 'ASC';
+            $direction = isset($orderByParts[1]) ? \strtoupper($orderByParts[1]) : 'ASC';
 
             if ($column === 'comment_count') {
                 $column = 'comment_count'; // Matches our SQL virtual column alias!
-            } elseif (strpos($column, 'blog_posts.') !== 0 && $column !== 'comment_count') {
+            } elseif (\strpos($column, 'blog_posts.') !== 0 && $column !== 'comment_count') {
                 $column = 'blog_posts.' . $column;
             }
 
-            if (preg_match('/^[a-zA-Z0-9_\.]+$/', $column)) {
+            if (\preg_match('/^[a-zA-Z0-9_\.]+$/', $column)) {
                 if ($direction !== 'ASC' && $direction !== 'DESC') {
                     $direction = 'ASC';
                 }
@@ -224,14 +250,14 @@ class Post extends Page
             $params[] = $qParam;
         }
 
-        $whereSql = 'WHERE ' . implode(' AND ', $where);
+        $whereSql = 'WHERE ' . \implode(' AND ', $where);
 
         // Total count
         $totalStmt = DB::query("SELECT COUNT(*) as cnt FROM blog_posts {$whereSql}", $params);
         $total = $totalStmt->fetch();
-        $totalCount = $total ? intval($total['cnt']) : 0;
+        $totalCount = $total ? \intval($total['cnt']) : 0;
 
-        $pages = max(1, ceil($totalCount / $perPage));
+        $pages = \max(1, \ceil($totalCount / $perPage));
         $offset = ($page - 1) * $perPage;
 
         // Fetch paginated data using a JOIN to select comment_count and featured_image_path in a single query
@@ -277,6 +303,6 @@ class Post extends Page
         $res = parent::save();
         
         $this->featured_image = $originalFeaturedImage;
-        return $res;
+        return $res !== false;
     }
 }

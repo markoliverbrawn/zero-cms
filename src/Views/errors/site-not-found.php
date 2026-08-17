@@ -258,11 +258,11 @@ use Zero\Support\Str;
             <ul class="tips-list">
                 <li>
                     <strong>Run Database Seeders & Migrations:</strong> If this is a fresh setup or the database is unpopulated, you must run the migrations and seeders to initialize the default sites:
-                    <code class="command-block">docker exec -w /data/misc/zero php83 php seeders/seeder.php</code>
+                    <code class="command-block">docker exec -w /data/misc/zero php83 bin/seed</code>
                 </li>
                 <li>
                     <strong>Map Domain in Local Hosts:</strong> Ensure that your local hosts mapping configuration redirects this domain to your server's IP address (typically <code>127.0.0.1</code>) inside <code>/etc/hosts</code>:
-                    <code class="command-block">127.0.0.1  d6laptop.zero d6laptop.zero.guide d6laptop.zero.portfolio d6laptop.zero.shop d6laptop.zero.kitchensink</code>
+                    <code class="command-block">127.0.0.1  d6laptop.zero d6laptop.zero.guide d6laptop.zero.kitchensink</code>
                 </li>
                 <li>
                     <strong>Register Tenant inside Back-office:</strong> If you are a platform Super Administrator, log in via a valid configured domain to manage and register new site configurations in the central administrative panel.

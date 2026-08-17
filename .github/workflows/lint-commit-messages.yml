@@ -1,0 +1,27 @@
+name: Lint Commit Messages
+
+# Gives fast PR-time feedback when a commit's subject line doesn't follow Conventional Commits --
+# bin/release depends on that format to compute the next semantic version, so a malformed message
+# here would otherwise only surface later as a silent "nothing to release" after merge.
+on:
+  pull_request:
+    branches: ["main", "dev"]
+
+jobs:
+  lint-commits:
+    name: Validate Conventional Commit Messages
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up PHP 8.3 Environment
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: none
+
+      - name: Validate commit messages
+        run: bin/check-commit-messages "origin/${{ github.event.pull_request.base.ref }}..HEAD"

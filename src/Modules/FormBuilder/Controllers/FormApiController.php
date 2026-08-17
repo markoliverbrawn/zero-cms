@@ -1,48 +1,69 @@
 <?php
 
+declare(strict_types=1);
+
+/**
+ * File: src/Modules/FormBuilder/Controllers/FormApiController.php
+ * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
+ * Package: Zero\Modules\FormBuilder\Controllers
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
 namespace Zero\Modules\FormBuilder\Controllers;
 
 use Zero\Core\App;
 use Zero\Core\Validator;
 use Zero\Database\DB;
-use Zero\Support\Security;
-use Zero\Support\Emailer;
 use Zero\Interfaces\Controller;
+use Zero\Support\Emailer;
+use Zero\Support\Security;
 use Zero\Support\Str;
 
+/**
+ * Class FormApiController
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class FormApiController implements Controller
 {
+    /**
+     * Handles the incoming HTTP action request context and dispatches response frames.
+     *
+     * @param mixed $param Argument descriptor.
+     * @return mixed Response output.
+     */
     public function handle($param)
     {
         // Enforce POST requests
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            http_response_code(405);
-            header('Content-Type: application/json');
-            echo json_encode(['success' => false, 'error' => 'Method Not Allowed']);
+            \http_response_code(405);
+            \header('Content-Type: application/json');
+            echo \json_encode(['success' => false, 'error' => 'Method Not Allowed']);
             exit;
         }
 
-        header('Content-Type: application/json');
+        \header('Content-Type: application/json');
 
         // Parse JSON raw payload input
-        $json = json_decode(file_get_contents('php://input'), true);
-        if (!is_array($json)) {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'error' => 'Invalid JSON Payload']);
+        $json = \json_decode(\file_get_contents('php://input'), true);
+        if (!\is_array($json)) {
+            \http_response_code(400);
+            echo \json_encode(['success' => false, 'error' => 'Invalid JSON Payload']);
             exit;
         }
 
         // SPAM HONEYPOT TRAP: If the hidden bait field is filled, silently discard
         if (!empty($json['website_url'])) {
-            echo json_encode([
+            echo \json_encode([
                 'success' => true,
                 'note' => 'Spam filtered successfully.'
             ]);
             exit;
         }
 
-        // DYNAMIC RATE LIMITER MIDDLEWARE: Prevent form submission flood abuse (limit to 1 request per 10 seconds per session)
-        App::applyRateLimitMiddleware('form_submission', 10);
+        // DYNAMIC RATE LIMITER MIDDLEWARE: Prevent form submission flood abuse (site-configurable window)
+        $rateLimitSeconds = (int)App::getModuleSetting('formbuilder', 'submission_rate_limit_seconds', 10);
+        App::applyRateLimitMiddleware('form_submission', $rateLimitSeconds);
 
         $siteId = App::getCurrentSiteId();
         $blockId = $json['block_id'] ?? '';
@@ -54,8 +75,8 @@ class FormApiController implements Controller
             // Check pages first
             $pages = DB::query("SELECT title, content FROM pages WHERE site_id = ? AND deleted_at IS NULL", [$siteId])->fetchAll();
             foreach ($pages as $p) {
-                $blocks = json_decode($p['content'], true);
-                if (is_array($blocks)) {
+                $blocks = \json_decode($p['content'], true);
+                if (\is_array($blocks)) {
                     foreach ($blocks as $b) {
                         if (($b['type'] ?? '') === 'form_builder' && ($b['id'] ?? '') === $blockId) {
                             $matchedBlock = $b;
@@ -70,8 +91,8 @@ class FormApiController implements Controller
             if (!$matchedBlock) {
                 $posts = DB::query("SELECT title, content FROM blog_posts WHERE site_id = ? AND deleted_at IS NULL", [$siteId])->fetchAll();
                 foreach ($posts as $po) {
-                    $blocks = json_decode($po['content'], true);
-                    if (is_array($blocks)) {
+                    $blocks = \json_decode($po['content'], true);
+                    if (\is_array($blocks)) {
                         foreach ($blocks as $b) {
                             if (($b['type'] ?? '') === 'form_builder' && ($b['id'] ?? '') === $blockId) {
                                 $matchedBlock = $b;
@@ -85,8 +106,8 @@ class FormApiController implements Controller
         }
 
         if (!$matchedBlock) {
-            http_response_code(404);
-            echo json_encode(['success' => false, 'error' => 'Form configuration not found.']);
+            \http_response_code(404);
+            echo \json_encode(['success' => false, 'error' => 'Form configuration not found.']);
             exit;
         }
 
@@ -108,7 +129,7 @@ class FormApiController implements Controller
             }
 
             if (!empty($fieldRules)) {
-                $rules[$fieldName] = implode('|', $fieldRules);
+                $rules[$fieldName] = \implode('|', $fieldRules);
             }
         }
 
@@ -116,8 +137,8 @@ class FormApiController implements Controller
         $validator = new Validator($json, $rules);
 
         if (!$validator->validate()) {
-            http_response_code(400);
-            echo json_encode([
+            \http_response_code(400);
+            echo \json_encode([
                 'success' => false,
                 'errors' => $validator->getErrors()
             ]);
@@ -137,9 +158,28 @@ class FormApiController implements Controller
             $name = $fieldObj['name'] ?? '';
             $label = $fieldObj['label'] ?? '';
             $type = $fieldObj['type'] ?? 'text';
-            $val = $json[$name] ?? null;
 
             if (empty($name)) continue;
+
+            // Translate FormBuilder's own vocabulary to the FormField registry's distinct group
+            // types (its 'checkbox' means a GROUP of checkboxes, not a single boolean toggle),
+            // and reshape a configured select's plain option-string list into the associative
+            // value=>label shape (with a blank placeholder) so an intentionally-unselected
+            // optional dropdown still casts through as a valid submission.
+            $resolvedType = $type;
+            $fieldOptions = [];
+            if ($type === 'checkbox') {
+                $resolvedType = 'checkbox_group';
+            } elseif ($type === 'radio') {
+                $resolvedType = 'radio_group';
+            } elseif ($type === 'select') {
+                $optionsStr = $fieldObj['options'] ?? '';
+                $options = !empty($optionsStr) ? \array_map('trim', \explode(',', $optionsStr)) : [];
+                $fieldOptions = ['' => '-- Select Option --'] + \array_combine($options, $options);
+            }
+
+            $field = App::makeFormField($resolvedType, $name, ['options' => $fieldOptions]);
+            $val = $field->castSubmittedValue($json);
 
             // Map standard column fields dynamically
             if ($type === 'email' && !empty($val)) {
@@ -148,12 +188,12 @@ class FormApiController implements Controller
             if ($type === 'tel' && !empty($val)) {
                 $senderPhone = $val;
             }
-            if ((strpos($name, 'name') !== false || $type === 'text') && $senderName === 'Form Submission' && !empty($val)) {
-                $senderName = is_array($val) ? implode(', ', $val) : $val;
+            if ((\strpos($name, 'name') !== false || $type === 'text') && $senderName === 'Form Submission' && !empty($val)) {
+                $senderName = \is_array($val) ? \implode(', ', $val) : $val;
             }
 
             // Save formatted visual value for the list/email body (json-encode arrays for multi-selects/checkboxes)
-            $displayVal = is_array($val) ? implode(', ', $val) : $val;
+            $displayVal = \is_array($val) ? \implode(', ', $val) : $val;
             $submissionDetails[$label] = $displayVal ?? 'N/A';
         }
 
@@ -163,7 +203,7 @@ class FormApiController implements Controller
         $submissionDetails['_meta_source_page'] = $sourcePageTitle;
 
         // Serialize fields dictionary into the 'message' TEXT column
-        $messagePayload = json_encode($submissionDetails, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+        $messagePayload = \json_encode($submissionDetails, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
 
         // Resolve notification recipient email
         $recipientEmail = $matchedBlock['recipient_email'] ?? 'admin@d6laptop.zero';
@@ -193,20 +233,20 @@ class FormApiController implements Controller
             ";
 
             foreach ($submissionDetails as $label => $val) {
-                if (strpos($label, '_meta_') === 0) continue; // skip metadata keys in email
-                $htmlBody .= "<p><strong>" . Str::escape($label) . ":</strong> " . nl2br(Str::escape($val)) . "</p>";
+                if (\strpos($label, '_meta_') === 0) continue; // skip metadata keys in email
+                $htmlBody .= "<p><strong>" . Str::escape($label) . ":</strong> " . \nl2br(Str::escape($val)) . "</p>";
             }
 
             Emailer::send($recipientEmail, $subject, $htmlBody);
 
-            echo json_encode([
+            echo \json_encode([
                 'success' => true,
                 'id' => $submissionId
             ]);
             exit;
         } catch (\Exception $e) {
-            http_response_code(500);
-            echo json_encode([
+            \http_response_code(500);
+            echo \json_encode([
                 'success' => false,
                 'error' => 'Could not save the submission: ' . $e->getMessage()
             ]);

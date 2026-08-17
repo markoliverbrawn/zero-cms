@@ -1,16 +1,30 @@
 <?php
 
+declare(strict_types=1);
+
+/**
+ * File: src/Modules/Queue/Support/QueueManager.php
+ * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
+ * Package: Zero\Modules\Queue\Support
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
 namespace Zero\Modules\Queue\Support;
 
+use Exception;
+use Throwable;
 use Zero\Core\App;
 use Zero\Database\DB;
 use Zero\Interfaces\Job as JobInterface;
 use Zero\Models\Site;
 use Zero\Modules\Queue\Models\QueueJob;
 use Zero\Support\Logger;
-use Exception;
-use Throwable;
 
+/**
+ * Class QueueManager
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class QueueManager
 {
     /**
@@ -28,7 +42,7 @@ class QueueManager
         $job = new QueueJob([
             'site_id' => $siteId,
             'job_class' => $jobClass,
-            'payload' => json_encode($payload),
+            'payload' => \json_encode($payload),
             'status' => 'pending',
             'attempts' => 0
         ]);
@@ -46,8 +60,8 @@ class QueueManager
     public static function runNextPendingJob(?int $lockTimeout = 900): bool
     {
         $pdo = DB::getPDO();
-        $now = gmdate('Y-m-d H:i:s');
-        $expiredTime = gmdate('Y-m-d H:i:s', time() - $lockTimeout);
+        $now = \gmdate('Y-m-d H:i:s');
+        $expiredTime = \gmdate('Y-m-d H:i:s', \time() - $lockTimeout);
 
         try {
             // Start reservation transaction
@@ -76,8 +90,8 @@ class QueueManager
             $jobId = $row['id'];
             $siteId = $row['site_id'];
             $jobClass = $row['job_class'];
-            $payloadData = json_decode($row['payload'], true) ?? [];
-            $attempts = intval($row['attempts']) + 1;
+            $payloadData = \json_decode($row['payload'], true) ?? [];
+            $attempts = \intval($row['attempts']) + 1;
 
             // 2. Transition state immediately to reserved
             $updateStmt = $pdo->prepare("
@@ -100,7 +114,7 @@ class QueueManager
 
         // 3. SHIFT STATE & EXECUTE
         $originalSite = App::getCurrentSite();
-        $startTime = microtime(true);
+        $startTime = \microtime(true);
 
         try {
             // Apply Site Tenant context scoping boundaries
@@ -112,9 +126,9 @@ class QueueManager
             }
 
             // Suppress output stream using buffering wrapper
-            ob_start();
+            \ob_start();
 
-            if (!class_exists($jobClass)) {
+            if (!\class_exists($jobClass)) {
                 throw new Exception("Job class '{$jobClass}' not found on disk");
             }
 
@@ -126,8 +140,8 @@ class QueueManager
             // Execute job
             $jobInstance->execute($payloadData);
 
-            if (ob_get_level() > 0) {
-                ob_end_clean();
+            if (\ob_get_level() > 0) {
+                \ob_end_clean();
             }
 
             // Mark job as completed
@@ -137,7 +151,7 @@ class QueueManager
                     updated_at = ? 
                 WHERE id = ?
             ");
-            $completeStmt->execute([gmdate('Y-m-d H:i:s'), $jobId]);
+            $completeStmt->execute([\gmdate('Y-m-d H:i:s'), $jobId]);
 
             // Log completion event inside audit logs
             Logger::log(
@@ -148,19 +162,19 @@ class QueueManager
                 meta: [
                     'job_class' => $jobClass,
                     'attempts' => $attempts,
-                    'duration_ms' => round((microtime(true) - $startTime) * 1000)
+                    'duration_ms' => \round((\microtime(true) - $startTime) * 1000)
                 ]
             );
 
         } catch (Throwable $e) {
-            if (ob_get_level() > 0) {
-                ob_end_clean();
+            if (\ob_get_level() > 0) {
+                \ob_end_clean();
             }
 
             $errorTrace = $e->getMessage() . "\n\n" . $e->getTraceAsString();
 
             // Mark as failed and write down diagnostic error traceback
-            $failedTime = gmdate('Y-m-d H:i:s');
+            $failedTime = \gmdate('Y-m-d H:i:s');
             $failStmt = $pdo->prepare("
                 UPDATE queue_jobs 
                 SET status = 'failed', 

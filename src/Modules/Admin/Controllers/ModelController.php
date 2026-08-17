@@ -1,13 +1,33 @@
 <?php
 
+declare(strict_types=1);
+
+/**
+ * File: src/Modules/Admin/Controllers/ModelController.php
+ * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
+ * Package: Zero\Modules\Admin\Controllers
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
 namespace Zero\Modules\Admin\Controllers;
 
 use Zero\Core\App;
-use Zero\Support\Logger;
 use Zero\Interfaces\Controller;
+use Zero\Support\Logger;
 
+/**
+ * Class ModelController
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class ModelController implements Controller
 {
+    /**
+     * Handles the incoming HTTP action request context and dispatches response frames.
+     *
+     * @param mixed $param Argument descriptor.
+     * @return mixed Response output.
+     */
     public function handle($param)
     {
         $matches = $param;
@@ -16,10 +36,10 @@ class ModelController implements Controller
         $modelName = $matches[1];
         
         // Distinguish action and ID based on restful path variables
-        $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-        $isDelete = (strpos($uri, '/admin/delete/') === 0);
-        $isRestore = (strpos($uri, '/admin/restore/') === 0);
-        $isForceDelete = (strpos($uri, '/admin/force-delete/') === 0);
+        $uri = \parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+        $isDelete = (\strpos($uri, '/admin/delete/') === 0);
+        $isRestore = (\strpos($uri, '/admin/restore/') === 0);
+        $isForceDelete = (\strpos($uri, '/admin/force-delete/') === 0);
 
         if ($isDelete) {
             $action = 'delete';
@@ -45,7 +65,7 @@ class ModelController implements Controller
             'security_audits'
         ];
         
-        if (in_array($modelName, $restrictedModelsForEditor)) {
+        if (\in_array($modelName, $restrictedModelsForEditor)) {
             App::applyRoleMiddleware('super_admin');
         }
 
@@ -57,7 +77,7 @@ class ModelController implements Controller
         $model = App::getModelClass($modelName);
 
         if (!$model) {
-            http_response_code(404);
+            \http_response_code(404);
             echo "Invalid model";
             exit;
         }
@@ -66,7 +86,7 @@ class ModelController implements Controller
 
         if ($action === 'delete') {
             if ($method !== 'POST') {
-                http_response_code(405);
+                \http_response_code(405);
                 echo "Method not allowed";
                 exit;
             }
@@ -81,13 +101,13 @@ class ModelController implements Controller
                     ]);
                 }
             }
-            header('Location: /admin/list/' . $modelName);
+            \header('Location: /admin/list/' . $modelName);
             exit;
         }
 
         if ($action === 'restore') {
             if ($method !== 'POST') {
-                http_response_code(405);
+                \http_response_code(405);
                 echo "Method not allowed";
                 exit;
             }
@@ -105,19 +125,19 @@ class ModelController implements Controller
                 }
             }
 
-            if (strpos($_SERVER['HTTP_ACCEPT'] ?? '', 'application/json') !== false) {
-                header('Content-Type: application/json');
-                echo json_encode(['success' => $success]);
+            if (\strpos($_SERVER['HTTP_ACCEPT'] ?? '', 'application/json') !== false) {
+                \header('Content-Type: application/json');
+                echo \json_encode(['success' => $success]);
                 exit;
             }
 
-            header('Location: /admin/list/' . $modelName . '?status=trash');
+            \header('Location: /admin/list/' . $modelName . '?status=trash');
             exit;
         }
 
         if ($action === 'force-delete') {
             if ($method !== 'POST') {
-                http_response_code(405);
+                \http_response_code(405);
                 echo "Method not allowed";
                 exit;
             }
@@ -132,7 +152,7 @@ class ModelController implements Controller
                     ]);
                 }
             }
-            header('Location: /admin/list/' . $modelName . '?status=trash');
+            \header('Location: /admin/list/' . $modelName . '?status=trash');
             exit;
         }
 
@@ -143,17 +163,18 @@ class ModelController implements Controller
             $data = [];
             foreach ($config as $field => $fieldConfig) {
                 if ($fieldConfig['editable'] ?? false) {
-                    $val = $_POST[$field] ?? '';
+                    $formField = App::makeFormField($fieldConfig['type'] ?? 'text', $field, $fieldConfig);
+                    $val = $formField->castSubmittedValue($_POST);
                     // Automatically json_encode array values (such as enabled_modules checkbox arrays!)
-                    if (is_array($val)) {
-                        $val = json_encode($val);
+                    if (\is_array($val)) {
+                        $val = \json_encode($val);
                     }
                     $data[$field] = $val;
                 }
             }
 
             // Auto-generate slug if the model has a slug property and title is set
-            if (property_exists($model, 'slug') && isset($data['title'])) {
+            if (\property_exists($model, 'slug') && isset($data['title'])) {
                 $inputSlug = $_POST['slug'] ?? '';
                 if (empty($inputSlug)) {
                     $data['slug'] = App::slugify($data['title']);
@@ -186,9 +207,9 @@ class ModelController implements Controller
             }
 
             if ($submitAction === 'save_continue' && $targetId) {
-                header('Location: /admin/edit/' . $modelName . '/' . $targetId);
+                \header('Location: /admin/edit/' . $modelName . '/' . $targetId);
             } else {
-                header('Location: /admin/list/' . $modelName);
+                \header('Location: /admin/list/' . $modelName);
             }
             exit;
         }

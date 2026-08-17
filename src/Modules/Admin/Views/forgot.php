@@ -1,4 +1,5 @@
 <?php
+use Zero\Core\App;
 use Zero\Support\Str;
 // src/Modules/Admin/Views/forgot.php
 ?>
@@ -21,7 +22,12 @@ use Zero\Support\Str;
           
           <div class="auth-form-group">
               <label for="username">Account Username</label>
-              <input type="text" id="username" name="username" required placeholder="Enter username">
+              <?php echo App::makeFormField('text', 'username', [
+                  'required' => true,
+                  'attributes' => ['id' => 'username', 'placeholder' => 'Enter username'],
+                  'showLabel' => false,
+                  'guessHelperTextKey' => false,
+              ])->render(); ?>
           </div>
           
           <button type="submit" class="auth-btn-primary">Request Recovery Link</button>

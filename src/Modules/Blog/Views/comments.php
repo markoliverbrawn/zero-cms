@@ -2,6 +2,7 @@
 // src/Modules/Blog/Views/comments.php
 // Decoupled, zero-inline-style blog comments listing and ajax commenting form
 
+use Zero\Core\App;
 use Zero\Modules\Blog\Models\Comment;
 use Zero\Support\I18n;
 use Zero\Support\Str;
@@ -51,20 +52,45 @@ $comments = Comment::getForPost($post->id);
         <div style="display: grid; grid-template-columns: 1fr; gap: 1rem;">
           <div class="form-group" style="display: flex; flex-direction: column; gap: 0.5rem;">
             <label style="font-weight: 700; font-size: 0.85rem; color: var(--text-muted, #94a3b8); text-transform: uppercase;">Name *</label>
-            <input type="text" name="author_name" required placeholder="Your display name" style="width: 100%; padding: 0.75rem 1rem; background-color: var(--bg-color, #0b0c10); border: 1px solid var(--border-color, #222636); border-radius: 6px; color: var(--text-color, #f8fafc); font-family: inherit; font-size: 0.95rem; box-sizing: border-box; transition: all 0.25s ease;">
+            <?php echo App::makeFormField('text', 'author_name', [
+                'required' => true,
+                'attributes' => [
+                    'placeholder' => 'Your display name',
+                    'style' => 'width: 100%; padding: 0.75rem 1rem; background-color: var(--bg-color, #0b0c10); border: 1px solid var(--border-color, #222636); border-radius: 6px; color: var(--text-color, #f8fafc); font-family: inherit; font-size: 0.95rem; box-sizing: border-box; transition: all 0.25s ease;',
+                ],
+                'showLabel' => false,
+                'guessHelperTextKey' => false,
+            ])->render(); ?>
             <span class="field-error author_name-error" style="color: #f43f5e; font-size: 0.82rem; display: none; font-weight: 600; margin-top: 4px;"></span>
           </div>
 
           <div class="form-group" style="display: flex; flex-direction: column; gap: 0.5rem;">
             <label style="font-weight: 700; font-size: 0.85rem; color: var(--text-muted, #94a3b8); text-transform: uppercase;">Email Address *</label>
-            <input type="email" name="author_email" required placeholder="name@domain.com (won't be published)" style="width: 100%; padding: 0.75rem 1rem; background-color: var(--bg-color, #0b0c10); border: 1px solid var(--border-color, #222636); border-radius: 6px; color: var(--text-color, #f8fafc); font-family: inherit; font-size: 0.95rem; box-sizing: border-box; transition: all 0.25s ease;">
+            <?php echo App::makeFormField('email', 'author_email', [
+                'required' => true,
+                'attributes' => [
+                    'placeholder' => "name@domain.com (won't be published)",
+                    'style' => 'width: 100%; padding: 0.75rem 1rem; background-color: var(--bg-color, #0b0c10); border: 1px solid var(--border-color, #222636); border-radius: 6px; color: var(--text-color, #f8fafc); font-family: inherit; font-size: 0.95rem; box-sizing: border-box; transition: all 0.25s ease;',
+                ],
+                'showLabel' => false,
+                'guessHelperTextKey' => false,
+            ])->render(); ?>
             <span class="field-error author_email-error" style="color: #f43f5e; font-size: 0.82rem; display: none; font-weight: 600; margin-top: 4px;"></span>
           </div>
         </div>
 
         <div class="form-group" style="display: flex; flex-direction: column; gap: 0.5rem;">
           <label style="font-weight: 700; font-size: 0.85rem; color: var(--text-muted, #94a3b8); text-transform: uppercase;">Comment *</label>
-          <textarea name="content" required placeholder="Share your perspective..." rows="4" style="width: 100%; padding: 0.75rem 1rem; background-color: var(--bg-color, #0b0c10); border: 1px solid var(--border-color, #222636); border-radius: 6px; color: var(--text-color, #f8fafc); font-family: inherit; font-size: 0.95rem; box-sizing: border-box; transition: all 0.25s ease; resize: vertical;"></textarea>
+          <?php echo App::makeFormField('textarea', 'content', [
+              'required' => true,
+              'attributes' => [
+                  'placeholder' => 'Share your perspective...',
+                  'rows' => 4,
+                  'style' => 'width: 100%; padding: 0.75rem 1rem; background-color: var(--bg-color, #0b0c10); border: 1px solid var(--border-color, #222636); border-radius: 6px; color: var(--text-color, #f8fafc); font-family: inherit; font-size: 0.95rem; box-sizing: border-box; transition: all 0.25s ease; resize: vertical;',
+              ],
+              'showLabel' => false,
+              'guessHelperTextKey' => false,
+          ])->render(); ?>
           <span class="field-error content-error" style="color: #f43f5e; font-size: 0.82rem; display: none; font-weight: 600; margin-top: 4px;"></span>
         </div>
 

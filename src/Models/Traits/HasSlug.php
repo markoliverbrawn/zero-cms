@@ -1,15 +1,35 @@
 <?php
 
+declare(strict_types=1);
+
+/**
+ * File: src/Models/Traits/HasSlug.php
+ * Architectural Purpose: Active Record data model or behavioral trait wrapping database schema representation with tenant-scoping.
+ * Package: Zero\Models\Traits
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
 namespace Zero\Models\Traits;
 
-use Zero\Database\DB;
 use Zero\Core\App;
+use Zero\Database\DB;
 
+/**
+ * Trait HasSlug
+ *
+ * Defines systemic behavioral interface contract mechanisms.
+ */
 trait HasSlug
 {
     public $slug;
 
     // This method will be used by controllers to get config for views
+    /**
+     * Find by slug processing implementation helper.
+     *
+     * @param mixed $slug Argument descriptor.
+     * @return mixed Response output.
+     */
     public static function findBySlug($slug)
     {
         $sql = "SELECT * FROM " . static::$tableName . " WHERE slug = ?";
@@ -29,7 +49,7 @@ trait HasSlug
         }
 
         // Enforce polymorphic type restrictions if configured and column exists
-        $modelType = property_exists(static::class, 'modelType') ? static::$modelType : null;
+        $modelType = \property_exists(static::class, 'modelType') ? static::$modelType : null;
         if ($modelType !== null && DB::hasColumn(static::$tableName, 'type')) {
             $sql .= " AND `type` = ?";
             $params[] = $modelType;

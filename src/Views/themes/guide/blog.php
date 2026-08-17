@@ -2,6 +2,9 @@
 // src/Views/themes/guide/blog.php
 
 use Zero\Core\App;
+use Zero\Core\Storage\Storage;
+use Zero\Core\Template;
+use Zero\Support\BlockHelper;
 use Zero\Support\Security;
 use Zero\Support\Str;
 
@@ -44,14 +47,66 @@ $shouldOmitTitle = !empty($post->omit_title) || $hasHeroBlock;
     <?php
     $content = $post->content ?? '';
     $decodedBlocks = json_decode($content, true);
+    
+    // 1. Eager load all referenced media IDs across blocks generically using App::eagerLoadBlockMedia
+    $mediaIdMap = [];
     if (json_last_error() === JSON_ERROR_NONE && is_array($decodedBlocks)) {
-        foreach ($decodedBlocks as $block) {
-            echo Security::sanitizeHtml($block['content'] ?? '');
-        }
-    } else {
-        echo Security::sanitizeHtml($content);
+        $mediaIdMap = App::eagerLoadBlockMedia($decodedBlocks);
     }
-    ?>
+
+    // 2. Ultra-fast media resolver helper (no DB hits!)
+    $resolveMedia = function($idOrPath) use ($mediaIdMap) {
+        if (empty($idOrPath)) {
+            return '';
+        }
+        $path = strpos($idOrPath, '/') === 0 ? $idOrPath : ($mediaIdMap[$idOrPath] ?? '');
+        if (empty($path)) {
+            return '';
+        }
+        return Storage::getUrl($path);
+    };
+
+    if (json_last_error() === JSON_ERROR_NONE && is_array($decodedBlocks)): ?>
+      <?php foreach ($decodedBlocks as $block): ?>
+        <?php 
+        $type = $block['type'] ?? '';
+        $theme = App::getCurrentSite()->theme ?? 'default';
+        
+        $themeBlocksDir = App::resolveThemeDir($theme);
+        $blockPath = $themeBlocksDir !== null ? $themeBlocksDir . '/blocks/' . $type . '.php' : '';
+        if (!file_exists($blockPath)) {
+            $registeredBlock = App::getRegisteredBlocks()[$type] ?? [];
+            if (!empty($registeredBlock['frontend_view']) && file_exists($registeredBlock['frontend_view'])) {
+                $blockPath = $registeredBlock['frontend_view'];
+            } else {
+                $blockPath = App::resolveThemeFile('default', 'blocks/' . $type . '.php') ?? '';
+            }
+        }
+        if (file_exists($blockPath)) {
+            $isBreakout = ($type === 'baseline' && !empty($block['full_width']) && $block['full_width'] === '1');
+            $rowClass = BlockHelper::getRowClasses($block, $type, $isBreakout);
+            echo '<section class="' . $rowClass . '">';
+            echo '  <div class="' . ($isBreakout ? 'block-container-fluid' : 'block-container') . '">';
+            
+            // If hide_title is not explicitly enabled, render the section title as a block-level H2 or H1
+            $hideTitle = $block['hide_title'] ?? '0';
+            if ($hideTitle !== '1' && !empty($block['title']) && $type !== 'baseline') {
+                $titleTag = $hideTitle === '2' ? 'h1' : 'h2';
+                echo '<' . $titleTag . ' class="block-section-title">' . Security::sanitizeHtml($block['title']) . '</' . $titleTag . '>';
+            }
+
+            echo Template::renderFile($blockPath, [
+                'block' => $block,
+                'resolveMedia' => $resolveMedia
+            ]);
+            echo '  </div>';
+            echo '</section>';
+        }
+        ?>
+      <?php endforeach; ?>
+    <?php else: ?>
+      <?php echo Security::sanitizeHtml($content); ?>
+    <?php endif; ?>
   </div>
 
   <!-- Articles List -->

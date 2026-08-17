@@ -227,13 +227,41 @@ button {
     }
 }
 
+.settings-flash-message {
+    padding: 0.75rem 1rem;
+    border-radius: var(--border-radius);
+    margin-bottom: 1.5rem;
+    font-weight: bold;
+    border: 1px solid transparent;
+
+    &.settings-flash-success {
+        background-color: color-mix(in srgb, #22c55e 15%, var(--card-bg) 85%);
+        border-color: color-mix(in srgb, #22c55e 40%, var(--border-color) 60%);
+        color: #16a34a;
+    }
+
+    &.settings-flash-error {
+        background-color: color-mix(in srgb, #ef4444 15%, var(--card-bg) 85%);
+        border-color: color-mix(in srgb, #ef4444 40%, var(--border-color) 60%);
+        color: #dc2626;
+    }
+}
+
+.settings-checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: normal;
+    cursor: pointer;
+}
+
 .editrecord {
     background-color: var(--card-bg);
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius);
     padding: 2rem;
     box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
-    
+
     form > div {
         margin-bottom: calc(var(--layout-spacing)*3);
     }
@@ -274,6 +302,12 @@ button {
             min-height: calc(var(--layout-spacing) * 64);
             overflow: auto;
             padding: calc(var(--layout-spacing) * 3);
+            &.block-title-rich-editor {
+                min-height: 64px;
+                max-height: 120px;
+                height: 64px;
+                padding: 10px 14px;
+            }
             ol, ul {
                 margin-left: calc(var(--layout-spacing) * 4);
             }

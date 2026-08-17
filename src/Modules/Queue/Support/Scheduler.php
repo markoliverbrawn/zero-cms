@@ -1,13 +1,27 @@
 <?php
 
+declare(strict_types=1);
+
+/**
+ * File: src/Modules/Queue/Support/Scheduler.php
+ * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
+ * Package: Zero\Modules\Queue\Support
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
 namespace Zero\Modules\Queue\Support;
 
 use Zero\Core\App;
 use Zero\Database\DB;
-use Zero\Support\Security;
-use Zero\Support\Logger;
 use Zero\Modules\Queue\Support\QueueManager;
+use Zero\Support\Logger;
+use Zero\Support\Security;
 
+/**
+ * Class Scheduler
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class Scheduler
 {
     protected static array $tasks = [];
@@ -25,8 +39,8 @@ class Scheduler
             return true; // Never run before, so it's definitely due!
         }
 
-        $lastTime = strtotime($lastRunAt . ' UTC');
-        $diff = time() - $lastTime;
+        $lastTime = \strtotime($lastRunAt . ' UTC');
+        $diff = \time() - $lastTime;
 
         switch ($expression) {
             case 'every_minute':
@@ -68,7 +82,7 @@ class Scheduler
     {
         $originalSite = App::getCurrentSite();
         $sites = \Zero\Models\Site::all();
-        $now = gmdate('Y-m-d H:i:s');
+        $now = \gmdate('Y-m-d H:i:s');
         $pdo = DB::getPDO();
 
         foreach ($sites as $site) {
@@ -119,7 +133,7 @@ class Scheduler
                                 $id, 
                                 $siteId, 
                                 $jobClass, 
-                                json_encode($payload), 
+                                \json_encode($payload), 
                                 $expression, 
                                 $now, 
                                 $now, 

@@ -1,12 +1,26 @@
 <?php
 
+declare(strict_types=1);
+
+/**
+ * File: src/Modules/Admin/Controllers/ExportController.php
+ * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
+ * Package: Zero\Modules\Admin\Controllers
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
 namespace Zero\Modules\Admin\Controllers;
 
+use Exception;
 use Zero\Core\App;
 use Zero\Core\CSVExporter;
 use Zero\Interfaces\Controller;
-use Exception;
 
+/**
+ * Class ExportController
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class ExportController implements Controller
 {
     /**
@@ -45,8 +59,8 @@ class ExportController implements Controller
             ];
         }
 
-        $filename = App::getCurrentSite()->name . '-' . $modelName . '-export-' . date('Ymd-His') . '.csv';
-        $filename = strtolower(str_replace(' ', '-', $filename));
+        $filename = App::getCurrentSite()->name . '-' . $modelName . '-export-' . \date('Ymd-His') . '.csv';
+        $filename = \strtolower(\str_replace(' ', '-', $filename));
 
         CSVExporter::download($filename, $records, $headers);
         exit;

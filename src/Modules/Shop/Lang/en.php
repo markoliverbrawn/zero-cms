@@ -1,4 +1,14 @@
 <?php
+
+declare(strict_types=1);
+
+/**
+ * File: src/Modules/Shop/Lang/en.php
+ * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
+ * Package: Zero
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
 // src/Modules/Shop/Lang/en.php
 
 return [

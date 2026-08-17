@@ -1,13 +1,27 @@
 <?php
 
+declare(strict_types=1);
+
+/**
+ * File: src/Modules/Search/Services/SearchService.php
+ * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
+ * Package: Zero\Modules\Search\Services
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
 namespace Zero\Modules\Search\Services;
 
 use Zero\Core\App;
 use Zero\Core\Env;
 use Zero\Database\DB;
-use Zero\Modules\Search\Interfaces\SearchDriverInterface;
 use Zero\Modules\Search\Drivers\DatabaseSearchDriver;
+use Zero\Modules\Search\Interfaces\SearchDriverInterface;
 
+/**
+ * Class SearchService
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class SearchService
 {
     protected static ?SearchDriverInterface $driver = null;
@@ -95,7 +109,7 @@ class SearchService
      */
     public static function register(string $modelClass, array $config = []): void
     {
-        self::$searchables[$modelClass] = array_merge([
+        self::$searchables[$modelClass] = \array_merge([
             'type_label' => 'Item',
             'search_fields' => ['title', 'content'],
             'title_field' => 'title',
@@ -118,7 +132,7 @@ class SearchService
 
         $counts = [];
         foreach (self::getSearchables() as $modelClass => $config) {
-            if (class_exists($modelClass)) {
+            if (\class_exists($modelClass)) {
                 $tableName = $modelClass::getTableName();
                 $rows = DB::query("SELECT * FROM {$tableName} WHERE site_id = ? AND deleted_at IS NULL", [$siteId])->fetchAll();
                 

@@ -1,12 +1,26 @@
 <?php
 
+declare(strict_types=1);
+
+/**
+ * File: src/Modules/Shop/Controllers/ShopHomeController.php
+ * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
+ * Package: Zero\Modules\Shop\Controllers
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
 namespace Zero\Modules\Shop\Controllers;
 
-use Zero\Interfaces\Controller;
 use Zero\Core\App;
+use Zero\Interfaces\Controller;
 use Zero\Models\Page;
 use Zero\Modules\Shop\Models\Product;
 
+/**
+ * Class ShopHomeController
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class ShopHomeController implements Controller
 {
     /**

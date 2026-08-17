@@ -1,18 +1,33 @@
 <?php
+
+declare(strict_types=1);
+
+/**
+ * File: src/Models/Page.php
+ * Architectural Purpose: Active Record data model or behavioral trait wrapping database schema representation with tenant-scoping.
+ * Package: Zero\Models
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
 // src/Models/Page.php
 
 namespace Zero\Models;
 
+use Zero\Core\App;
+use Zero\Database\DB;
 use Zero\Interfaces\Model;
-use Zero\Models\Traits\IsModel;
 use Zero\Models\Traits\HasSlug;
+use Zero\Models\Traits\IsModel;
 use Zero\Models\Traits\IsOrderable;
 use Zero\Models\Traits\UsesBlockBuilder;
 use Zero\Modules\Search\Traits\Searchable;
-use Zero\Database\DB;
 use Zero\Support\I18n;
-use Zero\Core\App;
 
+/**
+ * Class Page
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class Page implements Model
 {
     use IsModel, HasSlug, IsOrderable, UsesBlockBuilder, Searchable {
@@ -55,10 +70,10 @@ class Page implements Model
     {
         if (isset($data['slug'])) {
             $slugStr = $data['slug'];
-            $lastSlash = strrpos($slugStr, '/');
+            $lastSlash = \strrpos($slugStr, '/');
             if ($lastSlash !== false) {
-                $data['parent_path'] = substr($slugStr, 0, $lastSlash);
-                $data['slug_part'] = substr($slugStr, $lastSlash + 1);
+                $data['parent_path'] = \substr($slugStr, 0, $lastSlash);
+                $data['slug_part'] = \substr($slugStr, $lastSlash + 1);
             } else {
                 $data['parent_path'] = '';
                 $data['slug_part'] = $slugStr;
@@ -66,7 +81,7 @@ class Page implements Model
         }
 
         foreach ($data as $key => $value) {
-            if (property_exists($this, $key)) {
+            if (\property_exists($this, $key)) {
                 $this->$key = $value;
             }
         }
@@ -94,6 +109,11 @@ class Page implements Model
         return $this->traitForceDelete();
     }
 
+    /**
+     * Retrieves the config attribute value.
+     *
+     * @return mixed Response output.
+     */
     public static function getConfig(): array
     {
         // Dynamically compile active parent slugs list inside current site tenant boundaries
@@ -202,7 +222,7 @@ class Page implements Model
     public function getFrontendUrl(): string
     {
         $slug = $this->slug ?? '';
-        return $slug === '' ? '/' : '/' . ltrim($slug, '/');
+        return $slug === '' ? '/' : '/' . \ltrim($slug, '/');
     }
 
     /**
@@ -211,7 +231,7 @@ class Page implements Model
     public function isHomepage(): bool
     {
         // Never block deletions of test pages created inside automated tests
-        if (defined('TEST_SUITE_RUNNING')) {
+        if (\defined('TEST_SUITE_RUNNING')) {
             return false;
         }
 
@@ -244,10 +264,10 @@ class Page implements Model
 
         // 1. Synchronize: If 'slug' has been manually updated from the outside, re-parse it first
         if ($tableName === 'pages' && !empty($this->slug)) {
-            $lastSlash = strrpos($this->slug, '/');
+            $lastSlash = \strrpos($this->slug, '/');
             if ($lastSlash !== false) {
-                $this->parent_path = substr($this->slug, 0, $lastSlash);
-                $this->slug_part = substr($this->slug, $lastSlash + 1);
+                $this->parent_path = \substr($this->slug, 0, $lastSlash);
+                $this->slug_part = \substr($this->slug, $lastSlash + 1);
             } else {
                 $this->parent_path = '';
                 $this->slug_part = $this->slug;
@@ -263,8 +283,8 @@ class Page implements Model
 
         // 2. Combine compound virtual parent and segment fields cleanly
         if ($tableName === 'pages') {
-            $parent = trim($this->parent_path ?? '', '/');
-            $part = trim($this->slug_part ?? '', '/');
+            $parent = \trim($this->parent_path ?? '', '/');
+            $part = \trim($this->slug_part ?? '', '/');
             
             if ($part === '') {
                 $slugifiedTitle = App::slugify($this->title);
@@ -292,7 +312,7 @@ class Page implements Model
             }
         } else {
             // For flat-slug models (like blog posts)
-            $part = trim($this->slug_part ?? '', '/');
+            $part = \trim($this->slug_part ?? '', '/');
             if ($part === '') {
                 $this->slug = App::slugify($this->title);
             } else {
@@ -313,9 +333,9 @@ class Page implements Model
             }
             
             // Squeeze numerical suffix inside terminal segment: services/about -> services/about-2
-            $lastSlash = strrpos($baseSlug, '/');
+            $lastSlash = \strrpos($baseSlug, '/');
             if ($lastSlash !== false) {
-                $uniqueSlug = substr($baseSlug, 0, $lastSlash) . '/' . substr($baseSlug, $lastSlash + 1) . '-' . $counter;
+                $uniqueSlug = \substr($baseSlug, 0, $lastSlash) . '/' . \substr($baseSlug, $lastSlash + 1) . '-' . $counter;
             } else {
                 $uniqueSlug = $baseSlug . '-' . $counter;
             }
@@ -324,10 +344,10 @@ class Page implements Model
         $this->slug = $uniqueSlug;
 
         // Update virtual fields to reflect any newly generated unique slug suffixes
-        $lastSlash = strrpos($this->slug, '/');
+        $lastSlash = \strrpos($this->slug, '/');
         if ($lastSlash !== false) {
-            $this->parent_path = substr($this->slug, 0, $lastSlash);
-            $this->slug_part = substr($this->slug, $lastSlash + 1);
+            $this->parent_path = \substr($this->slug, 0, $lastSlash);
+            $this->slug_part = \substr($this->slug, $lastSlash + 1);
         } else {
             $this->parent_path = '';
             $this->slug_part = $this->slug;
@@ -341,7 +361,7 @@ class Page implements Model
 
             if ($oldSlug !== null && $oldSlug !== $newSlug && $oldSlug !== '') {
                 $oldPrefixPattern = $oldSlug . '/%';
-                $oldSlugLength = strlen($oldSlug);
+                $oldSlugLength = \strlen($oldSlug);
                 $substringStartIndex = $oldSlugLength + 1; // 1-indexed SUBSTRING
 
                 DB::query("
@@ -370,8 +390,16 @@ class Page implements Model
      */
     public function usesBlockBuilder(): bool
     {
-        // If a custom routing controller is assigned to power this page record, completely hide the block builder
+        // Decoupled capability check: If a custom controller is assigned, check if it declares support for page builder blocks
         if (!empty($this->controller)) {
+            if (\class_exists($this->controller)) {
+                if (\method_exists($this->controller, 'supportsBlocks')) {
+                    return (bool) $this->controller::supportsBlocks();
+                }
+                if (\method_exists($this->controller, 'isBlockBuilderEnabled')) {
+                    return (bool) $this->controller::isBlockBuilderEnabled();
+                }
+            }
             return false;
         }
         return true;

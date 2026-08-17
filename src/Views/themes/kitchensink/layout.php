@@ -76,7 +76,13 @@ $sidebarCategories = DB::query("SELECT title, slug FROM shop_categories WHERE si
             <div class="sidebar-widget">
                 <h3>Search Showroom</h3>
                 <form method="get" action="/search" class="sidebar-search-container">
-                    <input type="text" name="q" placeholder="Enter keywords..." required class="sidebar-search-input">
+                    <?php echo App::makeFormField('text', 'q', [
+                        'value' => $_GET['q'] ?? '',
+                        'required' => true,
+                        'attributes' => ['class' => 'sidebar-search-input', 'placeholder' => 'Enter keywords...'],
+                        'showLabel' => false,
+                        'guessHelperTextKey' => false,
+                    ])->render(); ?>
                     <button type="submit" class="admin-btn sidebar-search-btn">Go</button>
                 </form>
             </div>

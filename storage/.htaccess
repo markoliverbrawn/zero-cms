@@ -1,0 +1,9 @@
+# Zero CMS - Secure Storage Directory Hardening Policy
+# Block direct HTTP execution or access to any executable script file types
+<FilesMatch "\.(php|phtml|php3|php4|php5|php7|php8|pl|py|jsp|asp|sh|cgi)$">
+    Order Deny,Allow
+    Deny from all
+</FilesMatch>
+
+# Prevent directory index file listings
+Options -Indexes

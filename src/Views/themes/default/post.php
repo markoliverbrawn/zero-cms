@@ -7,6 +7,7 @@ use Zero\Core\Template;
 use Zero\Database\DB;
 use Zero\Modules\Blog\Models\Post;
 use Zero\Support\BlockHelper;
+use Zero\Support\Security;
 use Zero\Support\Str;
 
 $isBlogPost = $post instanceof Post;
@@ -80,23 +81,25 @@ $shouldOmitTitle = !empty($post->omit_title) || $hasHeroBlock;
         // 1. Check if the active theme overrides this block: src/Views/themes/{theme}/blocks/{type}.php
         // 2. Check if the block has a registered, module-owned 'frontend_view' path.
         // 3. Graceful legacy fallback.
-        $blockPath = APPLICATION_ROOT . '/src/Views/themes/' . $theme . '/blocks/' . $type . '.php';
+        $themeBlocksDir = App::resolveThemeDir($theme);
+        $blockPath = $themeBlocksDir !== null ? $themeBlocksDir . '/blocks/' . $type . '.php' : '';
         if (!file_exists($blockPath)) {
             $registeredBlock = App::getRegisteredBlocks()[$type] ?? [];
             if (!empty($registeredBlock['frontend_view']) && file_exists($registeredBlock['frontend_view'])) {
                 $blockPath = $registeredBlock['frontend_view'];
             } else {
-                $blockPath = APPLICATION_ROOT . '/src/Views/themes/default/blocks/' . $type . '.php';
+                $blockPath = App::resolveThemeFile('default', 'blocks/' . $type . '.php') ?? '';
             }
         }
         if (file_exists($blockPath)) {
             $rowClass = BlockHelper::getRowClasses($block, $type, false);
             echo '<div class="' . $rowClass . '">';
             
-            // If hide_title is not explicitly enabled, render the section title as a block-level H2
+            // If hide_title is not explicitly enabled, render the section title as a block-level H2 or H1
             $hideTitle = $block['hide_title'] ?? '0';
             if ($hideTitle !== '1' && !empty($block['title']) && $type !== 'baseline') {
-                echo '<h2 class="block-section-title">' . Str::escape($block['title']) . '</h2>';
+                $titleTag = $hideTitle === '2' ? 'h1' : 'h2';
+                echo '<' . $titleTag . ' class="block-section-title">' . Security::sanitizeHtml($block['title']) . '</' . $titleTag . '>';
             }
 
             echo Template::renderFile($blockPath, [

@@ -1,12 +1,32 @@
 <?php
 
+declare(strict_types=1);
+
+/**
+ * File: src/Modules/Shop/Controllers/Api/CategoriesController.php
+ * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
+ * Package: Zero\Modules\Shop\Controllers\Api
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
 namespace Zero\Modules\Shop\Controllers\Api;
 
 use Zero\Http\Controllers\ApiController;
 use Zero\Modules\Shop\Models\Category;
 
+/**
+ * Class CategoriesController
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class CategoriesController extends ApiController
 {
+    /**
+     * Handles the incoming HTTP action request context and dispatches response frames.
+     *
+     * @param mixed $matches Argument descriptor.
+     * @return mixed Response output.
+     */
     public function handle($matches)
     {
         // 1. Authenticate Request
@@ -28,12 +48,12 @@ class CategoriesController extends ApiController
             }
             $this->respond([
                 'success' => true,
-                'total' => count($output),
+                'total' => \count($output),
                 'categories' => $output
             ]);
         } else {
             $category = null;
-            if (strlen($param) === 36) {
+            if (\strlen($param) === 36) {
                 $category = Category::find($param);
             }
             if (!$category) {

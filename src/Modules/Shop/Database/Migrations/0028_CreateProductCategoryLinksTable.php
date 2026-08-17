@@ -1,10 +1,24 @@
 <?php
 
+declare(strict_types=1);
+
+/**
+ * File: src/Modules/Shop/Database/Migrations/0028_CreateProductCategoryLinksTable.php
+ * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
+ * Package: Zero\Modules\Shop\Database\Migrations
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
 namespace Zero\Modules\Shop\Database\Migrations;
 
 use Zero\Database\DB;
 use Zero\Database\Migration;
 
+/**
+ * Class CreateProductCategoryLinksTable
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class CreateProductCategoryLinksTable extends Migration
 {
     /**

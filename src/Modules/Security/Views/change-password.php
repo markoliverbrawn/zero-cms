@@ -35,12 +35,30 @@ use Zero\Support\Str;
 
             <div class="auth-form-group" style="margin-bottom: 1.25rem; display: flex; flex-direction: column; gap: 0.5rem;">
                 <label for="password" style="font-weight: 600; font-size: 0.9rem; color: var(--text-color, #0f172a);">New Secure Password</label>
-                <input type="password" id="password" name="password" required placeholder="Enter strong password (min 8 chars)" style="padding: 0.75rem 1rem; border: 1px solid var(--border-color); border-radius: var(--border-radius); font-size: 0.95rem;">
+                <?php echo App::makeFormField('password', 'password', [
+                    'required' => true,
+                    'attributes' => [
+                        'id' => 'password',
+                        'placeholder' => 'Enter strong password (min 8 chars)',
+                        'style' => 'padding: 0.75rem 1rem; border: 1px solid var(--border-color); border-radius: var(--border-radius); font-size: 0.95rem;',
+                    ],
+                    'showLabel' => false,
+                    'guessHelperTextKey' => false,
+                ])->render(); ?>
             </div>
 
             <div class="auth-form-group" style="margin-bottom: 2rem; display: flex; flex-direction: column; gap: 0.5rem;">
                 <label for="confirm_password" style="font-weight: 600; font-size: 0.9rem; color: var(--text-color, #0f172a);">Confirm New Password</label>
-                <input type="password" id="confirm_password" name="confirm_password" required placeholder="Re-type new password" style="padding: 0.75rem 1rem; border: 1px solid var(--border-color); border-radius: var(--border-radius); font-size: 0.95rem;">
+                <?php echo App::makeFormField('password', 'confirm_password', [
+                    'required' => true,
+                    'attributes' => [
+                        'id' => 'confirm_password',
+                        'placeholder' => 'Re-type new password',
+                        'style' => 'padding: 0.75rem 1rem; border: 1px solid var(--border-color); border-radius: var(--border-radius); font-size: 0.95rem;',
+                    ],
+                    'showLabel' => false,
+                    'guessHelperTextKey' => false,
+                ])->render(); ?>
             </div>
 
             <button class="auth-btn-primary" type="submit" style="width: 100%; background-color: var(--accent-color, #2563eb); color: #ffffff; border: none; padding: 0.8rem; border-radius: var(--border-radius); font-size: 1rem; font-weight: 700; cursor: pointer; transition: background-color 0.15s ease;">

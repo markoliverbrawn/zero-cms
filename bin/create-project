@@ -1,0 +1,885 @@
+#!/usr/bin/env php
+<?php
+/**
+ * bin/create-project
+ *
+ * Standalone bootstrapper: save this one file anywhere and run it on its own (no existing Zero
+ * CMS checkout required). It writes a composer.json into a new sub-project directory requiring
+ * Zero CMS Core from its public VCS repository and runs `composer install`, which pulls Core into
+ * vendor/markoliverbrawn/zero-cms-core/. It also lays down a basic public/src/bin/tests/storage
+ * folder structure for the sub-project's own files, and then deletes itself once the sub-project
+ * is fully scaffolded.
+ *
+ * Deliberately a single self-contained PHP file with no dependency on this repo's own
+ * src/Core/Autoloader.php or any Zero\ class -- unlike bin/seed/bin/test (thin wrappers around
+ * Zero\Support\SeederRunner/TestRunner), this script's entire purpose is to run somewhere that
+ * has no Zero CMS checkout at all yet. PHP (not bash/sh) is the runtime here because anywhere
+ * `composer` runs, `php` is guaranteed to run too -- Composer is itself a PHP application -- so
+ * this isn't a heavier requirement than the composer/git checks below already impose, and it
+ * sidesteps the bash-vs-sh/ash/dash portability gap a shell version would hit (e.g. Alpine
+ * containers ship /bin/sh but not /bin/bash).
+ *
+ * Usage:
+ *   create-project <target-directory> [options]
+ *
+ * Options:
+ *   --branch <name>    Branch of Zero CMS Core to require (default: dev)
+ *   --remote <url>     Git remote URL of the Zero CMS Core VCS repository to require instead of
+ *                       the default Zero CMS Core repo
+ *   -h, --help         Show this help message
+ *
+ * Example:
+ *   create-project ../acme-website
+ *   create-project ../acme-website --branch main
+ *   create-project ../acme-website --remote git@github.com:acme/zero-fork.git --branch main
+ */
+
+const DEFAULT_REMOTE = 'https://github.com/markoliverbrawn/zero-cms.git';
+const PACKAGE_NAME = 'markoliverbrawn/zero-cms-core';
+
+const USAGE = <<<'TXT'
+create-project
+
+Standalone bootstrapper: save this one file anywhere and run it on its own (no existing Zero
+CMS checkout required). It writes a composer.json into a new sub-project directory requiring
+Zero CMS Core from its public VCS repository and runs `composer install`, which pulls Core into
+vendor/markoliverbrawn/zero-cms-core/. It also lays down a basic public/src/bin/tests/storage
+folder structure for the sub-project's own files, and then deletes itself once the sub-project
+is fully scaffolded.
+
+Usage:
+  create-project <target-directory> [options]
+
+Options:
+  --branch <name>    Branch of Zero CMS Core to require (default: dev)
+  --remote <url>     Git remote URL of the Zero CMS Core VCS repository to require instead of
+                      the default Zero CMS Core repo
+  -h, --help         Show this help message
+
+Example:
+  create-project ../acme-website
+  create-project ../acme-website --branch main
+  create-project ../acme-website --remote git@github.com:acme/zero-fork.git --branch main
+
+TXT;
+
+/**
+ * Print $message to stderr, then exit(1). Never returns (declared so callers can rely on that).
+ *
+ * @param string $message
+ * @return never
+ */
+function fail(string $message)
+{
+    fwrite(STDERR, "Error: {$message}\n");
+    exit(1);
+}
+
+/**
+ * Whether a given executable is resolvable on PATH (delegates to the shell's own `command -v`,
+ * which every /bin/sh -- dash, ash, bash -- implements identically).
+ *
+ * @param string $command
+ * @return bool
+ */
+function commandExists(string $command): bool
+{
+    exec('command -v ' . escapeshellarg($command) . ' 2>/dev/null', $output, $exitCode);
+    return $exitCode === 0;
+}
+
+/**
+ * Run an external command (argv-style, never passed through a shell string) and abort the whole
+ * bootstrap on non-zero exit -- mirrors the old bash script's `set -e` semantics.
+ *
+ * @param string[] $argv
+ * @return void
+ */
+function runOrFail(array $argv): void
+{
+    $line = implode(' ', array_map('escapeshellarg', $argv));
+    passthru($line, $exitCode);
+    if ($exitCode !== 0) {
+        fail("command failed (exit {$exitCode}): {$line}");
+    }
+}
+
+/**
+ * file_put_contents() that also fails loudly -- every generated file in this bootstrap is load
+ * bearing, so a silent write failure should stop the whole run rather than produce a half-built
+ * sub-project.
+ *
+ * @param string $path
+ * @param string $contents
+ * @return void
+ */
+function writeFile(string $path, string $contents): void
+{
+    if (file_put_contents($path, $contents) === false) {
+        fail("could not write file: {$path}");
+    }
+}
+
+/**
+ * Recursively copies a directory tree, used to pull Core's own dev tooling (e.g. its
+ * docker-compose.yml + docker/ folder) out of the read-only vendor package and into this
+ * sub-project's own root, the same way individual files like .htaccess are copied below.
+ *
+ * @param string $source
+ * @param string $destination
+ * @return void
+ */
+function copyDir(string $source, string $destination): void
+{
+    if (!is_dir($destination) && !mkdir($destination, 0777, true) && !is_dir($destination)) {
+        fail("could not create directory: {$destination}");
+    }
+    foreach (scandir($source) as $item) {
+        if ($item === '.' || $item === '..') {
+            continue;
+        }
+        $from = "{$source}/{$item}";
+        $to = "{$destination}/{$item}";
+        if (is_dir($from)) {
+            copyDir($from, $to);
+        } elseif (copy($from, $to) === false) {
+            fail("could not copy file: {$from} -> {$to}");
+        }
+    }
+}
+
+// --- 1. Parse CLI arguments ---
+$args = array_slice($argv, 1);
+
+foreach ($args as $arg) {
+    if ($arg === '-h' || $arg === '--help') {
+        echo USAGE;
+        exit(0);
+    }
+}
+
+if (count($args) < 1) {
+    echo USAGE;
+    exit(1);
+}
+
+$target = array_shift($args);
+if ($target[0] === '-') {
+    fwrite(STDERR, "Error: first argument must be the target directory, got option-like value: {$target}\n");
+    echo USAGE;
+    exit(1);
+}
+
+$branch = 'dev';
+$remote = DEFAULT_REMOTE;
+
+while (count($args) > 0) {
+    $opt = array_shift($args);
+    switch ($opt) {
+        case '--remote':
+            if (count($args) === 0) {
+                fail('--remote requires a value');
+            }
+            $remote = array_shift($args);
+            break;
+        case '--branch':
+            if (count($args) === 0) {
+                fail('--branch requires a value');
+            }
+            $branch = array_shift($args);
+            break;
+        default:
+            fwrite(STDERR, "Unknown option: {$opt}\n");
+            echo USAGE;
+            exit(1);
+    }
+}
+
+if (!commandExists('git')) {
+    fail('git is required.');
+}
+if (!commandExists('composer')) {
+    fail('composer is required.');
+}
+
+// --- Safety check: never scaffold into an existing, non-empty directory ---
+if (file_exists($target)) {
+    $existing = array_diff(scandir($target) ?: [], ['.', '..']);
+    if (count($existing) > 0) {
+        fail("'{$target}' already exists and is not empty. Refusing to scaffold into it.");
+    }
+}
+
+$vendorDir = 'vendor/' . PACKAGE_NAME;
+
+echo "===================================================================\n";
+echo " Scaffolding new Zero CMS sub-project\n";
+echo "===================================================================\n";
+echo "  Target directory : {$target}\n";
+echo "  Core package     : " . PACKAGE_NAME . " (from {$remote} @ dev-{$branch})\n";
+echo "===================================================================\n\n";
+
+if (!is_dir($target) && !mkdir($target, 0777, true) && !is_dir($target)) {
+    fail("could not create directory: {$target}");
+}
+$target = realpath($target);
+if ($target === false) {
+    fail('could not resolve target directory to an absolute path');
+}
+
+// --- 2. Initialize the outer git repo and require Core via Composer ---
+if (!is_dir("{$target}/.git")) {
+    runOrFail(['git', '-C', $target, 'init', '-q']);
+    echo "-> Initialized new git repository at {$target}\n";
+}
+
+echo "-> Writing {$target}/composer.json requiring " . PACKAGE_NAME . "\n";
+$subprojectComposerJson = [
+    'name' => basename($target) . '/site',
+    'description' => 'Zero CMS sub-project',
+    'repositories' => [
+        ['type' => 'vcs', 'url' => $remote],
+    ],
+    'require' => [
+        PACKAGE_NAME => "dev-{$branch}",
+    ],
+    'config' => ['secure-http' => true],
+];
+writeFile(
+    "{$target}/composer.json",
+    json_encode($subprojectComposerJson, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n"
+);
+
+echo "-> Running composer install (clones Core into {$vendorDir}/)\n";
+runOrFail(['composer', 'install', '--working-dir', $target, '--no-interaction']);
+
+// --- 3. Scaffold the sub-project's own folder structure ---
+echo "-> Creating sub-project folder structure\n";
+foreach ([
+    "{$target}/public",
+    "{$target}/src/Controllers",
+    "{$target}/src/Models",
+    "{$target}/src/Views",
+    "{$target}/src/Support",
+    "{$target}/src/Modules/Records/Database/Migrations",
+    "{$target}/tests",
+    "{$target}/storage/private",
+    "{$target}/storage/logs",
+    "{$target}/bin",
+] as $dir) {
+    if (!is_dir($dir) && !mkdir($dir, 0777, true) && !is_dir($dir)) {
+        fail("could not create directory: {$dir}");
+    }
+}
+writeFile("{$target}/storage/private/.gitkeep", '');
+writeFile("{$target}/storage/logs/.gitkeep", '');
+
+// --- 4. Generate the front controller ---
+$indexPhp = <<<'PHP'
+<?php
+/**
+ * public/index.php
+ * Front Controller and Autoloader bootstrapper for this sub-project.
+ */
+
+use Zero\Core\App;
+use Zero\Core\Env;
+use Zero\Core\Storage\Storage;
+
+define('REQUEST_START_TIME', microtime(true));
+
+// 1. Define folder paths relative to Sub-project root
+define('SUBPROJECT_ROOT', dirname(__DIR__));
+
+// Zero CMS Core is installed by Composer at a fixed, deterministic vendor path -- no fallback
+// path-detection needed, unlike the old git-submodule bootstrap.
+define('APPLICATION_ROOT', SUBPROJECT_ROOT . '/__VENDOR_DIR__');
+define('CORE_ROOT', APPLICATION_ROOT);
+define('APP_ROOT', SUBPROJECT_ROOT);
+define('VIEWS_DIR', SUBPROJECT_ROOT . '/src/Views'); // Custom sub-project view overrides directory
+
+// 2. Register the Zero Core (Zero\ -> CORE_ROOT/src) and Sub-Project (App\ -> APP_ROOT/src)
+// namespace autoloaders via Core's shared Autoloader. Autoloader itself is the one class this
+// project always references fully-qualified: it must be require()'d and invoked before any
+// autoloading exists at all, so there's nothing a `use` import could resolve yet.
+require_once CORE_ROOT . '/src/Core/Autoloader.php';
+\Zero\Core\Autoloader::init();
+\Zero\Core\Autoloader::registerNamespace('App\\', APP_ROOT . '/src');
+
+// Keep all local storage (public tenant uploads, private files) physically inside this
+// sub-project's own root instead of the read-only vendor package -- paired with
+// bin/setup-symlinks, which points public/storage at ../storage so public URLs stay stable.
+Storage::setRoot(APP_ROOT);
+
+// Let this sub-project's own src/Modules/ contribute modules and migrations the same way
+// Core's own src/Modules/ does (see bin/seed and src/Modules/Records/Database/Migrations/
+// for a real example) -- must be registered before App::bootstrap().
+App::registerModulePath(APP_ROOT . '/src/Modules', 'App\\Modules\\');
+
+// Load environment configuration from this sub-project's own root
+Env::load(APP_ROOT);
+
+// Security Hardening: Configure error reporting based on Environment settings
+if (Env::get('ENVIRONMENT') === 'production') {
+    ini_set('display_errors', '0');
+    error_reporting(0);
+} else {
+    ini_set('display_errors', '1');
+    error_reporting(E_ALL);
+}
+
+// Bootstrap Multi-Tenant CMS (Automatically boots and configures the isolated system)
+App::bootstrap();
+
+// Register the sub-project view override folder to enable zero-touch theme/layout overrides
+App::registerViewDir('app', VIEWS_DIR);
+
+// Resolve and render the homepage for '/', dispatch dynamic/admin routes, and fall back to
+// serving static assets directly from this sub-project's own public/ directory -- shared with
+// Core's own public/index.php via App::handleRequest(), so this sub-project automatically gets
+// the same admin-route and static-asset fallback behavior instead of a hand-copied duplicate.
+App::handleRequest(__DIR__);
+
+PHP;
+writeFile("{$target}/public/index.php", str_replace('__VENDOR_DIR__', $vendorDir, $indexPhp));
+
+// --- 5. Generate the test bootstrap + runner ---
+$testsBootstrap = <<<'PHP'
+<?php
+/**
+ * tests/bootstrap.php
+ * Common bootstrapping and namespace autoloader for sub-project tests.
+ */
+
+use Zero\Core\App;
+use Zero\Core\Env;
+use Zero\Core\Storage\Storage;
+use Zero\Support\TestRunner;
+
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+define('SUBPROJECT_ROOT', dirname(__DIR__));
+define('APPLICATION_ROOT', SUBPROJECT_ROOT . '/__VENDOR_DIR__');
+define('CORE_ROOT', APPLICATION_ROOT);
+define('APP_ROOT', SUBPROJECT_ROOT);
+define('TEST_SUITE_RUNNING', true);
+
+require_once CORE_ROOT . '/src/Core/Autoloader.php';
+\Zero\Core\Autoloader::init();
+\Zero\Core\Autoloader::registerNamespace('App\\', APP_ROOT . '/src');
+Storage::setRoot(APP_ROOT);
+App::registerModulePath(APP_ROOT . '/src/Modules', 'App\\Modules\\');
+
+Env::load(APP_ROOT);
+
+// Force the test suite onto an isolated database instead of the real one.
+try {
+    $reflector = new ReflectionClass(Env::class);
+    $property = $reflector->getProperty('data');
+    $property->setAccessible(true);
+    $data = $property->getValue();
+
+    $originalDbName = $data['DB_NAME'] ?? 'cms';
+    $testDbName = $originalDbName . '_subproject_test';
+
+    if ($workerToken = getenv('TEST_TOKEN')) {
+        $testDbName .= '_' . $workerToken;
+    }
+
+    $data['DB_NAME'] = $testDbName;
+    $data['STORAGE_DRIVER'] = 'local';
+    $property->setValue(null, $data);
+} catch (Exception $e) {
+    echo "Warning setting up test database override: " . $e->getMessage() . "\n";
+}
+
+/**
+ * Light-weight test assertion helper. Delegates to Core's own Zero\Support\TestRunner (already
+ * fully generic over an arbitrary test directory) so every test file's assert_test() call and
+ * this sub-project's bin/test share the exact same pass/fail behavior, with no local copy to
+ * drift out of sync with Core's.
+ */
+function assert_test(bool $condition, string $message) {
+    TestRunner::assertTest($condition, $message);
+}
+
+PHP;
+writeFile("{$target}/tests/bootstrap.php", str_replace('__VENDOR_DIR__', $vendorDir, $testsBootstrap));
+
+$testPhp = <<<'PHP'
+#!/usr/bin/env php
+<?php
+/**
+ * bin/test
+ * Discovers and runs all *Test.php files under tests/ via Core's own Zero\Support\TestRunner
+ * (already fully generic over an arbitrary test directory -- no local copy needed here).
+ */
+
+define('SUBPROJECT_ROOT', dirname(__DIR__));
+define('APPLICATION_ROOT', SUBPROJECT_ROOT . '/__VENDOR_DIR__');
+define('CORE_ROOT', APPLICATION_ROOT);
+define('APP_ROOT', SUBPROJECT_ROOT);
+
+require_once CORE_ROOT . '/src/Core/Autoloader.php';
+\Zero\Core\Autoloader::init();
+\Zero\Core\Autoloader::registerNamespace('App\\', APP_ROOT . '/src');
+
+use Zero\Support\TestRunner;
+
+exit(TestRunner::run(APP_ROOT . '/tests'));
+
+PHP;
+writeFile("{$target}/bin/test", str_replace('__VENDOR_DIR__', $vendorDir, $testPhp));
+chmod("{$target}/bin/test", 0755);
+
+$exampleTestPhp = <<<'PHP'
+<?php
+/**
+ * tests/ExampleTest.php
+ * Example unit test verifying the sub-project's own model and controller load correctly.
+ */
+
+use App\Controllers\HomeController;
+use App\Models\CustomModel;
+use Zero\Interfaces\Controller;
+
+require_once __DIR__ . '/bootstrap.php';
+
+$config = CustomModel::getConfig();
+assert_test(is_array($config), "CustomModel::getConfig() returns an array");
+assert_test(isset($config['name']) && $config['name']['required'] === true, "CustomModel 'name' field is required");
+
+$controller = new HomeController();
+assert_test($controller instanceof Controller, "HomeController implements Zero\\Interfaces\\Controller");
+
+echo "Example sub-project tests completed.\n";
+
+PHP;
+writeFile("{$target}/tests/ExampleTest.php", $exampleTestPhp);
+
+// --- 6. Generate the example migration and the seed script ---
+$migrationPhp = <<<'PHP'
+<?php
+/**
+ * src/Modules/Records/Database/Migrations/0001_CreateCustomRecordsTable.php
+ * Example migration for this sub-project's own schema. Discovered automatically by
+ * Zero\Database\MigrationManager because public/index.php (and tests/bootstrap.php, bin/seed)
+ * register src/Modules/ as a module search path via App::registerModulePath() -- the same
+ * mechanism Core's own bundled modules use for their migrations. Add more modules here the
+ * same way (SomeName/Database/Migrations/000N_Whatever.php) and they'll be picked up the same way.
+ */
+
+namespace App\Modules\Records\Database\Migrations;
+
+use Zero\Database\DB;
+use Zero\Database\Migration;
+
+class CreateCustomRecordsTable extends Migration
+{
+    public function up(): void
+    {
+        echo "Creating custom_records table...\n";
+        DB::query("CREATE TABLE IF NOT EXISTS custom_records (
+            id VARCHAR(36) PRIMARY KEY,
+            site_id VARCHAR(36) NOT NULL,
+            name VARCHAR(255) NOT NULL,
+            description TEXT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            deleted_at DATETIME NULL,
+            INDEX (site_id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+    }
+
+    public function down(): void
+    {
+        echo "Dropping custom_records table...\n";
+        DB::query("DROP TABLE IF EXISTS custom_records;");
+    }
+}
+
+PHP;
+writeFile(
+    "{$target}/src/Modules/Records/Database/Migrations/0001_CreateCustomRecordsTable.php",
+    $migrationPhp
+);
+
+$seedPhp = <<<'PHP'
+#!/usr/bin/env php
+<?php
+/**
+ * bin/seed
+ * Runs every pending migration (Core's own, plus this sub-project's own modules under
+ * src/Modules, e.g. src/Modules/Records/Database/Migrations) and seeds an example record.
+ */
+
+use App\Models\CustomModel;
+use Zero\Core\App;
+use Zero\Core\Env;
+use Zero\Core\Storage\Storage;
+use Zero\Database\MigrationManager;
+use Zero\Models\Site;
+
+define('SUBPROJECT_ROOT', dirname(__DIR__));
+define('APPLICATION_ROOT', SUBPROJECT_ROOT . '/__VENDOR_DIR__');
+define('CORE_ROOT', APPLICATION_ROOT);
+define('APP_ROOT', SUBPROJECT_ROOT);
+
+require_once CORE_ROOT . '/src/Core/Autoloader.php';
+\Zero\Core\Autoloader::init();
+\Zero\Core\Autoloader::registerNamespace('App\\', APP_ROOT . '/src');
+Storage::setRoot(APP_ROOT);
+App::registerModulePath(APP_ROOT . '/src/Modules', 'App\\Modules\\');
+
+Env::load(APP_ROOT);
+App::bootstrap();
+
+echo "====================================================================\n";
+echo "SUB-PROJECT SETUP: MIGRATE + SEED\n";
+echo "====================================================================\n\n";
+
+try {
+    echo "Running migrations (Core + this sub-project's own)...\n";
+    MigrationManager::up();
+    echo "Migrations up to date.\n\n";
+
+    $siteId = App::getCurrentSiteId();
+
+    // bin/seed runs from the CLI, where there is no HTTP_HOST for App::bootstrap() to match
+    // against a `sites` row -- it always falls back to the literal host 'localhost'. If a site
+    // already exists (e.g. created through the dev-mode Setup Wizard by visiting the site in a
+    // browser first), fall back to it directly via App::setCurrentSite() instead of depending on
+    // that host match, mirroring how Zero\Support\Seeder manages tenant context for CLI seeding.
+    if (empty($siteId)) {
+        $existingSite = Site::all()[0] ?? null;
+        if ($existingSite) {
+            App::setCurrentSite($existingSite);
+            $siteId = $existingSite->id;
+        }
+    }
+
+    if (!empty($siteId)) {
+        echo "Seeding an example record...\n";
+        (new CustomModel(['site_id' => $siteId, 'name' => 'First Custom Record', 'description' => 'Seeded example record.']))->save();
+        echo "Done.\n";
+    } else {
+        echo "No site tenant exists yet -- skipping example record seed.\n";
+        echo "Set ENVIRONMENT=dev in .env, then visit this site in a browser to run the Setup\n";
+        echo "Wizard and create your first site + admin user. Re-run bin/seed afterward to seed\n";
+        echo "the example record for that site.\n";
+    }
+
+    echo "\n\xE2\x9C\x85 SETUP COMPLETE\n";
+} catch (\Exception $e) {
+    echo "\n\xE2\x9D\x8C FAILED: " . $e->getMessage() . "\n";
+    exit(1);
+}
+
+PHP;
+writeFile("{$target}/bin/seed", str_replace('__VENDOR_DIR__', $vendorDir, $seedPhp));
+chmod("{$target}/bin/seed", 0755);
+
+// --- 7. Generate an example controller, model, and views ---
+$homeControllerPhp = <<<'PHP'
+<?php
+/**
+ * src/Controllers/HomeController.php
+ * Example route controller for this sub-project's homepage.
+ */
+
+namespace App\Controllers;
+
+use Zero\Interfaces\Controller;
+use Zero\Core\App;
+use App\Models\CustomModel;
+
+class HomeController implements Controller
+{
+    public function handle($param)
+    {
+        $records = [];
+        try {
+            $records = CustomModel::all();
+        } catch (\Exception $e) {
+            // Table might not be migrated yet -- run bin/seed
+        }
+
+        // Note the 'app/' prefix: this is what App::registerViewDir('app', VIEWS_DIR) in
+        // public/index.php maps to this sub-project's own src/Views/ directory.
+        App::render('app/home', [
+            'message' => 'Welcome to your new Zero CMS sub-project!',
+            'records' => $records
+        ]);
+        exit;
+    }
+}
+
+PHP;
+writeFile("{$target}/src/Controllers/HomeController.php", $homeControllerPhp);
+
+$customModelPhp = <<<'PHP'
+<?php
+/**
+ * src/Models/CustomModel.php
+ * Example Active Record model for this sub-project.
+ */
+
+namespace App\Models;
+
+use Zero\Interfaces\Model;
+use Zero\Models\Traits\IsModel;
+
+class CustomModel implements Model
+{
+    use IsModel;
+
+    protected static $tableName = 'custom_records';
+    protected static $modelType = 'CustomRecord';
+    protected static $fillable = ['site_id', 'name', 'description'];
+
+    public $id;
+    public $site_id;
+    public $name;
+    public $description;
+    public $created_at;
+    public $updated_at;
+    public $deleted_at;
+
+    public static function getConfig(): array
+    {
+        return [
+            'id' => ['type' => 'int', 'label' => 'ID', 'editable' => false, 'listDisplay' => false],
+            'name' => ['type' => 'text', 'label' => 'Record Name', 'editable' => true, 'required' => true, 'listDisplay' => true, 'searchable' => true],
+            'description' => ['type' => 'textarea', 'label' => 'Description', 'editable' => true, 'required' => false, 'listDisplay' => true],
+            'created_at' => ['type' => 'datetime', 'label' => 'Created At', 'editable' => false, 'listDisplay' => true],
+        ];
+    }
+}
+
+PHP;
+writeFile("{$target}/src/Models/CustomModel.php", $customModelPhp);
+
+$layoutPhp = <<<'PHP'
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sub-Project</title>
+</head>
+<body>
+    <?php echo $content ?? ''; ?>
+</body>
+</html>
+
+PHP;
+writeFile("{$target}/src/Views/layout.php", $layoutPhp);
+
+$homeViewPhp = <<<'PHP'
+<?php
+/**
+ * src/Views/home.php
+ * Example home view for this sub-project.
+ */
+
+use Zero\Support\Str;
+?>
+<div class="custom-home-container">
+    <header>
+        <h1><?php echo Str::escape($message ?? 'Welcome!'); ?></h1>
+    </header>
+    <main>
+        <h2>Custom Sub-Project Records</h2>
+        <?php if (!empty($records)): ?>
+            <ul>
+                <?php foreach ($records as $record): ?>
+                    <li>
+                        <strong><?php echo Str::escape($record->name); ?></strong>:
+                        <span><?php echo Str::escape($record->description ?? '(No description)'); ?></span>
+                    </li>
+                <?php endforeach; ?>
+            </ul>
+        <?php else: ?>
+            <p>No custom records found yet. Run <code>bin/seed</code> to create one.</p>
+        <?php endif; ?>
+    </main>
+</div>
+
+PHP;
+writeFile("{$target}/src/Views/home.php", $homeViewPhp);
+
+// --- 8. Generate the asset/storage symlink setup script ---
+$setupSymlinksSh = <<<'SH'
+#!/bin/sh
+# bin/setup-symlinks
+# Set up symbolic links pointing from this sub-project's public/ to the Zero Core vendor
+# package's own assets, and from public/storage to this sub-project's own storage/ directory
+# (keeping uploaded files entirely outside the read-only vendor package).
+#
+# public/assets is symlinked as a WHOLE directory (not nested under a subfolder alias) because
+# Core's own view templates (e.g. the admin panel) reference asset URLs as document-root-relative
+# literal paths like `/assets/css/admin.css` -- App::handleRequest()'s static-file fallback
+# resolves these against *this* project's own public/ directory, not the vendor package's, so
+# public/assets has to actually be Core's asset directory for those paths to resolve. Because of
+# that, this sub-project's own custom assets shouldn't be dropped directly into public/assets/ --
+# add them via a theme under src/Views/themes/<theme>/ instead (see Zero CMS's theme/CSS-bundler
+# docs), which is resolved dynamically against APPLICATION_ROOT regardless of document root.
+set -e
+
+SUBPROJECT_ROOT=$(cd "$(dirname "$0")/.." && pwd)
+
+echo "Setting up Zero CMS Core asset symlinks..."
+
+mkdir -p "${SUBPROJECT_ROOT}/public"
+mkdir -p "${SUBPROJECT_ROOT}/storage/private"
+mkdir -p "${SUBPROJECT_ROOT}/storage/logs"
+
+ln -sfn "../__VENDOR_DIR__/public/assets" "${SUBPROJECT_ROOT}/public/assets"
+ln -sfn "../storage" "${SUBPROJECT_ROOT}/public/storage"
+
+echo "Symlinks established:"
+echo "  - Core assets:    public/assets/ -> __VENDOR_DIR__/public/assets/"
+echo "  - Public uploads: public/storage/ -> storage/"
+
+SH;
+writeFile("{$target}/bin/setup-symlinks", str_replace('__VENDOR_DIR__', $vendorDir, $setupSymlinksSh));
+chmod("{$target}/bin/setup-symlinks", 0755);
+
+// --- 9. Environment configuration ---
+if (file_exists("{$target}/{$vendorDir}/.env.example")) {
+    copy("{$target}/{$vendorDir}/.env.example", "{$target}/.env");
+    echo "-> Copied {$vendorDir}/.env.example to .env (edit DB credentials before running the seeder)\n";
+}
+
+// Copy Core's own .htaccess files as-is rather than re-authoring their rewrite/hardening rules
+// here -- this project's public/ and storage/ are separate physical directories from the vendor
+// package's, so they need their own copies to get the same mod_rewrite front-controller routing
+// and storage execution/listing hardening Core relies on when run standalone.
+if (file_exists("{$target}/{$vendorDir}/public/.htaccess")) {
+    copy("{$target}/{$vendorDir}/public/.htaccess", "{$target}/public/.htaccess");
+    echo "-> Copied {$vendorDir}/public/.htaccess to public/.htaccess\n";
+}
+if (file_exists("{$target}/{$vendorDir}/storage/.htaccess")) {
+    copy("{$target}/{$vendorDir}/storage/.htaccess", "{$target}/storage/.htaccess");
+    echo "-> Copied {$vendorDir}/storage/.htaccess to storage/.htaccess\n";
+}
+
+// Copy Core's local docker-compose setup (mysql + mailpit + php83-apache) out of the read-only
+// vendor package and into this sub-project's own root. It has to live here, not in vendor/ --
+// `context: .` and the `.:/var/www/html` bind mount are written relative to wherever
+// docker-compose.yml itself sits, so run from inside the vendor package it would only ever
+// mount Core's own package tree into the container instead of this sub-project's public/,
+// bin/, storage/ and .env.
+if (file_exists("{$target}/{$vendorDir}/docker-compose.yml")) {
+    copy("{$target}/{$vendorDir}/docker-compose.yml", "{$target}/docker-compose.yml");
+    echo "-> Copied {$vendorDir}/docker-compose.yml to docker-compose.yml\n";
+}
+if (is_dir("{$target}/{$vendorDir}/docker")) {
+    copyDir("{$target}/{$vendorDir}/docker", "{$target}/docker");
+    echo "-> Copied {$vendorDir}/docker/ to docker/\n";
+}
+
+// --- 10. .gitignore ---
+$gitignore = <<<'TXT'
+.env
+/vendor/
+storage/private/*
+storage/logs/*
+!storage/private/.gitkeep
+!storage/logs/.gitkeep
+
+TXT;
+writeFile("{$target}/.gitignore", $gitignore);
+
+// --- 11. README ---
+$readme = <<<'MD'
+# Sub-Project
+
+This project requires Zero CMS Core via Composer as `__PACKAGE_NAME__`, installed at
+`__VENDOR_DIR__/` and kept entirely separate from this sub-project's own code, views,
+storage, and uploads.
+
+## Finish setup
+
+1. Set up asset/storage symlinks (already run once by the scaffold script; re-run any time):
+   ```
+   ./bin/setup-symlinks
+   ```
+2. Edit `.env` with your real database credentials. For local development, also set
+   `ENVIRONMENT=dev` (the copied `.env.example` default is `production`).
+3. Run every pending migration (Core's own, plus this sub-project's own under
+   `src/Modules/*/Database/Migrations/`):
+   ```
+   bin/seed
+   ```
+   A brand-new database has no site tenant yet, so this only runs migrations -- it prints a
+   note and skips seeding the example record until a site exists.
+4. Point your web server's document root at `public/`, or for local dev:
+   ```
+   php -S localhost:8000 public/index.php
+   ```
+   With `ENVIRONMENT=dev` set, visiting the site with no site tenant yet automatically shows
+   the **Setup Wizard**, which creates your first site and admin user.
+5. Re-run `bin/seed` to seed the example record against the site you just created, then run
+   the test suite:
+   ```
+   bin/test
+   ```
+
+## Layout
+
+- `__VENDOR_DIR__/` -- Zero CMS Core (read-only Composer package; do not edit in place)
+- `public/` -- this sub-project's document root
+- `src/Controllers`, `src/Models`, `src/Views` -- your own simple code (namespace `App\`)
+- `src/Modules/Records` -- an example self-contained module (own migration under
+  `Database/Migrations/`), showing how to add real modules the same way Core's own
+  bundled modules are structured -- add more alongside it the same way
+- `bin/seed`, `bin/test`, `tests/` -- your own setup script, test runner, and tests
+- `storage/` -- private files and logs, kept outside `__VENDOR_DIR__/`
+
+## Updating Core
+
+```
+composer update __PACKAGE_NAME__
+```
+
+`composer.lock` pins the installed Core version -- commit it alongside `composer.json` so
+teammates and deploys reproduce the same `__VENDOR_DIR__/` checkout via `composer install`.
+`vendor/` itself is gitignored and rebuilt from the lock file, not committed.
+
+MD;
+writeFile(
+    "{$target}/README.md",
+    str_replace(['__PACKAGE_NAME__', '__VENDOR_DIR__'], [PACKAGE_NAME, $vendorDir], $readme)
+);
+
+// --- 12. Run the symlink setup now, then stage everything ---
+echo "-> Running bin/setup-symlinks\n";
+runOrFail(['sh', "{$target}/bin/setup-symlinks"]);
+
+echo "-> Staging all generated files\n";
+runOrFail(['git', '-C', $target, 'add', '-A']);
+
+echo "\n";
+echo "===================================================================\n";
+echo " Done. Sub-project scaffolded at: {$target}\n";
+echo "===================================================================\n";
+echo "\n";
+echo "Next steps:\n";
+echo "  cd {$target}\n";
+echo "  \$EDITOR .env                 # set your real DB credentials\n";
+echo "  bin/seed                      # migrate Core + this sub-project's tables, seed an example\n";
+echo "  bin/test                      # run the sub-project test suite\n";
+echo "  git commit -m 'Initial sub-project scaffold'\n";
+echo "\n";
+
+// --- 13. Self-delete: this script's one job was to bootstrap $target, and it's done.
+// Only reached if every step above succeeded (fail() exits early otherwise). __FILE__ always
+// resolves to this script's own real absolute path, no matter how it was invoked or what the
+// scaffolding steps above changed the working directory to -- unlike bash's $0/BASH_SOURCE
+// dance, nothing here can be fooled by a relative invocation.
+if (is_file(__FILE__) && !is_link(__FILE__)) {
+    echo "-> Removing this bootstrap script (" . __FILE__ . "), its job is done\n";
+    @unlink(__FILE__);
+}

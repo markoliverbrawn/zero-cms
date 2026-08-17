@@ -1,30 +1,92 @@
 <?php
 
+declare(strict_types=1);
+
+/**
+ * File: src/Support/Emailer.php
+ * Architectural Purpose: Global diagnostic tools, cryptographic security handlers, SMTP email transmitters, and text helpers.
+ * Package: Zero\Support
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
 namespace Zero\Support;
 
 use Zero\Core\Env;
 use Zero\Database\DB;
 use Zero\Support\Logger;
 
+/**
+ * Class Emailer
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class Emailer
 {
+    protected static $testMode = false;
+    protected static $testModeSentEmails = [];
+
+    /**
+     * Enable test mode: send() short-circuits before opening any real SMTP connection, recording
+     * the attempt instead. Prevents automated test runs from triggering real email sends as a
+     * side effect of exercising code paths (e.g. a scheduled job) that happen to call
+     * Emailer::send() indirectly.
+     *
+     * @return void
+     */
+    public static function enableTestMode(): void
+    {
+        self::$testMode = true;
+        self::$testModeSentEmails = [];
+    }
+
+    /**
+     * Disable test mode, restoring real SMTP send behavior. Used by tests that specifically need
+     * to exercise the real send() code path (typically because they've already made it safe some
+     * other way, e.g. by shadowing the low-level socket functions).
+     *
+     * @return void
+     */
+    public static function disableTestMode(): void
+    {
+        self::$testMode = false;
+    }
+
+    /**
+     * @return bool
+     */
+    public static function isTestMode(): bool
+    {
+        return self::$testMode;
+    }
+
+    /**
+     * Get every email "sent" while in test mode, for tests that want to assert on what would
+     * have been sent without any real email actually going out.
+     *
+     * @return array
+     */
+    public static function getTestModeSentEmails(): array
+    {
+        return self::$testModeSentEmails;
+    }
+
     /**
      * Obfuscates Personally Identifiable Information (PII) like email addresses.
      * e.g., "jordan.smith@example.com" -> "j**********h@example.com"
      */
     private static function maskEmail(string $email): string
     {
-        $parts = explode('@', $email);
-        if (count($parts) !== 2) {
+        $parts = \explode('@', $email);
+        if (\count($parts) !== 2) {
             return $email;
         }
         $local = $parts[0];
         $domain = $parts[1];
-        $len = strlen($local);
+        $len = \strlen($local);
         if ($len <= 2) {
             return '***@' . $domain;
         }
-        return substr($local, 0, 1) . str_repeat('*', $len - 2) . substr($local, -1) . '@' . $domain;
+        return \substr($local, 0, 1) . \str_repeat('*', $len - 2) . \substr($local, -1) . '@' . $domain;
     }
 
     /**
@@ -33,14 +95,24 @@ class Emailer
      */
     public static function send(string $to, string $subject, string $htmlBody, string $textBody = ''): bool
     {
+        if (self::$testMode) {
+            self::$testModeSentEmails[] = [
+                'to' => $to,
+                'subject' => $subject,
+                'html_body' => $htmlBody,
+                'text_body' => $textBody
+            ];
+            return true;
+        }
+
         // Read active SMTP configurations from environment
         $host = Env::get('SMTP_HOST', 'mailpit');
-        $port = intval(Env::get('SMTP_PORT', '1025'));
+        $port = \intval(Env::get('SMTP_PORT', '1025'));
         $fromEmail = Env::get('SMTP_FROM_EMAIL', 'noreply@zero.shop');
         $fromName = Env::get('SMTP_FROM_NAME', 'Zero CMS');
 
         if (empty($textBody)) {
-            $textBody = strip_tags($htmlBody);
+            $textBody = \strip_tags($htmlBody);
         }
 
         // Open direct socket connection to the SMTP server
@@ -80,18 +152,18 @@ class Emailer
             $getResponse($socket);
 
             // Construct secure, standard-compliant MIME headers & payload
-            $boundary = "bnd_" . md5(uniqid(time()));
+            $boundary = "bnd_" . \md5(\uniqid((string)\time()));
             $headers = [
                 "MIME-Version: 1.0",
-                "From: =?UTF-8?B?" . base64_encode($fromName) . "?= <{$fromEmail}>",
+                "From: =?UTF-8?B?" . \base64_encode($fromName) . "?= <{$fromEmail}>",
                 "To: <{$to}>",
-                "Subject: =?UTF-8?B?" . base64_encode($subject) . "?=",
+                "Subject: =?UTF-8?B?" . \base64_encode($subject) . "?=",
                 "Content-Type: multipart/alternative; boundary=\"{$boundary}\"",
-                "Date: " . date('r'),
+                "Date: " . \date('r'),
                 "X-Mailer: Zero-Dependency PHP Mailer"
             ];
 
-            $message = implode("\r\n", $headers) . "\r\n\r\n";
+            $message = \implode("\r\n", $headers) . "\r\n\r\n";
             $message .= "--{$boundary}\r\n";
             $message .= "Content-Type: text/plain; charset=UTF-8\r\n";
             $message .= "Content-Transfer-Encoding: 8bit\r\n\r\n";
@@ -103,13 +175,13 @@ class Emailer
             $message .= $htmlBody . "\r\n\r\n";
             $message .= "--{$boundary}--\r\n";
 
-            fputs($socket, $message . "\r\n.\r\n");
+            \fputs($socket, $message . "\r\n.\r\n");
             $getResponse($socket);
 
-            fputs($socket, "QUIT\r\n");
+            \fputs($socket, "QUIT\r\n");
             $getResponse($socket);
 
-            fclose($socket);
+            \fclose($socket);
 
             // Central audit logging of email send attempts with strict PII redaction
             try {
@@ -145,7 +217,7 @@ class Emailer
 
             return true;
         } catch (\Exception $e) {
-            fclose($socket);
+            \fclose($socket);
             return false;
         }
     }

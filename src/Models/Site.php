@@ -1,15 +1,31 @@
 <?php
+
+declare(strict_types=1);
+
+/**
+ * File: src/Models/Site.php
+ * Architectural Purpose: Active Record data model or behavioral trait wrapping database schema representation with tenant-scoping.
+ * Package: Zero\Models
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
 // src/Models/Site.php
 
 namespace Zero\Models;
 
 use Zero\Core\App;
+use Zero\Core\Storage\Storage;
 use Zero\Database\DB;
 use Zero\Interfaces\Model;
 use Zero\Models\Traits\CascadesDeletes;
 use Zero\Models\Traits\IsModel;
 use Zero\Support\I18n;
 
+/**
+ * Class Site
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class Site implements Model
 {
     use IsModel, CascadesDeletes {
@@ -21,7 +37,7 @@ class Site implements Model
 
     protected static $tableName = 'sites';
     protected static $modelType = null;
-    protected static $fillable = ['name', 'domain', 'theme', 'enabled_modules', 'timezone', 'default_language', 'homepage_id', 'expires_at'];
+    protected static $fillable = ['name', 'domain', 'theme', 'enabled_modules', 'timezone', 'default_language', 'homepage_id', 'expires_at', 'settings'];
     protected static $systemModules = ['admin', 'queue', 'security'];
     protected static array $cascadeDeletes = [
         User::class => 'site_id',
@@ -47,6 +63,7 @@ class Site implements Model
     public $default_language = 'en';
     public $homepage_id;
     public $expires_at;
+    public $settings;
     public $created_at;
     public $updated_at;
     public $deleted_at;
@@ -64,7 +81,7 @@ class Site implements Model
         $res = $this->traitDelete();
 
         // Recursively clean up the tenant uploads directory if it exists
-        $uploadDir = APPLICATION_ROOT . '/public/storage/uploads/' . $this->id;
+        $uploadDir = Storage::getUploadsRoot() . '/' . $this->id;
         $this->deleteDirectoryRecursive($uploadDir);
 
         return $res;
@@ -75,36 +92,42 @@ class Site implements Model
      */
     private function deleteDirectoryRecursive(string $dir): bool
     {
-        if (!file_exists($dir)) {
+        if (!\file_exists($dir)) {
             return true;
         }
 
         // Configure a temporary custom error handler to trap and convert filesystem warnings into exceptions,
         // avoiding any output printing (which would corrupt HTTP redirect headers).
-        set_error_handler(function($errno, $errstr) {
+        \set_error_handler(function($errno, $errstr) {
             throw new \ErrorException($errstr, 0, $errno);
         });
 
         try {
-            if (!is_dir($dir)) {
-                return unlink($dir);
+            if (!\is_dir($dir)) {
+                return \unlink($dir);
             }
-            foreach (scandir($dir) as $item) {
+            foreach (\scandir($dir) as $item) {
                 if ($item === '.' || $item === '..') {
                     continue;
                 }
                 // Recurse without interrupting the loop if one file encounters a permission blockage
                 $this->deleteDirectoryRecursive($dir . '/' . $item);
             }
-            return rmdir($dir);
+            return \rmdir($dir);
         } catch (\Exception $e) {
             // Rethrow descriptive file deletion or other failures to bubble out to the controller/user
             throw new \Exception("Deletion failed: Could not clean up tenant uploads folder. " . $e->getMessage());
         } finally {
-            restore_error_handler();
+            \restore_error_handler();
         }
     }
 
+    /**
+     * Find by domain processing implementation helper.
+     *
+     * @param string $domain Argument descriptor.
+     * @return mixed Response output.
+     */
     public static function findByDomain(string $domain)
     {
         $stmt = DB::query("SELECT * FROM sites WHERE domain = ? LIMIT 1", [$domain]);
@@ -128,7 +151,7 @@ class Site implements Model
         $res = $this->traitForceDelete();
 
         // Recursively clean up the tenant uploads directory if it exists
-        $uploadDir = APPLICATION_ROOT . '/public/storage/uploads/' . $this->id;
+        $uploadDir = Storage::getUploadsRoot() . '/' . $this->id;
         $this->deleteDirectoryRecursive($uploadDir);
 
         return $res;
@@ -147,7 +170,7 @@ class Site implements Model
             if ($class === self::class) {
                 continue;
             }
-            if (class_exists($class)) {
+            if (\class_exists($class)) {
                 try {
                     $reflector = new \ReflectionClass($class);
                     if ($reflector->hasProperty('tableName')) {
@@ -168,6 +191,11 @@ class Site implements Model
         return $cascade;
     }
 
+    /**
+     * Retrieves the config attribute value.
+     *
+     * @return mixed Response output.
+     */
     public static function getConfig(): array
     {
         return [
@@ -240,6 +268,11 @@ class Site implements Model
         ];
     }
 
+    /**
+     * Retrieves the homepage options attribute value.
+     *
+     * @return mixed Response output.
+     */
     public static function getHomepageOptions(): array
     {
         $options = ['' => '-- Default Routing (Empty/Home slug) --'];
@@ -259,19 +292,24 @@ class Site implements Model
         return $options;
     }
 
+    /**
+     * Retrieves the theme options attribute value.
+     *
+     * @return mixed Response output.
+     */
     public static function getThemeOptions(): array
     {
         $options = [];
         $themesDir = APPLICATION_ROOT . '/src/Views/themes';
-        if (is_dir($themesDir)) {
-            $folders = scandir($themesDir);
+        if (\is_dir($themesDir)) {
+            $folders = \scandir($themesDir);
             foreach ($folders as $folder) {
                 if ($folder === '.' || $folder === '..') {
                     continue;
                 }
-                if (is_dir($themesDir . '/' . $folder)) {
+                if (\is_dir($themesDir . '/' . $folder)) {
                     // Convert folder name dynamically (e.g., kebab-case or snake_case to Title Case)
-                    $friendlyName = ucwords(str_replace(['-', '_'], ' ', $folder));
+                    $friendlyName = \ucwords(\str_replace(['-', '_'], ' ', $folder));
                     if ($folder === 'default') {
                         $title = 'Default Corporate Theme';
                     } elseif ($folder === 'guide') {
@@ -283,16 +321,29 @@ class Site implements Model
                 }
             }
         }
+        // Include themes registered dynamically via App::registerThemePath() (e.g. contributed
+        // by a host project that installs Zero CMS Core via Composer) that don't live in this repo.
+        foreach (App::getRegisteredThemeNames() as $folder) {
+            if (!isset($options[$folder])) {
+                $options[$folder] = \ucwords(\str_replace(['-', '_'], ' ', $folder)) . ' Theme';
+            }
+        }
+
         if (empty($options)) {
             $options = ['default' => 'Default Corporate Theme'];
         }
         return $options;
     }
 
+    /**
+     * Retrieves the timezone options attribute value.
+     *
+     * @return mixed Response output.
+     */
     public static function getTimezoneOptions(): array
     {
         $timezones = \DateTimeZone::listIdentifiers();
-        return array_combine($timezones, $timezones);
+        return \array_combine($timezones, $timezones);
     }
 
     /**
@@ -300,7 +351,7 @@ class Site implements Model
      */
     public function isModuleEnabled(string $module): bool
     {
-        if (in_array($module, self::$systemModules)) {
+        if (\in_array($module, self::$systemModules)) {
             return true;
         }
 
@@ -308,16 +359,86 @@ class Site implements Model
             // Default fallback: if empty/unseeded, default to all enabled for backward compatibility
             return true;
         }
-        $modules = json_decode($this->enabled_modules, true);
-        if (!is_array($modules)) {
+        $modules = \json_decode($this->enabled_modules, true);
+        if (!\is_array($modules)) {
             return true;
         }
-        return in_array($module, $modules);
+        return \in_array($module, $modules);
     }
 
+    /**
+     * Get every configured setting value for a module on this site, merged over that module's
+     * registered schema defaults (App::registerModuleSettings()) so a freshly-enabled module with
+     * no saved settings yet still returns sensible values.
+     *
+     * @param string $moduleId
+     * @return array
+     */
+    public function getModuleSettings(string $moduleId): array
+    {
+        $stored = [];
+        if (!empty($this->settings)) {
+            $decoded = \json_decode($this->settings, true);
+            if (\is_array($decoded) && isset($decoded[$moduleId]) && \is_array($decoded[$moduleId])) {
+                $stored = $decoded[$moduleId];
+            }
+        }
+
+        $result = [];
+        foreach (App::getModuleSettingsSchema($moduleId) as $key => $fieldConfig) {
+            $result[$key] = \array_key_exists($key, $stored) ? $stored[$key] : ($fieldConfig['default'] ?? null);
+        }
+        return $result;
+    }
+
+    /**
+     * Get a single setting value for a module on this site, falling back to that field's
+     * registered schema default (or $default if the field isn't registered at all).
+     *
+     * @param string $moduleId
+     * @param string $key
+     * @param mixed $default
+     * @return mixed
+     */
+    public function getModuleSetting(string $moduleId, string $key, $default = null)
+    {
+        $settings = $this->getModuleSettings($moduleId);
+        return \array_key_exists($key, $settings) ? $settings[$key] : $default;
+    }
+
+    /**
+     * Save a module's settings for this site, persisting into the shared 'settings' JSON column
+     * alongside every other module's own settings (each module gets its own top-level key, so
+     * saving one module's settings never touches another's).
+     *
+     * @param string $moduleId
+     * @param array $values
+     * @return void
+     */
+    public function saveModuleSettings(string $moduleId, array $values): void
+    {
+        $all = [];
+        if (!empty($this->settings)) {
+            $decoded = \json_decode($this->settings, true);
+            if (\is_array($decoded)) {
+                $all = $decoded;
+            }
+        }
+
+        $all[$moduleId] = $values;
+        $this->settings = \json_encode($all);
+        $this->save();
+    }
+
+    /**
+     * Registers the system module component definition dynamically.
+     *
+     * @param string $module Argument descriptor.
+     * @return mixed Response output.
+     */
     public static function registerSystemModule(string $module)
     {
-        if (!in_array($module, self::$systemModules)) {
+        if (!\in_array($module, self::$systemModules)) {
             self::$systemModules[] = $module;
         }
     }

@@ -20,7 +20,12 @@ $content = $block['content'] ?? 'Experience the power of Zero CMS. Spin up a ful
         <div class="form-group">
             <label class="form-label" for="demo_email">Your Email Address *</label>
             <p class="form-desc">We will send your sandbox administrative credentials and login instructions directly to this email.</p>
-            <input type="email" id="demo_email" name="email" class="form-input" placeholder="e.g. dev@yourcompany.com" required>
+            <?php echo App::makeFormField('email', 'email', [
+                'required' => true,
+                'attributes' => ['id' => 'demo_email', 'class' => 'form-input', 'placeholder' => 'e.g. dev@yourcompany.com'],
+                'showLabel' => false,
+                'guessHelperTextKey' => false,
+            ])->render(); ?>
         </div>
 
         <!-- Hidden Preset Mapping (Forces Kitchen Sink) -->

@@ -1,4 +1,14 @@
 <?php
+
+declare(strict_types=1);
+
+/**
+ * File: src/Modules/Security/Middleware/ContentSecurityPolicyMiddleware.php
+ * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
+ * Package: Zero\Modules\Security\Middleware
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
 // src/Modules/Security/Middleware/ContentSecurityPolicyMiddleware.php
 
 namespace Zero\Modules\Security\Middleware;
@@ -7,16 +17,27 @@ use Exception;
 use Zero\Core\App;
 use Zero\Core\Env;
 
+/**
+ * Class ContentSecurityPolicyMiddleware
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class ContentSecurityPolicyMiddleware
 {
+    /**
+     * Handles the incoming HTTP action request context and dispatches response frames.
+     *
+     * @param callable $next Argument descriptor.
+     * @return mixed Response output.
+     */
     public function handle(callable $next)
     {
         // Generate a dynamic secure CSP cryptographic nonce
         $nonce = '';
         try {
-            $nonce = base64_encode(random_bytes(16));
+            $nonce = \base64_encode(\random_bytes(16));
         } catch (Exception $e) {
-            $nonce = base64_encode(uniqid('', true));
+            $nonce = \base64_encode(\uniqid('', true));
         }
         
         App::setNonce($nonce);
@@ -43,14 +64,14 @@ class ContentSecurityPolicyMiddleware
             $csp .= " upgrade-insecure-requests;";
         }
 
-        if (php_sapi_name() !== 'cli' && !headers_sent()) {
-            header("Content-Security-Policy: " . $csp);
+        if (\php_sapi_name() !== 'cli' && !\headers_sent()) {
+            \header("Content-Security-Policy: " . $csp);
 
             // Enforce other high-impact, standard security response headers
-            header("X-Frame-Options: SAMEORIGIN");
-            header("X-Content-Type-Options: nosniff");
-            header("X-XSS-Protection: 1; mode=block");
-            header("Referrer-Policy: strict-origin-when-cross-origin");
+            \header("X-Frame-Options: SAMEORIGIN");
+            \header("X-Content-Type-Options: nosniff");
+            \header("X-XSS-Protection: 1; mode=block");
+            \header("Referrer-Policy: strict-origin-when-cross-origin");
         }
 
         return $next();

@@ -1,11 +1,25 @@
 <?php
 
+declare(strict_types=1);
+
+/**
+ * File: src/Modules/Queue/Models/QueueJob.php
+ * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
+ * Package: Zero\Modules\Queue\Models
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
 namespace Zero\Modules\Queue\Models;
 
 use Zero\Database\DB;
 use Zero\Interfaces\Model as ModelInterface;
 use Zero\Models\Traits\IsModel;
 
+/**
+ * Class QueueJob
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class QueueJob implements ModelInterface
 {
     use IsModel {
@@ -38,6 +52,11 @@ class QueueJob implements ModelInterface
     public $updated_at;
     public $deleted_at;
 
+    /**
+     * Save processing implementation helper.
+     *
+     * @return mixed Response output.
+     */
     public function save()
     {
         // When status is manually reset to pending, clear error trace, attempts, and locks
@@ -50,27 +69,37 @@ class QueueJob implements ModelInterface
         return $this->traitSave();
     }
 
+    /**
+     * Update processing implementation helper.
+     *
+     * @return mixed Response output.
+     */
     protected function update()
     {
         $set = [];
         $values = [];
 
         foreach (static::$fillable as $field) {
-            if (property_exists($this, $field)) {
+            if (\property_exists($this, $field)) {
                 $set[] = "$field = ?";
                 $values[] = $this->$field;
             }
         }
 
         $set[] = 'updated_at = ?';
-        $values[] = gmdate('Y-m-d H:i:s');
+        $values[] = \gmdate('Y-m-d H:i:s');
         $values[] = $this->id; // for the WHERE clause
 
-        $sql = "UPDATE " . static::$tableName . " SET " . implode(', ', $set) . " WHERE id = ?";
+        $sql = "UPDATE " . static::$tableName . " SET " . \implode(', ', $set) . " WHERE id = ?";
         DB::query($sql, $values);
         return true;
     }
 
+    /**
+     * Retrieves the config attribute value.
+     *
+     * @return mixed Response output.
+     */
     public static function getConfig(): array
     {
         return [
@@ -130,6 +159,11 @@ class QueueJob implements ModelInterface
         ];
     }
 
+    /**
+     * Retrieves the edit label attribute value.
+     *
+     * @return string Response output.
+     */
     public static function getEditLabel(): string
     {
         return 'View';

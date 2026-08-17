@@ -1,9 +1,24 @@
 <?php
+
+declare(strict_types=1);
+
+/**
+ * File: src/Support/Logger.php
+ * Architectural Purpose: Global diagnostic tools, cryptographic security handlers, SMTP email transmitters, and text helpers.
+ * Package: Zero\Support
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
 namespace Zero\Support;
 
-use Zero\Database\DB;
 use Zero\Core\App;
+use Zero\Database\DB;
 
+/**
+ * Class Logger
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class Logger
 {
     /**
@@ -11,7 +26,7 @@ class Logger
      */
     public static function log($userId, $action, $objectType = null, $objectId = null, $meta = null)
     {
-        $metaJson = $meta ? json_encode($meta) : null;
+        $metaJson = $meta ? \json_encode($meta) : null;
         $id = Security::uuidv7();
         $siteId = App::getCurrentSiteId() ?: null;
         

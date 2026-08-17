@@ -1,11 +1,25 @@
 <?php
 
+declare(strict_types=1);
+
+/**
+ * File: src/Http/Middleware/AuthThrottlingMiddleware.php
+ * Architectural Purpose: HTTP request routing, request filtering middleware, or dynamic content-security controllers.
+ * Package: Zero\Http\Middleware
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
 namespace Zero\Http\Middleware;
 
 use Zero\Core\App;
-use Zero\Support\Security;
 use Zero\Support\Logger;
+use Zero\Support\Security;
 
+/**
+ * Class AuthThrottlingMiddleware
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class AuthThrottlingMiddleware
 {
     /**
@@ -20,7 +34,7 @@ class AuthThrottlingMiddleware
     {
         $method = $_SERVER['REQUEST_METHOD'];
         if ($method === 'POST') {
-            $username = trim($_POST['username'] ?? '');
+            $username = \trim($_POST['username'] ?? '');
             if (empty($username)) {
                 // Fallback to IP address if no username is present (e.g., during reset completion)
                 $username = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';

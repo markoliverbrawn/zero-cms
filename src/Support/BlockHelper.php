@@ -1,9 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
+/**
+ * File: src/Support/BlockHelper.php
+ * Architectural Purpose: Global diagnostic tools, cryptographic security handlers, SMTP email transmitters, and text helpers.
+ * Package: Zero\Support
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
 namespace Zero\Support;
 
 use Zero\Support\Str;
 
+/**
+ * Class BlockHelper
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class BlockHelper
 {
     /**
@@ -36,7 +50,7 @@ class BlockHelper
             $classes[] = $spaceAfter;
         }
 
-        return implode(' ', $classes);
+        return \implode(' ', $classes);
     }
 
     /**

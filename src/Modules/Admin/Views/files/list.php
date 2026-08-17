@@ -59,7 +59,12 @@ $currentFolder = $folder ?? '';
       </span>
       <strong style="display: block; margin-bottom: 5px;">Click to select or drag files here to upload</strong>
       <span style="font-size: 0.85rem; color: color-mix(in srgb, var(--text-color) 60%, transparent);">Uploading into active folder: <strong><?php echo !empty($currentFolder) ? Str::escape($currentFolder) : 'Root'; ?></strong></span>
-      <input type="file" name="file" id="media-file-input" required style="display: none;">
+      <?php echo App::makeFormField('file', 'file', [
+          'required' => true,
+          'attributes' => ['id' => 'media-file-input', 'style' => 'display: none;'],
+          'showLabel' => false,
+          'guessHelperTextKey' => false,
+      ])->render(); ?>
     </div>
     <div id="media-upload-actions" style="display: none; margin-top: 15px; align-items: center; gap: 15px;">
       <span id="selected-file-name" style="font-weight: bold; font-size: 0.9rem;"></span>

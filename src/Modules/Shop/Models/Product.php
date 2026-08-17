@@ -1,5 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
+/**
+ * File: src/Modules/Shop/Models/Product.php
+ * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
+ * Package: Zero\Modules\Shop\Models
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
 namespace Zero\Modules\Shop\Models;
 
 use Zero\Core\App;
@@ -15,6 +24,11 @@ use Zero\Modules\Shop\Models\ProductVariant;
 use Zero\Support\I18n;
 use Zero\Support\Security;
 
+/**
+ * Class Product
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class Product implements Model
 {
     use IsModel, HasSlug, Paginates, CascadesDeletes, Searchable {
@@ -51,11 +65,17 @@ class Product implements Model
     public $main_image_path;
     public $main_image_id;
 
+    /**
+     * __construct processing implementation helper.
+     *
+     * @param mixed $data Argument descriptor.
+     * @return mixed Response output.
+     */
     public function __construct($data = [])
     {
         // Hydrate all matching DB fields
         foreach ($data as $key => $value) {
-            if (property_exists($this, $key)) {
+            if (\property_exists($this, $key)) {
                 $this->$key = $value;
             }
         }
@@ -68,7 +88,7 @@ class Product implements Model
             $this->main_image = $this->main_image_path;
         } else {
             // Otherwise, fetch it dynamically if main_image contains a 36-char media ID
-            if (!empty($this->main_image) && strlen($this->main_image) === 36) {
+            if (!empty($this->main_image) && \strlen($this->main_image) === 36) {
                 $this->main_image_id = $this->main_image;
                 $media = Media::find($this->main_image);
                 if ($media) {
@@ -101,6 +121,11 @@ class Product implements Model
         return $results;
     }
 
+    /**
+     * Create record processing implementation helper.
+     *
+     * @return mixed Response output.
+     */
     protected function createRecord()
     {
         if (empty($this->id)) {
@@ -128,17 +153,23 @@ class Product implements Model
         $placeholders[] = '?';
         $values[] = $this->site_id ?? App::getCurrentSiteId();
 
-        $sql = "INSERT INTO shop_products (" . implode(', ', $fields) . ") VALUES (" . implode(', ', $placeholders) . ")";
+        $sql = "INSERT INTO shop_products (" . \implode(', ', $fields) . ") VALUES (" . \implode(', ', $placeholders) . ")";
         DB::query($sql, $values);
 
         // Synchronize with search index if searchable
-        if (method_exists($this, 'indexInSearch')) {
+        if (\method_exists($this, 'indexInSearch')) {
             $this->indexInSearch();
         }
 
         return $this->id;
     }
 
+    /**
+     * Find processing implementation helper.
+     *
+     * @param mixed $id Argument descriptor.
+     * @return mixed Response output.
+     */
     public static function find($id)
     {
         $stmt = DB::query("
@@ -155,6 +186,12 @@ class Product implements Model
         return null;
     }
 
+    /**
+     * Find by slug processing implementation helper.
+     *
+     * @param mixed $slug Argument descriptor.
+     * @return mixed Response output.
+     */
     public static function findBySlug($slug)
     {
         $siteId = App::getCurrentSiteId();
@@ -180,10 +217,15 @@ class Product implements Model
         return $this->category_id ? Category::find($this->category_id) : null;
     }
 
+    /**
+     * Retrieves the config attribute value.
+     *
+     * @return mixed Response output.
+     */
     public static function getConfig(): array
     {
         $categories = [];
-        if (class_exists(Category::class)) {
+        if (\class_exists(Category::class)) {
             $allCats = Category::all();
             foreach ($allCats as $cat) {
                 $categories[$cat->id] = $cat->title;
@@ -207,8 +249,8 @@ class Product implements Model
             'price' => ['type' => 'number', 'label' => 'Price', 'editable' => true, 'required' => true, 'listDisplay' => true, 'width' => 'half'],
             'compare_at_price' => ['type' => 'number', 'label' => I18n::t('compare_at_price'), 'editable' => true, 'required' => false, 'listDisplay' => false, 'width' => 'half'],
             'main_image' => ['type' => 'image', 'label' => I18n::t('primary_image_path'), 'editable' => true, 'required' => false, 'listDisplay' => true, 'section' => 'side', 'width' => 'full'],
-            'media_ids' => ['type' => 'text', 'label' => 'Media IDs (comma separated)', 'editable' => true, 'required' => false, 'listDisplay' => false, 'section' => 'side', 'width' => 'full'],
-            'description' => ['type' => 'textarea', 'label' => I18n::t('rich_description'), 'editable' => true, 'required' => false, 'listDisplay' => false, 'width' => 'full'],
+            'media_ids' => ['type' => 'gallery_picker', 'label' => 'Media IDs (comma separated)', 'editable' => true, 'required' => false, 'listDisplay' => false, 'section' => 'side', 'width' => 'full'],
+            'description' => ['type' => 'rich_text_editor', 'label' => I18n::t('rich_description'), 'editable' => true, 'required' => false, 'listDisplay' => false, 'width' => 'full'],
             'status' => [
                 'type' => 'select',
                 'label' => 'Status',
@@ -247,7 +289,7 @@ class Product implements Model
     public function getFrontendUrl(): string
     {
         $slug = $this->slug ?? '';
-        return '/shop/product/' . ltrim($slug, '/');
+        return '/shop/product/' . \ltrim($slug, '/');
     }
 
     /**
@@ -258,12 +300,12 @@ class Product implements Model
         if (empty($this->media_ids)) {
             return [];
         }
-        $ids = array_filter(array_map('trim', explode(',', $this->media_ids)));
+        $ids = \array_filter(\array_map('trim', \explode(',', $this->media_ids)));
         if (empty($ids)) {
             return [];
         }
         
-        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+        $placeholders = \implode(',', \array_fill(0, \count($ids), '?'));
         return DB::query("
             SELECT * FROM media 
             WHERE id IN ($placeholders)
@@ -305,23 +347,23 @@ class Product implements Model
         }
 
         // Apply custom alias mapping for ordering
-        if (strpos($orderBy, 'created_at') === 0) {
-            $orderBy = 'shop_products.created_at ' . (str_ends_with($orderBy, 'DESC') ? 'DESC' : 'ASC');
-        } elseif (strpos($orderBy, 'title') === 0) {
-            $orderBy = 'shop_products.title ' . (str_ends_with($orderBy, 'DESC') ? 'DESC' : 'ASC');
-        } elseif (strpos($orderBy, 'price') === 0) {
-            $orderBy = 'shop_products.price ' . (str_ends_with($orderBy, 'DESC') ? 'DESC' : 'ASC');
-        } elseif (strpos($orderBy, 'status') === 0) {
-            $orderBy = 'shop_products.status ' . (str_ends_with($orderBy, 'DESC') ? 'DESC' : 'ASC');
-        } elseif (strpos($orderBy, 'sku') === 0) {
-            $orderBy = 'shop_products.sku ' . (str_ends_with($orderBy, 'DESC') ? 'DESC' : 'ASC');
+        if (\strpos($orderBy, 'created_at') === 0) {
+            $orderBy = 'shop_products.created_at ' . (\str_ends_with($orderBy, 'DESC') ? 'DESC' : 'ASC');
+        } elseif (\strpos($orderBy, 'title') === 0) {
+            $orderBy = 'shop_products.title ' . (\str_ends_with($orderBy, 'DESC') ? 'DESC' : 'ASC');
+        } elseif (\strpos($orderBy, 'price') === 0) {
+            $orderBy = 'shop_products.price ' . (\str_ends_with($orderBy, 'DESC') ? 'DESC' : 'ASC');
+        } elseif (\strpos($orderBy, 'status') === 0) {
+            $orderBy = 'shop_products.status ' . (\str_ends_with($orderBy, 'DESC') ? 'DESC' : 'ASC');
+        } elseif (\strpos($orderBy, 'sku') === 0) {
+            $orderBy = 'shop_products.sku ' . (\str_ends_with($orderBy, 'DESC') ? 'DESC' : 'ASC');
         }
 
         // Total count
         $totalStmt = DB::query("SELECT COUNT(*) as cnt FROM shop_products $where", $params);
-        $totalCount = intval($totalStmt->fetch()['cnt'] ?? 0);
+        $totalCount = \intval($totalStmt->fetch()['cnt'] ?? 0);
 
-        $pages = max(1, ceil($totalCount / $perPage));
+        $pages = \max(1, \ceil($totalCount / $perPage));
         $offset = ($page - 1) * $perPage;
 
         // Fetch paginated data with EAGER LOAD main_image_path in exactly ONE query!
@@ -349,6 +391,11 @@ class Product implements Model
         ];
     }
 
+    /**
+     * Save processing implementation helper.
+     *
+     * @return mixed Response output.
+     */
     public function save()
     {
         // Swap main_image path with media ID for DB storage
@@ -373,6 +420,11 @@ class Product implements Model
         return $result;
     }
 
+    /**
+     * Update record processing implementation helper.
+     *
+     * @return mixed Response output.
+     */
     protected function updateRecord()
     {
         $set = [];
@@ -388,11 +440,11 @@ class Product implements Model
         $set[] = "updated_at = NOW()";
         $values[] = $this->id;
 
-        $sql = "UPDATE shop_products SET " . implode(', ', $set) . " WHERE id = ?";
+        $sql = "UPDATE shop_products SET " . \implode(', ', $set) . " WHERE id = ?";
         DB::query($sql, $values);
 
         // Synchronize with search index if searchable
-        if (method_exists($this, 'indexInSearch')) {
+        if (\method_exists($this, 'indexInSearch')) {
             $this->indexInSearch();
         }
 
@@ -408,7 +460,7 @@ class Product implements Model
         $siteId = App::getCurrentSiteId();
         
         // Handle table prefix dynamically for columns
-        $columnSql = (strpos($column, '.') === false) ? "shop_products.{$column}" : $column;
+        $columnSql = (\strpos($column, '.') === false) ? "shop_products.{$column}" : $column;
         $sql = "
             SELECT shop_products.*, media.path AS main_image_path 
             FROM shop_products 
@@ -419,7 +471,7 @@ class Product implements Model
 
         if (!empty($options)) {
             // Translate options to use correct aliases if needed
-            $options = str_replace('ORDER BY ', 'ORDER BY shop_products.', $options);
+            $options = \str_replace('ORDER BY ', 'ORDER BY shop_products.', $options);
             $sql .= " " . $options;
         }
 

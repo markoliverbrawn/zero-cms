@@ -1,0 +1,227 @@
+#!/usr/bin/env php
+<?php
+// bin/release - Zero-dependency Conventional Commits semantic-versioning release utility.
+// Reads every commit since the last "v*" git tag, computes the next semver bump
+// (feat -> minor, fix/perf -> patch, a "!" or "BREAKING CHANGE:" footer -> major), appends a
+// CHANGELOG.md section, tags the release, and publishes it via GitHub's own `gh` CLI. No
+// Node/npm and no third-party package required -- just git and gh, both already present on
+// every GitHub Actions runner.
+//
+// Usage:
+//   bin/release            Compute, tag, and publish the next release.
+//   bin/release --dry-run  Compute and print the next version + changelog only; no git/gh
+//                          mutation of any kind (safe to run locally at any time).
+
+declare(strict_types=1);
+
+define('APPLICATION_ROOT', dirname(__DIR__));
+
+$dryRun = in_array('--dry-run', $argv, true);
+
+/**
+ * Run a shell command from the repository root and return its trimmed stdout.
+ * Throws a RuntimeException (with stderr context) on a non-zero exit code.
+ */
+function run(string $cmd): string
+{
+    $descriptors = [1 => ['pipe', 'w'], 2 => ['pipe', 'w']];
+    $process = proc_open($cmd, $descriptors, $pipes, APPLICATION_ROOT);
+    if (!is_resource($process)) {
+        throw new RuntimeException("Failed to start process: {$cmd}");
+    }
+    $stdout = stream_get_contents($pipes[1]);
+    $stderr = stream_get_contents($pipes[2]);
+    fclose($pipes[1]);
+    fclose($pipes[2]);
+    $exitCode = proc_close($process);
+    if ($exitCode !== 0) {
+        throw new RuntimeException("Command failed ({$exitCode}): {$cmd}\n{$stderr}");
+    }
+    return trim($stdout);
+}
+
+/**
+ * The most recent "v*" semver tag reachable from HEAD, or null if none exists yet.
+ */
+function getLastTag(): ?string
+{
+    $descriptors = [1 => ['pipe', 'w'], 2 => ['pipe', 'w']];
+    $process = proc_open('git tag --list "v*" --sort=-v:refname', $descriptors, $pipes, APPLICATION_ROOT);
+    $stdout = stream_get_contents($pipes[1]);
+    fclose($pipes[1]);
+    fclose($pipes[2]);
+    proc_close($process);
+    $tags = array_filter(explode("\n", trim($stdout)));
+    return $tags[0] ?? null;
+}
+
+/**
+ * Every commit since $sinceTag (or the full history if null), each as
+ * ['hash' => short sha, 'subject' => first line, 'body' => remaining lines].
+ */
+function getCommitsSince(?string $sinceTag): array
+{
+    $range = $sinceTag ? "{$sinceTag}..HEAD" : 'HEAD';
+    // \x01 separates fields within a commit; \x02 separates commits from each other -- both are
+    // control characters no real commit message will ever contain, so this splits safely even
+    // when a commit body itself contains blank lines, colons, or other punctuation.
+    $log = run("git log {$range} --pretty=format:%h%x01%s%x01%b%x02");
+    if ($log === '') {
+        return [];
+    }
+    $commits = [];
+    foreach (explode("\x02", $log) as $record) {
+        $record = trim($record, "\n");
+        if ($record === '') {
+            continue;
+        }
+        [$hash, $subject, $body] = array_pad(explode("\x01", $record, 3), 3, '');
+        $commits[] = ['hash' => $hash, 'subject' => $subject, 'body' => $body];
+    }
+    return $commits;
+}
+
+/**
+ * Parse a Conventional Commits subject line into ['type' => ..., 'scope' => ..., 'breaking' =>
+ * bool, 'description' => ...], or null if the subject doesn't follow the convention at all
+ * (e.g. a merge commit, or a message predating the convention being adopted).
+ */
+function parseConventionalCommit(string $subject): ?array
+{
+    if (!preg_match('/^([a-zA-Z]+)(\(([^)]+)\))?(!)?:\s*(.+)$/', $subject, $m)) {
+        return null;
+    }
+    return [
+        'type' => strtolower($m[1]),
+        'scope' => $m[3] ?? '',
+        'breaking' => $m[4] === '!',
+        'description' => $m[5],
+    ];
+}
+
+/**
+ * Determine the required semver bump ('major'|'minor'|'patch'|null) across a set of parsed
+ * commits, and group them by Conventional Commits type for the changelog.
+ */
+function classifyCommits(array $commits): array
+{
+    $bump = null;
+    $groups = ['feat' => [], 'fix' => [], 'perf' => []];
+
+    foreach ($commits as $commit) {
+        $parsed = parseConventionalCommit($commit['subject']);
+        if ($parsed === null) {
+            continue;
+        }
+        $isBreaking = $parsed['breaking'] || preg_match('/^BREAKING[ -]CHANGE:/mi', $commit['body']) === 1;
+
+        if ($isBreaking) {
+            $bump = 'major';
+        } elseif ($parsed['type'] === 'feat' && $bump !== 'major') {
+            $bump = 'minor';
+        } elseif (in_array($parsed['type'], ['fix', 'perf'], true) && !in_array($bump, ['major', 'minor'], true)) {
+            $bump = 'patch';
+        }
+
+        if (isset($groups[$parsed['type']])) {
+            $entry = $parsed['scope'] !== '' ? "**{$parsed['scope']}:** {$parsed['description']}" : $parsed['description'];
+            $groups[$parsed['type']][] = "{$entry} ({$commit['hash']})";
+        }
+    }
+
+    return ['bump' => $bump, 'groups' => $groups];
+}
+
+/**
+ * Apply a semver bump to a [major, minor, patch] tuple.
+ */
+function applyBump(array $version, string $bump): array
+{
+    [$major, $minor, $patch] = $version;
+    switch ($bump) {
+        case 'major':
+            return [$major + 1, 0, 0];
+        case 'minor':
+            return [$major, $minor + 1, 0];
+        default:
+            return [$major, $minor, $patch + 1];
+    }
+}
+
+/**
+ * Render the "## vX.Y.Z" changelog section for this release from its grouped commits.
+ */
+function renderChangelogSection(string $tag, array $groups): string
+{
+    $sectionTitles = ['feat' => 'Features', 'fix' => 'Bug Fixes', 'perf' => 'Performance'];
+    $date = date('Y-m-d');
+    $lines = ["## {$tag} ({$date})", ''];
+
+    foreach ($sectionTitles as $type => $title) {
+        if (empty($groups[$type])) {
+            continue;
+        }
+        $lines[] = "### {$title}";
+        foreach ($groups[$type] as $entry) {
+            $lines[] = "- {$entry}";
+        }
+        $lines[] = '';
+    }
+
+    return implode("\n", $lines);
+}
+
+// --- Main ---
+
+$lastTag = getLastTag();
+$baseVersion = $lastTag ? array_map('intval', explode('.', ltrim($lastTag, 'v'))) : [0, 0, 0];
+$commits = getCommitsSince($lastTag);
+
+if (empty($commits)) {
+    echo "No commits since " . ($lastTag ?? '(repository start)') . " -- nothing to release.\n";
+    exit(0);
+}
+
+['bump' => $bump, 'groups' => $groups] = classifyCommits($commits);
+
+if ($bump === null) {
+    echo "No feat/fix/perf/breaking commits since " . ($lastTag ?? '(repository start)') . " -- skipping release.\n";
+    exit(0);
+}
+
+$nextVersion = applyBump($baseVersion, $bump);
+$nextTag = 'v' . implode('.', $nextVersion);
+$changelogSection = renderChangelogSection($nextTag, $groups);
+
+echo "Last tag:    " . ($lastTag ?? '(none)') . "\n";
+echo "Bump type:   {$bump}\n";
+echo "Next tag:    {$nextTag}\n\n";
+echo $changelogSection . "\n";
+
+if ($dryRun) {
+    echo "[dry run] No tag, commit, or release was created.\n";
+    exit(0);
+}
+
+$changelogPath = APPLICATION_ROOT . '/CHANGELOG.md';
+$existing = file_exists($changelogPath) ? file_get_contents($changelogPath) : "# Changelog\n\n";
+$updated = preg_replace('/^# Changelog\n\n/', "# Changelog\n\n{$changelogSection}\n\n", $existing, 1);
+if ($updated === $existing) {
+    // File existed but didn't start with the expected header (e.g. first run against a file
+    // that predates this tool) -- prepend the new section right at the top regardless.
+    $updated = $changelogSection . "\n\n" . $existing;
+}
+file_put_contents($changelogPath, $updated);
+
+run('git add CHANGELOG.md');
+run('git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -m ' . escapeshellarg("chore(release): {$nextTag} [skip ci]"));
+run('git push origin HEAD:' . run('git rev-parse --abbrev-ref HEAD'));
+run('git tag ' . escapeshellarg($nextTag));
+run('git push origin ' . escapeshellarg($nextTag));
+
+$notesFile = tempnam(sys_get_temp_dir(), 'release-notes-');
+file_put_contents($notesFile, $changelogSection);
+run('gh release create ' . escapeshellarg($nextTag) . ' --title ' . escapeshellarg($nextTag) . ' --notes-file ' . escapeshellarg($notesFile));
+unlink($notesFile);
+
+echo "\nPublished release {$nextTag}.\n";

@@ -1,15 +1,35 @@
 <?php
 
+declare(strict_types=1);
+
+/**
+ * File: src/Modules/Admin/Controllers/PreferencesController.php
+ * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
+ * Package: Zero\Modules\Admin\Controllers
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
 namespace Zero\Modules\Admin\Controllers;
 
 use Zero\Core\App;
-use Zero\Models\User;
-use Zero\Support\Logger;
-use Zero\Support\I18n;
 use Zero\Interfaces\Controller;
+use Zero\Models\User;
+use Zero\Support\I18n;
+use Zero\Support\Logger;
 
+/**
+ * Class PreferencesController
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class PreferencesController implements Controller
 {
+    /**
+     * Handles the incoming HTTP action request context and dispatches response frames.
+     *
+     * @param mixed $param Argument descriptor.
+     * @return mixed Response output.
+     */
     public function handle($param)
     {
         App::applyAuthMiddleware();
@@ -24,20 +44,20 @@ class PreferencesController implements Controller
             App::applyCsrfMiddleware();
             
             $layout = $_POST['layout'] ?? [];
-            if (!is_array($layout)) {
+            if (!\is_array($layout)) {
                 $layout = [];
             }
             
             $allowedWidgets = ['recent_posts', 'recent_pages', 'recent_media', 'quick_links', 'recent_orders', 'shop_orders_chart', 'shop_category_pie'];
-            $layout = array_values(array_intersect($layout, $allowedWidgets));
+            $layout = \array_values(\array_intersect($layout, $allowedWidgets));
             
             $prefs = User::getPreferencesForUser($userId);
             $prefs['dashboard_layout'] = $layout;
             
             User::savePreferencesForUser($userId, $prefs);
             
-            header('Content-Type: application/json');
-            echo json_encode(['success' => true]);
+            \header('Content-Type: application/json');
+            echo \json_encode(['success' => true]);
             exit;
         }
 
@@ -48,30 +68,30 @@ class PreferencesController implements Controller
             $theme = $_POST['theme'] ?? 'light';
             $themePreset = $_POST['theme_preset'] ?? 'default';
             $language = $_POST['language'] ?? 'en';
-            $perPage = intval($_POST['per_page'] ?? 20);
+            $perPage = \intval($_POST['per_page'] ?? 20);
             $dashboardLayout = $_POST['dashboard_layout'] ?? [];
             $timezone = $_POST['timezone'] ?? 'UTC';
 
             // Basic validation
-            if (!in_array($theme, ['light', 'dark'])) {
+            if (!\in_array($theme, ['light', 'dark'])) {
                 $theme = 'light';
             }
-            if (!in_array($themePreset, ['default', 'vintage-greenscreen'])) {
+            if (!\in_array($themePreset, ['default', 'vintage-greenscreen'])) {
                 $themePreset = 'default';
             }
-            if (!in_array($language, ['en', 'es', 'mi', 'hr'])) {
+            if (!\in_array($language, ['en', 'es', 'mi', 'hr'])) {
                 $language = 'en';
             }
-            if (!in_array($perPage, [10, 20, 50, 100])) {
+            if (!\in_array($perPage, [10, 20, 50, 100])) {
                 $perPage = 20;
             }
-            if (!is_array($dashboardLayout)) {
+            if (!\is_array($dashboardLayout)) {
                 $dashboardLayout = [];
             }
             
             // Filter invalid layout items
             $allowedWidgets = ['recent_posts', 'recent_pages', 'recent_media', 'quick_links', 'recent_orders', 'shop_orders_chart', 'shop_category_pie'];
-            $dashboardLayout = array_values(array_intersect($dashboardLayout, $allowedWidgets));
+            $dashboardLayout = \array_values(\array_intersect($dashboardLayout, $allowedWidgets));
 
             $prefs = [
                 'theme' => $theme,

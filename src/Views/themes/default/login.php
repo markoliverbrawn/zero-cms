@@ -1,4 +1,5 @@
 <?php
+use Zero\Core\App;
 use Zero\Support\Str;
 // src/Views/themes/default/login.php
 ?>
@@ -17,15 +18,25 @@ use Zero\Support\Str;
         
         <div class="auth-form-group">
             <label class="auth-label">Username</label>
-            <input name="username" required placeholder="minimalist_stylist" class="auth-input">
+            <?php echo App::makeFormField('text', 'username', [
+                'required' => true,
+                'attributes' => ['class' => 'auth-input', 'placeholder' => 'minimalist_stylist'],
+                'showLabel' => false,
+                'guessHelperTextKey' => false,
+            ])->render(); ?>
         </div>
-        
+
         <div class="auth-form-group-password">
             <div class="auth-form-group-password-header">
                 <label class="auth-label-inline">Password</label>
                 <a href="/forgot" style="font-size: 0.8rem; color: var(--accent-color, #2563eb); text-decoration: none; font-weight: bold;">Forgot Password?</a>
             </div>
-            <input name="password" type="password" required placeholder="••••••••" class="auth-input">
+            <?php echo App::makeFormField('password', 'password', [
+                'required' => true,
+                'attributes' => ['class' => 'auth-input', 'placeholder' => '••••••••'],
+                'showLabel' => false,
+                'guessHelperTextKey' => false,
+            ])->render(); ?>
         </div>
         
         <button type="submit" class="auth-btn">Log In</button>

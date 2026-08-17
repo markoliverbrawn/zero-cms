@@ -1,5 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
+/**
+ * File: src/Modules/Shop/Models/Category.php
+ * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
+ * Package: Zero\Modules\Shop\Models
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
 namespace Zero\Modules\Shop\Models;
 
 use Zero\Core\App;
@@ -9,6 +18,11 @@ use Zero\Models\Media;
 use Zero\Models\Traits\HasSlug;
 use Zero\Models\Traits\IsModel;
 
+/**
+ * Class Category
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class Category implements Model
 {
     use IsModel, HasSlug;
@@ -28,11 +42,17 @@ class Category implements Model
     public $created_at;
     public $updated_at;
 
+    /**
+     * __construct processing implementation helper.
+     *
+     * @param mixed $data Argument descriptor.
+     * @return mixed Response output.
+     */
     public function __construct($data = [])
     {
         // Hydrate all matching DB fields
         foreach ($data as $key => $value) {
-            if (property_exists($this, $key)) {
+            if (\property_exists($this, $key)) {
                 $this->$key = $value;
             }
         }
@@ -41,7 +61,7 @@ class Category implements Model
         if (!empty($this->image_path)) {
             $this->image_id = $this->image;
             $this->image = $this->image_path;
-        } elseif (!empty($this->image) && strlen($this->image) === 36) {
+        } elseif (!empty($this->image) && \strlen($this->image) === 36) {
             $this->image_id = $this->image;
             $media = Media::find($this->image);
             if ($media) {
@@ -94,13 +114,18 @@ class Category implements Model
         return null;
     }
 
+    /**
+     * Retrieves the config attribute value.
+     *
+     * @return mixed Response output.
+     */
     public static function getConfig(): array
     {
         return [
             'id' => ['type' => 'text', 'label' => 'ID', 'editable' => false, 'listDisplay' => false],
             'title' => ['type' => 'text', 'label' => 'Category Name', 'editable' => true, 'required' => true, 'listDisplay' => true, 'searchable' => true],
             'slug' => ['type' => 'text', 'label' => 'Slug', 'editable' => false, 'listDisplay' => true],
-            'description' => ['type' => 'textarea', 'label' => 'Description', 'editable' => true, 'listDisplay' => true],
+            'description' => ['type' => 'rich_text_editor', 'label' => 'Description', 'editable' => true, 'listDisplay' => true],
             'image' => [
                 'type' => 'image',
                 'label' => 'Category Image',
@@ -121,20 +146,20 @@ class Category implements Model
         $siteId = App::getCurrentSiteId();
         
         // Defensive whitelisting and column mapping of the ORDER BY clause
-        $orderByParts = explode(' ', trim($orderBy));
+        $orderByParts = \explode(' ', \trim($orderBy));
         $cleanOrderBy = 'shop_categories.created_at DESC'; // Fallback default
 
         if (!empty($orderByParts)) {
             $column = $orderByParts[0];
-            $direction = isset($orderByParts[1]) ? strtoupper($orderByParts[1]) : 'ASC';
+            $direction = isset($orderByParts[1]) ? \strtoupper($orderByParts[1]) : 'ASC';
 
             if ($column === 'image_path') {
                 $column = 'image_path';
-            } elseif (strpos($column, 'shop_categories.') !== 0 && $column !== 'image_path') {
+            } elseif (\strpos($column, 'shop_categories.') !== 0 && $column !== 'image_path') {
                 $column = 'shop_categories.' . $column;
             }
 
-            if (preg_match('/^[a-zA-Z0-9_\.]+$/', $column)) {
+            if (\preg_match('/^[a-zA-Z0-9_\.]+$/', $column)) {
                 if ($direction !== 'ASC' && $direction !== 'DESC') {
                     $direction = 'ASC';
                 }
@@ -160,14 +185,14 @@ class Category implements Model
             $params[] = $qParam;
         }
 
-        $whereSql = 'WHERE ' . implode(' AND ', $where);
+        $whereSql = 'WHERE ' . \implode(' AND ', $where);
 
         // Total count
         $totalStmt = DB::query("SELECT COUNT(*) as cnt FROM shop_categories {$whereSql}", $params);
         $total = $totalStmt->fetch();
-        $totalCount = $total ? intval($total['cnt']) : 0;
+        $totalCount = $total ? \intval($total['cnt']) : 0;
 
-        $pages = max(1, ceil($totalCount / $perPage));
+        $pages = \max(1, \ceil($totalCount / $perPage));
         $offset = ($page - 1) * $perPage;
 
         // Fetch paginated data with EAGER LOAD image_path in exactly ONE query!
@@ -203,7 +228,7 @@ class Category implements Model
         $siteId = App::getCurrentSiteId();
         
         // Handle table prefix dynamically for columns
-        $columnSql = (strpos($column, '.') === false) ? "shop_categories.{$column}" : $column;
+        $columnSql = (\strpos($column, '.') === false) ? "shop_categories.{$column}" : $column;
         $sql = "
             SELECT shop_categories.*, media.path AS image_path 
             FROM shop_categories 
@@ -213,7 +238,7 @@ class Category implements Model
         $params = [$value, $siteId];
 
         if (!empty($options)) {
-            $options = str_replace('ORDER BY ', 'ORDER BY shop_categories.', $options);
+            $options = \str_replace('ORDER BY ', 'ORDER BY shop_categories.', $options);
             $sql .= " " . $options;
         }
 

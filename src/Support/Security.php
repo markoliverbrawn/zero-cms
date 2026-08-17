@@ -1,11 +1,25 @@
 <?php
 
+declare(strict_types=1);
+
+/**
+ * File: src/Support/Security.php
+ * Architectural Purpose: Global diagnostic tools, cryptographic security handlers, SMTP email transmitters, and text helpers.
+ * Package: Zero\Support
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
 namespace Zero\Support;
 
 use Zero\Core\App;
 use Zero\Database\DB;
 use Zero\Support\Str;
 
+/**
+ * Class Security
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class Security {
     /**
      * Check if authentication attempts are exceeded for a combination of IP and identifier.
@@ -14,7 +28,7 @@ class Security {
     public static function checkAuthRateLimit(string $action, string $identifier, int $maxAttempts = 5, int $decaySeconds = 900): bool
     {
         $ip = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
-        $timeWindow = gmdate('Y-m-d H:i:s', time() - $decaySeconds);
+        $timeWindow = \gmdate('Y-m-d H:i:s', \time() - $decaySeconds);
 
         // Map general actions to database actions
         $failedActions = [];
@@ -31,8 +45,8 @@ class Security {
         }
 
         // Prepare query with correct in clause
-        $placeholders = implode(',', array_fill(0, count($failedActions), '?'));
-        $params = array_merge($failedActions, [$timeWindow]);
+        $placeholders = \implode(',', \array_fill(0, \count($failedActions), '?'));
+        $params = \array_merge($failedActions, [$timeWindow]);
 
         $logs = DB::query("
             SELECT meta FROM audit_logs
@@ -43,11 +57,11 @@ class Security {
 
         $attempts = 0;
         foreach ($logs as $log) {
-            $meta = json_decode($log['meta'] ?? '{}', true);
+            $meta = \json_decode($log['meta'] ?? '{}', true);
             $metaIp = $meta['ip_address'] ?? '';
             $metaUser = $meta['username'] ?? '';
 
-            if ($metaIp === $ip || (!empty($metaUser) && strtolower($metaUser) === strtolower($identifier))) {
+            if ($metaIp === $ip || (!empty($metaUser) && \strtolower($metaUser) === \strtolower($identifier))) {
                 $attempts++;
             }
         }
@@ -55,20 +69,36 @@ class Security {
         return $attempts < $maxAttempts;
     }
 
+    /**
+     * Csrf input processing implementation helper.
+     *
+     * @return mixed Response output.
+     */
     public static function csrfInput() {
         return '<input type="hidden" name="csrf" value="' . Str::escape(self::csrfToken()) . '">';
     }
 
+    /**
+     * Csrf token processing implementation helper.
+     *
+     * @return mixed Response output.
+     */
     public static function csrfToken()
     {
         App::ensureSession();
         if (empty($_SESSION['_csrf_token'])) {
-            $_SESSION['_csrf_token'] = bin2hex(random_bytes(16));
-            $_SESSION['_csrf_token_time'] = time(); // Record creation time
+            $_SESSION['_csrf_token'] = \bin2hex(\random_bytes(16));
+            $_SESSION['_csrf_token_time'] = \time(); // Record creation time
         }
         return $_SESSION['_csrf_token'];
     }
 
+    /**
+     * Csrf verify processing implementation helper.
+     *
+     * @param mixed $token Argument descriptor.
+     * @return mixed Response output.
+     */
     public static function csrfVerify($token)
     {
         App::ensureSession();
@@ -76,14 +106,14 @@ class Security {
 
         // Expiry check: 10 minutes (600 seconds)
         $tokenTime = $_SESSION['_csrf_token_time'] ?? 0;
-        if ((time() - $tokenTime) > 600) {
+        if ((\time() - $tokenTime) > 600) {
             // Token has expired! Destroy it to prevent replay
             unset($_SESSION['_csrf_token']);
             unset($_SESSION['_csrf_token_time']);
             return false;
         }
 
-        return hash_equals($_SESSION['_csrf_token'] ?? '', $token);
+        return \hash_equals($_SESSION['_csrf_token'] ?? '', $token);
     }
 
     /**
@@ -100,7 +130,7 @@ class Security {
     public static function rateLimit(string $key, int $limitSeconds): bool
     {
         App::ensureSession();
-        $now = time();
+        $now = \time();
         $sessionKey = '_rate_limit_' . $key;
         $lastTime = $_SESSION[$sessionKey] ?? 0;
 
@@ -123,14 +153,14 @@ class Security {
         }
 
         // Disable standard libxml errors to prevent warning output for incomplete HTML tags
-        $internalErrors = libxml_use_internal_errors(true);
+        $internalErrors = \libxml_use_internal_errors(true);
 
         $doc = new \DOMDocument();
         // Load with UTF-8 encoding declaration to handle special characters correctly
         $doc->loadHTML('<?xml encoding="utf-8" ?>' . $html, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
 
-        libxml_clear_errors();
-        libxml_use_internal_errors($internalErrors);
+        \libxml_clear_errors();
+        \libxml_use_internal_errors($internalErrors);
 
         // Recursive tag and attribute scrubber
         $stripTags = ['script', 'iframe', 'object', 'embed', 'style', 'meta', 'link', 'form', 'input', 'button', 'textarea'];
@@ -154,17 +184,17 @@ class Security {
             }
 
             foreach ($attrs as $attrName) {
-                $lowerAttr = strtolower($attrName);
+                $lowerAttr = \strtolower($attrName);
                 // Strip event handlers starting with "on" (e.g. onclick, onload, onerror)
-                if (strpos($lowerAttr, 'on') === 0) {
+                if (\strpos($lowerAttr, 'on') === 0) {
                     $el->removeAttribute($attrName);
                     continue;
                 }
 
                 // Strip attributes with "javascript:" or "data:" URI protocols
-                $attrValue = strtolower(trim($el->getAttribute($attrName)));
+                $attrValue = \strtolower(\trim($el->getAttribute($attrName)));
                 if ($lowerAttr === 'href' || $lowerAttr === 'src') {
-                    if (strpos($attrValue, 'javascript:') === 0 || strpos($attrValue, 'data:') === 0) {
+                    if (\strpos($attrValue, 'javascript:') === 0 || \strpos($attrValue, 'data:') === 0) {
                         $el->removeAttribute($attrName);
                     }
                 }
@@ -174,9 +204,9 @@ class Security {
         // Save and clean the output HTML
         $cleaned = $doc->saveHTML();
         // Remove the xml encoding header
-        $cleaned = str_replace('<?xml encoding="utf-8" ?>', '', $cleaned);
+        $cleaned = \str_replace('<?xml encoding="utf-8" ?>', '', $cleaned);
 
-        $cleaned = trim($cleaned);
+        $cleaned = \trim($cleaned);
 
         // Automatically highlight any inline pre/code blocks!
         return Str::highlightHtml($cleaned);
@@ -187,24 +217,24 @@ class Security {
      */
     public static function sanitizeInput($data, bool $stripHtml = false, array $exceptKeys = ['password', 'confirm_password', 'content', 'description'])
     {
-        if (is_array($data)) {
+        if (\is_array($data)) {
             foreach ($data as $key => $value) {
                 // Skip sanitising raw values for passwords and rich HTML blocks
-                $shouldStrip = $stripHtml && !in_array($key, $exceptKeys);
+                $shouldStrip = $stripHtml && !\in_array($key, $exceptKeys);
                 $data[$key] = self::sanitizeInput($value, $shouldStrip, $exceptKeys);
             }
             return $data;
         }
 
-        if (is_string($data)) {
+        if (\is_string($data)) {
             // Prevent null-byte injection attacks (\0 / %00)
-            $data = str_replace(chr(0), '', $data);
+            $data = \str_replace(\chr(0), '', $data);
 
             // Trim surrounding whitespace
-            $data = trim($data);
+            $data = \trim($data);
 
             if ($stripHtml) {
-                $data = strip_tags($data);
+                $data = \strip_tags($data);
             }
         }
 
@@ -217,31 +247,81 @@ class Security {
     public static function uuidv7(): string
     {
         // Get current millisecond timestamp
-        $time = microtime(true);
-        $milli = floor($time * 1000);
+        $time = \microtime(true);
+        $milli = \floor($time * 1000);
 
         // Convert millisecond timestamp to hexadecimal string padding left
-        $timeHex = str_pad(base_convert($milli, 10, 16), 12, '0', STR_PAD_LEFT);
+        $timeHex = \str_pad(\base_convert((string)$milli, 10, 16), 12, '0', STR_PAD_LEFT);
 
         // Generate 16 bytes of cryptographically secure random entropy
-        $randBytes = random_bytes(10);
+        $randBytes = \random_bytes(10);
 
         // Extract and map fields conforming with RFC 9562 layout
-        $randHex1 = bin2hex(substr($randBytes, 0, 2));
-        $randHex2 = bin2hex(substr($randBytes, 2, 8));
+        $randHex1 = \bin2hex(\substr($randBytes, 0, 2));
+        $randHex2 = \bin2hex(\substr($randBytes, 2, 8));
 
         // Inject version (7) and variant (2) bits
-        $varAndVer = '7' . substr($randHex1, 1);
-        $variant = base_convert((hexdec(substr($randHex2, 0, 1)) & 0x03) | 0x08, 10, 16) . substr($randHex2, 1);
+        $varAndVer = '7' . \substr($randHex1, 1);
+        $variant = \base_convert((string)((\hexdec(\substr($randHex2, 0, 1)) & 0x03) | 0x08), 10, 16) . \substr($randHex2, 1);
 
         // Format and return as a standard 36-character time-ordered UUIDv7 string key
-        return sprintf('%s-%s-%s-%s-%s',
-            substr($timeHex, 0, 8),
-            substr($timeHex, 8, 4),
+        return \sprintf('%s-%s-%s-%s-%s',
+            \substr($timeHex, 0, 8),
+            \substr($timeHex, 8, 4),
             $varAndVer,
-            substr($variant, 0, 4),
-            substr($variant, 4, 12)
+            \substr($variant, 0, 4),
+            \substr($variant, 4, 12)
         );
+    }
+
+    /**
+     * Validate a string is safe to interpolate directly into raw SQL as a table or column
+     * identifier. Table/column names can't be bound via PDO placeholders the way values can,
+     * so any code path that must build a query around a dynamic identifier (e.g. cascade-delete
+     * child table/foreign-key metadata resolved via reflection) should reject anything that
+     * doesn't match this strict allowlist before interpolating it.
+     */
+    public static function isSafeSqlIdentifier(string $identifier): bool
+    {
+        return (bool)\preg_match('/^[a-zA-Z0-9_]+$/', $identifier);
+    }
+
+    /**
+     * Strict allow-list check: confirm $table actually exists in the connected database's live
+     * schema (via SHOW TABLES, cached for the process lifetime) before it's interpolated into raw
+     * SQL. Ties the identifier to ground truth rather than trusting character-class shape alone --
+     * use alongside isSafeSqlIdentifier(), not instead of it.
+     */
+    public static function isKnownSqlTable(string $table): bool
+    {
+        static $tables = null;
+        if ($tables === null) {
+            try {
+                $tables = DB::query('SHOW TABLES')->fetchAll(\PDO::FETCH_COLUMN);
+            } catch (\Exception $e) {
+                $tables = [];
+            }
+        }
+        return \in_array($table, $tables, true);
+    }
+
+    /**
+     * Strict allow-list check: confirm $column is an actual column of $table (via SHOW COLUMNS,
+     * cached per table for the process lifetime). $table must already be validated via
+     * isKnownSqlTable() before calling this, since it's interpolated into the SHOW COLUMNS query.
+     */
+    public static function isKnownSqlColumn(string $table, string $column): bool
+    {
+        static $columnsByTable = [];
+        if (!isset($columnsByTable[$table])) {
+            try {
+                $rows = DB::query("SHOW COLUMNS FROM `{$table}`")->fetchAll(\PDO::FETCH_ASSOC);
+                $columnsByTable[$table] = \array_column($rows, 'Field');
+            } catch (\Exception $e) {
+                $columnsByTable[$table] = [];
+            }
+        }
+        return \in_array($column, $columnsByTable[$table], true);
     }
 
     /**
@@ -249,26 +329,26 @@ class Security {
      */
     public static function sanitizeSvg(string $filePath): bool
     {
-        if (!file_exists($filePath)) {
+        if (!\file_exists($filePath)) {
             return false;
         }
 
-        $content = file_get_contents($filePath);
+        $content = \file_get_contents($filePath);
         if ($content === false) {
             return false;
         }
 
         // Hardened: Reject SVGs containing DOCTYPE or Entity declarations to completely block XXE
-        if (preg_match('/<!DOCTYPE/i', $content) || preg_match('/<!ENTITY/i', $content)) {
+        if (\preg_match('/<!DOCTYPE/i', $content) || \preg_match('/<!ENTITY/i', $content)) {
             return false;
         }
 
         $dom = new \DOMDocument();
 
         // Disable external entities loading and DTD processing completely
-        $libxmlState = libxml_use_internal_errors(true);
+        $libxmlState = \libxml_use_internal_errors(true);
         $success = $dom->loadXML($content, LIBXML_NONET | LIBXML_NOCDATA);
-        libxml_use_internal_errors($libxmlState);
+        \libxml_use_internal_errors($libxmlState);
 
         if (!$success) {
             return false;
@@ -309,10 +389,10 @@ class Security {
                 if ($node instanceof \DOMElement && $node->hasAttributes()) {
                     $attrsToRemove = [];
                     foreach ($node->attributes as $attr) {
-                        $attrName = strtolower($attr->nodeName);
+                        $attrName = \strtolower($attr->nodeName);
 
                         // Strip inline event triggers (onload, onclick, etc.)
-                        if (strpos($attrName, 'on') === 0) {
+                        if (\strpos($attrName, 'on') === 0) {
                             $attrsToRemove[] = $attr->nodeName;
                             continue;
                         }
@@ -325,8 +405,8 @@ class Security {
 
                         // Strip all dangerous URI schemes (javascript:, data:, vbscript:, file:, etc.) in any attribute
                         // Safe schemes are http, https, or relative paths/fragment IDs (no scheme separator ':')
-                        if (preg_match('/^\s*([a-zA-Z0-9+.-]+):/i', $attr->nodeValue, $matches)) {
-                            $scheme = strtolower($matches[1]);
+                        if (\preg_match('/^\s*([a-zA-Z0-9+.-]+):/i', $attr->nodeValue, $matches)) {
+                            $scheme = \strtolower($matches[1]);
                             if ($scheme !== 'http' && $scheme !== 'https') {
                                 $attrsToRemove[] = $attr->nodeName;
                             }
@@ -340,6 +420,6 @@ class Security {
         }
 
         $sanitizedContent = $dom->saveXML();
-        return file_put_contents($filePath, $sanitizedContent) !== false;
+        return \file_put_contents($filePath, $sanitizedContent) !== false;
     }
 }

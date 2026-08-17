@@ -30,14 +30,23 @@ if (!empty($mediaIds)) {
 }
 ?>
 <div class="field-group">
-    <label>Block Section Title</label>
-    <input type="text" class="block-title-input" value="<?php echo Str::escape($blockTitle); ?>" placeholder="Enter grid section title...">
+    <label>Block Section Title (Rich Text)</label>
+    <div class="editor">
+        <div class="toolbar">
+            <button type="button" data-cmd="bold"><strong>B</strong></button>
+            <button type="button" data-cmd="italic"><em>I</em></button>
+            <button type="button" data-cmd="insertSmall">Small</button>
+            <button type="button" data-cmd="removeFormat">Clear</button>
+        </div>
+        <div class="editor-area block-editor-area block-title-rich-editor block-title-input" contenteditable="true"><?php echo $blockTitle; ?></div>
+    </div>
 </div>
 
 <div class="field-group">
     <label>Grid Cards List</label>
     <div class="grid-items-list" style="display: flex; flex-direction: column; gap: 15px; margin-bottom: 10px;">
-        <?php foreach ($items as $index => $item): 
+        <?php foreach ($items as $index => $item): ?>
+            <?php 
             $iTitle = $item['title'] ?? '';
             $iDesc = $item['desc'] ?? '';
             $iLinkUrl = $item['link_url'] ?? '';

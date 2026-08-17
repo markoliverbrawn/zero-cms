@@ -1665,6 +1665,22 @@ h3 {
     background-clip: text;
     -webkit-text-fill-color: transparent;
 
+    /* Support nested block-level elements from contenteditable without breaking background-clip */
+    div, p {
+        display: block;
+        background: inherit;
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    span {
+        display: inline;
+        background: inherit;
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
     /* Dynamic analog CRT display flicker (comfort-safe range) */
     animation: crt-flicker 0.15s infinite;
 

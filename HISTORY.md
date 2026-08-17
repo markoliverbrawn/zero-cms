@@ -228,8 +228,63 @@ This phase focused on implementing high-fidelity AI-generated featured images, b
 
 ---
 
+### 📅 Phase 8: Cloud Run Media Storage, Signed URLs, & Upload Paths Alignment
+*(Session: Monday, July 27, 2026)*
+
+This phase was focused on enabling fully stateless, persistent GCS-backed media storage for serverless environments (Cloud Run), developing secure Signed URLs for gated private files, and aligning all media upload directories under site-specific subfolders with 100% path consistency.
+
+#### 1. Google Cloud Storage (GCS) Dynamic Content-Type Resolution
+*   **The Bug**: Seeder images written to GCS were serving as broken images because the storage driver hardcoded a `"Content-Type: text/plain"` header, storing all binary uploads as text/plain.
+*   **The Resolution**: Refactored `GoogleCloudStorageDriver::write` to dynamically map file extensions to correct MIME content-type headers (e.g., `image/jpeg`, `image/png`, `video/mp4`, `image/svg+xml`) before uploading, resolving the broken images issue permanently.
+
+#### 2. Serverless Secure Uploads & Gated GCS V4 Signed URLs
+*   **GCS Private ACL Protection**: Updated `putFile()` and `write()` in `GoogleCloudStorageDriver` to automatically detect secure files (paths starting with `storage/private/`) and override the default bucket-level public ACLs, forcing `predefinedAcl=private` to lock out anonymous public callers.
+*   **Native GCS V4 Signed URL Generator**: Coded a zero-dependency, standard-conforming **Google V4 Signed URL** generator using raw PHP OpenSSL to cryptographically sign GCS Canonical Requests with the service account's private key via **RSA-SHA256** (and also implemented an **AWS S3 V4 Signed URL** HMAC-SHA256 generator in the S3 driver).
+*   **Secure Redirection Gate**: Upgraded `SecureDownloadController` to detect cloud-backed storage drivers (GCS/S3), authenticate callers, and automatically generate and redirect secure download requests to short-lived (60 seconds) Signed URLs, securing gated private assets in serverless environments.
+
+#### 3. Loose Coupling: Dynamic Themes Discovery
+*   **Dynamic Theme Discovery**: Removed the rigid, hardcoded theme title `match` blocks inside `Site::getThemeOptions()` in favor of fully automated formatting. It scans `/themes/` on-demand and dynamically converts kebab-case and snake_case folders into Title Case (e.g., `custom-preset` -> `Custom Preset Theme`), allowing new themes to be hot-plugged with 0% code modifications.
+
+#### 4. Dynamic Blank-Site Seeding
+*   **Minimalist Initialization**: Added support for a new `--only=blank` seeder option that cleanly rebuilds all database tables and seeds:
+    *   A **single, default blank site record** matching your local `BASE_URL`.
+    *   A **single, empty homepage welcome record** under your blank tenant domain.
+    *   Your default Super Admin user account, skipping 100% of all other demo sites, pages, and media bloat.
+
+#### 5. Local Storage Path and Prefix Alignment
+*   **Path Resolution Alignment**: Discovered that absolute paths containing `/public` bypassed local tenant-scoping in `LocalStorageDriver::resolvePath()`. We updated `resolvePath()` to clean absolute/relative `public/storage/uploads` paths to be absolute under `APPLICATION_ROOT`, and updated `LocalStorageDriver::getUrl()` to strip any leading `/public` prefix from relative disk paths before checking.
+*   **Result**: Resolves all path inconsistencies, ensuring local uploads land in `/public/storage/uploads/{siteId}/` and save cleanly in the database under `/storage/uploads/{siteId}/...`.
+
+#### 6. Multi-Controller Upload Folder Hardening
+*   **All Upload Paths Tenant-Aligned**: Updated all 5 distinct folder creation, file moving, and file uploading operations in the synchronous backend controller `FilesController.php` to dynamically append the `$siteId` subdirectory, bringing it in perfect, secure alignment with the REST API `AdminApiController.php` uploads. We cleared the OPcache by restarting the `php83` container to immediately load both updated controllers.
+
+---
+
+### 📅 Phase 9: Simple Rich Text Block Titles Support
+*(Session: Sunday, August 2, 2026)*
+
+This phase was focused on enabling simple rich-text editing (bold, italic, small) for all block-builder block titles, aligning their capabilities with the Hero/Baseline block, and ensuring safe HTML rendering across all visual themes.
+
+#### 1. WYSIWYG Admin Block Builders (14 blocks upgraded)
+*   **The Conversion**: Replaced flat text `<input>` title fields across all 14 block admin templates (including accordion, chart, code, gallery, grid, masonry, sub_pages, testimonials, text, text_image, latest_articles, demo_creator, form_builder, and categories) with custom-designed rich text editors (`.editor-area.block-title-rich-editor.block-title-input` with `contenteditable="true"`).
+*   **Consistent Formatting**: Restricted toolbar capabilities to a simple set of tags: bold (`<strong>`), italic (`<em>`), and small text (`<small>`), matching the Baseline Hero block exactly.
+
+#### 2. Frontend Safe Title Rendering (0% flat escape)
+*   **Dynamic Theme Post Handlers**: Upgraded the central block title renderers inside themes (default, guide, and kitchensink `post.php` view templates) to safely compile and output the formatted HTML tags using the core XSS-safe `Security::sanitizeHtml()` sanitization helper instead of escaping raw tags as plain text.
+*   **Imports Alignment**: Added explicit namespace imports (`use Zero\Support\Security;`) at the top of templates as mandated by Rule 13.
+*   **Self-Rendering Blocks**: Patched the frontend block views that render their own titles (e.g. `chart.php` and `code.php`) to safely compile their titles as rich text using `Security::sanitizeHtml()`.
+
+#### 3. Admin Assets and JS Helpers Synchronization
+*   **Multi-Editor Scaffolding**: Enhanced `block_builder.js` block insertion to locate and initialize multiple `.editor` containers sequentially, supporting blocks that feature both rich-text titles and rich-text body/description editors simultaneously.
+*   **AI Text Extractor Helper**: Patched `model_edit.js`'s `getPageContentText()` helper to support reading plain text contents from `contenteditable` block title fields, preserving complete AI helper compatibility.
+
+#### 4. Clean Search Indexing
+*   **Tag Stripping**: Updated the 5 block Active Record helper models in `src/Blocks/` (`AccordionBlock`, `BaselineBlock`, `TestimonialsBlock`, `TextBlock`, and `TextImageBlock`) to strip HTML tags via `strip_tags()` before writing search index contents, keeping the global search index fully clean of HTML tag noise.
+
+---
+
 ## 🏆 Current Repository Performance & Standards Compliance
-*   **100% CI Pipeline Pass**: Re-executed our continuous integration automated test pipeline under maximum stress-testing data load—achieving a flawless **36 / 36 Passing Suites (100% GRAND SUCCESS)**!
+*   **100% CI Pipeline Pass**: Re-executed our continuous integration automated test pipeline under maximum stress-testing data load—achieving a flawless **37 / 37 Passing Suites (100% GRAND SUCCESS)**!
 *   **Explicit Imports (Rule 13)**: Imported `use Zero\Support\Emailer;` and `use Zero\Core\Template;` explicitly at the top of our newly written files, utilizing standard class imports over fully namespaced inline references.
 *   **Mandatory Template Rendering (Rule 27)**: Added a new Core Convention inside `GEMINI.md` requiring that blocks of rendered HTML and email bodies always use the templating system instead of being hardcoded inside classes (such as `src/Views/emails/demo_credentials.php`).
 *   **No Inline Styles (Rule 1)**: Visual layouts, sidebars, and forms are completely managed by modular stylesheets.

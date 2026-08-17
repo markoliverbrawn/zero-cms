@@ -1,0 +1,12 @@
+#!/usr/bin/env php
+<?php
+// bin/test - Entry point for the parallel subprocess test runner (Zero\Support\TestRunner).
+
+use Zero\Support\TestRunner;
+
+define('APPLICATION_ROOT', dirname(__DIR__));
+
+require_once APPLICATION_ROOT . '/src/Core/Autoloader.php';
+\Zero\Core\Autoloader::init();
+
+exit(TestRunner::run(APPLICATION_ROOT . '/src'));

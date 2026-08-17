@@ -1,24 +1,44 @@
 <?php
 
+declare(strict_types=1);
+
+/**
+ * File: src/Modules/Admin/Controllers/ForgotController.php
+ * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
+ * Package: Zero\Modules\Admin\Controllers
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
 namespace Zero\Modules\Admin\Controllers;
 
 use Zero\Core\App;
+use Zero\Core\Template;
 use Zero\Database\DB;
-use Zero\Support\Logger;
+use Zero\Http\Middleware\AuthThrottlingMiddleware;
 use Zero\Interfaces\Controller;
 use Zero\Support\Emailer;
+use Zero\Support\Logger;
 use Zero\Support\Security;
-use Zero\Http\Middleware\AuthThrottlingMiddleware;
-use Zero\Core\Template;
 
+/**
+ * Class ForgotController
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class ForgotController implements Controller
 {
+    /**
+     * Handles the incoming HTTP action request context and dispatches response frames.
+     *
+     * @param mixed $param Argument descriptor.
+     * @return mixed Response output.
+     */
     public function handle($param)
     {
         $method = $_SERVER['REQUEST_METHOD'];
         if ($method === 'POST') {
             App::applyCsrfMiddleware();
-            $username = trim($_POST['username'] ?? '');
+            $username = \trim($_POST['username'] ?? '');
 
             // Enforce centralized rate limiting and progressive lockout protection via Middleware
             AuthThrottlingMiddleware::handle('password_reset', 'admin/forgot', [], function() {});
@@ -26,8 +46,11 @@ class ForgotController implements Controller
             $user = DB::query('SELECT * FROM users WHERE username = ? LIMIT 1', [$username])->fetch();
             
             if ($user && !empty($user['email'])) {
-                $token = bin2hex(random_bytes(16));
-                $expires = gmdate('Y-m-d H:i:s', time() + 3600);
+                $site = App::getCurrentSite();
+                $expiryMinutes = $site ? (int)$site->getModuleSetting('admin', 'password_reset_expiry_minutes', 60) : 60;
+
+                $token = \bin2hex(\random_bytes(16));
+                $expires = \gmdate('Y-m-d H:i:s', \time() + ($expiryMinutes * 60));
                 $resetId = Security::uuidv7();
                 
                 // Track reset token in database
@@ -50,8 +73,9 @@ class ForgotController implements Controller
                 $subject = "Reset Your Password - Zero CMS";
                 $htmlBody = Template::renderFile(APPLICATION_ROOT . '/src/Views/emails/forgot-password.php', [
                     'username' => $user['username'],
-                    'siteName' => App::getCurrentSite()->name,
-                    'link' => $link
+                    'siteName' => $site->name,
+                    'link' => $link,
+                    'expiryMinutes' => $expiryMinutes
                 ]);
                 
                 // Send Recovery Email via dynamic Mailpit SMTP helper!
@@ -63,7 +87,7 @@ class ForgotController implements Controller
                     'ip_address' => $_SERVER['REMOTE_ADDR']
                 ]);
                 // Introduce simulated timing delay to match successful path
-                usleep(250000); // 250ms
+                \usleep(250000); // 250ms
             }
             
             // SECURITY REMEDIATION (Timing mitigation):

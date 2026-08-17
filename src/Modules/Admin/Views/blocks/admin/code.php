@@ -1,12 +1,20 @@
 <?php
 use Zero\Support\Str;
-// src/Modules/Admin/Views/blocks/code.php
+// src/Modules/Admin/Views/blocks/admin/code.php
 $language = $block['language'] ?? 'php';
 $code = $block['code'] ?? '';
 ?>
 <div class="field-group">
-    <label>Block Label / File Name (Optional)</label>
-    <input type="text" class="block-title-input" value="<?php echo Str::escape($blockTitle); ?>" placeholder="e.g. src/Core/App.php...">
+    <label>Block Label / File Name (Rich Text, Optional)</label>
+    <div class="editor">
+        <div class="toolbar">
+            <button type="button" data-cmd="bold"><strong>B</strong></button>
+            <button type="button" data-cmd="italic"><em>I</em></button>
+            <button type="button" data-cmd="insertSmall">Small</button>
+            <button type="button" data-cmd="removeFormat">Clear</button>
+        </div>
+        <div class="editor-area block-editor-area block-title-rich-editor block-title-input" contenteditable="true"><?php echo $blockTitle; ?></div>
+    </div>
 </div>
 <div class="field-group">
     <label>Programming Language</label>

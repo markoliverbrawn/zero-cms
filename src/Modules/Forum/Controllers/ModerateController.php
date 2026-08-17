@@ -1,14 +1,34 @@
 <?php
 
+declare(strict_types=1);
+
+/**
+ * File: src/Modules/Forum/Controllers/ModerateController.php
+ * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
+ * Package: Zero\Modules\Forum\Controllers
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
 namespace Zero\Modules\Forum\Controllers;
 
-use Zero\Interfaces\Controller;
 use Zero\Core\App;
-use Zero\Modules\Forum\Models\ForumThread;
+use Zero\Interfaces\Controller;
 use Zero\Modules\Forum\Models\ForumPost;
+use Zero\Modules\Forum\Models\ForumThread;
 
+/**
+ * Class ModerateController
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class ModerateController implements Controller
 {
+    /**
+     * Handles the incoming HTTP action request context and dispatches response frames.
+     *
+     * @param mixed $param Argument descriptor.
+     * @return mixed Response output.
+     */
     public function handle($param)
     {
         App::ensureSession();
@@ -17,7 +37,7 @@ class ModerateController implements Controller
 
         $thread = ForumThread::findBySlug($threadSlug);
         if (!$thread || $thread->site_id !== $siteId) {
-            http_response_code(404);
+            \http_response_code(404);
             echo "Forum thread not found.";
             exit;
         }
@@ -26,13 +46,13 @@ class ModerateController implements Controller
         $isModerator = $user && ($user->role === 'super_admin' || $user->role === 'editor');
 
         if (!$isModerator) {
-            http_response_code(403);
+            \http_response_code(403);
             echo "Access Denied: You do not possess moderation privileges.";
             exit;
         }
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header("Location: /forum/thread/{$thread->slug}");
+            \header("Location: /forum/thread/{$thread->slug}");
             exit;
         }
 
@@ -56,7 +76,7 @@ class ModerateController implements Controller
             }
         }
 
-        header("Location: /forum/thread/{$thread->slug}");
+        \header("Location: /forum/thread/{$thread->slug}");
         exit;
     }
 }

@@ -1,11 +1,30 @@
 <?php
 
+declare(strict_types=1);
+
+/**
+ * File: src/Modules/Search/Database/Migrations/0026_AddExcludeFromSearchToTables.php
+ * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
+ * Package: Zero\Modules\Search\Database\Migrations
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
 namespace Zero\Modules\Search\Database\Migrations;
 
 use Zero\Database\DB;
 
+/**
+ * Class AddExcludeFromSearchToTables
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class AddExcludeFromSearchToTables extends \Zero\Database\Migration
 {
+    /**
+     * Runs the database transactional migrations to compile schemas.
+     *
+     * @return void Response output.
+     */
     public function up(): void
     {
         echo "Adding exclude_from_search column to pages, blog_posts, and shop_products tables...\n";
@@ -23,6 +42,11 @@ class AddExcludeFromSearchToTables extends \Zero\Database\Migration
         }
     }
 
+    /**
+     * Reverses database schema migrations, rolling back table columns cleanly.
+     *
+     * @return void Response output.
+     */
     public function down(): void
     {
         echo "Removing exclude_from_search column from pages, blog_posts, and shop_products tables...\n";

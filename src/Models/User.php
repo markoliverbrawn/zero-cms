@@ -1,5 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
+/**
+ * File: src/Models/User.php
+ * Architectural Purpose: Active Record data model or behavioral trait wrapping database schema representation with tenant-scoping.
+ * Package: Zero\Models
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
 namespace Zero\Models;
 
 use Zero\Core\App;
@@ -10,6 +19,11 @@ use Zero\Models\Traits\IsModel;
 use Zero\Support\I18n;
 use Zero\Support\Str;
 
+/**
+ * Class User
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class User implements Model
 {
     use IsModel, HasSlug {
@@ -31,6 +45,11 @@ class User implements Model
     public $updated_at;
     public $deleted_at;
 
+    /**
+     * Retrieves the config attribute value.
+     *
+     * @return mixed Response output.
+     */
     public static function getConfig(): array
     {
         return [
@@ -67,8 +86,8 @@ class User implements Model
         if ($currentUser instanceof User && $currentUser->id === $userId) {
             $preferencesJson = $currentUser->preferences ?? '';
             if (!empty($preferencesJson)) {
-                $decoded = json_decode($preferencesJson, true);
-                if (json_last_error() === JSON_ERROR_NONE) {
+                $decoded = \json_decode($preferencesJson, true);
+                if (\json_last_error() === JSON_ERROR_NONE) {
                     self::$prefsCache[$userId] = $decoded;
                     return $decoded;
                 }
@@ -84,8 +103,8 @@ class User implements Model
             if ($row) {
                 $preferencesJson = $row['preferences'] ?? '';
                 if (!empty($preferencesJson)) {
-                    $decoded = json_decode($preferencesJson, true);
-                    if (json_last_error() === JSON_ERROR_NONE) {
+                    $decoded = \json_decode($preferencesJson, true);
+                    if (\json_last_error() === JSON_ERROR_NONE) {
                         self::$prefsCache[$userId] = $decoded;
                         return $decoded;
                     }
@@ -105,13 +124,18 @@ class User implements Model
         throw new \Exception("User preferences requested for non-existent or inactive user: " . Str::escape($userId));
     }
 
+    /**
+     * Save processing implementation helper.
+     *
+     * @return string Response output.
+     */
     public function save(): string
     {
         // If this is a new user and no password_hash is set, generate a secure random password
         if (empty($this->id) && empty($this->password_hash)) {
             // Generate a secure, temporary random password (and hash it)
-            $tempPassword = bin2hex(random_bytes(10));
-            $this->password_hash = password_hash($tempPassword, PASSWORD_BCRYPT);
+            $tempPassword = \bin2hex(\random_bytes(10));
+            $this->password_hash = \password_hash($tempPassword, PASSWORD_BCRYPT);
         }
         
         return $this->traitSave();
@@ -122,7 +146,7 @@ class User implements Model
      */
     public static function savePreferencesForUser(string $userId, array $prefs): bool
     {
-        $json = json_encode($prefs);
+        $json = \json_encode($prefs);
         DB::query("UPDATE users SET preferences = ? WHERE id = ?", [$json, $userId]);
         
         // Invalidate / update cache

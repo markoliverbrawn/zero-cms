@@ -1,14 +1,34 @@
 <?php
 
+declare(strict_types=1);
+
+/**
+ * File: src/Modules/Shop/Controllers/CartController.php
+ * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
+ * Package: Zero\Modules\Shop\Controllers
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
 namespace Zero\Modules\Shop\Controllers;
 
-use Zero\Interfaces\Controller;
 use Zero\Core\App;
+use Zero\Interfaces\Controller;
 use Zero\Modules\Shop\Models\Product;
 use Zero\Modules\Shop\Models\ProductVariant;
 
+/**
+ * Class CartController
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class CartController implements Controller
 {
+    /**
+     * Handles the incoming HTTP action request context and dispatches response frames.
+     *
+     * @param mixed $param Argument descriptor.
+     * @return mixed Response output.
+     */
     public function handle($param)
     {
         App::ensureSession();
@@ -25,7 +45,7 @@ class CartController implements Controller
             if ($action === 'add') {
                 $productId = $_POST['product_id'] ?? '';
                 $variantId = $_POST['variant_id'] ?? '';
-                $quantity = max(1, intval($_POST['quantity'] ?? 1));
+                $quantity = \max(1, \intval($_POST['quantity'] ?? 1));
 
                 $product = Product::find($productId);
                 if ($product) {
@@ -52,7 +72,7 @@ class CartController implements Controller
                 }
             } elseif ($action === 'update') {
                 $itemKey = $_POST['item_key'] ?? '';
-                $quantity = max(0, intval($_POST['quantity'] ?? 1));
+                $quantity = \max(0, \intval($_POST['quantity'] ?? 1));
 
                 if (isset($_SESSION['cart'][$itemKey])) {
                     if ($quantity === 0) {
@@ -69,7 +89,7 @@ class CartController implements Controller
             }
 
             // Redirect back to the cart view to avoid form resubmission
-            header('Location: /shop/cart');
+            \header('Location: /shop/cart');
             exit;
         }
 
@@ -79,9 +99,14 @@ class CartController implements Controller
             $subtotal += $item['price'] * $item['quantity'];
         }
 
+        $site = App::getCurrentSite();
+
         App::render('cart', [
             'cart' => $_SESSION['cart'],
-            'subtotal' => $subtotal
+            'subtotal' => $subtotal,
+            'currencySymbol' => $site ? $site->getModuleSetting('shop', 'currency_symbol', '$') : '$',
+            'freeShippingThreshold' => $site ? (float)$site->getModuleSetting('shop', 'free_shipping_threshold', 150) : 150,
+            'standardShippingCost' => $site ? (float)$site->getModuleSetting('shop', 'standard_shipping_cost', 15) : 15
         ]);
         exit;
     }

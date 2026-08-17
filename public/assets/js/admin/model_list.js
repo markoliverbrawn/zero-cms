@@ -79,6 +79,56 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Generic handler for module-registered list actions (App::registerModelListAction()) --
+    // any button rendered by list.php with class="list-registered-action-btn"
+    document.querySelectorAll('.list-registered-action-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            const url = btn.getAttribute('data-url');
+            const csrf = btn.getAttribute('data-csrf') || '';
+            const label = btn.getAttribute('data-label') || 'Action';
+            const confirmMessage = btn.getAttribute('data-confirm') || ('Are you sure you want to run "' + label + '"?');
+
+            const runAction = () => {
+                btn.disabled = true;
+
+                fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': csrf
+                    },
+                    body: JSON.stringify({ csrf: csrf })
+                })
+                    .then((res) => res.json())
+                    .then((data) => {
+                        if (data.success) {
+                            window.adminAlert(label, data.message || 'Action completed successfully.');
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 1500);
+                        } else {
+                            window.adminAlert(label + ' Failed', data.error || 'An error occurred.');
+                            btn.disabled = false;
+                        }
+                    })
+                    .catch((err) => {
+                        window.adminAlert(label + ' Error', err.message);
+                        btn.disabled = false;
+                    });
+            };
+
+            window.adminConfirm({
+                title: label,
+                message: confirmMessage,
+                confirmText: label
+            }).then((confirmed) => {
+                if (confirmed) {
+                    runAction();
+                }
+            });
+        });
+    });
+
     const tableBody = document.querySelector('.listrecords table tbody');
     if (!tableBody) return;
 

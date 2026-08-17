@@ -1,17 +1,37 @@
 <?php
 
+declare(strict_types=1);
+
+/**
+ * File: src/Modules/Forum/Controllers/ThreadCreateController.php
+ * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
+ * Package: Zero\Modules\Forum\Controllers
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
 namespace Zero\Modules\Forum\Controllers;
 
-use Zero\Interfaces\Controller;
 use Zero\Core\App;
 use Zero\Core\Validator;
-use Zero\Support\Security;
+use Zero\Interfaces\Controller;
 use Zero\Modules\Forum\Models\ForumBoard;
-use Zero\Modules\Forum\Models\ForumThread;
 use Zero\Modules\Forum\Models\ForumPost;
+use Zero\Modules\Forum\Models\ForumThread;
+use Zero\Support\Security;
 
+/**
+ * Class ThreadCreateController
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class ThreadCreateController implements Controller
 {
+    /**
+     * Handles the incoming HTTP action request context and dispatches response frames.
+     *
+     * @param mixed $param Argument descriptor.
+     * @return mixed Response output.
+     */
     public function handle($param)
     {
         App::ensureSession();
@@ -20,7 +40,7 @@ class ThreadCreateController implements Controller
 
         $board = ForumBoard::findBySlug($boardSlug);
         if (!$board || $board->site_id !== $siteId) {
-            http_response_code(404);
+            \http_response_code(404);
             echo "Forum board not found.";
             exit;
         }
@@ -28,7 +48,7 @@ class ThreadCreateController implements Controller
         $user = App::getCurrentUser();
         if (!$user) {
             $_SESSION['redirect_to'] = "/forum/board/{$board->slug}/create";
-            header('Location: /login');
+            \header('Location: /login');
             exit;
         }
 
@@ -65,7 +85,7 @@ class ThreadCreateController implements Controller
             // Handle duplicate slug collision safely
             $existing = ForumThread::findBySlug($threadSlug);
             if ($existing) {
-                $threadSlug .= '-' . substr(bin2hex(random_bytes(3)), 0, 4);
+                $threadSlug .= '-' . \substr(\bin2hex(\random_bytes(3)), 0, 4);
             }
 
             $thread = new ForumThread([
@@ -82,6 +102,7 @@ class ThreadCreateController implements Controller
 
             // 2. Create the original post associated with the thread
             $postId = Security::uuidv7();
+            $defaultStatus = App::getModuleSetting('forum', 'default_post_status', 'approved');
             $post = new ForumPost([
                 'id' => $postId,
                 'site_id' => $siteId,
@@ -89,11 +110,11 @@ class ThreadCreateController implements Controller
                 'user_id' => $user->id,
                 'content' => $validated['content'],
                 'parent_id' => null,
-                'status' => 'approved'
+                'status' => $defaultStatus
             ]);
             $post->save();
 
-            header("Location: /forum/thread/{$thread->slug}");
+            \header("Location: /forum/thread/{$thread->slug}");
             exit;
         }
 

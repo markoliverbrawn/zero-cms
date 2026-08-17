@@ -1,15 +1,35 @@
 <?php
 
+declare(strict_types=1);
+
+/**
+ * File: src/Modules/Admin/Controllers/ListController.php
+ * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
+ * Package: Zero\Modules\Admin\Controllers
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
 namespace Zero\Modules\Admin\Controllers;
 
+use Exception;
 use Zero\Core\App;
 use Zero\Interfaces\Controller;
-use Exception;
 use Zero\Models\Traits\IsOrderable;
 use Zero\Models\User;
 
+/**
+ * Class ListController
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class ListController implements Controller
 {
+    /**
+     * Handles the incoming HTTP action request context and dispatches response frames.
+     *
+     * @param mixed $param Argument descriptor.
+     * @return mixed Response output.
+     */
     public function handle($param)
     {
         $matches = $param;
@@ -26,7 +46,7 @@ class ListController implements Controller
             throw new Exception('Invalid model class');
         }
         
-        $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
+        $page = isset($_GET['page']) ? \max(1, \intval($_GET['page'])) : 1;
         
         // Load default pagination limit from user preferences
         $userId = $_SESSION['user_id'] ?? null;
@@ -37,19 +57,19 @@ class ListController implements Controller
         }
 
         // Check if model has IsOrderable trait or supports reordering
-        $traits = class_uses($model);
-        $isOrderable = isset($traits[IsOrderable::class]) || (method_exists($model, 'isOrderable') && $model::isOrderable());
+        $traits = \class_uses($model);
+        $isOrderable = isset($traits[IsOrderable::class]) || (\method_exists($model, 'isOrderable') && $model::isOrderable());
         
         $sort = $_GET['sort'] ?? '';
         $defaultOrder = $isOrderable ? 'asc' : 'desc';
-        $order = strtolower($_GET['order'] ?? $defaultOrder);
-        if (!in_array($order, ['asc', 'desc'])) {
+        $order = \strtolower($_GET['order'] ?? $defaultOrder);
+        if (!\in_array($order, ['asc', 'desc'])) {
             $order = $defaultOrder;
         }
 
         $config = $model::getConfig();
         // Fallback to precedence if no sort or invalid column is supplied and model is orderable
-        if (empty($sort) || !array_key_exists($sort, $config)) {
+        if (empty($sort) || !\array_key_exists($sort, $config)) {
             $sort = $isOrderable ? 'precedence' : 'created_at';
         }
 
@@ -64,7 +84,7 @@ class ListController implements Controller
             'modelName' => $modelName,
             'records' => $paginationData['data'],
             'page' => $paginationData['currentPage'],
-            'range' => range(1, $paginationData['totalPages']),
+            'range' => \range(1, $paginationData['totalPages']),
             'pages' => $paginationData['totalPages'],
             'q' => $paginationData['query'] ?? '',
             'sort' => $sort,

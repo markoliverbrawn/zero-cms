@@ -264,8 +264,11 @@ document.addEventListener('DOMContentLoaded', () => {
             var blockItems = blockBuilderContainer.querySelectorAll('.block-item');
             blockItems.forEach(function(item) {
                 var titleInput = item.querySelector('.block-title-input');
-                if (titleInput && typeof titleInput.value === 'string' && titleInput.value.trim() !== '') {
-                    blocks.push(titleInput.value.trim());
+                if (titleInput) {
+                    var titleVal = titleInput.hasAttribute('contenteditable') ? (titleInput.innerText || titleInput.textContent || '') : (titleInput.value || '');
+                    if (titleVal.trim() !== '') {
+                        blocks.push(titleVal.trim());
+                    }
                 }
                 item.querySelectorAll('.editor-area').forEach(function(ed) {
                     var txt = ed.innerText || ed.textContent || '';

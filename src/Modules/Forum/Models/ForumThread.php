@@ -1,5 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
+/**
+ * File: src/Modules/Forum/Models/ForumThread.php
+ * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
+ * Package: Zero\Modules\Forum\Models
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
 namespace Zero\Modules\Forum\Models;
 
 use Zero\Core\App;
@@ -12,6 +21,11 @@ use Zero\Models\User;
 use Zero\Modules\Forum\Models\ForumBoard;
 use Zero\Modules\Forum\Models\ForumPost;
 
+/**
+ * Class ForumThread
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class ForumThread implements ModelInterface
 {
     use IsModel, HasSlug, CascadesDeletes {
@@ -43,10 +57,16 @@ class ForumThread implements ModelInterface
     public $replies_count;
     public $author_username;
 
+    /**
+     * __construct processing implementation helper.
+     *
+     * @param mixed $data Argument descriptor.
+     * @return mixed Response output.
+     */
     public function __construct($data = [])
     {
         foreach ($data as $key => $value) {
-            if (property_exists($this, $key)) {
+            if (\property_exists($this, $key)) {
                 $this->$key = $value;
             }
         }
@@ -60,6 +80,11 @@ class ForumThread implements ModelInterface
         }
     }
 
+    /**
+     * Retrieves the author username attribute value.
+     *
+     * @return string Response output.
+     */
     public function getAuthorUsername(): string
     {
         if (!empty($this->author_username)) {
@@ -70,6 +95,12 @@ class ForumThread implements ModelInterface
         return $this->author_username;
     }
 
+    /**
+     * Retrieves the board threads attribute value.
+     *
+     * @param string $boardId Argument descriptor.
+     * @return mixed Response output.
+     */
     public static function getBoardThreads(string $boardId): array
     {
         $sql = "
@@ -79,7 +110,7 @@ class ForumThread implements ModelInterface
                 COUNT(CASE WHEN forum_posts.parent_id IS NOT NULL THEN 1 END) AS replies_count
             FROM forum_threads
             LEFT JOIN users ON forum_threads.user_id = users.id
-            LEFT JOIN forum_posts ON forum_posts.thread_id = forum_threads.id AND forum_posts.deleted_at IS NULL
+            LEFT JOIN forum_posts ON forum_posts.thread_id = forum_threads.id AND forum_posts.status = 'approved' AND forum_posts.deleted_at IS NULL
             WHERE forum_threads.board_id = ?
               AND forum_threads.site_id = ?
               AND forum_threads.deleted_at IS NULL
@@ -102,8 +133,8 @@ class ForumThread implements ModelInterface
         
         // Eager load User models directly into the globally centralized DB identity map cache
         if (!empty($userIds)) {
-            $userIds = array_unique($userIds);
-            $placeholders = implode(',', array_fill(0, count($userIds), '?'));
+            $userIds = \array_unique($userIds);
+            $placeholders = \implode(',', \array_fill(0, \count($userIds), '?'));
             $usersData = DB::query(
                 "SELECT * FROM users WHERE id IN ($placeholders) AND deleted_at IS NULL",
                 $userIds
@@ -118,6 +149,11 @@ class ForumThread implements ModelInterface
         return $results;
     }
 
+    /**
+     * Retrieves the config attribute value.
+     *
+     * @return mixed Response output.
+     */
     public static function getConfig(): array
     {
         return [
@@ -156,10 +192,15 @@ class ForumThread implements ModelInterface
         ];
     }
 
+    /**
+     * Retrieves the posts attribute value.
+     *
+     * @return mixed Response output.
+     */
     public function getPosts(): array
     {
         $postsData = DB::query(
-            "SELECT * FROM forum_posts WHERE thread_id = ? AND deleted_at IS NULL ORDER BY created_at ASC",
+            "SELECT * FROM forum_posts WHERE thread_id = ? AND status = 'approved' AND deleted_at IS NULL ORDER BY created_at ASC",
             [$this->id]
         )->fetchAll();
 
@@ -174,8 +215,8 @@ class ForumThread implements ModelInterface
 
         // Eager load User models directly into the globally centralized DB identity map cache to prevent N+1 queries
         if (!empty($userIds)) {
-            $userIds = array_values(array_unique($userIds));
-            $placeholders = implode(',', array_fill(0, count($userIds), '?'));
+            $userIds = \array_values(\array_unique($userIds));
+            $placeholders = \implode(',', \array_fill(0, \count($userIds), '?'));
             $usersData = DB::query(
                 "SELECT * FROM users WHERE id IN ($placeholders) AND deleted_at IS NULL",
                 $userIds
@@ -190,19 +231,33 @@ class ForumThread implements ModelInterface
         return $posts;
     }
 
+    /**
+     * Retrieves the replies count attribute value.
+     *
+     * @return int Response output.
+     */
     public function getRepliesCount(): int
     {
         if (isset($this->replies_count)) {
             return (int)$this->replies_count;
         }
         $cnt = DB::query(
-            "SELECT COUNT(*) FROM forum_posts WHERE thread_id = ? AND parent_id IS NOT NULL AND deleted_at IS NULL",
+            "SELECT COUNT(*) FROM forum_posts WHERE thread_id = ? AND parent_id IS NOT NULL AND status = 'approved' AND deleted_at IS NULL",
             [$this->id]
         )->fetchColumn();
-        $this->replies_count = intval($cnt);
+        $this->replies_count = \intval($cnt);
         return $this->replies_count;
     }
 
+    /**
+     * Paginate processing implementation helper.
+     *
+     * @param mixed $page Argument descriptor.
+     * @param mixed $perPage Argument descriptor.
+     * @param mixed $filters Argument descriptor.
+     * @param mixed $orderBy Argument descriptor.
+     * @return mixed Response output.
+     */
     public static function paginate($page = 1, $perPage = 10, $filters = [], $orderBy = 'created_at DESC')
     {
         $pagination = self::traitPaginate($page, $perPage, $filters, $orderBy);
@@ -222,8 +277,8 @@ class ForumThread implements ModelInterface
             
             // Eager load User models directly into the globally centralized DB identity map cache
             if (!empty($userIds)) {
-                $userIds = array_unique($userIds);
-                $placeholders = implode(',', array_fill(0, count($userIds), '?'));
+                $userIds = \array_unique($userIds);
+                $placeholders = \implode(',', \array_fill(0, \count($userIds), '?'));
                 $usersData = DB::query(
                     "SELECT * FROM users WHERE id IN ($placeholders) AND deleted_at IS NULL",
                     $userIds
@@ -237,8 +292,8 @@ class ForumThread implements ModelInterface
             
             // Eager load ForumBoard models directly into the globally centralized DB identity map cache
             if (!empty($boardIds)) {
-                $boardIds = array_unique($boardIds);
-                $placeholders = implode(',', array_fill(0, count($boardIds), '?'));
+                $boardIds = \array_unique($boardIds);
+                $placeholders = \implode(',', \array_fill(0, \count($boardIds), '?'));
                 $boardsData = DB::query(
                     "SELECT * FROM forum_boards WHERE id IN ($placeholders) AND deleted_at IS NULL",
                     $boardIds

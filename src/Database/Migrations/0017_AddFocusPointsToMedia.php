@@ -1,11 +1,30 @@
 <?php
 
+declare(strict_types=1);
+
+/**
+ * File: src/Database/Migrations/0017_AddFocusPointsToMedia.php
+ * Architectural Purpose: Database schema definition, transactional migration tracking, or seed data loader.
+ * Package: Zero\Database\Migrations
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
 namespace Zero\Database\Migrations;
 
 use Zero\Database\DB;
 
+/**
+ * Class AddFocusPointsToMedia
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class AddFocusPointsToMedia extends \Zero\Database\Migration
 {
+    /**
+     * Runs the database transactional migrations to compile schemas.
+     *
+     * @return void Response output.
+     */
     public function up(): void
     {
         echo "Adding focus point columns to media table...\n";
@@ -19,6 +38,11 @@ class AddFocusPointsToMedia extends \Zero\Database\Migration
         }
     }
 
+    /**
+     * Reverses database schema migrations, rolling back table columns cleanly.
+     *
+     * @return void Response output.
+     */
     public function down(): void
     {
         echo "Removing focus point columns from media table...\n";

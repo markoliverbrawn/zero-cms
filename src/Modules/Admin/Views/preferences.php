@@ -1,5 +1,6 @@
 <?php
 // views/admin/preferences.php
+use Zero\Core\App;
 use Zero\Support\I18n;
 use Zero\Support\Str;
 ?>
@@ -43,10 +44,13 @@ use Zero\Support\Str;
         <!-- Theme Preset -->
         <div class="preferences-form-group">
           <label for="theme_preset" class="preferences-label"><?php echo I18n::t('color_preset'); ?></label>
-          <select name="theme_preset" id="theme_preset" class="preferences-select">
-            <option value="default" <?php echo ($prefs['theme_preset'] ?? 'default') === 'default' ? 'selected' : ''; ?>>Default Theme</option>
-            <option value="vintage-greenscreen" <?php echo ($prefs['theme_preset'] ?? 'default') === 'vintage-greenscreen' ? 'selected' : ''; ?>>Vintage Greenscreen</option>
-          </select>
+          <?php echo App::makeFormField('select', 'theme_preset', [
+              'value' => $prefs['theme_preset'] ?? 'default',
+              'options' => ['default' => 'Default Theme', 'vintage-greenscreen' => 'Vintage Greenscreen'],
+              'attributes' => ['id' => 'theme_preset', 'class' => 'preferences-select'],
+              'showLabel' => false,
+              'guessHelperTextKey' => false,
+          ])->render(); ?>
           <small class="preferences-help-text"><?php echo I18n::t('theme_preset_desc'); ?></small>
         </div>
 
@@ -79,25 +83,26 @@ use Zero\Support\Str;
         <!-- Language Preference -->
         <div class="preferences-form-group">
           <label for="language" class="preferences-label"><?php echo I18n::t('language'); ?></label>
-          <select name="language" id="language" class="preferences-select">
-            <option value="en" <?php echo ($prefs['language'] ?? 'en') === 'en' ? 'selected' : ''; ?>>English</option>
-            <option value="es" <?php echo ($prefs['language'] ?? 'en') === 'es' ? 'selected' : ''; ?>>Español</option>
-            <option value="mi" <?php echo ($prefs['language'] ?? 'en') === 'mi' ? 'selected' : ''; ?>>Māori</option>
-            <option value="hr" <?php echo ($prefs['language'] ?? 'en') === 'hr' ? 'selected' : ''; ?>>Hrvatski</option>
-          </select>
+          <?php echo App::makeFormField('select', 'language', [
+              'value' => $prefs['language'] ?? 'en',
+              'options' => ['en' => 'English', 'es' => 'Español', 'mi' => 'Māori', 'hr' => 'Hrvatski'],
+              'attributes' => ['id' => 'language', 'class' => 'preferences-select'],
+              'showLabel' => false,
+              'guessHelperTextKey' => false,
+          ])->render(); ?>
           <small class="preferences-help-text"><?php echo I18n::t('language_desc'); ?></small>
         </div>
 
         <!-- Timezone Selection -->
         <div class="preferences-form-group compact">
           <label for="timezone" class="preferences-label"><?php echo I18n::t('user_timezone'); ?></label>
-          <select name="timezone" id="timezone" class="preferences-select">
-            <?php foreach ($timezones as $tz): ?>
-              <option value="<?php echo Str::escape($tz); ?>" <?php echo ($prefs['timezone'] ?? 'UTC') === $tz ? 'selected' : ''; ?>>
-                <?php echo Str::escape($tz); ?>
-              </option>
-            <?php endforeach; ?>
-          </select>
+          <?php echo App::makeFormField('select', 'timezone', [
+              'value' => $prefs['timezone'] ?? 'UTC',
+              'options' => $timezones,
+              'attributes' => ['id' => 'timezone', 'class' => 'preferences-select'],
+              'showLabel' => false,
+              'guessHelperTextKey' => false,
+          ])->render(); ?>
           <small class="preferences-help-text"><?php echo I18n::t('timezone_desc'); ?></small>
         </div>
       </div>
@@ -116,13 +121,20 @@ use Zero\Support\Str;
       <!-- Default Pagination Limit -->
       <div class="preferences-form-group" style="margin-bottom: 25px;">
         <label for="per_page" class="preferences-label"><?php echo I18n::t('default_pagination_limit'); ?></label>
-        <select name="per_page" id="per_page" class="preferences-select" style="max-width: 350px;">
-          <?php foreach ([10, 20, 50, 100] as $num): ?>
-            <option value="<?php echo $num; ?>" <?php echo (int)($prefs['per_page'] ?? 20) === $num ? 'selected' : ''; ?>>
-              <?php echo $num; ?> <?php echo I18n::t('id') === 'ID' ? 'items' : 'artículos'; ?>
-            </option>
-          <?php endforeach; ?>
-        </select>
+        <?php
+        $perPageLabelSuffix = I18n::t('id') === 'ID' ? 'items' : 'artículos';
+        $perPageOptions = [];
+        foreach ([10, 20, 50, 100] as $num) {
+            $perPageOptions[$num] = $num . ' ' . $perPageLabelSuffix;
+        }
+        ?>
+        <?php echo App::makeFormField('select', 'per_page', [
+            'value' => (int)($prefs['per_page'] ?? 20),
+            'options' => $perPageOptions,
+            'attributes' => ['id' => 'per_page', 'class' => 'preferences-select', 'style' => 'max-width: 350px;'],
+            'showLabel' => false,
+            'guessHelperTextKey' => false,
+        ])->render(); ?>
         <small class="preferences-help-text" style="margin-top: 5px;"><?php echo I18n::t('pagination_limit_desc'); ?></small>
       </div>
 

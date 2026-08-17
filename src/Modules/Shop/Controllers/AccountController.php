@@ -1,15 +1,35 @@
 <?php
 
+declare(strict_types=1);
+
+/**
+ * File: src/Modules/Shop/Controllers/AccountController.php
+ * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
+ * Package: Zero\Modules\Shop\Controllers
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
 namespace Zero\Modules\Shop\Controllers;
 
-use Zero\Interfaces\Controller;
 use Zero\Core\App;
+use Zero\Interfaces\Controller;
 use Zero\Models\User;
 use Zero\Modules\Shop\Models\Order;
 use Zero\Support\Security;
 
+/**
+ * Class AccountController
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class AccountController implements Controller
 {
+    /**
+     * Handles the incoming HTTP action request context and dispatches response frames.
+     *
+     * @param mixed $param Argument descriptor.
+     * @return mixed Response output.
+     */
     public function handle($param)
     {
         App::ensureSession();
@@ -18,7 +38,7 @@ class AccountController implements Controller
         // Strict auth guard: redirect to login if not authenticated
         if (!$user) {
             $_SESSION['redirect_to'] = '/shop/account';
-            header('Location: /login');
+            \header('Location: /login');
             exit;
         }
 
@@ -69,17 +89,17 @@ class AccountController implements Controller
                     $prefs = User::getPreferencesForUser($userId);
                     $addresses = $prefs['addresses'] ?? [];
                     
-                    $addresses = array_filter($addresses, function ($addr) use ($addressId) {
+                    $addresses = \array_filter($addresses, function ($addr) use ($addressId) {
                         return $addr['id'] !== $addressId;
                     });
                     
-                    $prefs['addresses'] = array_values($addresses);
+                    $prefs['addresses'] = \array_values($addresses);
                     User::savePreferencesForUser($userId, $prefs);
                     $_SESSION['success_msg'] = 'Address removed.';
                 }
             }
 
-            header('Location: /shop/account');
+            \header('Location: /shop/account');
             exit;
         }
 

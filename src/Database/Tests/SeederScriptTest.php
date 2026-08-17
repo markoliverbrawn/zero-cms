@@ -1,0 +1,132 @@
+<?php
+// tests/SeederScriptTest.php
+// Integration test to verify Option 1 and Option 2 fallback of the multi-tenant seeder.
+
+require_once dirname(dirname(__DIR__)) . '/Support/TestBootstrap.php';
+
+use Zero\Core\Env;
+use Zero\Database\DB;
+
+echo "=== Seeder Script CLI & Fallback Option Tests ===\n";
+
+// Bootstrap App to guarantee database connectivity and environment variables
+\Zero\Core\App::bootstrap();
+
+$testDb = Env::get('DB_NAME');
+$phpBinary = 'php';
+
+// Helper to run seeder with specific arguments and environment variables
+function run_seeder_test_proc(string $args = '', array $envOverrides = []): string {
+    global $testDb, $phpBinary;
+    
+    // Merge standard test database name with any test-specific env overrides
+    $envVars = array_merge([
+        'DB_NAME' => $testDb,
+        'STORAGE_DRIVER' => 'local'
+    ], $envOverrides);
+    
+    $envPrefix = '';
+    foreach ($envVars as $key => $value) {
+        $envPrefix .= "{$key}=" . escapeshellarg($value) . " ";
+    }
+    
+    $cmd = "{$envPrefix} {$phpBinary} " . escapeshellarg(APPLICATION_ROOT . '/bin/seed') . " {$args} 2>&1";
+    return (string) shell_exec($cmd);
+}
+
+// 1. Test Option 1 Command-Line Argument: --sites=documentation
+echo "  Testing Option 1 CLI Parameter: --sites=documentation...\n";
+
+$output = run_seeder_test_proc('--sites=documentation');
+
+// Assert that the command completed and printed correct logs
+assert_test(strpos($output, "Selective seeding enabled for: [documentation]") !== false, "CLI correctly parsed selective seeding modes");
+assert_test(strpos($output, "SEEDING DATASET: default.php") !== false, "Default dataset loaded");
+assert_test(strpos($output, "SEEDING DATASET: documentation.php") !== false, "Documentation dataset loaded");
+assert_test(strpos($output, "SEEDING DATASET: kitchensink.php") === false, "Kitchensink dataset was skipped successfully");
+assert_test(strpos($output, "DATABASE SEEDING OPERATIONS COMPLETED WITH 100% SUCCESS") !== false, "Seeder executed with 100% success state");
+
+// Verify DB entries to confirm selective database seeding
+$siteCount = (int) DB::query("SELECT COUNT(*) FROM sites")->fetchColumn();
+assert_test($siteCount === 1, "Only 1 site was seeded (the documentation site)");
+
+$siteName = DB::query("SELECT name FROM sites LIMIT 1")->fetchColumn();
+assert_test(strpos($siteName, "Docs") !== false, "The seeded site is the Documentation site");
+
+
+// 2. Test Option 2 Fallback: SEED_SITES="kitchensink" in env
+echo "  Testing Option 2 Fallback Env Variable: SEED_SITES=\"kitchensink\"...\n";
+
+$output = run_seeder_test_proc('', ['SEED_SITES' => 'kitchensink']);
+
+assert_test(strpos($output, "Selective seeding enabled for: [kitchensink]") !== false, "Env fallback correctly identified and parsed from SEED_SITES");
+assert_test(strpos($output, "SEEDING DATASET: default.php") !== false, "Default dataset loaded for user provisioning");
+assert_test(strpos($output, "SEEDING DATASET: kitchensink.php") !== false, "Kitchensink dataset loaded");
+assert_test(strpos($output, "SEEDING DATASET: documentation.php") === false, "Documentation dataset was skipped successfully");
+assert_test(strpos($output, "DATABASE SEEDING OPERATIONS COMPLETED WITH 100% SUCCESS") !== false, "Seeder executed with 100% success state in env fallback mode");
+
+// Verify DB entries to confirm selective database seeding in env fallback mode
+$siteCount = (int) DB::query("SELECT COUNT(*) FROM sites")->fetchColumn();
+assert_test($siteCount === 1, "Only 1 site was seeded (the kitchensink site)");
+
+$siteName = DB::query("SELECT name FROM sites LIMIT 1")->fetchColumn();
+assert_test(strpos($siteName, "Kitchen Sink") !== false, "The seeded site is the Kitchen Sink showcase site");
+
+
+// 3. Test CLI Precedence over Env Fallback: --sites=documentation with SEED_SITES="kitchensink"
+echo "  Testing CLI priority overriding SEED_SITES fallback env variable...\n";
+
+$output = run_seeder_test_proc('--sites=documentation', ['SEED_SITES' => 'kitchensink']);
+
+assert_test(strpos($output, "Selective seeding enabled for: [documentation]") !== false, "CLI argument took absolute priority over SEED_SITES env fallback");
+assert_test(strpos($output, "SEEDING DATASET: documentation.php") !== false, "Seeded targeted documentation dataset");
+assert_test(strpos($output, "SEEDING DATASET: kitchensink.php") === false, "Skipped kitchensink dataset as CLI override prevailed");
+
+
+// 4. Test Blank Clean Install via --only=blank
+echo "  Testing Blank Standalone Setup with --only=blank...\n";
+
+$output = run_seeder_test_proc('--only=blank');
+
+assert_test(strpos($output, "Selective seeding enabled for: [blank]") !== false, "Blank site option was parsed correctly");
+assert_test(strpos($output, "SEEDING DATASET: default.php") !== false, "Default base was executed");
+assert_test(strpos($output, "SEEDING DATASET: documentation.php") === false, "Documentation dataset was skipped");
+assert_test(strpos($output, "SEEDING DATASET: kitchensink.php") === false, "Kitchensink dataset was skipped");
+
+$siteCount = (int) DB::query("SELECT COUNT(*) FROM sites")->fetchColumn();
+assert_test($siteCount === 1, "Only 1 blank standalone site was seeded");
+
+$siteName = DB::query("SELECT name FROM sites LIMIT 1")->fetchColumn();
+assert_test($siteName === "My New Standalone Site", "Blank site is named My New Standalone Site");
+
+
+// 5. Test Multiple Comma-Separated Values: --sites=documentation,kitchensink
+echo "  Testing multiple datasets via --sites=documentation,kitchensink...\n";
+
+$output = run_seeder_test_proc('--sites=documentation,kitchensink');
+
+assert_test(strpos($output, "Selective seeding enabled for: [documentation, kitchensink]") !== false, "Multiple comma-separated list of target datasets parsed correctly");
+assert_test(strpos($output, "SEEDING DATASET: default.php") !== false, "Default dataset ran in stripped-down admin-only mode");
+assert_test(strpos($output, "SEEDING DATASET: documentation.php") !== false, "Documentation dataset loaded");
+assert_test(strpos($output, "SEEDING DATASET: kitchensink.php") !== false, "Kitchensink dataset loaded");
+
+$siteCount = (int) DB::query("SELECT COUNT(*) FROM sites")->fetchColumn();
+assert_test($siteCount === 2, "Both selected sites (Documentation and Kitchen Sink) were successfully seeded");
+
+
+// 6. Test ADMIN_PASSWORD post-run seeder hook override from .env
+echo "  Testing ADMIN_PASSWORD custom override post-run seeder hook...\n";
+
+// Run the seeder with a custom admin password env variable
+$output = run_seeder_test_proc('--sites=documentation', ['ADMIN_PASSWORD' => 'CustomTestAdminPassword555']);
+
+assert_test(strpos($output, "Applying custom ADMIN_PASSWORD override from .env") !== false, "Seeder log correctly reported ADMIN_PASSWORD override being applied");
+assert_test(strpos($output, "[Seeder-Hook] Successfully updated administrator account passwords to ADMIN_PASSWORD from .env") !== false, "Seeder-Hook success message was outputted");
+
+// Query the database to verify the admin password was updated and verify its hash
+$adminHash = DB::query("SELECT password_hash FROM users WHERE username = 'admin'")->fetchColumn();
+assert_test(!empty($adminHash), "Admin user is present in the database after seeding");
+assert_test(password_verify('CustomTestAdminPassword555', $adminHash) === true, "Admin user password hash matches CustomTestAdminPassword555");
+
+
+echo "\n✅ Seeder Script CLI & Fallback Option Integration Tests Passed Successfully!\n";

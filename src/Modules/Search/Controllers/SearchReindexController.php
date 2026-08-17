@@ -1,13 +1,27 @@
 <?php
 
+declare(strict_types=1);
+
+/**
+ * File: src/Modules/Search/Controllers/SearchReindexController.php
+ * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
+ * Package: Zero\Modules\Search\Controllers
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
 namespace Zero\Modules\Search\Controllers;
 
-use Zero\Interfaces\Controller;
 use Zero\Core\App;
 use Zero\Database\DB;
+use Zero\Interfaces\Controller;
 use Zero\Modules\Search\Services\SearchService;
 use Zero\Support\Security;
 
+/**
+ * Class SearchReindexController
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class SearchReindexController implements Controller
 {
     /**
@@ -22,41 +36,41 @@ class SearchReindexController implements Controller
         // Enforce administrative permissions
         $user = App::getCurrentUser();
         if (!$user || ($user->role !== 'super_admin' && $user->role !== 'editor')) {
-            header('Content-Type: application/json');
-            http_response_code(403);
-            echo json_encode(['error' => 'Unauthorized back-office access.']);
+            \header('Content-Type: application/json');
+            \http_response_code(403);
+            echo \json_encode(['error' => 'Unauthorized back-office access.']);
             exit;
         }
 
         // Security Hardening: Enforce POST-only requests & Validate CSRF Token
         $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
         if ($method !== 'POST') {
-            header('Content-Type: application/json');
-            http_response_code(405);
-            echo json_encode(['error' => 'Method Not Allowed']);
+            \header('Content-Type: application/json');
+            \http_response_code(405);
+            echo \json_encode(['error' => 'Method Not Allowed']);
             exit;
         }
 
         $token = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
         if (empty($token) || !Security::csrfVerify($token)) {
-            header('Content-Type: application/json');
-            http_response_code(403);
-            echo json_encode(['error' => 'CSRF verification failed.']);
+            \header('Content-Type: application/json');
+            \http_response_code(403);
+            echo \json_encode(['error' => 'CSRF verification failed.']);
             exit;
         }
 
         // Parse path routing
         $uri = $_SERVER['REQUEST_URI'] ?? '';
-        $path = parse_url($uri, PHP_URL_PATH);
+        $path = \parse_url($uri, PHP_URL_PATH);
 
-        if (str_ends_with($path, '/start')) {
+        if (\str_ends_with($path, '/start')) {
             $this->handleStart();
-        } elseif (str_ends_with($path, '/batch')) {
+        } elseif (\str_ends_with($path, '/batch')) {
             $this->handleBatch();
         } else {
-            header('Content-Type: application/json');
-            http_response_code(404);
-            echo json_encode(['error' => 'API endpoint not found.']);
+            \header('Content-Type: application/json');
+            \http_response_code(404);
+            echo \json_encode(['error' => 'API endpoint not found.']);
             exit;
         }
     }
@@ -68,27 +82,27 @@ class SearchReindexController implements Controller
      */
     protected function handleBatch()
     {
-        header('Content-Type: application/json');
-        $raw = file_get_contents('php://input');
-        $input = json_decode($raw, true) ?? [];
+        \header('Content-Type: application/json');
+        $raw = \file_get_contents('php://input');
+        $input = \json_decode($raw, true) ?? [];
 
         $modelClass = $input['model'] ?? '';
         $ids = $input['ids'] ?? [];
 
         if (empty($modelClass) || empty($ids)) {
-            echo json_encode(['success' => false, 'error' => 'Missing model class or IDs.']);
+            echo \json_encode(['success' => false, 'error' => 'Missing model class or IDs.']);
             exit;
         }
 
         // Security Hardening: Restrict reindexing strictly to registered searchable models
         $searchableModels = SearchService::getSearchables();
         if (!isset($searchableModels[$modelClass])) {
-            echo json_encode(['success' => false, 'error' => 'Model class is not registered as searchable.']);
+            echo \json_encode(['success' => false, 'error' => 'Model class is not registered as searchable.']);
             exit;
         }
 
-        if (!class_exists($modelClass)) {
-            echo json_encode(['success' => false, 'error' => 'Model class does not exist.']);
+        if (!\class_exists($modelClass)) {
+            echo \json_encode(['success' => false, 'error' => 'Model class does not exist.']);
             exit;
         }
 
@@ -97,8 +111,8 @@ class SearchReindexController implements Controller
         $siteId = App::getCurrentSiteId();
 
         // Query only the requested batch IDs inside tenant scoping
-        $placeholders = implode(',', array_fill(0, count($ids), '?'));
-        $params = array_merge([$siteId], $ids);
+        $placeholders = \implode(',', \array_fill(0, \count($ids), '?'));
+        $params = \array_merge([$siteId], $ids);
         $sql = "SELECT * FROM {$tableName} WHERE site_id = ? AND id IN ({$placeholders}) AND deleted_at IS NULL";
         
         $rows = DB::query($sql, $params)->fetchAll();
@@ -108,7 +122,7 @@ class SearchReindexController implements Controller
             $indexed++;
         }
 
-        echo json_encode(['success' => true, 'indexed' => $indexed]);
+        echo \json_encode(['success' => true, 'indexed' => $indexed]);
         exit;
     }
 
@@ -119,7 +133,7 @@ class SearchReindexController implements Controller
      */
     protected function handleStart()
     {
-        header('Content-Type: application/json');
+        \header('Content-Type: application/json');
         $siteId = App::getCurrentSiteId();
 
         // 1. Clear existing search index for this site
@@ -130,24 +144,24 @@ class SearchReindexController implements Controller
         $totalCount = 0;
 
         foreach (SearchService::getSearchables() as $modelClass => $config) {
-            if (class_exists($modelClass)) {
+            if (\class_exists($modelClass)) {
                 $tableName = $modelClass::getTableName();
                 // Fetch all IDs for this model
                 $sql = "SELECT id FROM {$tableName} WHERE site_id = ? AND deleted_at IS NULL";
                 $rows = DB::query($sql, [$siteId])->fetchAll();
                 
-                $ids = array_column($rows, 'id');
+                $ids = \array_column($rows, 'id');
                 if (!empty($ids)) {
                     $batches[] = [
                         'model' => $modelClass,
                         'ids' => $ids
                     ];
-                    $totalCount += count($ids);
+                    $totalCount += \count($ids);
                 }
             }
         }
 
-        echo json_encode([
+        echo \json_encode([
             'success' => true,
             'total' => $totalCount,
             'batches' => $batches

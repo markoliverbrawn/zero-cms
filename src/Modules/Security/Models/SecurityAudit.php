@@ -1,10 +1,24 @@
 <?php
 
+declare(strict_types=1);
+
+/**
+ * File: src/Modules/Security/Models/SecurityAudit.php
+ * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
+ * Package: Zero\Modules\Security\Models
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
 namespace Zero\Modules\Security\Models;
 
 use Zero\Interfaces\Model as ModelInterface;
 use Zero\Models\Traits\IsModel;
 
+/**
+ * Class SecurityAudit
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class SecurityAudit implements ModelInterface
 {
     use IsModel;
@@ -24,6 +38,11 @@ class SecurityAudit implements ModelInterface
     public $updated_at;
     public $deleted_at;
 
+    /**
+     * Retrieves the config attribute value.
+     *
+     * @return mixed Response output.
+     */
     public static function getConfig(): array
     {
         return [
@@ -43,6 +62,11 @@ class SecurityAudit implements ModelInterface
         ];
     }
 
+    /**
+     * Retrieves the edit label attribute value.
+     *
+     * @return string Response output.
+     */
     public static function getEditLabel(): string
     {
         return 'View';

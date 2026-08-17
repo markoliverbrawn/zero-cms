@@ -1,7 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
+/**
+ * File: src/Core/Storage/StorageDriver.php
+ * Architectural Purpose: Core bootstrapping, system environment configuration, and utility class of the framework.
+ * Package: Zero\Core\Storage
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
 namespace Zero\Core\Storage;
 
+/**
+ * Interface StorageDriver
+ *
+ * Defines systemic behavioral interface contract mechanisms.
+ */
 interface StorageDriver
 {
     /**

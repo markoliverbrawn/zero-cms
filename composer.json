@@ -1,0 +1,9 @@
+{
+    "name": "markoliverbrawn/zero-cms-core",
+    "description": "Zero CMS Core — a zero third-party-runtime-dependency, multi-tenant PHP CMS/e-commerce engine. Composer is used only to version and install this package into a host project; Core boots via its own src/Core/Autoloader.php, not vendor/autoload.php.",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": ">=8.1"
+    }
+}

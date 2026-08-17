@@ -1,12 +1,26 @@
 <?php
 
+declare(strict_types=1);
+
+/**
+ * File: src/Modules/Blog/Models/Comment.php
+ * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
+ * Package: Zero\Modules\Blog\Models
+ * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ */
+
 namespace Zero\Modules\Blog\Models;
 
-use Zero\Interfaces\Model;
-use Zero\Models\Traits\IsModel;
 use Zero\Core\App;
 use Zero\Database\DB;
+use Zero\Interfaces\Model;
+use Zero\Models\Traits\IsModel;
 
+/**
+ * Class Comment
+ *
+ * Provides structural platform implementation and operational encapsulation.
+ */
 class Comment implements Model
 {
     use IsModel;
@@ -25,10 +39,16 @@ class Comment implements Model
     protected static string $tableName = 'blog_comments';
     protected static array $fillable = ['post_id', 'author_name', 'author_email', 'content', 'status'];
 
+    /**
+     * __construct processing implementation helper.
+     *
+     * @param array $data Argument descriptor.
+     * @return mixed Response output.
+     */
     public function __construct(array $data = [])
     {
         foreach ($data as $key => $value) {
-            if (property_exists($this, $key)) {
+            if (\property_exists($this, $key)) {
                 $this->$key = $value;
             }
         }
@@ -43,8 +63,11 @@ class Comment implements Model
         }
     }
 
-    
-
+    /**
+     * Retrieves the config attribute value.
+     *
+     * @return mixed Response output.
+     */
     public static function getConfig(): array
     {
         return [
@@ -53,7 +76,7 @@ class Comment implements Model
             'post_title' => ['type' => 'text', 'label' => 'Post', 'editable' => false, 'listDisplay' => true, 'searchable' => true],
             'author_name' => ['type' => 'text', 'label' => 'Author Name', 'editable' => true, 'listDisplay' => true, 'searchable' => true],
             'author_email' => ['type' => 'text', 'label' => 'Author Email', 'editable' => true, 'listDisplay' => true, 'searchable' => true],
-            'content' => ['type' => 'textarea', 'label' => 'Comment', 'editable' => true, 'listDisplay' => false],
+            'content' => ['type' => 'rich_text_editor', 'label' => 'Comment', 'editable' => true, 'listDisplay' => false],
             'status' => [
                 'type' => 'select',
                 'label' => 'Status',
@@ -91,20 +114,20 @@ class Comment implements Model
     public static function paginate($page = 1, $perPage = 10, $filters = [], $orderBy = 'created_at DESC')
     {
         // Defensive whitelisting and column mapping of the ORDER BY clause
-        $orderByParts = explode(' ', trim($orderBy));
+        $orderByParts = \explode(' ', \trim($orderBy));
         $cleanOrderBy = 'blog_comments.created_at DESC'; // Fallback
 
         if (!empty($orderByParts)) {
             $column = $orderByParts[0];
-            $direction = isset($orderByParts[1]) ? strtoupper($orderByParts[1]) : 'ASC';
+            $direction = isset($orderByParts[1]) ? \strtoupper($orderByParts[1]) : 'ASC';
 
             if ($column === 'post_title') {
                 $column = 'blog_posts.title';
-            } elseif (strpos($column, 'blog_comments.') !== 0 && $column !== 'title') {
+            } elseif (\strpos($column, 'blog_comments.') !== 0 && $column !== 'title') {
                 $column = 'blog_comments.' . $column;
             }
 
-            if (preg_match('/^[a-zA-Z0-9_\.]+$/', $column)) {
+            if (\preg_match('/^[a-zA-Z0-9_\.]+$/', $column)) {
                 if ($direction !== 'ASC' && $direction !== 'DESC') {
                     $direction = 'ASC';
                 }
@@ -144,7 +167,7 @@ class Comment implements Model
 
         $whereSql = '';
         if ($where) {
-            $whereSql = 'WHERE ' . implode(' AND ', $where);
+            $whereSql = 'WHERE ' . \implode(' AND ', $where);
         }
 
         // Total count (using left join to ensure we can count matching search rows)
@@ -156,9 +179,9 @@ class Comment implements Model
         ";
         $totalStmt = DB::query($totalQuery, $params);
         $total = $totalStmt->fetch();
-        $totalCount = $total ? intval($total['cnt']) : 0;
+        $totalCount = $total ? \intval($total['cnt']) : 0;
 
-        $pages = max(1, ceil($totalCount / $perPage));
+        $pages = \max(1, \ceil($totalCount / $perPage));
         $offset = ($page - 1) * $perPage;
 
         // Fetch paginated data (using left join to select post title as well!)

@@ -1,0 +1,12 @@
+#!/usr/bin/env php
+<?php
+// bin/seed - Entry point for the multi-tenant database seeder (Zero\Support\SeederRunner).
+
+define('APPLICATION_ROOT', dirname(__DIR__));
+
+require_once APPLICATION_ROOT . '/src/Core/Autoloader.php';
+\Zero\Core\Autoloader::init();
+
+use Zero\Support\SeederRunner;
+
+exit(SeederRunner::run($argv));
