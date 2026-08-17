@@ -41,61 +41,76 @@ graph TD
     docs --> core_components
     docs --> bootstrap
     
-    %% How-To Guides Hub
+    %% How-To Guides Hub -- three category sub-hubs, each with its own sub_pages listing
     how_tos["🔧 How-To Guides Index<br/><i>(Slug: 'docs/how-tos')</i>"]
     docs --> how_tos
     
-    models["📦 Database Models & Active Record Traits<br/><i>(Slug: 'docs/how-tos/models')</i>"]
-    views["🎨 How to Create Views & Fallbacks<br/><i>(Slug: 'docs/how-tos/views')</i>"]
-    seeder["🌱 How to Create a Custom Seeder<br/><i>(Slug: 'docs/how-tos/seeder')</i>"]
-    middleware["🛡️ How to Create Middleware Filters<br/><i>(Slug: 'docs/how-tos/middleware')</i>"]
-    controllers["🎮 How to Create Controllers<br/><i>(Slug: 'docs/how-tos/controllers')</i>"]
-    uuidv7["🔑 Understanding Time-Ordered UUIDv7 Keys<br/><i>(Slug: 'docs/how-tos/uuidv7')</i>"]
-    emailer["📧 SMTP TCP Socket Emailing<br/><i>(Slug: 'docs/how-tos/emailer')</i>"]
-    multitenancy["🔒 Multi-Tenant Data Isolation<br/><i>(Slug: 'docs/how-tos/multitenancy')</i>"]
-    security_hard["🛡️ Core Security Hardening & Anti-XSS<br/><i>(Slug: 'docs/how-tos/security')</i>"]
-    custom_views["🖼️ Custom Column listView Rendering<br/><i>(Slug: 'docs/how-tos/custom-views')</i>"]
-    custom_blocks["🧱 Creating Page Builder Blocks<br/><i>(Slug: 'docs/how-tos/custom-blocks')</i>"]
-    supervisor["🔄 Supervisor Queue Daemon Setup<br/><i>(Slug: 'docs/how-tos/supervisor-setup')</i>"]
-    gcs["☁️ Configuring Google Cloud Storage<br/><i>(Slug: 'docs/how-tos/gcs-setup')</i>"]
-    secure_uploads["🔏 Secure Uploads & Private Storage<br/><i>(Slug: 'docs/how-tos/secure-uploads')</i>"]
-    s3["🗄️ Configuring AWS S3 Storage<br/><i>(Slug: 'docs/how-tos/aws-s3-setup')</i>"]
-    search_arch["🔍 Search Index & Driver Architecture<br/><i>(Slug: 'docs/how-tos/search-architecture')</i>"]
-    deploy["☁️ Serverless Deployments & low-cost Cloud Run<br/><i>(Slug: 'docs/how-tos/deploy-cloud-run')</i>"]
-    standalone_projects["📦 Standalone Project Creation & Core Syncing<br/><i>(Slug: 'docs/how-tos/standalone-projects')</i>"]
-    list_actions["🔘 Registering Custom Admin List Actions<br/><i>(Slug: 'docs/how-tos/list-actions')</i>"]
-    migrations_page["🧬 Writing Database Migrations<br/><i>(Slug: 'docs/how-tos/migrations')</i>"]
-    testing_page["🧪 Automated Test Suite Conventions<br/><i>(Slug: 'docs/how-tos/testing')</i>"]
-    oauth_page["🔑 Google OAuth 2.0 Single Sign-On<br/><i>(Slug: 'docs/how-tos/oauth')</i>"]
-    module_settings_page["🎛️ Per-Module Site Settings<br/><i>(Slug: 'docs/how-tos/module-settings')</i>"]
-    form_fields_page["🧾 The FormField Component System<br/><i>(Slug: 'docs/how-tos/form-fields')</i>"]
-    ci_cd_page["🚦 Continuous Integration & Automated Releases<br/><i>(Slug: 'docs/how-tos/ci-cd')</i>"]
+    core_concepts_hub["🧠 Core Concepts<br/><i>(Slug: 'docs/how-tos/core-concepts')</i>"]
+    extending_hub["🧩 Extending the Platform<br/><i>(Slug: 'docs/how-tos/extending')</i>"]
+    operations_hub["🚀 Operations & Deployment<br/><i>(Slug: 'docs/how-tos/operations')</i>"]
     
-    how_tos --> models
-    how_tos --> views
-    how_tos --> seeder
-    how_tos --> middleware
-    how_tos --> controllers
-    how_tos --> uuidv7
-    how_tos --> emailer
-    how_tos --> multitenancy
-    how_tos --> security_hard
-    how_tos --> custom_views
-    how_tos --> custom_blocks
-    how_tos --> supervisor
-    how_tos --> gcs
-    how_tos --> secure_uploads
-    how_tos --> s3
-    how_tos --> search_arch
-    how_tos --> deploy
-    how_tos --> standalone_projects
-    how_tos --> list_actions
-    how_tos --> migrations_page
-    how_tos --> testing_page
-    how_tos --> oauth_page
-    how_tos --> module_settings_page
-    how_tos --> form_fields_page
-    how_tos --> ci_cd_page
+    how_tos --> core_concepts_hub
+    how_tos --> extending_hub
+    how_tos --> operations_hub
+    
+    %% Core Concepts: how the framework itself works
+    models["📦 Database Models & Active Record Traits<br/><i>(Slug: 'docs/how-tos/core-concepts/models')</i>"]
+    views["🎨 How to Create Views & Fallbacks<br/><i>(Slug: 'docs/how-tos/core-concepts/views')</i>"]
+    seeder["🌱 How to Create a Custom Seeder<br/><i>(Slug: 'docs/how-tos/core-concepts/seeder')</i>"]
+    middleware["🛡️ How to Create Middleware Filters<br/><i>(Slug: 'docs/how-tos/core-concepts/middleware')</i>"]
+    controllers["🎮 How to Create Controllers<br/><i>(Slug: 'docs/how-tos/core-concepts/controllers')</i>"]
+    uuidv7["🔑 Understanding Time-Ordered UUIDv7 Keys<br/><i>(Slug: 'docs/how-tos/core-concepts/uuidv7')</i>"]
+    emailer["📧 SMTP TCP Socket Emailing<br/><i>(Slug: 'docs/how-tos/core-concepts/emailer')</i>"]
+    multitenancy["🔒 Multi-Tenant Data Isolation<br/><i>(Slug: 'docs/how-tos/core-concepts/multitenancy')</i>"]
+    security_hard["🛡️ Core Security Hardening & Anti-XSS<br/><i>(Slug: 'docs/how-tos/core-concepts/security')</i>"]
+    migrations_page["🧬 Writing Database Migrations<br/><i>(Slug: 'docs/how-tos/core-concepts/migrations')</i>"]
+    
+    core_concepts_hub --> models
+    core_concepts_hub --> views
+    core_concepts_hub --> seeder
+    core_concepts_hub --> middleware
+    core_concepts_hub --> controllers
+    core_concepts_hub --> uuidv7
+    core_concepts_hub --> emailer
+    core_concepts_hub --> multitenancy
+    core_concepts_hub --> security_hard
+    core_concepts_hub --> migrations_page
+    
+    %% Extending the Platform: building on top of the framework
+    module_settings_page["🎛️ Per-Module Site Settings<br/><i>(Slug: 'docs/how-tos/extending/module-settings')</i>"]
+    form_fields_page["🧾 The FormField Component System<br/><i>(Slug: 'docs/how-tos/extending/form-fields')</i>"]
+    custom_views["🖼️ Custom Column listView Rendering<br/><i>(Slug: 'docs/how-tos/extending/custom-views')</i>"]
+    custom_blocks["🧱 Creating Page Builder Blocks<br/><i>(Slug: 'docs/how-tos/extending/custom-blocks')</i>"]
+    list_actions["🔘 Registering Custom Admin List Actions<br/><i>(Slug: 'docs/how-tos/extending/list-actions')</i>"]
+    oauth_page["🔑 Google OAuth 2.0 Single Sign-On<br/><i>(Slug: 'docs/how-tos/extending/oauth')</i>"]
+    search_arch["🔍 Search Index & Driver Architecture<br/><i>(Slug: 'docs/how-tos/extending/search-architecture')</i>"]
+    
+    extending_hub --> module_settings_page
+    extending_hub --> form_fields_page
+    extending_hub --> custom_views
+    extending_hub --> custom_blocks
+    extending_hub --> list_actions
+    extending_hub --> oauth_page
+    extending_hub --> search_arch
+    
+    %% Operations & Deployment: running and shipping the platform
+    testing_page["🧪 Automated Test Suite Conventions<br/><i>(Slug: 'docs/how-tos/operations/testing')</i>"]
+    ci_cd_page["🚦 Continuous Integration & Automated Releases<br/><i>(Slug: 'docs/how-tos/operations/ci-cd')</i>"]
+    supervisor["🔄 Supervisor Queue Daemon Setup<br/><i>(Slug: 'docs/how-tos/operations/supervisor-setup')</i>"]
+    gcs["☁️ Configuring Google Cloud Storage<br/><i>(Slug: 'docs/how-tos/operations/gcs-setup')</i>"]
+    secure_uploads["🔏 Secure Uploads & Private Storage<br/><i>(Slug: 'docs/how-tos/operations/secure-uploads')</i>"]
+    s3["🗄️ Configuring AWS S3 Storage<br/><i>(Slug: 'docs/how-tos/operations/aws-s3-setup')</i>"]
+    deploy["☁️ Serverless Deployments & low-cost Cloud Run<br/><i>(Slug: 'docs/how-tos/operations/deploy-cloud-run')</i>"]
+    standalone_projects["📦 Standalone Project Creation & Core Syncing<br/><i>(Slug: 'docs/how-tos/operations/standalone-projects')</i>"]
+    
+    operations_hub --> testing_page
+    operations_hub --> ci_cd_page
+    operations_hub --> supervisor
+    operations_hub --> gcs
+    operations_hub --> secure_uploads
+    operations_hub --> s3
+    operations_hub --> deploy
+    operations_hub --> standalone_projects
     
     %% Platform Modules Hub
     modules["📦 Platform Modules Directory<br/><i>(Slug: 'docs/modules')</i>"]
@@ -143,7 +158,7 @@ graph TD
     class home home;
     class contact,blog,docs nav;
     class benchmarks,intro,framework,limitations,getting_started,core_components,bootstrap page;
-    class how_tos,models,views,seeder,middleware,controllers,uuidv7,emailer,multitenancy,security_hard,custom_views,custom_blocks,supervisor,gcs,secure_uploads,s3,search_arch,standalone_projects,list_actions,migrations_page,testing_page,oauth_page,module_settings_page,form_fields_page,ci_cd_page howto;
+    class how_tos,core_concepts_hub,extending_hub,operations_hub,models,views,seeder,middleware,controllers,uuidv7,emailer,multitenancy,security_hard,custom_views,custom_blocks,supervisor,gcs,secure_uploads,s3,search_arch,standalone_projects,list_actions,migrations_page,testing_page,oauth_page,module_settings_page,form_fields_page,ci_cd_page howto;
     class modules,mod_create,mod_blog,mod_shop,mod_form,mod_forum,mod_jobs,mod_security,form_advanced module;
     class blog_triggers,jobs_tutorials,form_custom_fields,form_save_submissions tutorial;
 ```
@@ -168,32 +183,35 @@ The table below catalogs every page record compiled on seed bootstrap, capturing
 | **Installation and Environment Setup** | `docs/getting-started` | Docs | No (`0`) | `text`, `code` (local server & seed commands) |
 | **Core Components and Core Helpers** | `docs/core-components` | Docs | No (`0`) | `text` (App Bootstrapper, DB PDO Prepared Wrapper) |
 | **Single-Query Bootstrap and Performance** | `docs/bootstrap` | Docs | No (`0`) | `text`, `code` (Consolidated SQL UNION query, static singleton latch) |
-| **How To's** | `docs/how-tos` | Docs / Sub-Hub | No (`0`) | `sub_pages` (Filtered Technical Guides list) |
-| **Database Models and Active Record Traits** | `docs/how-tos/models` | How-Tos | No (`0`) | `text`, `code` (creating models, form configurations, `CascadesDeletes` + SQL identifier validation) |
-| **How to Create Views** | `docs/how-tos/views` | How-Tos | No (`0`) | `text` (Template fallbacks, buffering, layout nesting) |
-| **How to Create a Custom Seeder** | `docs/how-tos/seeder` | How-Tos | No (`0`) | `text` (JSON architecture, running imports) |
-| **How to Create Middleware** | `docs/how-tos/middleware` | How-Tos | No (`0`) | `text`, `code` (Auth onion-pipeline handler) |
-| **How to Create Controllers** | `docs/how-tos/controllers` | How-Tos | No (`0`) | `text` (Interface patterns) |
-| **Understanding Time-Ordered UUIDv7 Keys** | `docs/how-tos/uuidv7` | How-Tos | No (`0`) | `text` (B-Tree pages clustering optimization) |
-| **SMTP TCP Socket Emailing** | `docs/how-tos/emailer` | How-Tos | No (`0`) | `text` (Raw sockets manual dialogue & fsockopen) |
-| **Multi-Tenant Data Isolation** | `docs/how-tos/multitenancy` | How-Tos | No (`0`) | `text` (physical site_id constraints inside IsModel) |
-| **Core Security Hardening and Anti-XSS Pipelines** | `docs/how-tos/security` | How-Tos | No (`0`) | `text`, `code` (CsrfVerify, DOMDocument/DOMXPath scrubber) |
-| **Custom Column Rendering (listView)** | `docs/how-tos/custom-views` | How-Tos | No (`0`) | `text` (custom badges, site modules list pill views) |
-| **Creating Custom Page Builder Blocks** | `docs/how-tos/custom-blocks` | How-Tos | No (`0`) | `text` (View, Admin Edit fields templates, registration hooks) |
-| **Setting Up Supervisor for the Job Queue** | `docs/how-tos/supervisor-setup` | How-Tos | No (`0`) | `text` (program configurations, daemon monitoring, log rotate) |
-| **Configuring Google Cloud Storage (Zero Dependencies)** | `docs/how-tos/gcs-setup` | How-Tos | No (`0`) | `text` (Uniform vs ACL buckets, .env setup, Storage API) |
-| **Secure Frontend Uploads & Private Storage** | `docs/how-tos/secure-uploads` | How-Tos | No (`0`) | `text` (binaries obfuscation, secure download route stream) |
-| **Configuring AWS S3 Storage (Zero Dependencies)** | `docs/how-tos/aws-s3-setup` | How-Tos | No (`0`) | `text` (SigV4 cryptographic hmac signature generation) |
-| **Standalone Project Creation & Core Syncing** | `docs/how-tos/standalone-projects` | How-Tos | No (`0`) | `text`, `code` (`bin/create-project` Composer bootstrap, `composer update` core syncing, best practices) |
-| **Registering Custom Admin List Actions** | `docs/how-tos/list-actions` | How-Tos | No (`0`) | `text`, `code` (`ManagesModelListActions`, `registerModelListAction()`, worked "Create Demo Site" example) |
-| **Writing Database Migrations** | `docs/how-tos/migrations` | How-Tos | No (`0`) | `text`, `code` (`Migration` base class, `MigrationManager` discovery/numbering, `bin/migrate`) |
-| **Automated Test Suite Conventions** | `docs/how-tos/testing` | How-Tos | No (`0`) | `text`, `code` (per-component `Tests/` layout, `TestRunner` subprocess isolation, `bin/test`) |
-| **Google OAuth 2.0 Single Sign-On** | `docs/how-tos/oauth` | How-Tos | No (`0`) | `text`, `code` (`GoogleAuthController`, anti-CSRF state token, multi-tenant scoping check) |
-| **Per-Module Site Settings** | `docs/how-tos/module-settings` | How-Tos | No (`0`) | `text`, `code` (`App::registerModuleSettings()`, `sites.settings` JSON column, min/max clamping, generic `/admin/settings/{moduleId}` page) |
-| **The FormField Component System** | `docs/how-tos/form-fields` | How-Tos | No (`0`) | `text`, `code` (`Zero\Support\Forms`, `FormField` interface, `App::makeFormField()`, `castSubmittedValue()`, custom type registration) |
-| **Continuous Integration & Automated Releases** | `docs/how-tos/ci-cd` | How-Tos | No (`0`) | `text`, `code` (`run-tests.yml`, Conventional Commits, `bin/release`, `bin/check-commit-messages`, `workflow_run`-gated `release.yml`) |
-| **Search Index & Decoupled Driver Architecture** | `docs/how-tos/search-architecture` | How-Tos | No (`0`) | `text`, `code` (database search driver, block helpers, N+1 preventions) |
-| **Serverless Blueprints: Google Cloud Run & Cloud SQL Setup** | `docs/how-tos/deploy-cloud-run` | How-Tos | No (`0`) | `text`, `code` (Stateless architecture, low-cost db-f1-micro instance/bucket creation, DB_SOCKET connection) |
+| **How To's** | `docs/how-tos` | Docs / Sub-Hub | No (`0`) | `sub_pages` (3 category cards: Core Concepts, Extending, Operations) |
+| **Core Concepts** | `docs/how-tos/core-concepts` | How-Tos / Sub-Hub | No (`0`) | `sub_pages` (Framework internals topic list) |
+| **Extending the Platform** | `docs/how-tos/extending` | How-Tos / Sub-Hub | No (`0`) | `sub_pages` (Extensibility topic list) |
+| **Operations & Deployment** | `docs/how-tos/operations` | How-Tos / Sub-Hub | No (`0`) | `sub_pages` (Running/shipping topic list) |
+| **Database Models and Active Record Traits** | `docs/how-tos/core-concepts/models` | How-Tos / Core Concepts | No (`0`) | `text`, `code` (creating models, form configurations, `CascadesDeletes` + SQL identifier validation) |
+| **How to Create Views** | `docs/how-tos/core-concepts/views` | How-Tos / Core Concepts | No (`0`) | `text` (Template fallbacks, buffering, layout nesting) |
+| **How to Create a Custom Seeder** | `docs/how-tos/core-concepts/seeder` | How-Tos / Core Concepts | No (`0`) | `text` (JSON architecture, running imports) |
+| **How to Create Middleware** | `docs/how-tos/core-concepts/middleware` | How-Tos / Core Concepts | No (`0`) | `text`, `code` (Auth onion-pipeline handler) |
+| **How to Create Controllers** | `docs/how-tos/core-concepts/controllers` | How-Tos / Core Concepts | No (`0`) | `text` (Interface patterns) |
+| **Understanding Time-Ordered UUIDv7 Keys** | `docs/how-tos/core-concepts/uuidv7` | How-Tos / Core Concepts | No (`0`) | `text` (B-Tree pages clustering optimization) |
+| **SMTP TCP Socket Emailing** | `docs/how-tos/core-concepts/emailer` | How-Tos / Core Concepts | No (`0`) | `text` (Raw sockets manual dialogue & fsockopen) |
+| **Multi-Tenant Data Isolation** | `docs/how-tos/core-concepts/multitenancy` | How-Tos / Core Concepts | No (`0`) | `text` (physical site_id constraints inside IsModel) |
+| **Core Security Hardening and Anti-XSS Pipelines** | `docs/how-tos/core-concepts/security` | How-Tos / Core Concepts | No (`0`) | `text`, `code` (CsrfVerify, DOMDocument/DOMXPath scrubber) |
+| **Writing Database Migrations** | `docs/how-tos/core-concepts/migrations` | How-Tos / Core Concepts | No (`0`) | `text`, `code` (`Migration` base class, `MigrationManager` discovery/numbering, `bin/migrate`) |
+| **Per-Module Site Settings** | `docs/how-tos/extending/module-settings` | How-Tos / Extending | No (`0`) | `text`, `code` (`App::registerModuleSettings()`, `sites.settings` JSON column, min/max clamping, generic `/admin/settings/{moduleId}` page) |
+| **The FormField Component System** | `docs/how-tos/extending/form-fields` | How-Tos / Extending | No (`0`) | `text`, `code` (`Zero\Support\Forms`, `FormField` interface, `App::makeFormField()`, `castSubmittedValue()`, custom type registration) |
+| **Custom Column Rendering (listView)** | `docs/how-tos/extending/custom-views` | How-Tos / Extending | No (`0`) | `text` (custom badges, site modules list pill views) |
+| **Creating Custom Page Builder Blocks** | `docs/how-tos/extending/custom-blocks` | How-Tos / Extending | No (`0`) | `text` (View, Admin Edit fields templates, registration hooks) |
+| **Registering Custom Admin List Actions** | `docs/how-tos/extending/list-actions` | How-Tos / Extending | No (`0`) | `text`, `code` (`ManagesModelListActions`, `registerModelListAction()`, worked "Create Demo Site" example) |
+| **Google OAuth 2.0 Single Sign-On** | `docs/how-tos/extending/oauth` | How-Tos / Extending | No (`0`) | `text`, `code` (`GoogleAuthController`, anti-CSRF state token, multi-tenant scoping check) |
+| **Search Index & Decoupled Driver Architecture** | `docs/how-tos/extending/search-architecture` | How-Tos / Extending | No (`0`) | `text`, `code` (database search driver, block helpers, N+1 preventions) |
+| **Automated Test Suite Conventions** | `docs/how-tos/operations/testing` | How-Tos / Operations | No (`0`) | `text`, `code` (per-component `Tests/` layout, `TestRunner` subprocess isolation, `bin/test`) |
+| **Continuous Integration & Automated Releases** | `docs/how-tos/operations/ci-cd` | How-Tos / Operations | No (`0`) | `text`, `code` (`run-tests.yml`, Conventional Commits, `bin/release`, `bin/check-commit-messages`, `workflow_run`-gated `release.yml`) |
+| **Setting Up Supervisor for the Job Queue** | `docs/how-tos/operations/supervisor-setup` | How-Tos / Operations | No (`0`) | `text` (program configurations, daemon monitoring, log rotate) |
+| **Configuring Google Cloud Storage (Zero Dependencies)** | `docs/how-tos/operations/gcs-setup` | How-Tos / Operations | No (`0`) | `text` (Uniform vs ACL buckets, .env setup, Storage API) |
+| **Secure Frontend Uploads & Private Storage** | `docs/how-tos/operations/secure-uploads` | How-Tos / Operations | No (`0`) | `text` (binaries obfuscation, secure download route stream) |
+| **Configuring AWS S3 Storage (Zero Dependencies)** | `docs/how-tos/operations/aws-s3-setup` | How-Tos / Operations | No (`0`) | `text` (SigV4 cryptographic hmac signature generation) |
+| **Serverless Blueprints: Google Cloud Run & Cloud SQL Setup** | `docs/how-tos/operations/deploy-cloud-run` | How-Tos / Operations | No (`0`) | `text`, `code` (Stateless architecture, low-cost db-f1-micro instance/bucket creation, DB_SOCKET connection) |
+| **Standalone Project Creation & Core Syncing** | `docs/how-tos/operations/standalone-projects` | How-Tos / Operations | No (`0`) | `text`, `code` (`bin/create-project` Composer bootstrap, `composer update` core syncing, best practices) |
 | **Modules** | `docs/modules` | Docs / Sub-Hub | No (`0`) | `sub_pages` (Decoupled system modules list) |
 | **How to Create Modules** | `docs/modules/how-to-create` | Modules | No (`0`) | `text` (Hot-swappable toggle structures, widgets) |
 | **Blog & Commenting Module** | `docs/modules/blog` | Modules | No (`0`) | `text` (moderation flow), `code` (comment model), `sub_pages` (tutorials) |

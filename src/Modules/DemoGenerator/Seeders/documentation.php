@@ -564,7 +564,52 @@ Percentage of the requests served within a certain time (ms)
                 [
                     'type' => 'sub_pages',
                     'title' => 'Zero CMS Technical Guides',
-                    'content' => '<p>Welcome to our developer How-To library! Select a topic card below to read fully structured, detailed walk-throughs and guides explaining how to expand, customize, and operate the zero-dependency CMS engine.</p>',
+                    'content' => '<p>Welcome to our developer How-To library! Pick a category below, then a topic card, to read fully structured, detailed walk-throughs and guides explaining how the platform works, how to extend it, and how to operate it in production.</p>',
+                ],
+            ],
+            'type' => 'page',
+            'show_in_nav' => '0',
+        ],
+        [
+            'title' => 'Core Concepts',
+            'slug' => 'docs/how-tos/core-concepts',
+            'status' => 'published',
+            'site_domain' => 'd6laptop.zero.guide',
+            'content' => [
+                [
+                    'type' => 'sub_pages',
+                    'title' => 'Core Concepts',
+                    'content' => '<p>The foundational mental model: how models, views, controllers, middleware, migrations, and multi-tenant isolation actually work under the hood.</p>',
+                ],
+            ],
+            'type' => 'page',
+            'show_in_nav' => '0',
+        ],
+        [
+            'title' => 'Extending the Platform',
+            'slug' => 'docs/how-tos/extending',
+            'status' => 'published',
+            'site_domain' => 'd6laptop.zero.guide',
+            'content' => [
+                [
+                    'type' => 'sub_pages',
+                    'title' => 'Extending the Platform',
+                    'content' => '<p>Building on top of Zero CMS: per-module settings, the FormField component system, custom page-builder blocks, custom admin columns/list actions, search drivers, and OAuth single sign-on.</p>',
+                ],
+            ],
+            'type' => 'page',
+            'show_in_nav' => '0',
+        ],
+        [
+            'title' => 'Operations & Deployment',
+            'slug' => 'docs/how-tos/operations',
+            'status' => 'published',
+            'site_domain' => 'd6laptop.zero.guide',
+            'content' => [
+                [
+                    'type' => 'sub_pages',
+                    'title' => 'Operations & Deployment',
+                    'content' => '<p>Running and shipping Zero CMS: automated testing, CI and release automation, standalone Composer sub-projects, the job queue daemon, storage backends, and cloud deployment.</p>',
                 ],
             ],
             'type' => 'page',
@@ -572,7 +617,7 @@ Percentage of the requests served within a certain time (ms)
         ],
         [
             'title' => 'Database Models and Active Record Traits',
-            'slug' => 'docs/how-tos/models',
+            'slug' => 'docs/how-tos/core-concepts/models',
             'status' => 'published',
             'site_domain' => 'd6laptop.zero.guide',
             'content' => [
@@ -649,7 +694,7 @@ class Post implements Model {
         ],
         [
             'title' => 'How to Create Views',
-            'slug' => 'docs/how-tos/views',
+            'slug' => 'docs/how-tos/core-concepts/views',
             'status' => 'published',
             'site_domain' => 'd6laptop.zero.guide',
             'content' => [
@@ -676,7 +721,7 @@ class Post implements Model {
         ],
         [
             'title' => 'How to Create a Custom Seeder',
-            'slug' => 'docs/how-tos/seeder',
+            'slug' => 'docs/how-tos/core-concepts/seeder',
             'status' => 'published',
             'site_domain' => 'd6laptop.zero.guide',
             'content' => [
@@ -786,7 +831,7 @@ class MyCustomSeeder implements SeederInterface
         ],
         [
             'title' => 'How to Create Middleware',
-            'slug' => 'docs/how-tos/middleware',
+            'slug' => 'docs/how-tos/core-concepts/middleware',
             'status' => 'published',
             'site_domain' => 'd6laptop.zero.guide',
             'content' => [
@@ -832,7 +877,7 @@ class AuthMiddleware
         ],
         [
             'title' => 'How to Create Controllers',
-            'slug' => 'docs/how-tos/controllers',
+            'slug' => 'docs/how-tos/core-concepts/controllers',
             'status' => 'published',
             'site_domain' => 'd6laptop.zero.guide',
             'content' => [
@@ -931,7 +976,7 @@ if ($moduleName !== null) {
         ],
         [
             'title' => 'Understanding Time-Ordered UUIDv7 Keys',
-            'slug' => 'docs/how-tos/uuidv7',
+            'slug' => 'docs/how-tos/core-concepts/uuidv7',
             'status' => 'published',
             'site_domain' => 'd6laptop.zero.guide',
             'content' => [
@@ -959,7 +1004,7 @@ if ($moduleName !== null) {
         ],
         [
             'title' => 'SMTP TCP Socket Emailing',
-            'slug' => 'docs/how-tos/emailer',
+            'slug' => 'docs/how-tos/core-concepts/emailer',
             'status' => 'published',
             'site_domain' => 'd6laptop.zero.guide',
             'content' => [
@@ -1000,7 +1045,7 @@ fputs($socket, "QUIT\\r\\
         ],
         [
             'title' => 'Multi-Tenant Data Isolation',
-            'slug' => 'docs/how-tos/multitenancy',
+            'slug' => 'docs/how-tos/core-concepts/multitenancy',
             'status' => 'published',
             'site_domain' => 'd6laptop.zero.guide',
             'content' => [
@@ -1036,7 +1081,7 @@ public static function all(): array {
         ],
         [
             'title' => 'Core Security Hardening and Anti-XSS Pipelines',
-            'slug' => 'docs/how-tos/security',
+            'slug' => 'docs/how-tos/core-concepts/security',
             'status' => 'published',
             'site_domain' => 'd6laptop.zero.guide',
             'content' => [
@@ -1099,7 +1144,7 @@ class Security {
         ],
         [
             'title' => 'Custom Column Rendering (listView)',
-            'slug' => 'docs/how-tos/custom-views',
+            'slug' => 'docs/how-tos/extending/custom-views',
             'status' => 'published',
             'site_domain' => 'd6laptop.zero.guide',
             'content' => [
@@ -1197,7 +1242,7 @@ if (!is_array($modules)) {
         ],
         [
             'title' => 'Registering Custom Admin List Actions',
-            'slug' => 'docs/how-tos/list-actions',
+            'slug' => 'docs/how-tos/extending/list-actions',
             'status' => 'published',
             'site_domain' => 'd6laptop.zero.guide',
             'content' => [
@@ -1250,7 +1295,7 @@ if (!is_array($modules)) {
         ],
         [
             'title' => 'Writing Database Migrations',
-            'slug' => 'docs/how-tos/migrations',
+            'slug' => 'docs/how-tos/core-concepts/migrations',
             'status' => 'published',
             'site_domain' => 'd6laptop.zero.guide',
             'content' => [
@@ -1297,7 +1342,7 @@ class AddExpiresAtToSitesTable extends \\Zero\\Database\\Migration
         ],
         [
             'title' => 'Automated Test Suite Conventions',
-            'slug' => 'docs/how-tos/testing',
+            'slug' => 'docs/how-tos/operations/testing',
             'status' => 'published',
             'site_domain' => 'd6laptop.zero.guide',
             'content' => [
@@ -1334,7 +1379,7 @@ assert_test($post->slug === \'hello-world\', \'Post slug should be auto-generate
         ],
         [
             'title' => 'Google OAuth 2.0 Single Sign-On',
-            'slug' => 'docs/how-tos/oauth',
+            'slug' => 'docs/how-tos/extending/oauth',
             'status' => 'published',
             'site_domain' => 'd6laptop.zero.guide',
             'content' => [
@@ -1367,7 +1412,7 @@ $tokenResponse = json_decode(curl_exec($ch), true);
         ],
         [
             'title' => 'Creating Custom Page Builder Blocks',
-            'slug' => 'docs/how-tos/custom-blocks',
+            'slug' => 'docs/how-tos/extending/custom-blocks',
             'status' => 'published',
             'site_domain' => 'd6laptop.zero.guide',
             'content' => [
@@ -1981,7 +2026,7 @@ $jobId = QueueManager::dispatch(
         ],
         [
             'title' => 'Setting Up Supervisor for the Job Queue',
-            'slug' => 'docs/how-tos/supervisor-setup',
+            'slug' => 'docs/how-tos/operations/supervisor-setup',
             'status' => 'published',
             'show_in_nav' => '0',
             'site_domain' => 'd6laptop.zero.guide',
@@ -2034,7 +2079,7 @@ sudo supervisorctl status</code></pre>',
         ],
         [
             'title' => 'Configuring Google Cloud Storage (Zero Dependencies)',
-            'slug' => 'docs/how-tos/gcs-setup',
+            'slug' => 'docs/how-tos/operations/gcs-setup',
             'status' => 'published',
             'show_in_nav' => '0',
             'site_domain' => 'd6laptop.zero.guide',
@@ -2087,7 +2132,7 @@ if (Storage::exists(\'uploads/avatars/user-123.jpg\')) {
         ],
         [
             'title' => 'Secure Frontend Uploads & Private Storage',
-            'slug' => 'docs/how-tos/secure-uploads',
+            'slug' => 'docs/how-tos/operations/secure-uploads',
             'status' => 'published',
             'show_in_nav' => '0',
             'site_domain' => 'd6laptop.zero.guide',
@@ -2143,7 +2188,7 @@ header(\'Cache-Control: private, must-revalidate\');</code></pre>',
         ],
         [
             'title' => 'Configuring AWS S3 Storage (Zero Dependencies)',
-            'slug' => 'docs/how-tos/aws-s3-setup',
+            'slug' => 'docs/how-tos/operations/aws-s3-setup',
             'status' => 'published',
             'show_in_nav' => '0',
             'site_domain' => 'd6laptop.zero.guide',
@@ -2191,7 +2236,7 @@ if (Storage::exists(\'uploads/contracts/agreement-123.txt\')) {
         ],
         [
             'title' => 'Standalone Project Creation & Core Syncing',
-            'slug' => 'docs/how-tos/standalone-projects',
+            'slug' => 'docs/how-tos/operations/standalone-projects',
             'status' => 'published',
             'show_in_nav' => '0',
             'site_domain' => 'd6laptop.zero.guide',
@@ -2290,7 +2335,7 @@ bin/test
         ],
         [
             'title' => 'Search Index & Decoupled Driver Architecture',
-            'slug' => 'docs/how-tos/search-architecture',
+            'slug' => 'docs/how-tos/extending/search-architecture',
             'status' => 'published',
             'show_in_nav' => '0',
             'site_domain' => 'd6laptop.zero.guide',
@@ -2371,7 +2416,7 @@ class ProductShowcaseBlock implements BlockHelperInterface
         ],
         [
             'title' => 'Serverless Blueprints: Google Cloud Run & Cloud SQL Setup',
-            'slug' => 'docs/how-tos/deploy-cloud-run',
+            'slug' => 'docs/how-tos/operations/deploy-cloud-run',
             'status' => 'published',
             'show_in_nav' => '0',
             'site_domain' => 'd6laptop.zero.guide',
@@ -2495,7 +2540,7 @@ gcloud run jobs execute zerocms-seed-job',
         ],
         [
             'title' => 'Per-Module Site Settings',
-            'slug' => 'docs/how-tos/module-settings',
+            'slug' => 'docs/how-tos/extending/module-settings',
             'status' => 'published',
             'site_domain' => 'd6laptop.zero.guide',
             'content' => [
@@ -2559,7 +2604,7 @@ $postsPerPage = (int)$site->getModuleSetting(\'blog\', \'posts_per_page\', 6);',
         ],
         [
             'title' => 'The FormField Component System',
-            'slug' => 'docs/how-tos/form-fields',
+            'slug' => 'docs/how-tos/extending/form-fields',
             'status' => 'published',
             'site_domain' => 'd6laptop.zero.guide',
             'content' => [
@@ -2607,7 +2652,7 @@ $value = $field-&gt;castSubmittedValue($_POST);</code></pre><p>This is exactly w
                 [
                     'type' => 'text',
                     'title' => 'Registering a Custom Field Type',
-                    'content' => '<p>The type registry follows the same <code>App::registerX()</code> pattern used by blocks and models. Core types are registered once during bootstrap; a module can register its own additional type from inside its own <code>Module::init()</code>:</p><pre><code class="language-php">App::registerFormFieldType(\'sku_lookup\', \\Zero\\Modules\\Shop\\Support\\Forms\\SkuLookupField::class);</code></pre><p>Any class implementing <code>Zero\\Interfaces\\FormField</code> works &mdash; see <a href="/docs/how-tos/module-settings">Per-Module Site Settings</a> for the array-config schema shape a field\'s constructor receives.</p>',
+                    'content' => '<p>The type registry follows the same <code>App::registerX()</code> pattern used by blocks and models. Core types are registered once during bootstrap; a module can register its own additional type from inside its own <code>Module::init()</code>:</p><pre><code class="language-php">App::registerFormFieldType(\'sku_lookup\', \\Zero\\Modules\\Shop\\Support\\Forms\\SkuLookupField::class);</code></pre><p>Any class implementing <code>Zero\\Interfaces\\FormField</code> works &mdash; see <a href="/docs/how-tos/extending/module-settings">Per-Module Site Settings</a> for the array-config schema shape a field\'s constructor receives.</p>',
                 ],
             ],
             'type' => 'page',
@@ -2615,14 +2660,14 @@ $value = $field-&gt;castSubmittedValue($_POST);</code></pre><p>This is exactly w
         ],
         [
             'title' => 'Continuous Integration & Automated Releases',
-            'slug' => 'docs/how-tos/ci-cd',
+            'slug' => 'docs/how-tos/operations/ci-cd',
             'status' => 'published',
             'site_domain' => 'd6laptop.zero.guide',
             'content' => [
                 [
                     'type' => 'text',
                     'title' => 'Continuous Integration',
-                    'content' => '<p><code>.github/workflows/run-tests.yml</code> runs the full <a href="/docs/how-tos/testing">automated test suite</a> on every push and pull request targeting <code>main</code> or <code>dev</code>, against a real MySQL 8.0 service container on PHP 8.3 &mdash; the exact same <code>bin/test</code> command a developer runs locally, so CI can never diverge from the local dev workflow.</p>',
+                    'content' => '<p><code>.github/workflows/run-tests.yml</code> runs the full <a href="/docs/how-tos/operations/testing">automated test suite</a> on every push and pull request targeting <code>main</code> or <code>dev</code>, against a real MySQL 8.0 service container on PHP 8.3 &mdash; the exact same <code>bin/test</code> command a developer runs locally, so CI can never diverge from the local dev workflow.</p>',
                 ],
                 [
                     'type' => 'text',
