@@ -22,6 +22,28 @@ namespace Zero\Support;
 class TestRunner
 {
     /**
+     * Messages of assertions that failed in the current subprocess, in the order they failed.
+     *
+     * @var string[]
+     */
+    private static array $failedAssertions = [];
+
+    /**
+     * Whether the end-of-suite failure handler has already been registered, so accumulating a
+     * second failure does not stack duplicate shutdown handlers.
+     *
+     * @var bool
+     */
+    private static bool $failureExitRegistered = false;
+
+    /**
+     * Count of assertions that passed in the current subprocess, used for the end-of-suite recap.
+     *
+     * @var int
+     */
+    private static int $passedAssertions = 0;
+
+    /**
      * Discover, run, and report on every *Test.php file under $root (scanned recursively, so a
      * single src/ root picks up both component-level Tests/ folders like src/Core/Tests and
      * module Tests/ folders like src/Modules/Blog/Tests). Echoes progress directly (matching the
@@ -84,22 +106,75 @@ class TestRunner
 
     /**
      * Custom light-weight test assertion helper, called by every test file via the global
-     * assert_test() wrapper defined in src/Support/TestBootstrap.php. Exits the current subprocess with
-     * status code 1 on failure, which is what run()'s exit-code-based pass/fail detection relies
-     * on -- it does not return/continue to accumulate multiple failures within one test file.
+     * assert_test() wrapper defined in src/Support/TestBootstrap.php.
      *
-     * @param bool $condition
-     * @param string $message
+     * A failing assertion is recorded and execution continues, so one run surfaces every broken
+     * assertion in the file rather than only the first. The subprocess exit code -- which is how
+     * run() detects pass/fail -- is still set to 1 for any failure, via a shutdown handler
+     * registered on the first failure (exit() inside a shutdown function does set the process exit
+     * code, even over an explicit exit(0) in the test body).
+     *
+     * Pass $halt to stop the file immediately instead, for a precondition whose failure would make
+     * every later assertion meaningless noise (no database connection, missing fixture). Prefer the
+     * default: continuing is what turns a red run into one full list of what is broken.
+     *
+     * @param bool $condition Assertion outcome; false records a failure.
+     * @param string $message Human-readable description, echoed as PASS:/FAIL: and counted by printSummary().
+     * @param bool $halt Whether to abort the file at once rather than accumulate and continue.
      * @return void
      */
-    public static function assertTest(bool $condition, string $message): void
+    public static function assertTest(bool $condition, string $message, bool $halt = false): void
     {
         if ($condition) {
+            self::$passedAssertions++;
             echo "  \033[32m\xE2\x9C\x85 PASS:\033[0m {$message}\n";
-        } else {
-            echo "  \033[31m\xE2\x9D\x8C FAIL:\033[0m {$message}\n";
+            return;
+        }
+
+        self::$failedAssertions[] = $message;
+        echo "  \033[31m\xE2\x9D\x8C FAIL:\033[0m {$message}\n";
+
+        if ($halt) {
+            echo "  \033[1;31mHalting this suite: the failure above is a precondition for the rest of the file.\033[0m\n";
             exit(1);
         }
+
+        self::registerFailureExit();
+    }
+
+    /**
+     * Arrange for the current subprocess to exit non-zero once it finishes, and to print a recap of
+     * every assertion that failed. Registered on the first failure only.
+     *
+     * The recap is deliberately worded to avoid the literal "PASS:"/"FAIL:" markers, because
+     * printSummary() totals assertions by counting those substrings across captured output -- a
+     * recap containing them would double-count the very failures it is summarising.
+     *
+     * Registering here rather than up front matters when a suite fails and then fatals: shutdown
+     * handlers still run on a fatal error, so the recap and the non-zero exit survive a crash that
+     * a later assertion triggers.
+     *
+     * @return void
+     */
+    private static function registerFailureExit(): void
+    {
+        if (self::$failureExitRegistered) {
+            return;
+        }
+        self::$failureExitRegistered = true;
+
+        \register_shutdown_function(static function (): void {
+            $failed = \count(self::$failedAssertions);
+            $total = $failed + self::$passedAssertions;
+
+            echo "\n  \033[1;31m{$failed} of {$total} assertions failed in this suite\033[0m\n";
+            foreach (self::$failedAssertions as $index => $message) {
+                $position = $index + 1;
+                echo "    {$position}) {$message}\n";
+            }
+
+            exit(1);
+        });
     }
 
     /**

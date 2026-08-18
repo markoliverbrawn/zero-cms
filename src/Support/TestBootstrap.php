@@ -50,10 +50,24 @@ Emailer::enableTestMode();
 
 /**
  * Custom light-weight test assertion helper.
- * Exits with status code 1 on failure to signal the test runner.
+ *
+ * A failure is recorded and the file keeps going, so a single run reports every broken assertion
+ * instead of stopping at the first. The subprocess still exits with status code 1 if anything
+ * failed, which is how the runner detects a failing suite.
  */
 function assert_test(bool $condition, string $message) {
     TestRunner::assertTest($condition, $message);
+}
+
+/**
+ * Assert a precondition, aborting the file immediately if it fails.
+ *
+ * Use this only where continuing would produce meaningless cascade failures rather than useful
+ * information -- no database connection, a fixture that did not get created, a required extension
+ * missing. For ordinary checks use assert_test(), so one run surfaces the full list of problems.
+ */
+function assert_critical(bool $condition, string $message) {
+    TestRunner::assertTest($condition, $message, true);
 }
 
 /**
