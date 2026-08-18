@@ -14,7 +14,8 @@ To ensure absolute system stability, security, and multi-tenant isolation withou
 * **Shared bootstrap**: `src/Support/TestBootstrap.php` — the one file every test requires directly. It starts the session, defines `APPLICATION_ROOT`/`TEST_SUITE_RUNNING`, initializes `Zero\Core\Autoloader`, loads `.env` via `Env::load()`, overrides `DB_NAME` to an isolated `_test` database (suffixed with the `TEST_TOKEN` worker slot if set), calls `Emailer::enableTestMode()`, and defines the global `assert_test(bool $condition, string $message)` helper (a thin wrapper delegating to `TestRunner::assertTest()`).
 * **No per-folder relay**: every test file requires `TestBootstrap.php` directly with a `dirname()` call sized to its own depth under `src/` — `dirname(dirname(__DIR__)) . '/Support/TestBootstrap.php'` (2 levels) for component-level `Tests/` folders like `src/Core/Tests/`, or `dirname(dirname(dirname(__DIR__))) . '/Support/TestBootstrap.php'` (3 levels) for module-level `Tests/` folders like `src/Modules/Blog/Tests/`. There used to be a thin `bootstrap.php` relay file in every `Tests/` folder forwarding to this same file, but it was collapsed as unnecessary indirection — one line inlined per test file was judged neater than a two-hop require through a same-purpose file in every folder.
 * **Runner class**: `src/Support/TestRunner.php` (`Zero\Support\TestRunner`) — discovers every `*Test.php` file recursively under a given root (`src/`), runs them, and reports results. Exposes `TestRunner::run(string $root): int` and `TestRunner::assertTest(bool $condition, string $message): void`.
-* **Entry point**: `bin/test` — a thin executable that boots the autoloader and calls `TestRunner::run(APPLICATION_ROOT . '/src')`.
+* **Entry point**: `bin/test` — a thin executable that boots the autoloader and calls `TestRunner::run(APPLICATION_ROOT . '/src', $collectCoverage)`, passing `true` when invoked with `--coverage`.
+* **Coverage collector**: `src/Support/CoverageRecorder.php` (`Zero\Support\CoverageRecorder`) plus the procedural `src/Support/CoveragePrepend.php` shim it auto-prepends. Only used by `bin/test --coverage`.
 
 ## Execution model
 
@@ -23,6 +24,18 @@ To ensure absolute system stability, security, and multi-tenant isolation withou
 * `[PASS]`/`[FAIL]` progress lines print the instant each subprocess completes, in completion order (not queue order) — this is expected, not a bug, when comparing two runs' output.
 * A failing suite's full captured stdout+stderr is dumped immediately to assist debugging, followed by a final summary box: suite counts, total assertion count (counted by scanning subprocess output for `PASS:`/`FAIL:` substrings), and a `GRAND STATUS: SUCCESS`/`FAILURE` banner.
 * `assert_test()` (and the underlying `TestRunner::assertTest()`) exits the current subprocess with status code `1` on the first failing assertion — it does not accumulate multiple failures within one test file.
+
+## Measuring coverage
+
+```bash
+docker exec -w /data/misc/zero php83 php bin/test --coverage
+```
+
+Prints the usual test summary, then a line-coverage summary (overall, per component, least-covered files), and writes the full per-file report to `storage/coverage/coverage.json`. Requires the Xdebug extension; the runner refuses to proceed rather than reporting a misleading 0% if it's missing.
+
+Coverage is recorded across the **entire process tree**, not just the test process. This matters because the suite is subprocess-based and several tests spawn subprocesses of their own — `ApiControllerTest.php` pipes code to a fresh `php` over stdin, `SeederScriptTest.php` `shell_exec`s `bin/seed`. A single-process collector misses all of that: it reported `ApiController.php` at 3% (really 100%), `SeederRunner.php` at 13% (really 97.5%), and all 30 migration files as never loaded (really 98.2% covered, since their `up()`/`down()` runs inside `bin/seed`). `CoverageRecorder::prepare()` writes a scratch php.ini fragment into `storage/coverage/ini` that sets `auto_prepend_file`, and exposes it through `PHP_INI_SCAN_DIR` — which is inherited by every descendant process, so each one records and dumps its own hit map for the parent to merge.
+
+Test scaffolding (`*Test.php`, `TestBootstrap.php`, `TestRunner.php`, and the two coverage files) is excluded from the figures, so the number describes the product rather than the harness.
 
 ## Adding a new test
 

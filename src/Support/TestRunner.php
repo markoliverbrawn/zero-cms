@@ -28,10 +28,17 @@ class TestRunner
      * original script's behavior) and returns the process exit code (0 on full success, 1 if any
      * suite failed).
      *
+     * With $collectCoverage enabled, every spawned subprocess -- and every subprocess those spawn in
+     * turn -- is instrumented for Xdebug line coverage, and a coverage summary is printed after the
+     * test summary. Collecting coverage never changes the pass/fail exit code; it only adds a
+     * report. See Zero\Support\CoverageRecorder for why instrumentation spans the whole process tree
+     * rather than just this one.
+     *
      * @param string $root Absolute path to scan recursively for *Test.php files.
+     * @param bool $collectCoverage Whether to record and report line coverage for the run.
      * @return int
      */
-    public static function run(string $root): int
+    public static function run(string $root, bool $collectCoverage = false): int
     {
         $testFiles = self::discoverTestFiles($root);
 
@@ -41,14 +48,38 @@ class TestRunner
 
         echo "Found " . count($testFiles) . " test suite files matching *Test.php.\n";
 
+        $applicationRoot = \defined('APPLICATION_ROOT') ? APPLICATION_ROOT : \dirname($root);
+        $coverageEnv = [];
+
+        if ($collectCoverage) {
+            // Refusing to continue is deliberate: silently running the suite without the coverage
+            // that was explicitly asked for would hand back a "0%" report indistinguishable from
+            // genuinely untested code.
+            if (!CoverageRecorder::isAvailable()) {
+                echo "\n\033[1;31mCoverage requested but Xdebug's coverage functions are unavailable.\033[0m\n";
+                echo "Enable the Xdebug extension (php -m | grep -i xdebug) and try again.\n";
+                return 1;
+            }
+
+            CoverageRecorder::prepare($applicationRoot);
+            $coverageEnv = CoverageRecorder::childEnvironment($applicationRoot);
+            echo "Collecting line coverage (whole process tree, including nested subprocesses).\n";
+        }
+
         $maxConcurrency = self::detectConcurrency();
         echo "Running with concurrency limit: {$maxConcurrency} workers.\n\n";
 
         $startTime = microtime(true);
-        $completedJobs = self::executeJobs($testFiles, $maxConcurrency, $root);
+        $completedJobs = self::executeJobs($testFiles, $maxConcurrency, $root, $coverageEnv);
         $duration = microtime(true) - $startTime;
 
-        return self::printSummary($completedJobs, count($testFiles), $duration);
+        $exitCode = self::printSummary($completedJobs, count($testFiles), $duration);
+
+        if ($collectCoverage) {
+            self::printCoverage($applicationRoot, $root);
+        }
+
+        return $exitCode;
     }
 
     /**
@@ -153,9 +184,11 @@ class TestRunner
      * @param string[] $testFiles Absolute paths, already sorted/deduped.
      * @param int $maxConcurrency Size of the token pool (from detectConcurrency()).
      * @param string $cwd proc_open()'s working directory for every spawned subprocess.
+     * @param array<string, string> $extraEnv Additional environment variables handed to every
+     *        subprocess (used to switch on coverage instrumentation for the whole process tree).
      * @return array List of completed-job shapes, in completion order.
      */
-    private static function executeJobs(array $testFiles, int $maxConcurrency, string $cwd): array
+    private static function executeJobs(array $testFiles, int $maxConcurrency, string $cwd, array $extraEnv = []): array
     {
         $jobsQueue = $testFiles;
         $totalJobs = \count($testFiles);
@@ -180,8 +213,10 @@ class TestRunner
                 ];
 
                 $pipes = [];
-                // Inject the isolated database worker token environment variable
-                $env = \array_merge($_ENV, ['TEST_TOKEN' => (string)$token]);
+                // Inject the isolated database worker token environment variable, plus any coverage
+                // instrumentation vars. These are passed explicitly rather than left to inheritance
+                // because proc_open()'s $env argument replaces the child's environment outright.
+                $env = \array_merge($_ENV, $extraEnv, ['TEST_TOKEN' => (string)$token]);
 
                 $process = \proc_open("php " . \escapeshellarg($file), $descriptors, $pipes, $cwd, $env);
 
@@ -263,6 +298,45 @@ class TestRunner
         }
 
         return $completedJobs;
+    }
+
+    /**
+     * Aggregate every per-process coverage dump produced by the run, write the full per-file report
+     * to storage/coverage/coverage.json, and echo the human-readable summary.
+     *
+     * @param string $applicationRoot Absolute path to the project root (where storage/ lives).
+     * @param string $srcRoot Absolute path to the measured source tree.
+     * @return void
+     * @throws \RuntimeException If the JSON report cannot be encoded or written.
+     */
+    private static function printCoverage(string $applicationRoot, string $srcRoot): void
+    {
+        // Xdebug reports fully-resolved paths, so the prefix used to match and trim them has to be
+        // resolved too -- otherwise a symlinked checkout silently matches nothing.
+        $resolvedSrcRoot = \realpath($srcRoot);
+        if ($resolvedSrcRoot === false) {
+            throw new \RuntimeException("TestRunner: could not resolve source root '{$srcRoot}'.");
+        }
+
+        $aggregate = CoverageRecorder::aggregate(CoverageRecorder::dumpDir($applicationRoot), $resolvedSrcRoot);
+
+        $stats = CoverageRecorder::report(
+            $aggregate['coverage'],
+            $resolvedSrcRoot,
+            $aggregate['dumps'],
+            $aggregate['corrupt']
+        );
+
+        $jsonPath = $applicationRoot . '/storage/coverage/coverage.json';
+        $encoded = \json_encode($stats, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+        if ($encoded === false) {
+            throw new \RuntimeException('TestRunner: could not encode the coverage report as JSON.');
+        }
+        if (\file_put_contents($jsonPath, $encoded) === false) {
+            throw new \RuntimeException("TestRunner: could not write the coverage report to '{$jsonPath}'.");
+        }
+
+        CoverageRecorder::renderSummary($stats, $jsonPath);
     }
 
     /**

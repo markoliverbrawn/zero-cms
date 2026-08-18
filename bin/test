@@ -1,6 +1,12 @@
 #!/usr/bin/env php
 <?php
 // bin/test - Entry point for the parallel subprocess test runner (Zero\Support\TestRunner).
+//
+// Usage:
+//   bin/test              Run every *Test.php suite under src/.
+//   bin/test --coverage   Run the suite and additionally report Xdebug line coverage. Coverage is
+//                         recorded across the whole process tree, so work done inside subprocesses
+//                         a test spawns itself is credited correctly. Requires the Xdebug extension.
 
 use Zero\Support\TestRunner;
 
@@ -9,4 +15,6 @@ define('APPLICATION_ROOT', dirname(__DIR__));
 require_once APPLICATION_ROOT . '/src/Core/Autoloader.php';
 \Zero\Core\Autoloader::init();
 
-exit(TestRunner::run(APPLICATION_ROOT . '/src'));
+$collectCoverage = in_array('--coverage', array_slice($argv, 1), true);
+
+exit(TestRunner::run(APPLICATION_ROOT . '/src', $collectCoverage));
