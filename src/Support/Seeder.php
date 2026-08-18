@@ -23,7 +23,9 @@ use Zero\Support\Security;
 /**
  * Class Seeder
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Executes a seed dataset against the database, and the extension points around it: per-field
+ * filters, per-row processors, and post-table and post-run hooks, so a module can adjust or follow
+ * up on seeded data without the seeder needing to know about that module.
  */
 class Seeder
 {

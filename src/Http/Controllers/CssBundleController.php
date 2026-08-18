@@ -18,7 +18,9 @@ use Zero\Interfaces\Controller;
 /**
  * Class CssBundleController
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Compiles a theme's stylesheets into one minified bundle cached at
+ * public/assets/css/main-{theme}.css and serves it as text/css, resolving the theme from the
+ * matched route or the active site.
  */
 class CssBundleController implements Controller
 {

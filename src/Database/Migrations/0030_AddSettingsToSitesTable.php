@@ -18,7 +18,7 @@ use Zero\Database\DB;
 /**
  * Class AddSettingsToSitesTable
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Adds the settings column to sites, holding the per-tenant, per-module settings payload.
  */
 class AddSettingsToSitesTable extends \Zero\Database\Migration
 {

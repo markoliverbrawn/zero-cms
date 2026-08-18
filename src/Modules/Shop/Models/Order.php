@@ -19,7 +19,7 @@ use Zero\Modules\Shop\Models\OrderItem;
 /**
  * Class Order
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Active Record model for a placed order, exposing the line items recorded against it.
  */
 class Order implements Model
 {

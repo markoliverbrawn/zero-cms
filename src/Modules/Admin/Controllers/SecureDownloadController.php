@@ -19,7 +19,8 @@ use Zero\Interfaces\Controller;
 /**
  * Class SecureDownloadController
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Serves a private stored file at /admin/secure-download/{id}, authorising the request and
+ * streaming the object through the application so private storage is never publicly addressable.
  */
 class SecureDownloadController implements Controller
 {

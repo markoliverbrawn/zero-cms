@@ -17,7 +17,7 @@ use Zero\Database\Migration;
 /**
  * Class CreateQueueJobsTable
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Creates the queue_jobs table holding dispatched jobs, their payloads, and their outcome.
  */
 class CreateQueueJobsTable extends Migration
 {

@@ -22,7 +22,7 @@ use Zero\Support\Str;
 /**
  * Class User
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Active Record model for accounts, covering credential storage and the per-user preferences blob.
  */
 class User implements Model
 {

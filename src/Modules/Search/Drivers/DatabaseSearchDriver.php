@@ -19,7 +19,8 @@ use Zero\Support\Security;
 /**
  * Class DatabaseSearchDriver
  *
- * Provides structural platform implementation and operational encapsulation.
+ * SearchDriverInterface implementation backed by the project's own database, keeping search
+ * working with no external search service to run.
  */
 class DatabaseSearchDriver implements SearchDriverInterface
 {

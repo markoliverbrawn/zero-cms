@@ -16,7 +16,9 @@ use Zero\Core\App;
 /**
  * Class AuthMiddleware
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Gate in front of authenticated back-office routes. Re-resolves the session user against the
+ * database rather than trusting the session alone, enforces the administrative role set, and
+ * redirects to the configurable login URL when either check fails.
  */
 class AuthMiddleware
 {

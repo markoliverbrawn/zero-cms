@@ -17,7 +17,8 @@ use Zero\Database\Migration;
 /**
  * Class CreateProductCategoryLinksTable
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Creates the join table linking products to categories, replacing the single-category column with
+ * a many-to-many relationship.
  */
 class CreateProductCategoryLinksTable extends Migration
 {

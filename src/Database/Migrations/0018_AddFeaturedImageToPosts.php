@@ -16,7 +16,7 @@ use Zero\Database\DB;
 /**
  * Class AddFeaturedImageToPosts
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Adds the featured-image reference to blog_posts.
  */
 class AddFeaturedImageToPosts extends \Zero\Database\Migration
 {

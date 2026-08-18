@@ -18,7 +18,8 @@ use Zero\Database\DB;
 /**
  * Class AddSiteTimezoneAndLanguage
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Adds timezone and default_language to sites, so each tenant localises dates and copy
+ * independently.
  */
 class AddSiteTimezoneAndLanguage extends \Zero\Database\Migration
 {

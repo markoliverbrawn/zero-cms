@@ -17,7 +17,7 @@ use Zero\Database\Migration;
 /**
  * Class CreateQueueScheduledTasksTable
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Creates the table recording scheduled recurring tasks and when each last ran.
  */
 class CreateQueueScheduledTasksTable extends Migration
 {

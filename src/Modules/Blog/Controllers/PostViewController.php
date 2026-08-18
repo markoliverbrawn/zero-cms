@@ -18,7 +18,7 @@ use Zero\Modules\Blog\Models\Post;
 /**
  * Class PostViewController
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Renders a single blog post at its public URL, resolving the post from the requested slug.
  */
 class PostViewController implements Controller
 {

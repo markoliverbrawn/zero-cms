@@ -17,7 +17,8 @@ use Zero\Models\Traits\IsModel;
 /**
  * Class OrderItem
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Active Record model for one line of an order, holding the quantity and the price captured at the
+ * time of purchase.
  */
 class OrderItem implements Model
 {

@@ -16,7 +16,8 @@ use Zero\Support\Security;
 /**
  * Class RateLimitMiddleware
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Applies a keyed request rate limit in front of a handler, answering a breach with HTTP 429, a
+ * Retry-After header, and a JSON error rather than invoking the handler.
  */
 class RateLimitMiddleware
 {

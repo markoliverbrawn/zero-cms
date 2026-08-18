@@ -26,7 +26,8 @@ use Zero\Support\I18n;
 /**
  * Class Page
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Active Record model for CMS pages: slug-addressed content, the block-builder payload, homepage
+ * designation, and the frontend URL a page resolves to.
  */
 class Page implements Model
 {

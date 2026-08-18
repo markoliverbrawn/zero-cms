@@ -19,7 +19,9 @@ use Zero\Support\Security;
 /**
  * Class ApiController
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Abstract base for REST API controllers. Authenticates a caller by token -- an Authorization
+ * Bearer header, an X-API-Key header, or an api_key query parameter -- rejecting a token whose
+ * owning user falls outside the requested tenant, and hands subclasses a JSON response writer.
  */
 abstract class ApiController
 {

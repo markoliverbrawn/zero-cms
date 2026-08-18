@@ -21,7 +21,8 @@ use Zero\Models\Traits\IsModel;
 /**
  * Class Category
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Active Record model for a product category, including slug resolution and the paginated queries
+ * the catalogue filters through.
  */
 class Category implements Model
 {

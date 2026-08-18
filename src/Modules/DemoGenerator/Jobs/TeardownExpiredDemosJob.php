@@ -20,7 +20,8 @@ use Zero\Models\Site;
 /**
  * Class TeardownExpiredDemosJob
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Scheduled job that reaps demo tenants whose expires_at has passed, deleting each site and the
+ * records cascading from it.
  */
 class TeardownExpiredDemosJob implements Job
 {

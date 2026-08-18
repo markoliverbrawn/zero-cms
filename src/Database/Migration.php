@@ -14,7 +14,8 @@ namespace Zero\Database;
 /**
  * Class Migration
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Base class every migration extends, fixing the two-method contract the migration runner drives:
+ * up() to apply a schema change and down() to revert it.
  */
 abstract class Migration
 {

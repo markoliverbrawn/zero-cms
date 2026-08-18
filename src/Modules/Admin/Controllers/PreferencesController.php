@@ -20,7 +20,8 @@ use Zero\Support\Logger;
 /**
  * Class PreferencesController
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Per-user preference screen at /admin/preferences, persisting the signed-in account's own
+ * interface choices.
  */
 class PreferencesController implements Controller
 {

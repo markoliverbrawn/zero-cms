@@ -22,7 +22,11 @@ use Zero\Support\Str;
 /**
  * Class FormApiController
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Receives public form submissions at /api/v1/contact/submit. Compiles the validation rules from
+ * the stored form-builder block's own field schema, archives the accepted submission, and notifies
+ * the recipients configured on the block -- which are resolved server-side from the block id,
+ * never sent to the browser. A filled honeypot field is answered with an ordinary success response
+ * and discarded.
  */
 class FormApiController implements Controller
 {

@@ -17,7 +17,9 @@ use Zero\Interfaces\Module as ModuleInterface;
 /**
  * Class Module
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Module contract implementation for the Admin module: the back-office route table, the
+ * authentication and CRUD screens, the dashboard, and the shared theme-side authentication
+ * controllers that Shop and Forum register into their own routes.
  */
 class Module implements ModuleInterface
 {

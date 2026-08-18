@@ -20,7 +20,8 @@ use Zero\Support\Security;
 /**
  * Class SearchReindexController
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Rebuilds the search index on demand from the back office, walking every registered searchable
+ * model and re-indexing its records.
  */
 class SearchReindexController implements Controller
 {

@@ -17,7 +17,8 @@ use Zero\Interfaces\Controller;
 /**
  * Class DashboardController
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Renders the back-office dashboard at /admin/dashboard, composed from the widget views the
+ * enabled modules contribute.
  */
 class DashboardController implements Controller
 {

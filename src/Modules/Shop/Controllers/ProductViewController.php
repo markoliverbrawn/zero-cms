@@ -18,7 +18,8 @@ use Zero\Modules\Shop\Models\Product;
 /**
  * Class ProductViewController
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Renders a single product page, resolving the product from the requested slug along with its
+ * images and variants.
  */
 class ProductViewController implements Controller
 {

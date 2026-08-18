@@ -16,7 +16,8 @@ use Zero\Database\DB;
 /**
  * Class AddShowInNavToPages
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Adds the show_in_nav flag to pages, so a page can be published and reachable yet omitted from
+ * generated navigation.
  */
 class AddShowInNavToPages extends \Zero\Database\Migration
 {

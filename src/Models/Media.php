@@ -19,7 +19,8 @@ use Zero\Models\Traits\IsModel;
 /**
  * Class Media
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Active Record model for uploaded media. Resolves public and square-crop URLs for a stored file,
+ * and removes the underlying stored object alongside the row on a force delete.
  */
 class Media implements Model
 {

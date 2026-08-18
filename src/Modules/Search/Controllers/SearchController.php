@@ -18,7 +18,8 @@ use Zero\Modules\Search\Services\SearchService;
 /**
  * Class SearchController
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Handles a public search request, passing the query to the configured search driver and rendering
+ * the results in the active theme.
  */
 class SearchController implements Controller
 {

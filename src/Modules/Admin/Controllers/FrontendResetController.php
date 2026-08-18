@@ -20,7 +20,8 @@ use Zero\Support\Logger;
 /**
  * Class FrontendResetController
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Theme-side password-reset completion, the front-of-site counterpart to ResetController, rendered
+ * inside the active theme for public member accounts.
  */
 class FrontendResetController implements Controller
 {

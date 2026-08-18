@@ -18,7 +18,8 @@ use Zero\Models\Traits\IsModel;
 /**
  * Class QueueJob
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Active Record model for a queued job: its target class, payload, attempt state, and any recorded
+ * failure, as surfaced in the back-office queue screens.
  */
 class QueueJob implements ModelInterface
 {

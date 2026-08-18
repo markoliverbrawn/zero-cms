@@ -18,7 +18,8 @@ use Zero\Models\User;
 /**
  * Class ForumPost
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Active Record model for a forum post. Its parent_id points at another post in the same thread,
+ * so the table is self-referencing and a reply chain is a tree rather than a flat list.
  */
 class ForumPost implements ModelInterface
 {

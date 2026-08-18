@@ -18,7 +18,7 @@ use Zero\Modules\Forum\Models\ForumBoard;
 /**
  * Class ForumHomeController
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Renders the forum index, listing the boards available to the active tenant.
  */
 class ForumHomeController implements Controller
 {

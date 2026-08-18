@@ -23,7 +23,8 @@ use Zero\Support\Security;
 /**
  * Class FrontendForgotController
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Theme-side password-reset request, the front-of-site counterpart to ForgotController, rendered
+ * inside the active theme for public member accounts.
  */
 class FrontendForgotController implements Controller
 {

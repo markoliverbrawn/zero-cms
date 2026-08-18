@@ -16,7 +16,8 @@ use Zero\Database\DB;
 /**
  * Class CreateShopTables
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Creates the shop tables: shop_categories, shop_products, shop_product_variants, shop_orders, and
+ * shop_order_items.
  */
 class CreateShopTables extends \Zero\Database\Migration
 {

@@ -20,7 +20,7 @@ use Zero\Modules\Shop\Models\Product;
 /**
  * Class CatalogController
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Renders the paginated product catalogue, applying category filtering and the listing order.
  */
 class CatalogController implements Controller
 {

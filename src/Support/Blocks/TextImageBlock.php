@@ -16,7 +16,8 @@ use Zero\Interfaces\BlockHelperInterface;
 /**
  * Class TextImageBlock
  *
- * Provides structural platform implementation and operational encapsulation.
+ * BlockHelperInterface adapter exposing a text-and-image block's copy for the search indexer.
+ * Operates purely on the passed-in JSON block data and issues no queries.
  */
 class TextImageBlock implements BlockHelperInterface
 {

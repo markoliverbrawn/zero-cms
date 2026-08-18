@@ -17,7 +17,9 @@ use Zero\Core\Env;
 /**
  * Class Storage
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Static facade over whichever StorageDriver is configured. Lazily resolves a single driver
+ * instance and forwards every filesystem operation to it, so calling code never depends on which
+ * backend is active.
  */
 class Storage
 {

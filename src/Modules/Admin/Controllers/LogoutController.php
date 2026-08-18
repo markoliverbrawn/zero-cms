@@ -18,7 +18,7 @@ use Zero\Support\Logger;
 /**
  * Class LogoutController
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Ends the back-office session at /admin/logout and returns the visitor to the sign-in page.
  */
 class LogoutController implements Controller
 {

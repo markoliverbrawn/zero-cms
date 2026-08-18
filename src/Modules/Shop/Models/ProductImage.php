@@ -17,7 +17,7 @@ use Zero\Models\Traits\IsModel;
 /**
  * Class ProductImage
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Active Record model for a secondary product image, ordered beneath its parent product.
  */
 class ProductImage implements Model
 {

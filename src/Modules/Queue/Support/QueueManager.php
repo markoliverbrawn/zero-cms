@@ -23,7 +23,9 @@ use Zero\Support\Logger;
 /**
  * Class QueueManager
  *
- * Provides structural platform implementation and operational encapsulation.
+ * The job queue itself: dispatch() persists a job with its payload for later execution, and
+ * runNextPendingJob() is what the worker process calls to claim and run the next one, recording
+ * success or failure against the row.
  */
 class QueueManager
 {

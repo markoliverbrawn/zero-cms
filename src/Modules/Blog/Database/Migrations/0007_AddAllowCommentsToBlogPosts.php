@@ -16,7 +16,7 @@ use Zero\Database\DB;
 /**
  * Class AddAllowCommentsToBlogPosts
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Adds the allow_comments flag to blog_posts, letting commenting be closed per post.
  */
 class AddAllowCommentsToBlogPosts extends \Zero\Database\Migration
 {

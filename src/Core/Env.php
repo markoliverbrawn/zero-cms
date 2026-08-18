@@ -14,7 +14,8 @@ namespace Zero\Core;
 /**
  * Class Env
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Parses the project's .env file once into a static cache, exposing individual configuration
+ * values through get() afterwards.
  */
 class Env
 {

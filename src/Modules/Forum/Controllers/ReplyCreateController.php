@@ -21,7 +21,8 @@ use Zero\Support\Security;
 /**
  * Class ReplyCreateController
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Handles reply submissions, attaching the reply either to the thread or to another reply via
+ * parent_id, which is what produces the nested thread structure.
  */
 class ReplyCreateController implements Controller
 {

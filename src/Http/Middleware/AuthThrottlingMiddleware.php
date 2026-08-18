@@ -18,7 +18,9 @@ use Zero\Support\Security;
 /**
  * Class AuthThrottlingMiddleware
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Wraps an authentication POST handler to rate-limit repeated attempts, keyed on the submitted
+ * username and falling back to the client IP where no username is present (such as completing a
+ * password reset).
  */
 class AuthThrottlingMiddleware
 {

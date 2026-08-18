@@ -16,7 +16,8 @@ namespace Zero\Support;
 /**
  * Class Str
  *
- * Provides structural platform implementation and operational encapsulation.
+ * String helpers used across the engine: HTML escaping (the single approved escape path for view
+ * output), URL slug generation, truncation, and syntax highlighting for rendered code blocks.
  */
 class Str
 {

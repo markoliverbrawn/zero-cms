@@ -17,7 +17,7 @@ use Zero\Database\Migration;
 /**
  * Class AddPrecedenceToPages
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Adds the precedence column to pages, giving sibling pages an explicit manual ordering.
  */
 class AddPrecedenceToPages extends Migration
 {

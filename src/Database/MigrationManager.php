@@ -17,7 +17,12 @@ use Zero\Database\DB;
 /**
  * Class MigrationManager
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Discovers the sequentially-numbered migration classes on disk and applies or reverts them,
+ * recording each one in the migrations table against a batch number.
+ *
+ * up() skips anything already recorded, so it is safe to re-run. down() reverts only the latest
+ * batch; hasBatches() lets a caller loop it to unwind the schema completely, which is how the
+ * seeder reaches a genuinely empty database before re-seeding.
  */
 class MigrationManager
 {

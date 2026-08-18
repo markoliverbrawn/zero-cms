@@ -23,7 +23,8 @@ use Zero\Modules\Queue\Support\Scheduler;
 /**
  * Class Module
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Module contract implementation for the DemoGenerator module: the demo-provisioning endpoints and
+ * the scheduled teardown of expired demo tenants.
  */
 class Module implements ModuleInterface
 {

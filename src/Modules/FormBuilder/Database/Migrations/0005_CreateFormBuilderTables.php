@@ -16,7 +16,7 @@ use Zero\Database\DB;
 /**
  * Class CreateFormBuilderTables
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Creates the form-builder tables that archive submitted form payloads.
  */
 class CreateFormBuilderTables extends \Zero\Database\Migration
 {

@@ -26,7 +26,9 @@ use Zero\Support\Str;
 /**
  * Class SecurityAuditController
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Back-office security audit screen. Assembles the audit report from the local codebase scan,
+ * environment and configuration telemetry, and recent published advisories fetched for the
+ * frameworks being compared against.
  */
 class SecurityAuditController implements Controller
 {

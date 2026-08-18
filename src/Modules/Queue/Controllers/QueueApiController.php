@@ -18,7 +18,8 @@ use Zero\Modules\Queue\Support\QueueManager;
 /**
  * Class QueueApiController
  *
- * Provides structural platform implementation and operational encapsulation.
+ * REST endpoint exposing queue state to the back office, so pending and failed jobs can be
+ * inspected from the dashboard.
  */
 class QueueApiController implements Controller
 {

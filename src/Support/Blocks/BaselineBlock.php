@@ -16,7 +16,8 @@ use Zero\Interfaces\BlockHelperInterface;
 /**
  * Class BaselineBlock
  *
- * Provides structural platform implementation and operational encapsulation.
+ * BlockHelperInterface adapter exposing a baseline block's text content for the search indexer.
+ * Operates purely on the passed-in JSON block data and issues no queries.
  */
 class BaselineBlock implements BlockHelperInterface
 {

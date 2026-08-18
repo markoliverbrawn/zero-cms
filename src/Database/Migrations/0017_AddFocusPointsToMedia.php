@@ -16,7 +16,8 @@ use Zero\Database\DB;
 /**
  * Class AddFocusPointsToMedia
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Adds focus_x and focus_y to media (percentages defaulting to the centre), letting cropped
+ * renditions keep the subject of an image in frame.
  */
 class AddFocusPointsToMedia extends \Zero\Database\Migration
 {

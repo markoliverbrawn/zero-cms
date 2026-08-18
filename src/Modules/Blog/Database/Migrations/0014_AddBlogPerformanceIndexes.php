@@ -16,7 +16,8 @@ use Zero\Database\DB;
 /**
  * Class AddBlogPerformanceIndexes
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Adds the composite idx_blog_site_status_deleted_created index to blog_posts, covering the
+ * tenant-scoped, published-only, newest-first query the article listings issue.
  */
 class AddBlogPerformanceIndexes extends \Zero\Database\Migration
 {

@@ -16,7 +16,8 @@ use Zero\Interfaces\BlockHelperInterface;
 /**
  * Class AccordionBlock
  *
- * Provides structural platform implementation and operational encapsulation.
+ * BlockHelperInterface adapter exposing an accordion block's panel titles and bodies as plain text
+ * for the search indexer. Operates purely on the passed-in JSON block data and issues no queries.
  */
 class AccordionBlock implements BlockHelperInterface
 {

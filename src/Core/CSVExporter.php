@@ -14,7 +14,8 @@ namespace Zero\Core;
 /**
  * Class CSVExporter
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Streams a set of rows to the client as a downloadable CSV attachment, handling the response
+ * headers and per-field escaping the export needs.
  */
 class CSVExporter
 {

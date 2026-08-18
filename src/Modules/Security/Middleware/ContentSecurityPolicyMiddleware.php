@@ -20,7 +20,7 @@ use Zero\Core\Env;
 /**
  * Class ContentSecurityPolicyMiddleware
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Emits the Content-Security-Policy and related hardening response headers around a request.
  */
 class ContentSecurityPolicyMiddleware
 {

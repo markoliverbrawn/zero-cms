@@ -17,7 +17,9 @@ use Zero\Models\User;
 /**
  * Class I18n
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Translation and localisation registry. Merges the core language dictionary with the per-module
+ * dictionaries registered at bootstrap, resolves a key through t()/translate(), and converts
+ * stored UTC timestamps into the viewing user's timezone for display.
  */
 class I18n
 {

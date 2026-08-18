@@ -21,7 +21,9 @@ use Zero\Support\Security;
 /**
  * Class GoogleAuthController
  *
- * Provides structural platform implementation and operational encapsulation.
+ * OAuth2 callback at /admin/google-callback completing Google single sign-on. Exchanges the
+ * authorisation code for a profile over raw cURL, then matches it to a local account and refuses
+ * the sign-in if that account belongs to a different tenant.
  */
 class GoogleAuthController implements Controller
 {

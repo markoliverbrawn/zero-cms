@@ -21,7 +21,8 @@ use Zero\Modules\Queue\Support\Scheduler;
 /**
  * Class Module
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Module contract implementation for the Queue module: the job queue and its worker, the
+ * recurring-task scheduler, and the back-office screens over both.
  */
 class Module implements ModuleInterface
 {

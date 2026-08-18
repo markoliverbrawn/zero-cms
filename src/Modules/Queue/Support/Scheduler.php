@@ -20,7 +20,9 @@ use Zero\Support\Security;
 /**
  * Class Scheduler
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Recurring-task registry and runner. Tasks are registered with a job class, a payload, and a
+ * cron-style expression; run() works out which are now due and dispatches them, so scheduling is
+ * declared in code while execution stays with the queue.
  */
 class Scheduler
 {

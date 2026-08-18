@@ -24,7 +24,9 @@ use Zero\Modules\Forum\Models\ForumPost;
 /**
  * Class ForumThread
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Active Record model for a forum thread, and the read side of the forum's threading: resolves a
+ * board's threads, a thread's posts and reply count, and the author attribution the templates
+ * display.
  */
 class ForumThread implements ModelInterface
 {

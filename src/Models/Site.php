@@ -24,7 +24,10 @@ use Zero\Support\I18n;
 /**
  * Class Site
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Active Record model for a tenant site, and the origin of most tenant scoping in the engine.
+ * Resolves a site by domain, stores per-tenant module enable/disable state and module settings,
+ * supplies the theme/timezone/homepage option sets the admin forms offer, and declares the cascade
+ * map applied when a site is deleted.
  */
 class Site implements Model
 {

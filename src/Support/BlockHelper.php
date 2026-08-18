@@ -16,7 +16,8 @@ use Zero\Support\Str;
 /**
  * Class BlockHelper
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Shared layout-class resolver for page-builder blocks, translating a block's stored row and
+ * spacing settings into the CSS class names its frontend template renders with.
  */
 class BlockHelper
 {

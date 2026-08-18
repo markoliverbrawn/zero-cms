@@ -19,7 +19,8 @@ use Zero\Modules\Forum\Models\ForumThread;
 /**
  * Class ModerateController
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Applies moderation decisions to forum threads and posts from the back office, changing the
+ * status that determines whether an item is publicly visible.
  */
 class ModerateController implements Controller
 {

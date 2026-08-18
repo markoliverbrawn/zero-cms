@@ -18,7 +18,7 @@ use Zero\Interfaces\Job;
 /**
  * Class PurgeOldLogsJob
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Scheduled job that trims historical log records so the tables do not grow without bound.
  */
 class PurgeOldLogsJob implements Job
 {

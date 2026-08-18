@@ -36,7 +36,32 @@ Prints the usual test summary, then a line-coverage summary (overall, per compon
 
 Coverage is recorded across the **entire process tree**, not just the test process. This matters because the suite is subprocess-based and several tests spawn subprocesses of their own — `ApiControllerTest.php` pipes code to a fresh `php` over stdin, `SeederScriptTest.php` `shell_exec`s `bin/seed`. A single-process collector misses all of that: it reported `ApiController.php` at 3% (really 100%), `SeederRunner.php` at 13% (really 97.5%), and all 30 migration files as never loaded (really 98.2% covered, since their `up()`/`down()` runs inside `bin/seed`). `CoverageRecorder::prepare()` writes a scratch php.ini fragment into `storage/coverage/ini` that sets `auto_prepend_file`, and exposes it through `PHP_INI_SCAN_DIR` — which is inherited by every descendant process, so each one records and dumps its own hit map for the parent to merge.
 
-Test scaffolding (`*Test.php`, `TestBootstrap.php`, `TestRunner.php`, and the two coverage files) is excluded from the figures, so the number describes the product rather than the harness.
+Test scaffolding is excluded from the figures, so the number describes the product rather than the harness: `*Test.php` plus the basenames listed in `CoverageRecorder::EXCLUDED_BASENAMES`. **Add new test infrastructure to that constant when it lands under `src/`**, or it quietly dilutes the percentage.
+
+## Testing a controller through the real request pipeline
+
+Use `Zero\Support\TestRequest` (`src/Support/TestRequest.php`) rather than hand-building a subprocess. It drives a genuine routed request — `App::handleRequest()` → `Router` → `HandlesRequests` → the controller → `RendersViews` — together with the tenant fixtures the request needs:
+
+```php
+$response = TestRequest::get('/admin/login')
+    ->onSite(['enabled_modules' => ['security']])
+    ->send();
+
+assert_test(str_contains($response['stdout'], '<form'), "Sign-in form renders");
+```
+
+`send()` returns `['stdout', 'stderr', 'exit_code']`. Available builders:
+
+* `onSite([...])` — create the tenant and target the request at it. Invents a unique domain (and matching `Host`) unless you pass `domain`, so parallel worker slots sharing a database cannot collide.
+* `withPage([...])` / `withHomepage([...])` — create a page owned by that tenant; the latter also sets `sites.homepage_id`.
+* `asUser([...])` — create a user **and sign them in**, for routes behind `AuthMiddleware`.
+* `withUser([...])` — create the user but leave the request anonymous. This is what a sign-in test wants: an authenticated session makes `LoginController` redirect to the dashboard before it ever evaluates the submitted credentials.
+* `withCsrf()` — issue a valid CSRF token into both session and body, so a `POST` behind `CsrfMiddleware` is reachable. Omit it deliberately to assert the rejection branch.
+* `withQuery([...])` / `withServer([...])` — `$_GET` entries and `$_SERVER` headers (e.g. `HTTP_AUTHORIZATION`, `HTTP_X_API_KEY`).
+
+Two things worth knowing. The request runs in a subprocess because the pipeline reads superglobals, resolves the tenant from `HTTP_HOST` during bootstrap, and ends in output plus an `exit` — but `$_ENV` is forwarded, so coverage still sees it. And user fixtures hard-delete any row sharing the username or email first, because `users.username`/`users.email` are globally unique (not per-tenant), which would otherwise make any sign-in test fail on its second run.
+
+See `src/Modules/Admin/Tests/LoginControllerTest.php` for a worked example covering render, CSRF rejection, each credential-failure branch, and success.
 
 ## Adding a new test
 

@@ -23,7 +23,8 @@ use Zero\Support\Str;
 /**
  * Class SendWelcomeController
  *
- * Provides structural platform implementation and operational encapsulation.
+ * API endpoint at /api/v1/user/send-welcome that emails a newly created account its welcome
+ * message and first-time sign-in details.
  */
 class SendWelcomeController implements Controller
 {

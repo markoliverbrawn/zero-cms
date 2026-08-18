@@ -18,7 +18,7 @@ use Zero\Database\DB;
 /**
  * Class CreateSecurityAuditsTable
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Creates the security_audits table that stores the results of each security audit run.
  */
 class CreateSecurityAuditsTable extends \Zero\Database\Migration
 {

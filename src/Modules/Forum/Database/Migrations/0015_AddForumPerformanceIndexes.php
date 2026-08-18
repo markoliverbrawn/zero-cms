@@ -16,7 +16,8 @@ use Zero\Database\DB;
 /**
  * Class AddForumPerformanceIndexes
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Adds the composite indexes the forum's listing queries need: boards by tenant and precedence,
+ * threads by board and status, and posts by thread, parent, and status.
  */
 class AddForumPerformanceIndexes extends \Zero\Database\Migration
 {

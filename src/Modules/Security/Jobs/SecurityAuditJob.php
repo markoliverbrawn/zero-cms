@@ -23,7 +23,8 @@ use Zero\Support\Emailer;
 /**
  * Class SecurityAuditJob
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Scheduled job that runs the security audit unattended and emails the resulting report to the
+ * configured administrator.
  */
 class SecurityAuditJob implements Job
 {

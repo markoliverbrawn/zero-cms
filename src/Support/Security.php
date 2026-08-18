@@ -18,7 +18,9 @@ use Zero\Support\Str;
 /**
  * Class Security
  *
- * Provides structural platform implementation and operational encapsulation.
+ * The engine's security primitives in one place: CSRF token issue and verification, request and
+ * authentication rate limiting, HTML/SVG sanitisation, input escaping, UUIDv7 generation, and the
+ * allow-list checks that validate SQL identifiers before they are interpolated into a statement.
  */
 class Security {
     /**

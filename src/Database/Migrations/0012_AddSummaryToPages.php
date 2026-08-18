@@ -16,7 +16,7 @@ use Zero\Database\DB;
 /**
  * Class AddSummaryToPages
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Adds the summary column to pages, holding the short description used in listings and meta tags.
  */
 class AddSummaryToPages extends \Zero\Database\Migration
 {

@@ -17,7 +17,8 @@ use Zero\Database\DB;
 /**
  * Class Logger
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Writes audit-log entries, resolving the active tenant automatically so a caller records what
+ * happened without also having to state which site it happened on.
  */
 class Logger
 {

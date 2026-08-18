@@ -21,7 +21,8 @@ use Zero\Support\Security;
 /**
  * Class FilesController
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Back-office media manager behind the /admin/files and /admin/list/files routes, covering browse,
+ * upload, edit, move, and delete for stored assets.
  */
 class FilesController implements Controller
 {

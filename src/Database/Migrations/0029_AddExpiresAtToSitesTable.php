@@ -18,7 +18,8 @@ use Zero\Database\DB;
 /**
  * Class AddExpiresAtToSitesTable
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Adds expires_at to sites, giving generated demo tenants a lifetime after which they can be
+ * reaped.
  */
 class AddExpiresAtToSitesTable extends \Zero\Database\Migration
 {

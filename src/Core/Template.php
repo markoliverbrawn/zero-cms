@@ -16,7 +16,11 @@ use Zero\Models\Site;
 /**
  * Class Template
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Renders a single PHP view file and returns its output as a string. A theme-relative path is
+ * resolved against the active site's theme (honouring any registered custom theme path before the
+ * bundled fallback), the supplied data is extracted into local variables, and notices/warnings are
+ * suppressed for the duration of the include so absent optional variables do not litter the
+ * output.
  */
 class Template
 {

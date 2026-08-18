@@ -18,7 +18,10 @@ use Zero\Support\Logger;
 /**
  * Class ModelController
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Generic record write handler behind /admin/edit, /admin/delete, /admin/restore, and
+ * /admin/force-delete. Resolves the target model from the route, validates the submission against
+ * that model's declared configuration, and applies the create, update, soft-delete, restore, or
+ * hard-delete.
  */
 class ModelController implements Controller
 {

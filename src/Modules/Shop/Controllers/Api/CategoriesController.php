@@ -17,7 +17,8 @@ use Zero\Modules\Shop\Models\Category;
 /**
  * Class CategoriesController
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Token-authenticated REST endpoint exposing product categories, inheriting ApiController's
+ * authentication and tenant-boundary checks.
  */
 class CategoriesController extends ApiController
 {

@@ -17,7 +17,8 @@ use Zero\Database\Migration as BaseMigration;
 /**
  * Class CreateForumTables
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Creates the forum tables: forum_boards, forum_threads, and forum_posts, the last carrying the
+ * self-referencing parent_id that makes replies nestable.
  */
 class CreateForumTables extends BaseMigration
 {

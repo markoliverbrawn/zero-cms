@@ -14,7 +14,8 @@ namespace Zero\Core\Storage;
 /**
  * Class LocalStorageDriver
  *
- * Provides structural platform implementation and operational encapsulation.
+ * StorageDriver backed by the local filesystem, mapping the storage contract onto ordinary file
+ * operations beneath the configured storage root.
  */
 class LocalStorageDriver implements StorageDriver
 {

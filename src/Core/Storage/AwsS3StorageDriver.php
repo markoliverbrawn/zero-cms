@@ -17,7 +17,9 @@ use Zero\Core\Env;
 /**
  * Class AwsS3StorageDriver
  *
- * Provides structural platform implementation and operational encapsulation.
+ * StorageDriver for S3-compatible object storage, speaking the REST API over raw cURL with
+ * hand-rolled AWS SigV4 request signing rather than a vendor SDK, and issuing presigned URLs for
+ * private objects.
  */
 class AwsS3StorageDriver implements StorageDriver
 {

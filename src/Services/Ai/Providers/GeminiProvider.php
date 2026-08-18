@@ -18,7 +18,8 @@ use Zero\Interfaces\AiProvider;
 /**
  * Class GeminiProvider
  *
- * Provides structural platform implementation and operational encapsulation.
+ * AiProvider implementation calling Google's Gemini REST endpoints over raw cURL for both text and
+ * image generation.
  */
 class GeminiProvider implements AiProvider
 {

@@ -17,7 +17,7 @@ use Zero\Models\Traits\IsModel;
 /**
  * Class SecurityAudit
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Active Record model for a stored security audit run and its findings.
  */
 class SecurityAudit implements ModelInterface
 {

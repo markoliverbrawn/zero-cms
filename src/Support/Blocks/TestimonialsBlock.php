@@ -16,7 +16,8 @@ use Zero\Interfaces\BlockHelperInterface;
 /**
  * Class TestimonialsBlock
  *
- * Provides structural platform implementation and operational encapsulation.
+ * BlockHelperInterface adapter exposing each testimonial's quote and attribution as plain text for
+ * the search indexer. Operates purely on the passed-in JSON block data and issues no queries.
  */
 class TestimonialsBlock implements BlockHelperInterface
 {

@@ -16,7 +16,8 @@ use Zero\Interfaces\Controller;
 /**
  * Class RedirectController
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Catch-all at the end of the admin route table, forwarding legacy or shorthand /admin/{something}
+ * URLs to their current destination so older links and back-buttons keep working.
  */
 class RedirectController implements Controller
 {

@@ -16,7 +16,7 @@ use Zero\Database\DB;
 /**
  * Class CreateBlogTables
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Creates the blog_posts table.
  */
 class CreateBlogTables extends \Zero\Database\Migration
 {

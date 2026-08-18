@@ -20,7 +20,7 @@ use Zero\Support\Security;
 /**
  * Class AccountController
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Customer account area, showing the signed-in member their own order history and details.
  */
 class AccountController implements Controller
 {

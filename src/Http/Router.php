@@ -17,7 +17,9 @@ use Zero\Models\Page;
 /**
  * Class Router
  *
- * Provides structural platform implementation and operational encapsulation.
+ * The regex-pattern-to-controller route table and the dispatcher over it. Matches an incoming URI
+ * against registered patterns, skips any route whose owning module is disabled for the active
+ * tenant so it reads as a clean 404, and otherwise falls back to resolving the URI as a Page slug.
  */
 class Router
 {

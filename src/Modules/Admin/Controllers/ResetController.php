@@ -21,7 +21,8 @@ use Zero\Support\Security;
 /**
  * Class ResetController
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Back-office password-reset completion at /admin/reset. Validates the emailed token, applies the
+ * new password, and consumes the token so the link cannot be replayed.
  */
 class ResetController implements Controller
 {

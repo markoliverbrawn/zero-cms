@@ -19,7 +19,8 @@ use Zero\Modules\Search\Services\SearchService;
 /**
  * Class Module
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Module contract implementation for the Search module: the index and its driver, the public
+ * search route, the search block, and back-office reindexing.
  */
 class Module implements ModuleInterface
 {

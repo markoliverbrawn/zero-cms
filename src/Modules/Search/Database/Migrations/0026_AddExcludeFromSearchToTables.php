@@ -16,7 +16,8 @@ use Zero\Database\DB;
 /**
  * Class AddExcludeFromSearchToTables
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Adds the exclude_from_search flag to pages, blog_posts, and shop_products, so an individual
+ * record can be kept out of the index while staying published.
  */
 class AddExcludeFromSearchToTables extends \Zero\Database\Migration
 {

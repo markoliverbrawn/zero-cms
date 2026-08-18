@@ -17,7 +17,9 @@ use Zero\Core\Env;
 /**
  * Class GoogleCloudStorageDriver
  *
- * Provides structural platform implementation and operational encapsulation.
+ * StorageDriver for Google Cloud Storage. Exchanges an RS256-signed service-account JWT for an
+ * OAuth2 access token over raw cURL rather than using a vendor SDK, and issues signed URLs for
+ * private objects.
  */
 class GoogleCloudStorageDriver implements StorageDriver
 {

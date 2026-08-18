@@ -35,7 +35,10 @@ use Zero\Core\Concerns\ResolvesTenantContext;
 /**
  * Class App
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Single static facade for the whole engine, assembled entirely from the Concerns traits it
+ * composes: access control, bootstrap, request handling, the module/theme/block/model registries,
+ * the admin sidebar, tenant context, view rendering, and utility helpers. It declares no members
+ * of its own, so every App::* call resolves into one of those traits.
  */
 class App
 {

@@ -16,7 +16,9 @@ use Zero\Database\DB;
 /**
  * Class AddCorePerformanceIndexes
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Adds the composite idx_pages_site_deleted_precedence index to pages, covering the tenant-scoped,
+ * soft-delete-filtered, precedence-ordered lookup that page listings issue on nearly every
+ * request.
  */
 class AddCorePerformanceIndexes extends \Zero\Database\Migration
 {

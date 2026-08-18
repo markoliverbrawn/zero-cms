@@ -36,7 +36,8 @@ use Zero\Support\Seeder;
 /**
  * Class Module
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Module contract implementation for the Shop module: catalogue, cart, checkout and order models,
+ * the customer account area, the product blocks, and the back-office management screens.
  */
 class Module implements ModuleInterface
 {

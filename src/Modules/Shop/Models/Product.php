@@ -27,7 +27,8 @@ use Zero\Support\Security;
 /**
  * Class Product
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Active Record model for a shop product: slug addressing, pricing, its category, secondary images
+ * and variants, and the paginated catalogue queries.
  */
 class Product implements Model
 {

@@ -18,7 +18,7 @@ use Zero\Modules\Shop\Models\Order;
 /**
  * Class SuccessController
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Renders the post-checkout confirmation page for a completed order.
  */
 class SuccessController implements Controller
 {

@@ -16,7 +16,8 @@ use Zero\Interfaces\BlockHelperInterface;
 /**
  * Class TextBlock
  *
- * Provides structural platform implementation and operational encapsulation.
+ * BlockHelperInterface adapter exposing a rich-text block's prose for the search indexer. Operates
+ * purely on the passed-in JSON block data and issues no queries.
  */
 class TextBlock implements BlockHelperInterface
 {

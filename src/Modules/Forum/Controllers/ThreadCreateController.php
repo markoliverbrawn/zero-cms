@@ -22,7 +22,7 @@ use Zero\Support\Security;
 /**
  * Class ThreadCreateController
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Handles new thread submissions, validating the post and attributing it to the signed-in member.
  */
 class ThreadCreateController implements Controller
 {

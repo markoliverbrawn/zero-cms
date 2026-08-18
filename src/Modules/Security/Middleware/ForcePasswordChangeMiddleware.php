@@ -16,7 +16,8 @@ use Zero\Core\App;
 /**
  * Class ForcePasswordChangeMiddleware
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Diverts a signed-in user whose password is flagged as needing replacement to the change-password
+ * screen, so the rest of the back office stays unreachable until they do.
  */
 class ForcePasswordChangeMiddleware
 {

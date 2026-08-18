@@ -19,7 +19,7 @@ use Zero\Modules\Forum\Models\ForumThread;
 /**
  * Class BoardViewController
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Renders a single board, listing its threads in the board's configured order.
  */
 class BoardViewController implements Controller
 {

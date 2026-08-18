@@ -21,7 +21,9 @@ use Zero\Support\Logger;
 /**
  * Class ModuleSettingsController
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Per-tenant module settings screen at /admin/settings/{module}. Builds the form from the module's
+ * declared settings schema and validates the submission against it, so each module owns its own
+ * settings without the admin having to know about them.
  */
 class ModuleSettingsController implements Controller
 {

@@ -17,7 +17,8 @@ use Zero\Modules\Blog\Models\Post;
 /**
  * Class PostsController
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Token-authenticated REST endpoint exposing blog posts, inheriting ApiController's authentication
+ * and tenant-boundary checks.
  */
 class PostsController extends ApiController
 {

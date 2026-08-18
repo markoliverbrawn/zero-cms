@@ -19,7 +19,9 @@ use Zero\Models\Traits\IsModel;
 /**
  * Class Comment
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Active Record model for a blog comment, carrying the moderation state (pending, approved,
+ * rejected, or spam) and the paginated per-post retrieval the public thread and the moderation
+ * screens both read through.
  */
 class Comment implements Model
 {

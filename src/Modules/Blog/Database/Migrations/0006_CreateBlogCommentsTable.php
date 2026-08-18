@@ -16,7 +16,7 @@ use Zero\Database\DB;
 /**
  * Class CreateBlogCommentsTable
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Creates the blog_comments table backing the relational commenting and moderation pipeline.
  */
 class CreateBlogCommentsTable extends \Zero\Database\Migration
 {

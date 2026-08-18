@@ -24,7 +24,9 @@ use Zero\Support\I18n;
 /**
  * Class Post
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Active Record model for a blog article. Extends Page, so a post inherits slug addressing,
+ * block-builder content, and tenant scoping, and adds the article-specific listing, ordering, and
+ * frontend URL behaviour.
  */
 class Post extends Page
 {

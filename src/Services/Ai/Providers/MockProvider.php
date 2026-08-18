@@ -18,7 +18,8 @@ use Zero\Support\Str;
 /**
  * Class MockProvider
  *
- * Provides structural platform implementation and operational encapsulation.
+ * AiProvider returning deterministic canned output, so tests and offline development can exercise
+ * the AI surface without network access or credentials.
  */
 class MockProvider implements AiProvider
 {

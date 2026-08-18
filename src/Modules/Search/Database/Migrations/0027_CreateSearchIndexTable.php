@@ -17,7 +17,7 @@ use Zero\Database\Migration;
 /**
  * Class CreateSearchIndexTable
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Creates the search index table that the database-backed search driver queries.
  */
 class CreateSearchIndexTable extends Migration
 {

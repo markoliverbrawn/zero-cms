@@ -19,7 +19,8 @@ use Zero\Interfaces\Controller;
 /**
  * Class ExportController
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Exports a model's records as a CSV download at /admin/export/{model}, honouring the same tenant
+ * scoping and column configuration the listing screen uses.
  */
 class ExportController implements Controller
 {

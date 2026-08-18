@@ -19,7 +19,8 @@ use Zero\Modules\FormBuilder\Models\Submission;
 /**
  * Class Module
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Module contract implementation for the FormBuilder module: the form_builder block type, the
+ * public submission endpoint, and the back-office submissions viewer.
  */
 class Module implements ModuleInterface
 {

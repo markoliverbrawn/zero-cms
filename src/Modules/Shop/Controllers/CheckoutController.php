@@ -22,7 +22,8 @@ use Zero\Support\Security;
 /**
  * Class CheckoutController
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Drives checkout: validates the submitted order, converts the cart into an order and its line
+ * items, and hands the visitor on to the confirmation step.
  */
 class CheckoutController implements Controller
 {

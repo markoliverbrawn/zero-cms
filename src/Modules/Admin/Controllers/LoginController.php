@@ -21,7 +21,11 @@ use Zero\Support\Security;
 /**
  * Class LoginController
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Back-office sign-in at /admin/login. Renders the credential form, and on submit verifies the
+ * password, confirms the account belongs to the active tenant unless it is a super_admin, and
+ * admits only administrative roles -- answering every failure with the same generic message so the
+ * response cannot be used to enumerate accounts. An already-authenticated visitor is redirected to
+ * the dashboard before any of that runs.
  */
 class LoginController implements Controller
 {

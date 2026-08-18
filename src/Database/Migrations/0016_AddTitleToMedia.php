@@ -16,7 +16,8 @@ use Zero\Database\DB;
 /**
  * Class AddTitleToMedia
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Adds the title column to media, so an asset carries a human-readable label independent of its
+ * filename.
  */
 class AddTitleToMedia extends \Zero\Database\Migration
 {

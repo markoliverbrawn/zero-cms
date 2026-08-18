@@ -18,7 +18,8 @@ use Zero\Database\DB;
 /**
  * Class AddOmitTitleToPages
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Adds the omit_title flag to pages, letting a layout suppress the automatic heading when the
+ * page's own content already opens with one.
  */
 class AddOmitTitleToPages extends \Zero\Database\Migration
 {

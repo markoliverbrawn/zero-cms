@@ -20,7 +20,8 @@ use Zero\Modules\Shop\Models\ProductVariant;
 /**
  * Class ProductsController
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Token-authenticated REST endpoint exposing products, inheriting ApiController's authentication
+ * and tenant-boundary checks.
  */
 class ProductsController extends ApiController
 {

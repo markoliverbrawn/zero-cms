@@ -17,7 +17,8 @@ use Zero\Database\Migration;
 /**
  * Class AddPrivateStorageFieldsToMediaTable
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Extends media with the fields private storage needs: visibility, the owning submission_id, and
+ * the original_name and file_size of the uploaded file.
  */
 class AddPrivateStorageFieldsToMediaTable extends Migration
 {

@@ -19,7 +19,7 @@ use Zero\Modules\Forum\Models\ForumThread;
 /**
  * Class ThreadViewController
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Renders a thread and its nested replies, resolving the reply tree for display.
  */
 class ThreadViewController implements Controller
 {

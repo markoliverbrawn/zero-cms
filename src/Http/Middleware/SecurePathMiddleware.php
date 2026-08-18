@@ -16,7 +16,8 @@ use Zero\Support\Logger;
 /**
  * Class SecurePathMiddleware
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Confines a requested file path to the configured storage root before anything is served from it,
+ * rejecting traversal attempts and symlinks that would escape the root.
  */
 class SecurePathMiddleware
 {

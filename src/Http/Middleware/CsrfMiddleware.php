@@ -17,7 +17,9 @@ use Zero\Support\Security;
 /**
  * Class CsrfMiddleware
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Verifies a CSRF token on every state-changing request (POST, PUT, PATCH, DELETE), accepting it
+ * from the form body, an X-CSRF-Token/X-XSRF-Token header, or a JSON payload, and rejecting the
+ * request when verification fails.
  */
 class CsrfMiddleware
 {

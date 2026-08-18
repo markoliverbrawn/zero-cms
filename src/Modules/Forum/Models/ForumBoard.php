@@ -21,7 +21,7 @@ use Zero\Modules\Forum\Models\ForumThread;
 /**
  * Class ForumBoard
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Active Record model for a forum board, the top-level container threads belong to.
  */
 class ForumBoard implements ModelInterface
 {

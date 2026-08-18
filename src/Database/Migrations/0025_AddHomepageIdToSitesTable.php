@@ -18,7 +18,8 @@ use Zero\Database\DB;
 /**
  * Class AddHomepageIdToSitesTable
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Adds homepage_id to sites, letting a tenant nominate any page as its homepage instead of relying
+ * on a reserved slug.
  */
 class AddHomepageIdToSitesTable extends \Zero\Database\Migration
 {

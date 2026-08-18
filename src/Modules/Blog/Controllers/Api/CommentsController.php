@@ -22,7 +22,8 @@ use Zero\Support\Str;
 /**
  * Class CommentsController
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Public comment submission endpoint. Validates and rate-limits the submission, stores it as
+ * pending so nothing appears unmoderated, and notifies the post's configured comment notifiers.
  */
 class CommentsController implements Controller
 {

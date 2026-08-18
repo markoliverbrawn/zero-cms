@@ -17,7 +17,8 @@ use Zero\Models\Traits\IsModel;
 /**
  * Class AuditLog
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Active Record model over the audit_logs table, presenting recorded activity to the back-office
+ * audit screens.
  */
 class AuditLog implements ModelInterface
 {

@@ -16,7 +16,9 @@ use Zero\Support\I18n;
 /**
  * Class Validator
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Declarative validation engine. Takes pipe-delimited rule strings per field, applies the built-in
+ * constraints plus any registered at runtime, and exposes both the collected error messages and
+ * the filtered subset of input that is safe to persist.
  */
 class Validator
 {

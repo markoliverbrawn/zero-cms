@@ -18,7 +18,7 @@ use Zero\Interfaces\Job;
 /**
  * Class PurgeOldCommentsJob
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Scheduled job that clears out stale comment records the moderation queue no longer needs.
  */
 class PurgeOldCommentsJob implements Job
 {

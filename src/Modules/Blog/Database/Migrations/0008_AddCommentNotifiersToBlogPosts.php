@@ -16,7 +16,8 @@ use Zero\Database\DB;
 /**
  * Class AddCommentNotifiersToBlogPosts
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Adds comment_notifiers to blog_posts, holding the addresses emailed when a comment awaits
+ * moderation.
  */
 class AddCommentNotifiersToBlogPosts extends \Zero\Database\Migration
 {

@@ -18,7 +18,12 @@ use Zero\Support\Logger;
 /**
  * Class Emailer
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Zero-dependency SMTP client that speaks the protocol directly over a TCP socket instead of
+ * relying on a mail library.
+ *
+ * Also carries the test-mode switch the suite relies on: with it enabled, messages are captured in
+ * memory and retrievable through getTestModeSentEmails() rather than transmitted, so a scheduled
+ * job dispatched during a test cannot email a real recipient.
  */
 class Emailer
 {

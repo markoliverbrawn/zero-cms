@@ -19,7 +19,7 @@ use Zero\Modules\Shop\Models\Product;
 /**
  * Class ShopHomeController
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Renders the shop landing page for the active tenant.
  */
 class ShopHomeController implements Controller
 {

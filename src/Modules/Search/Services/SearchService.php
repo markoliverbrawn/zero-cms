@@ -20,7 +20,9 @@ use Zero\Modules\Search\Interfaces\SearchDriverInterface;
 /**
  * Class SearchService
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Front door to search. Holds the registry of searchable models, resolves the configured driver,
+ * and exposes indexing, deletion, whole-index rebuilds, and querying, so callers depend on this
+ * rather than on a particular driver.
  */
 class SearchService
 {

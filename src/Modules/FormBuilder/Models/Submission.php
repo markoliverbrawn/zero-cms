@@ -17,7 +17,8 @@ use Zero\Models\Traits\IsModel;
 /**
  * Class Submission
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Active Record model for an archived form submission, exposing the stored payload to the
+ * back-office submissions viewer.
  */
 class Submission implements Model
 {

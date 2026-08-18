@@ -20,7 +20,9 @@ use Zero\Models\User;
 /**
  * Class ListController
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Generic record listing at /admin/list/{model}, driven by the target model's own admin
+ * configuration rather than per-model code, so a newly registered model becomes browsable without
+ * a bespoke controller.
  */
 class ListController implements Controller
 {

@@ -21,7 +21,7 @@ use Zero\Support\Security;
 /**
  * Class RegisterController
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Account sign-up handler, creating the user and its starting role.
  */
 class RegisterController implements Controller
 {

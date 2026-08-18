@@ -19,7 +19,8 @@ use Zero\Modules\Shop\Models\ProductVariant;
 /**
  * Class CartController
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Maintains the visitor's cart -- adding, updating, and removing lines -- and renders the cart
+ * view.
  */
 class CartController implements Controller
 {

@@ -46,6 +46,20 @@ class CoverageRecorder
     public const DUMP_DIR_ENV = 'ZERO_COVERAGE_DUMP_DIR';
 
     /**
+     * Basenames of files that are test scaffolding rather than application code under measurement.
+     * Excluding the suite's own machinery keeps the headline figure about the product rather than
+     * about the harness measuring it. Add a file here whenever new test infrastructure lands under
+     * src/, or it will quietly dilute the percentage.
+     */
+    private const EXCLUDED_BASENAMES = [
+        'CoveragePrepend.php',
+        'CoverageRecorder.php',
+        'TestBootstrap.php',
+        'TestRequest.php',
+        'TestRunner.php',
+    ];
+
+    /**
      * Merge every per-process coverage dump in $dumpDir into a single hit map.
      *
      * Dumps are merged with "best status wins" precedence: an executed line (1) beats a missed line
@@ -464,10 +478,7 @@ class CoverageRecorder
         $basename = \basename($absolutePath);
 
         return \str_ends_with($basename, 'Test.php')
-            || $basename === 'TestBootstrap.php'
-            || $basename === 'TestRunner.php'
-            || $basename === 'CoverageRecorder.php'
-            || $basename === 'CoveragePrepend.php';
+            || \in_array($basename, self::EXCLUDED_BASENAMES, true);
     }
 
     /**

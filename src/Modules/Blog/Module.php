@@ -27,7 +27,8 @@ use Zero\Support\Seeder;
 /**
  * Class Module
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Module contract implementation for the Blog module: article routes and models, the comment
+ * submission and moderation pipeline, the latest-articles block, and the dashboard widget.
  */
 class Module implements ModuleInterface
 {

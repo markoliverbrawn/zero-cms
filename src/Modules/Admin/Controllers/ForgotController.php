@@ -23,7 +23,8 @@ use Zero\Support\Security;
 /**
  * Class ForgotController
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Back-office password-reset request at /admin/forgot. Issues a single-use reset token and emails
+ * it, answering identically whether or not the address is on file.
  */
 class ForgotController implements Controller
 {

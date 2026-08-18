@@ -19,7 +19,8 @@ use Zero\Support\Logger;
 /**
  * Class ChangePasswordController
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Handles a password change for the signed-in account, including the forced change
+ * ForcePasswordChangeMiddleware redirects into.
  */
 class ChangePasswordController implements Controller
 {

@@ -16,7 +16,8 @@ use Zero\Database\DB;
 /**
  * Class AddSummaryToBlogPosts
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Adds the summary column to blog_posts, holding the short description used in listings and meta
+ * tags.
  */
 class AddSummaryToBlogPosts extends \Zero\Database\Migration
 {

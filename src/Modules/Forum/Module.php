@@ -28,7 +28,8 @@ use Zero\Support\Seeder;
 /**
  * Class Module
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Module contract implementation for the Forum module: boards, threads, nested replies, the
+ * theme-side views and reply overlays, and the back-office moderation screens.
  */
 class Module implements ModuleInterface
 {

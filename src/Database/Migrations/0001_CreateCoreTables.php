@@ -17,7 +17,8 @@ use Zero\Database\Migration;
 /**
  * Class CreateCoreTables
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Creates the engine's foundational tables: sites, users, pages, media, password_resets, and
+ * audit_logs.
  */
 class CreateCoreTables extends Migration
 {

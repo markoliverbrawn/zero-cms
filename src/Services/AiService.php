@@ -18,7 +18,8 @@ use Zero\Interfaces\AiProvider;
 /**
  * Class AiService
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Registry and front door for AI providers. Resolves the configured provider, reports whether one
+ * is actually usable, and forwards text and image generation on to it.
  */
 class AiService
 {

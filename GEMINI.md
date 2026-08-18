@@ -38,6 +38,7 @@ To maintain the high-quality, professional, and scalable state of the Zero CMS w
       'admin_view' => dirname(__FILE__) . '/Views/blocks/latest_articles.php'
   ]);
   ```
+* **Module-Owned Language Dictionaries:** Independent modules must house their own translation dictionaries at `src/Modules/<Name>/Lang/{en,es,hr,mi}.php` and must never add module-specific keys to the core dictionaries in `src/Lang/`. The core dictionaries are reserved strictly for generic, framework-level vocabulary and the helper texts of core's own models (`Page`, `Media`, `User`, `Site`). `Zero\Support\I18n::init()` discovers and merges every `<Module>/Lang/<activeLang>.php` on disk automatically across all `App::getModuleSearchPaths()` — no registration call is required, the file on disk is the wiring. Deleting a module from the workspace must therefore remove its strings with it, leaving no orphaned keys behind in core.
 * **Scalability & Hot-Plugging:** The system must compile and scale automatically. Adding a new module or theme fallback must only require registering it dynamically with the core on bootstrap and placing its assets on disk—ensuring modules can be safely enabled, disabled, or permanently deleted from the workspace without causing any core kernel compilation or routing failures.
 * **Module Accent Colors:** Every module class implementing `Zero\Interfaces\Module` MUST define a `getAccentColor(): string` method returning its brand-representative hex color code (e.g. `#ef4444` for security, `#9333ea` for demogenerator). This color is then used for rendering the module's administrative pills and widgets consistently under the active admin theme.
 
@@ -61,6 +62,7 @@ To maintain the high-quality, professional, and scalable state of the Zero CMS w
 ### 6. Dynamic Localized Field Helpers (No Hardcoded Explanations)
 * **Rule:** Form inputs in the admin area must never hardcode static description or explanation texts.
 * **Convention:** All input helper texts must be resolved dynamically inside the field renderer. The engine first checks the localized dictionaries for `{field}_help` or `{field}_desc` strings, falling back to optional model definitions (`helper_text`, `description`). This maintains high localization capability across English, Spanish, Croatian, and Māori.
+* **Ownership:** A `{field}_help` key belongs to whichever package declares the field. Helper texts for fields on core models live in `src/Lang/<code>.php`; helper texts for fields on a module's models live in that module's own `src/Modules/<Name>/Lang/<code>.php` (Rule 2). Because there is no per-key fallback to English, every module must ship all four language files or the missing key renders as the raw key string in the admin UI.
 
 ### 7. Zero-Dependency External Handshakes (No Vendor SDKs)
 * **Rule:** Integrations with external services (such as Google OAuth 2.0 or SMTP servers) must remain 100% dependency-free.

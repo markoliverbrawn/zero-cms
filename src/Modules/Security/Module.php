@@ -25,7 +25,9 @@ use Zero\Modules\Security\Models\SecurityAudit;
 /**
  * Class Module
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Module contract implementation for the Security module: the audit tooling and its scheduled job,
+ * the audit log screens, the password-change flow, and the CSP and forced-password-change
+ * middleware.
  */
 class Module implements ModuleInterface
 {

@@ -17,7 +17,7 @@ use Zero\Models\Traits\IsModel;
 /**
  * Class ProductVariant
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Active Record model for a purchasable variant of a product, carrying its own price and stock.
  */
 class ProductVariant implements Model
 {

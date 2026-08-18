@@ -25,7 +25,8 @@ use Zero\Support\Security;
 /**
  * Class DemoController
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Public endpoint at /api/v1/demo/create that provisions a throwaway demo tenant on request and
+ * returns its credentials.
  */
 class DemoController implements Controller
 {

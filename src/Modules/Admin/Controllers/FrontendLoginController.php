@@ -21,7 +21,9 @@ use Zero\Support\Security;
 /**
  * Class FrontendLoginController
  *
- * Provides structural platform implementation and operational encapsulation.
+ * Theme-side sign-in, registered by the modules that expose public member accounts (Shop and
+ * Forum), so a visitor authenticates within the site's own theme rather than through the
+ * back-office screens.
  */
 class FrontendLoginController implements Controller
 {
