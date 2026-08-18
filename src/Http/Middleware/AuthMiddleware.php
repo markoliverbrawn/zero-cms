@@ -85,5 +85,4 @@ class AuthMiddleware
     {
         self::$loginUrl = $url;
     }
-
-    }
+}
