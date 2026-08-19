@@ -61,5 +61,4 @@ If the file is under `src/Views/` or a module's `Views/`, stop and switch to the
 
 ## 10. Don't forget afterward
 
-- [ ] If this file represents a new or substantially-changed feature/module, it needs to be documented in the Guide site's seeder map and the seeder re-run — see the `multitenant-seeder` skill (Rule 15).
 - [ ] Run the test suite before considering the work done — see the `test-suite-architecture` skill (`docker exec -w /data/misc/zero php83 bin/test`).

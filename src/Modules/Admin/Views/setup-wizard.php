@@ -296,7 +296,7 @@ use Zero\Support\Str;
                     <label for="site_theme">Active Layout Theme</label>
                     <?php echo App::makeFormField('select', 'site_theme', [
                         'value' => $inputs['site_theme'],
-                        'options' => ['default' => 'Default Theme', 'guide' => 'Developer Guide Theme', 'kitchensink' => 'Kitchen Sink Showroom'],
+                        'options' => ['default' => 'Default Theme', 'kitchensink' => 'Kitchen Sink Showroom'],
                         'attributes' => ['id' => 'site_theme'],
                         'showLabel' => false,
                         'guessHelperTextKey' => false,

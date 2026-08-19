@@ -95,12 +95,7 @@ class Seeder
                 \strpos($relativePath, '.env') !== false ||
                 \strpos($relativePath, '.git/') === 0 ||
                 \strpos($relativePath, 'storage/uploads/') === 0 ||
-                \strpos($relativePath, '_archive/') === 0 ||
-                \strpos($relativePath, 'seeders/documentation/pack_svgs.php') !== false ||
-                \strpos($relativePath, 'seeders/documentation/add_') !== false ||
-                \strpos($relativePath, 'seeders/documentation/update_') !== false ||
-                \strpos($relativePath, 'seeders/documentation/nest_') !== false ||
-                \strpos($relativePath, 'seeders/documentation/restructure_') !== false
+                \strpos($relativePath, '_archive/') === 0
             ) {
                 continue;
             }

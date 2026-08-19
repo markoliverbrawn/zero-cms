@@ -79,8 +79,8 @@ $mockPagination = [
     'current_page' => 1
 ];
 
-// 4. Test rendering across all 3 visual themes
-$themes = ['default', 'guide', 'kitchensink'];
+// 4. Test rendering across all 2 visual themes
+$themes = ['default', 'kitchensink'];
 
 foreach ($themes as $theme) {
     echo "  Testing block rendering in theme: {$theme}...\n";

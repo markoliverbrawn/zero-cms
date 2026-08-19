@@ -96,12 +96,8 @@ To maintain the high-quality, professional, and scalable state of the Zero CMS w
 * **Rule:** All class methods inside any PHP class (including core bootstrappers, active record models, custom middleware, and helper utilities) MUST be arranged in strict alphabetical order.
 * **Convention:** Arrange the methods alphabetically (by method name) from A to Z, ensuring high readability, ease of file traversal, and structural consistency across the entire codebase.
 
-### 15. Mandatory Feature & Module Documentation (Guide Site Seeding)
-* **Rule:** Whenever a new feature, module, or system capability is added or substantially updated, it MUST be fully documented in the Guide site's seeder map, and the database MUST be cleanly re-seeded. The documentation must comprehensively cover:
-  1. **High-Level Architectural Summary**: An accessible overview of the feature's design, purposes, and systemic role.
-  2. **Configuration Information**: Complete description of environmental variable properties (e.g. `.env`) and setup settings.
-  3. **Extension Developer How-Tos**: Code snippets, interfaces/contracts, and practical, clean examples demonstrating how to build, register, or extend the feature.
-* **Convention:** See the `multitenant-seeder` skill for the exact seeder dataset/sitemap/navigation conventions and how to re-run the seeder.
+### 15. [Reserved / Intentionally Deleted]
+* **Status:** The mandatory feature/module guide-site documentation requirement has been deprecated and permanently removed. The technical guide site has been decoupled from the Zero CMS core.
 
 ### 16. Absolute Full-Width Views (No Container Max-Widths)
 * **Rule:** All administrative, backend back-office, and public cascading layout view templates must strictly be designed as completely full-width.
@@ -225,7 +221,7 @@ Detailed architecture references for individual subsystems are no longer inlined
 * `page-builder-engine` — dynamic layout page builder, block JSON structure, admin pre-rendering, generic JS serializer
 * `db-schema-blueprint` — SQL schema reference for core/module tables, reconstructed from every migration file (update it whenever a new migration is added, or it'll drift again)
 * `raw-tcp-emailer` — zero-dependency raw SMTP socket mailer
-* `multitenant-seeder` — the `bin/seed`/`SeederRunner` revert/migrate/seed pipeline and documentation-seeding conventions
+* `multitenant-seeder` — the `bin/seed`/`SeederRunner` revert/migrate/seed pipeline and dataset-seeding conventions
 * `google-oauth-integration` — zero-dependency Google OAuth 2.0 SSO flow and tenant-scoping checks
 * `test-suite-architecture` — how the test suite is laid out, discovered, and run (`bin/test`, `TestRunner`, `TestBootstrap`)
 * `input-validator` — the declarative `Zero\Core\Validator` engine

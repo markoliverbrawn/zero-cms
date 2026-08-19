@@ -184,7 +184,6 @@ class SeederRunner
     {
         $priorityMap = [
             'default.php' => 10,
-            'documentation.php' => 20,
             'kitchensink.php' => 50,
         ];
 

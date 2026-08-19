@@ -88,7 +88,7 @@ Zero CMS is divided into fully decoupled, modular plug-ins under `src/Modules/`:
 8. **Site Search (`Search`):**
    Decoupled search-driver architecture (`SearchDriverInterface`) with a `DatabaseSearchDriver` implementation, exposed via `SearchController`/`SearchService` and a `Searchable` model trait.
 9. **On-Demand Demo Site Generator (`DemoGenerator`):**
-   Lets a super-admin provision a fully-seeded demo tenant on demand (`AdminCreateDemoSiteController` + `DemoSiteFactory`), and seeds the public technical documentation site itself via declarative seed datasets under `src/Modules/DemoGenerator/Seeders/`.
+   Lets a super-admin provision a fully-seeded demo tenant on demand (`AdminCreateDemoSiteController` + `DemoSiteFactory`), and seeds the public kitchensink sandbox showcase via declarative seed datasets under `src/Modules/DemoGenerator/Seeders/`.
 
 ---
 
@@ -115,7 +115,7 @@ Zero CMS is divided into fully decoupled, modular plug-ins under `src/Modules/`:
 │   ├── Modules/                  # Decoupled extensible modules
 │   │   ├── Admin/                # Unified Back-Office dashboard controller & views
 │   │   ├── Blog/                 # Classic publishing and Commenting Module
-│   │   ├── DemoGenerator/        # On-demand demo tenant provisioning & docs seeding
+│   │   ├── DemoGenerator/        # On-demand demo tenant provisioning & kitchensink seeding
 │   │   ├── FormBuilder/          # Dynamic forms creation and submission logs module
 │   │   ├── Forum/                # Community Forum (boards, threads, nested posts)
 │   │   ├── Queue/                # Background job queue & cron-style scheduler

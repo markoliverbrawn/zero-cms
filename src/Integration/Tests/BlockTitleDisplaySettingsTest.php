@@ -98,16 +98,6 @@ assert_test(strpos($html0_default, '<h2 class="block-section-title">') !== false
 assert_test(strpos($html1_default, 'Title Hide Option') === false, "Default theme correctly hides Title");
 assert_test(strpos($html2_default, '<h1 class="block-section-title">') !== false && strpos($html2_default, 'Title H1 Option') !== false, "Default theme correctly renders Show Title (H1)");
 
-// Test Theme: guide
-echo "  Testing guide theme block title display render output...\n";
-$html0_guide = renderThemePost('guide', $post0);
-$html1_guide = renderThemePost('guide', $post1);
-$html2_guide = renderThemePost('guide', $post2);
-
-assert_test(strpos($html0_guide, '<h2 class="block-section-title">') !== false && strpos($html0_guide, 'Title H2 Option') !== false, "Guide theme correctly renders Show Title (H2)");
-assert_test(strpos($html1_guide, 'Title Hide Option') === false, "Guide theme correctly hides Title");
-assert_test(strpos($html2_guide, '<h1 class="block-section-title">') !== false && strpos($html2_guide, 'Title H1 Option') !== false, "Guide theme correctly renders Show Title (H1)");
-
 // Test Theme: kitchensink
 echo "  Testing kitchensink theme block title display render output...\n";
 $html0_ks = renderThemePost('kitchensink', $post0);

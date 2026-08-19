@@ -315,8 +315,6 @@ class Site implements Model
                     $friendlyName = \ucwords(\str_replace(['-', '_'], ' ', $folder));
                     if ($folder === 'default') {
                         $title = 'Default Corporate Theme';
-                    } elseif ($folder === 'guide') {
-                        $title = 'Technical Guide Theme';
                     } else {
                         $title = $friendlyName . ' Theme';
                     }

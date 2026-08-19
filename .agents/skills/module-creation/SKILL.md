@@ -101,6 +101,5 @@ src/Modules/<Name>/
 ## Don't forget
 
 * Ship `Lang/{en,es,hr,mi}.php` for every user-facing string the module renders, and confirm none of them were added to `src/Lang/` instead.
-* Document the new module in the Guide site's seeder map and re-seed — see the `multitenant-seeder` skill (Rule 15).
 * Write at least one test under `src/Modules/<Name>/Tests/` — see the `test-suite-architecture` skill for the exact bootstrap-require convention (a direct require to `src/Support/TestBootstrap.php`, 3 `dirname()` levels deep for module tests).
 * Run `docker exec -w /data/misc/zero php83 bin/test` before considering the module done.
