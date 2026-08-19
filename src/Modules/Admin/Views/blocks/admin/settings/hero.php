@@ -1,5 +1,5 @@
 <?php
-// src/Modules/Admin/Views/blocks/admin/settings/baseline.php
+// src/Modules/Admin/Views/blocks/admin/settings/hero.php
 ?>
 <div class="form-group">
     <label class="block-settings-label">Hero Minimum Height (vh):</label>

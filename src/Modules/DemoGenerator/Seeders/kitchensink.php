@@ -258,7 +258,7 @@ return [
             'site_domain' => 'd6laptop.zero.kitchensink',
             'content' => [
                 [
-                    'type' => 'baseline',
+                    'type' => 'hero',
                     'title' => 'Welcome to the Kitchen Sink Showroom',
                     'content' => 'Explore a fully integrated multi-tenant Zero CMS instance. This domain demonstrates every dynamic block, e-commerce shop categories, customizable variants, and classic blog postings compiled natively with zero external dependencies.',
                 ],

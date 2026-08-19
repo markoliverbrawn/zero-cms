@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /**
- * File: src/Support/Blocks/BaselineBlock.php
+ * File: src/Support/Blocks/HeroBlock.php
  * Architectural Purpose: Handles operations and business logic within the system.
  * Package: Zero\Support\Blocks
  * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
@@ -14,17 +14,17 @@ namespace Zero\Support\Blocks;
 use Zero\Interfaces\BlockHelperInterface;
 
 /**
- * Class BaselineBlock
+ * Class HeroBlock
  *
- * BlockHelperInterface adapter exposing a baseline block's text content for the search indexer.
+ * BlockHelperInterface adapter exposing a hero block's text content for the search indexer.
  * Operates purely on the passed-in JSON block data and issues no queries.
  */
-class BaselineBlock implements BlockHelperInterface
+class HeroBlock implements BlockHelperInterface
 {
     protected array $data;
 
     /**
-     * BaselineBlock constructor.
+     * HeroBlock constructor.
      *
      * @param array $data
      */
@@ -34,7 +34,7 @@ class BaselineBlock implements BlockHelperInterface
     }
 
     /**
-     * Retrieve the searchable plain text content from the Baseline Hero block.
+     * Retrieve the searchable plain text content from the Hero block.
      *
      * @return string
      */

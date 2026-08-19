@@ -1,8 +1,8 @@
 <?php
 /**
- * Zero CMS - Baseline Hero Min Height setting Test
+ * Zero CMS - Hero Min Height setting Test
  *
- * Verifies that the 'min_height' setting on baseline hero blocks is correctly
+ * Verifies that the 'min_height' setting on hero blocks is correctly
  * resolved and rendered as inline CSS style overrides on both public front-end pages
  * and dynamic administrative block previews.
  *
@@ -18,7 +18,7 @@ require_once dirname(dirname(__DIR__)) . '/Support/TestBootstrap.php';
 use Zero\Core\App;
 use Zero\Core\Template;
 
-echo "=== Baseline Hero Minimum Height Settings Test ===\n";
+echo "=== Hero Minimum Height Settings Test ===\n";
 
 // Bootstrap App
 App::bootstrap();
@@ -29,15 +29,15 @@ $resolveMedia = function($idOrPath) {
 };
 
 // 1. Test case: No min_height set (should default and not apply inline height overrides)
-echo "  Testing baseline hero block with default min_height setting...\n";
+echo "  Testing hero block with default min_height setting...\n";
 $blockDefault = [
-    'type' => 'baseline',
+    'type' => 'hero',
     'title' => 'My Main Title',
     'content' => '<p>Welcome</p>'
 ];
 
 $htmlDefault = Template::renderFile(
-    APPLICATION_ROOT . '/src/Modules/Admin/Views/blocks/frontend/baseline.php',
+    APPLICATION_ROOT . '/src/Modules/Admin/Views/blocks/frontend/hero.php',
     [
         'block' => $blockDefault,
         'resolveMedia' => $resolveMedia
@@ -48,16 +48,16 @@ assert_test(strpos($htmlDefault, 'style=""') !== false || strpos($htmlDefault, '
 
 
 // 2. Test case: Custom min_height set to 60vh (should output inline min-height)
-echo "  Testing baseline hero block with custom 60vh min_height setting...\n";
+echo "  Testing hero block with custom 60vh min_height setting...\n";
 $block60 = [
-    'type' => 'baseline',
+    'type' => 'hero',
     'title' => 'My Main Title',
     'content' => '<p>Welcome</p>',
     'min_height' => '60'
 ];
 
 $html60 = Template::renderFile(
-    APPLICATION_ROOT . '/src/Modules/Admin/Views/blocks/frontend/baseline.php',
+    APPLICATION_ROOT . '/src/Modules/Admin/Views/blocks/frontend/hero.php',
     [
         'block' => $block60,
         'resolveMedia' => $resolveMedia
@@ -68,16 +68,16 @@ assert_test(strpos($html60, 'min-height: 60vh;') !== false, "Custom min_height o
 
 
 // 3. Test case: Custom min_height set to 100vh
-echo "  Testing baseline hero block with custom 100vh min_height setting...\n";
+echo "  Testing hero block with custom 100vh min_height setting...\n";
 $block100 = [
-    'type' => 'baseline',
+    'type' => 'hero',
     'title' => 'My Main Title',
     'content' => '<p>Welcome</p>',
     'min_height' => '100'
 ];
 
 $html100 = Template::renderFile(
-    APPLICATION_ROOT . '/src/Modules/Admin/Views/blocks/frontend/baseline.php',
+    APPLICATION_ROOT . '/src/Modules/Admin/Views/blocks/frontend/hero.php',
     [
         'block' => $block100,
         'resolveMedia' => $resolveMedia
@@ -87,4 +87,4 @@ $html100 = Template::renderFile(
 assert_test(strpos($html100, 'min-height: 100vh;') !== false, "Custom min_height of 100vh correctly renders 'min-height: 100vh;' style attribute");
 
 
-echo "Baseline Hero Minimum Height settings tests completed successfully!\n\n";
+echo "Hero Minimum Height settings tests completed successfully!\n\n";

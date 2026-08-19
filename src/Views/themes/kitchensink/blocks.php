@@ -91,8 +91,8 @@ if (json_last_error() === JSON_ERROR_NONE && is_array($decodedBlocks)): ?>
       };
 
       switch ($blockType) {
-          case 'baseline':
-              echo '<div class="block-baseline">';
+          case 'hero':
+              echo '<div class="block-hero">';
               echo '<h1>' . Security::sanitizeHtml($block['title'] ?? '') . '</h1>';
               echo '<p>' . Security::sanitizeHtml($block['content'] ?? '') . '</p>';
               echo '</div>';

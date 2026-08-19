@@ -4,7 +4,7 @@
    ========================================================================== */
 
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap');
-@import url('../../blocks/baseline.css');
+@import url('../../blocks/hero.css');
 @import url('../../blocks/sub_pages.css');
 
 :root {
@@ -359,8 +359,8 @@ aside {
    Page Builder Blocks Styling (The Showcase)
    ========================================================================== */
 
-/* 1. Baseline Hero Block */
-.block-baseline {
+/* 1. Hero Block */
+.block-hero {
     background: linear-gradient(135deg, rgba(20, 23, 34, 0.95), rgba(11, 12, 16, 0.98)), url('good-image.jpg');
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius);

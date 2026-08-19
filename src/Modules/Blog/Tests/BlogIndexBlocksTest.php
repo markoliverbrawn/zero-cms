@@ -39,9 +39,9 @@ try {
 // 2. Create a mock blog Page record containing serialized page builder blocks
 $blocksPayload = [
     [
-        'type' => 'baseline',
-        'title' => 'Blog Hero baseline',
-        'content' => 'Welcome to our baseline publication hub.'
+        'type' => 'hero',
+        'title' => 'Blog Hero',
+        'content' => 'Welcome to our publication hub.'
     ],
     [
         'type' => 'text',
@@ -100,8 +100,8 @@ foreach ($themes as $theme) {
     ]);
     
     // Check that page builder block titles and content are rendered correctly
-    assert_test(strpos($renderedOutput, 'Blog Hero baseline') !== false, "Renders 'baseline' block title in '{$theme}' theme");
-    assert_test(strpos($renderedOutput, 'Welcome to our baseline publication hub.') !== false, "Renders 'baseline' block content in '{$theme}' theme");
+    assert_test(strpos($renderedOutput, 'Blog Hero') !== false, "Renders 'hero' block title in '{$theme}' theme");
+    assert_test(strpos($renderedOutput, 'Welcome to our publication hub.') !== false, "Renders 'hero' block content in '{$theme}' theme");
     
     assert_test(strpos($renderedOutput, 'Special notice') !== false, "Renders 'text' block title in '{$theme}' theme");
     assert_test(strpos($renderedOutput, 'Important announcements live here.') !== false, "Renders 'text' block content in '{$theme}' theme");

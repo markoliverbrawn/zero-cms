@@ -17,7 +17,7 @@ if (!empty($post->content)) {
     $blocks = json_decode($post->content, true);
     if (is_array($blocks)) {
         foreach ($blocks as $b) {
-            if (($b['type'] ?? '') === 'baseline') {
+            if (($b['type'] ?? '') === 'hero') {
                 $hasHeroBlock = true;
                 break;
             }
@@ -97,7 +97,7 @@ $shouldOmitTitle = !empty($post->omit_title) || $hasHeroBlock;
             
             // If hide_title is not explicitly enabled, render the section title as a block-level H2 or H1
             $hideTitle = $block['hide_title'] ?? '0';
-            if ($hideTitle !== '1' && !empty($block['title']) && $type !== 'baseline') {
+            if ($hideTitle !== '1' && !empty($block['title']) && $type !== 'hero') {
                 $titleTag = $hideTitle === '2' ? 'h1' : 'h2';
                 echo '<' . $titleTag . ' class="block-section-title">' . Security::sanitizeHtml($block['title']) . '</' . $titleTag . '>';
             }

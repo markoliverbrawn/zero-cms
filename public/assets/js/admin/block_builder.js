@@ -412,8 +412,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         doc.write('<script src="/assets/js/blocks/testimonials.js?v=' + Date.now() + '"><\/script>');
                     } else if (type === 'accordion') {
                         doc.write('<script src="/assets/js/blocks/accordion.js?v=' + Date.now() + '"><\/script>');
-                    } else if (type === 'baseline') {
-                        doc.write('<script src="/assets/js/blocks/baseline.js?v=' + Date.now() + '"><\/script>');
+                    } else if (type === 'hero') {
+                        doc.write('<script src="/assets/js/blocks/hero.js?v=' + Date.now() + '"><\/script>');
                     } else if (type === 'form_builder') {
                         doc.write('<script src="/assets/js/blocks/form_builder.js?v=' + Date.now() + '"><\/script>');
                     }

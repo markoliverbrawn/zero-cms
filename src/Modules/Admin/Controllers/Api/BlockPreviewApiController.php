@@ -99,7 +99,7 @@ class BlockPreviewApiController extends AdminApiControllerBase
             $hideTitle = $block['hide_title'] ?? '0';
             $title = $block['title'] ?? '';
 
-            if ($hideTitle !== '1' && !empty($title) && $type !== 'baseline') {
+            if ($hideTitle !== '1' && !empty($title) && $type !== 'hero') {
                 if ($theme === 'kitchensink') {
                     $tag = $hideTitle === '2' ? 'h1' : 'h3';
                     $colorVar = \in_array($type, ['text_image', 'testimonials', 'gallery']) ? '--neon-pink' : '--neon-cyan';
@@ -114,7 +114,7 @@ class BlockPreviewApiController extends AdminApiControllerBase
 
             // Determine appropriate theme stylesheets dynamically using App theme registry
             $themeStylesheets = [];
-            $themeStylesheets[] = '/assets/css/blocks/baseline.css'; // Always load dynamic public block baseline styles!
+            $themeStylesheets[] = '/assets/css/blocks/hero.css'; // Always load dynamic public block hero styles!
 
             // Dynamically load block-specific styles if they exist on disk (e.g. blocks/text_image.css)
             $blockCss = '/assets/css/blocks/' . $type . '.css';

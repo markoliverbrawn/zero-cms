@@ -1,6 +1,6 @@
 <?php
 use Zero\Support\Str;
-// src/Modules/Admin/Views/blocks/admin/baseline.php
+// src/Modules/Admin/Views/blocks/admin/hero.php
 $mediaId = $block['media_id'] ?? '';
 $fullWidth = !empty($block['full_width']) && $block['full_width'] === '1';
 ?>

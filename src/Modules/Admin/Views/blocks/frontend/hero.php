@@ -1,5 +1,5 @@
 <?php
-// src/Modules/Admin/Views/blocks/frontend/baseline.php
+// src/Modules/Admin/Views/blocks/frontend/hero.php
 
 use Zero\Models\Media;
 use Zero\Support\Security;
@@ -28,7 +28,7 @@ if (!empty($minHeight) && $minHeight !== 'default') {
     $bgStyle .= " min-height: {$minHeight}vh;";
 }
 ?>
-<div class="block-baseline <?php echo $fullWidth ? 'full-width-hero' : ''; ?> <?php echo $isVideo ? 'has-video-bg' : ''; ?>" style="<?php echo $bgStyle; ?>">
+<div class="block-hero <?php echo $fullWidth ? 'full-width-hero' : ''; ?> <?php echo $isVideo ? 'has-video-bg' : ''; ?>" style="<?php echo $bgStyle; ?>">
     <?php if ($isVideo && !empty($resolvedUrl)): ?>
         <!-- Continually looping background video -->
         <video class="hero-video-bg" loop muted playsinline preload="none">

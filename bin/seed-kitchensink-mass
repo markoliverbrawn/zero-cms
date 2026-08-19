@@ -285,7 +285,7 @@ for ($i = 0; $i < $pageCount; $i++) {
     // Compile JSON page-builder block arrays containing varied block structures
     $blocks = [
         [
-            'type' => 'baseline',
+            'type' => 'hero',
             'title' => 'System Directive: ' . $title,
             'subtitle' => 'Brutalist Engineering Manual',
             'content' => generateContent($title)

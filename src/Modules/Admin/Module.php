@@ -136,12 +136,12 @@ class Module implements ModuleInterface
             ]
         ]);
 
-        App::registerBlock('baseline', [
-            'label' => 'Baseline Hero Block',
+        App::registerBlock('hero', [
+            'label' => 'Hero Block',
             'description' => 'A bold headline hero block featuring an H1 title and content paragraphs.',
             'icon' => 'home',
-            'admin_view' => \dirname(__FILE__) . '/Views/blocks/admin/baseline.php',
-            'frontend_view' => \dirname(__FILE__) . '/Views/blocks/frontend/baseline.php'
+            'admin_view' => \dirname(__FILE__) . '/Views/blocks/admin/hero.php',
+            'frontend_view' => \dirname(__FILE__) . '/Views/blocks/frontend/hero.php'
         ]);
         App::registerBlock('grid', [
             'label' => 'Responsive Grid',

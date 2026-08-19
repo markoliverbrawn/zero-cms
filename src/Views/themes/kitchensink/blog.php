@@ -10,7 +10,7 @@ if (!empty($post->content)) {
     $blocks = json_decode($post->content, true);
     if (is_array($blocks)) {
         foreach ($blocks as $b) {
-            if (($b['type'] ?? '') === 'baseline') {
+            if (($b['type'] ?? '') === 'hero') {
                 $hasHeroBlock = true;
                 break;
             }
