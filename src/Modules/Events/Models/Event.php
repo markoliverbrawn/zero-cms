@@ -26,7 +26,7 @@ class Event implements Model
     use IsModel;
 
     protected static string $tableName = 'events';
-    protected static array $fillable = ['title', 'slug', 'description', 'event_date', 'location', 'status'];
+    protected static array $fillable = ['title', 'slug', 'description', 'event_date', 'location', 'status', 'featured_image'];
 
     public $id;
     public $site_id;
@@ -36,6 +36,7 @@ class Event implements Model
     public $event_date;
     public $location;
     public $status = 'published';
+    public $featured_image;
     public $created_at;
     public $updated_at;
     public $deleted_at;
@@ -89,6 +90,14 @@ class Event implements Model
             'description' => ['type' => 'textarea', 'label' => 'Description', 'editable' => true, 'listDisplay' => false],
             'event_date' => ['type' => 'datetime', 'label' => 'Event Date & Time (UTC)', 'editable' => true, 'listDisplay' => true, 'required' => true],
             'location' => ['type' => 'text', 'label' => 'Location', 'editable' => true, 'listDisplay' => true, 'searchable' => true],
+            'featured_image' => [
+                'type' => 'image',
+                'label' => 'Featured Image',
+                'editable' => true,
+                'required' => false,
+                'listDisplay' => true,
+                'helper_text' => 'The primary display thumbnail or hero image.'
+            ],
             'status' => [
                 'type' => 'select', 
                 'label' => 'Status', 

@@ -1693,3 +1693,259 @@ footer {
         margin-top: 1.5rem;
     }
 }
+
+/* ==========================================================================
+   Kitchen Sink Theme-Specific Events Customizations
+   ========================================================================== */
+.wrapper main {
+    .events-container, .event-detail-container {
+        max-width: none;
+        margin: 0;
+        padding: 0;
+
+        h1 {
+            font-size: 2.2rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(90deg, var(--neon-cyan), var(--neon-pink));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+
+        .events-subtitle {
+            color: var(--text-muted);
+            margin-bottom: 2.5rem;
+            font-size: 1.15rem;
+        }
+
+        /* Customize the Events Filter Bar */
+        .events-filter-bar {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 1.75rem;
+            margin-bottom: 3rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+
+            &::after {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 2px;
+                background: linear-gradient(90deg, var(--neon-cyan), var(--neon-pink));
+            }
+
+            form {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 1.5rem;
+                align-items: flex-end;
+
+                .filter-group {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 0.6rem;
+                    flex: 1 1 220px;
+
+                    label {
+                        font-family: var(--font-mono);
+                        font-size: 0.75rem;
+                        font-weight: 700;
+                        text-transform: uppercase;
+                        letter-spacing: 0.1em;
+                        color: var(--neon-cyan);
+                        text-shadow: 0 0 5px rgba(6, 182, 212, 0.2);
+                    }
+
+                    input, select {
+                        background-color: var(--bg-color);
+                        border: 1px solid var(--border-color);
+                        border-radius: var(--border-radius);
+                        padding: 0.85rem 1.25rem;
+                        font-size: 0.95rem;
+                        color: var(--text-color);
+                        font-family: var(--font-sans);
+                        width: 100%;
+                        box-sizing: border-box;
+                        transition: all 0.15s ease;
+
+                        &:focus {
+                            border-color: var(--neon-cyan);
+                            box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.15);
+                            outline: none;
+                        }
+
+                        option {
+                            background-color: var(--card-bg);
+                            color: var(--text-color);
+                        }
+                    }
+                }
+
+                .filter-actions {
+                    display: flex;
+                    gap: 1rem;
+                    align-items: center;
+                    flex: 0 0 auto;
+
+                    button {
+                        background: linear-gradient(135deg, var(--accent-color), var(--neon-pink));
+                        color: #ffffff;
+                        border: none;
+                        padding: 0.85rem 1.75rem;
+                        border-radius: var(--border-radius);
+                        font-size: 0.95rem;
+                        font-weight: 700;
+                        cursor: pointer;
+                        transition: all 0.15s ease;
+                        box-shadow: 0 4px 15px rgba(99, 102, 241, 0.2);
+
+                        &:hover {
+                            transform: translateY(-1px);
+                            box-shadow: 0 6px 20px rgba(244, 63, 94, 0.3);
+                        }
+                    }
+
+                    .btn-reset {
+                        background-color: transparent;
+                        color: var(--text-muted);
+                        border: 1px solid var(--border-color);
+                        padding: 0.85rem 1.75rem;
+                        border-radius: var(--border-radius);
+                        font-size: 0.95rem;
+                        font-weight: 600;
+                        text-decoration: none;
+                        text-align: center;
+                        box-sizing: border-box;
+                        transition: all 0.15s ease;
+
+                        &:hover {
+                            background-color: rgba(255, 255, 255, 0.05);
+                            color: var(--text-color);
+                            border-color: var(--text-muted);
+                        }
+                    }
+                }
+            }
+        }
+
+        /* Customize Event Cards */
+        .event-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            transition: all 0.2s ease;
+
+            &:hover {
+                border-color: var(--neon-cyan);
+                box-shadow: 0 0 15px rgba(6, 182, 212, 0.15);
+                transform: translateY(-2px);
+            }
+
+            .event-card-header {
+                h2 {
+                    font-family: var(--font-mono);
+                    font-size: 1.4rem;
+                    font-weight: 700;
+
+                    a {
+                        color: var(--text-color);
+                        &:hover {
+                            color: var(--neon-cyan);
+                            text-shadow: 0 0 8px rgba(6, 182, 212, 0.4);
+                        }
+                    }
+                }
+
+                .event-badge {
+                    background-color: rgba(249, 115, 22, 0.1);
+                    color: #f97316;
+                    border: 1px solid rgba(249, 115, 22, 0.3);
+                    padding: 0.3rem 0.8rem;
+                    font-size: 0.8rem;
+                    font-weight: 600;
+                    font-family: var(--font-mono);
+                }
+            }
+
+            .event-card-footer {
+                border-top: 1px solid var(--border-color);
+
+                .btn-view-event {
+                    background: linear-gradient(135deg, var(--accent-color), var(--neon-pink));
+                    color: #ffffff;
+                    border-radius: var(--border-radius);
+                    padding: 0.6rem 1.25rem;
+                    font-weight: 700;
+                    border: none;
+                    transition: all 0.15s ease;
+
+                    &:hover {
+                        transform: translateY(-1px);
+                        box-shadow: 0 4px 15px rgba(244, 63, 94, 0.3);
+                    }
+                }
+            }
+        }
+    }
+
+    /* Customize Event Detail Page */
+    .event-detail-container {
+        .back-link {
+            color: var(--neon-cyan);
+            font-family: var(--font-mono);
+            transition: all 0.15s ease;
+
+            &:hover {
+                color: var(--neon-pink);
+                text-shadow: 0 0 8px rgba(244, 63, 94, 0.4);
+            }
+        }
+
+        .event-detail-article {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 3rem;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+
+            .event-detail-header {
+                border-bottom: 1px solid var(--border-color);
+                
+                h1 {
+                    font-size: 2.5rem;
+                    background: linear-gradient(120deg, var(--neon-cyan), var(--text-color), var(--neon-pink));
+                    -webkit-background-clip: text;
+                    -webkit-text-fill-color: transparent;
+                    font-weight: 800;
+                }
+            }
+
+            .event-meta-banner {
+                background-color: var(--bg-color);
+                border: 1px solid var(--border-color);
+                border-radius: var(--border-radius);
+                
+                .meta-block {
+                    span {
+                        font-family: var(--font-mono);
+                        color: var(--neon-cyan);
+                        text-shadow: 0 0 5px rgba(6, 182, 212, 0.1);
+                    }
+                }
+            }
+
+            .event-body-content {
+                color: var(--text-color);
+            }
+        }
+    }
+}
+

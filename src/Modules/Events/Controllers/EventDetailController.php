@@ -25,12 +25,13 @@ class EventDetailController implements Controller
     /**
      * Handles display details of a single event.
      *
-     * @param mixed $slug Captured URL-friendly slug
+     * @param mixed $slug Captured URL-friendly slug or matches array from the router
      * @return void
      */
     public function handle($slug): void
     {
-        $event = Event::findBySlug((string)$slug);
+        $resolvedSlug = \is_array($slug) ? ($slug[1] ?? '') : (string)$slug;
+        $event = Event::findBySlug($resolvedSlug);
 
         if (!$event || $event->status !== 'published') {
             \http_response_code(404);
