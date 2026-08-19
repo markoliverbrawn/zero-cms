@@ -33,13 +33,16 @@ class EventsController implements Controller
     {
         $siteId = App::getCurrentSiteId();
         
-        $sql = "SELECT * FROM events WHERE site_id = ? AND status = 'published' AND deleted_at IS NULL";
+        $sql = "SELECT events.*, media.path AS featured_image_path 
+                FROM events 
+                LEFT JOIN media ON media.id = events.featured_image
+                WHERE events.site_id = ? AND events.status = 'published' AND events.deleted_at IS NULL";
         $params = [$siteId];
 
         // 1. Text Search Filter (Matches Title, Location, and Description)
         $q = isset($_GET['q']) ? \trim((string)$_GET['q']) : '';
         if ($q !== '') {
-            $sql .= " AND (title LIKE ? OR description LIKE ? OR location LIKE ?)";
+            $sql .= " AND (events.title LIKE ? OR events.description LIKE ? OR events.location LIKE ?)";
             $params[] = "%{$q}%";
             $params[] = "%{$q}%";
             $params[] = "%{$q}%";
@@ -49,23 +52,23 @@ class EventsController implements Controller
         $time = isset($_GET['time']) ? \trim((string)$_GET['time']) : 'upcoming';
         $now = \gmdate('Y-m-d H:i:s');
         if ($time === 'upcoming') {
-            $sql .= " AND event_date >= ?";
+            $sql .= " AND events.event_date >= ?";
             $params[] = $now;
         } elseif ($time === 'past') {
-            $sql .= " AND event_date < ?";
+            $sql .= " AND events.event_date < ?";
             $params[] = $now;
         }
 
         // 3. Location Type Filter (Matches online indicators like zoom/link/online or negates them)
         $locationType = isset($_GET['location_type']) ? \trim((string)$_GET['location_type']) : 'all';
         if ($locationType === 'online') {
-            $sql .= " AND (location LIKE ? OR location LIKE ? OR location LIKE ? OR location LIKE ?)";
+            $sql .= " AND (events.location LIKE ? OR events.location LIKE ? OR events.location LIKE ? OR events.location LIKE ?)";
             $params[] = '%online%';
             $params[] = '%zoom%';
             $params[] = '%link%';
             $params[] = '%decentralized%';
         } elseif ($locationType === 'physical') {
-            $sql .= " AND (location NOT LIKE ? AND location NOT LIKE ? AND location NOT LIKE ? AND location NOT LIKE ?)";
+            $sql .= " AND (events.location NOT LIKE ? AND events.location NOT LIKE ? AND events.location NOT LIKE ? AND events.location NOT LIKE ?)";
             $params[] = '%online%';
             $params[] = '%zoom%';
             $params[] = '%link%';
@@ -74,9 +77,9 @@ class EventsController implements Controller
 
         // Apply chronological ordering based on timeline filter
         if ($time === 'past') {
-            $sql .= " ORDER BY event_date DESC"; // Newest completed events first
+            $sql .= " ORDER BY events.event_date DESC"; // Newest completed events first
         } else {
-            $sql .= " ORDER BY event_date ASC";  // Soonest upcoming events first
+            $sql .= " ORDER BY events.event_date ASC";  // Soonest upcoming events first
         }
 
         $stmt = DB::query($sql, $params);

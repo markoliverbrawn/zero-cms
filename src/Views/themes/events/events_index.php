@@ -28,29 +28,37 @@ $currentLocationType = isset($locationType) ? $locationType : 'all';
                 $isPast = \strtotime($event->event_date) < \time();
                 ?>
                 <div class="event-card <?php echo $isPast ? 'is-past-event' : ''; ?>">
-                    <div class="event-card-header">
-                        <h2>
-                            <a href="/events/<?php echo Str::escape($event->slug); ?>">
-                                <?php echo Str::escape($event->title); ?>
+                    <?php if (!empty($event->featured_image_path)): ?>
+                        <div class="event-card-image">
+                            <img src="<?php echo Str::escape($event->featured_image_path); ?>" alt="<?php echo Str::escape($event->title); ?>">
+                        </div>
+                    <?php endif; ?>
+
+                    <div class="event-card-content">
+                        <div class="event-card-header">
+                            <h2>
+                                <a href="/events/<?php echo Str::escape($event->slug); ?>">
+                                    <?php echo Str::escape($event->title); ?>
+                                </a>
+                            </h2>
+                            <span class="event-badge <?php echo $isPast ? 'badge-past' : ''; ?>">
+                                <?php echo \date('M d, Y', \strtotime($event->event_date)); ?>
+                                <?php echo $isPast ? ' (Past)' : ''; ?>
+                            </span>
+                        </div>
+
+                        <p class="event-desc">
+                            <?php echo Str::escape(Str::truncate(\strip_tags($event->description ?? ''), 180)); ?>
+                        </p>
+
+                        <div class="event-card-footer">
+                            <span class="event-meta">
+                                <strong>Location:</strong> <?php echo Str::escape($event->location ?? ''); ?>
+                            </span>
+                            <a href="/events/<?php echo Str::escape($event->slug); ?>" class="btn-view-event">
+                                View Event Details
                             </a>
-                        </h2>
-                        <span class="event-badge <?php echo $isPast ? 'badge-past' : ''; ?>">
-                            <?php echo \date('M d, Y', \strtotime($event->event_date)); ?>
-                            <?php echo $isPast ? ' (Past)' : ''; ?>
-                        </span>
-                    </div>
-
-                    <p class="event-desc">
-                        <?php echo Str::escape(Str::truncate(\strip_tags($event->description ?? ''), 180)); ?>
-                    </p>
-
-                    <div class="event-card-footer">
-                        <span class="event-meta">
-                            <strong>Location:</strong> <?php echo Str::escape($event->location ?? ''); ?>
-                        </span>
-                        <a href="/events/<?php echo Str::escape($event->slug); ?>" class="btn-view-event">
-                            View Event Details
-                        </a>
+                        </div>
                     </div>
                 </div>
             <?php endforeach; ?>

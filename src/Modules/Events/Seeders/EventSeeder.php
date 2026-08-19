@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Zero\Modules\Events\Seeders;
 
 use Exception;
+use Zero\Core\Storage\Storage;
 use Zero\Database\DB;
 use Zero\Interfaces\SeederInterface;
 use Zero\Support\Security;
@@ -68,6 +69,46 @@ class EventSeeder implements SeederInterface
         // Clean up previous seeded events for this site
         DB::query("DELETE FROM events WHERE site_id = ?", [$siteId]);
 
+        // Helper anonymous function to load and copy seed featured image from disk
+        $loadFeaturedImage = function(string $slug) use ($siteId): ?string {
+            try {
+                $filename = "event-featured-{$slug}.jpg";
+                $seedImgPath = APPLICATION_ROOT . '/src/Modules/DemoGenerator/Seeders/data/images/' . $filename;
+                
+                if (!\file_exists($seedImgPath)) {
+                    return null;
+                }
+                
+                $content = \file_get_contents($seedImgPath);
+                
+                // Write to physical storage under uploads/site_id/filename
+                $uploadsRoot = Storage::getUploadsRoot();
+                $physicalPath = $uploadsRoot . '/' . $siteId . '/' . $filename;
+                Storage::write($physicalPath, $content);
+                
+                $publicPath = '/storage/uploads/' . $siteId . '/' . $filename;
+                $mediaId = Security::uuidv7();
+                
+                // Create a media record
+                DB::query("
+                    INSERT INTO media (id, site_id, filename, path, mime, title, visibility, file_size, created_at, updated_at)
+                    VALUES (?, ?, ?, ?, 'image/jpeg', ?, 'public', ?, NOW(), NOW())
+                ", [
+                    $mediaId,
+                    $siteId,
+                    $filename,
+                    $publicPath,
+                    "Featured Image for {$slug}",
+                    \strlen($content)
+                ]);
+                
+                return $mediaId;
+            } catch (Exception $ex) {
+                echo "Warning: Failed to load event featured image {$slug}: " . $ex->getMessage() . "\n";
+                return null;
+            }
+        };
+
         // Seed 3 high-quality, non-conflicting default events
         $events = [
             [
@@ -94,9 +135,12 @@ class EventSeeder implements SeederInterface
         ];
 
         foreach ($events as $e) {
+            // Load and link the static high-quality featured image
+            $featuredImageId = $loadFeaturedImage($e['slug']);
+
             DB::query("
-                INSERT INTO events (id, site_id, title, slug, description, event_date, location, status, created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, 'published', NOW(), NOW())
+                INSERT INTO events (id, site_id, title, slug, description, event_date, location, status, featured_image, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, 'published', ?, NOW(), NOW())
             ", [
                 Security::uuidv7(),
                 $siteId,
@@ -104,10 +148,11 @@ class EventSeeder implements SeederInterface
                 $e['slug'],
                 $e['description'],
                 $e['event_date'],
-                $e['location']
+                $e['location'],
+                $featuredImageId
             ]);
         }
-        
-        echo "Successfully seeded 3 events!\n";
+
+        echo "Successfully seeded 3 events with high-quality featured images!\n";
     }
 }

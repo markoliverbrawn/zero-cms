@@ -13,6 +13,15 @@ use Zero\Support\Str;
     </a>
 
     <article class="event-detail-article">
+        <?php if (!empty($event->featured_image_path)): ?>
+            <?php 
+            $focusY = isset($event->featured_image_focus_y) ? (int)$event->featured_image_focus_y : 50;
+            ?>
+            <div class="event-detail-hero" style="--focus-y: <?php echo $focusY; ?>%;">
+                <img src="<?php echo Str::escape($event->featured_image_path); ?>" alt="<?php echo Str::escape($event->title); ?>">
+            </div>
+        <?php endif; ?>
+
         <header class="event-detail-header">
             <div>
                 <span class="event-badge">

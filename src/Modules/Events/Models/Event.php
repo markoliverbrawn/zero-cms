@@ -37,6 +37,8 @@ class Event implements Model
     public $location;
     public $status = 'published';
     public $featured_image;
+    public $featured_image_path;
+    public $featured_image_focus_y = 50;
     public $created_at;
     public $updated_at;
     public $deleted_at;
@@ -65,10 +67,12 @@ class Event implements Model
     {
         $siteId = App::getCurrentSiteId();
         $stmt = DB::query("
-            SELECT * FROM events 
-            WHERE slug = ? 
-              AND site_id = ? 
-              AND deleted_at IS NULL 
+            SELECT events.*, media.path AS featured_image_path, media.focus_y AS featured_image_focus_y 
+            FROM events 
+            LEFT JOIN media ON media.id = events.featured_image
+            WHERE events.slug = ? 
+              AND events.site_id = ? 
+              AND events.deleted_at IS NULL 
             LIMIT 1
         ", [$slug, $siteId]);
 

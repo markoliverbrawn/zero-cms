@@ -106,7 +106,7 @@ class GeminiProvider implements AiProvider
             throw new Exception("Gemini API key is not configured. Please set GEMINI_API_KEY in your .env file.");
         }
 
-        $model = $options['model'] ?? 'imagen-4.0-generate-001';
+        $model = $options['model'] ?? 'imagen-3.0-generate-002';
         $aspectRatio = $options['aspect_ratio'] ?? '1:1';
         $timeout = $options['timeout'] ?? 90;
 
