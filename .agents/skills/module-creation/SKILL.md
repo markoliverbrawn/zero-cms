@@ -26,7 +26,7 @@ src/Modules/<Name>/
 `src/Modules/<Name>/Module.php` must declare `namespace Zero\Modules\<Name>;` and `class Module implements Zero\Interfaces\Module`, implementing:
 
 * `getId(): string` — a unique lowercase identifier (e.g. `'blog'`, `'shop'`). This is the key the whole system uses: `enabled_modules` site config, `module_dependency` sidebar gating, and view/route registration all key off this string.
-* `getAccentColor(): string` — a brand hex color (e.g. `'#3b82f6'`) used for the module's admin pills/widgets.
+* `getAccentColor(): string` — **MANDATORY.** A brand-representative hex color code (e.g. `'#ef4444'` for Security or `'#9333ea'` for DemoGenerator) used for the module's administrative pills and widgets. Every module MUST return a distinct, high-contrast, representative accent color; never use a generic standard default (Rule 2 in `GEMINI.md`).
 * `getDashboardWidgetView(): ?string` — the view name (relative to the module's `Views/`) of its dashboard widget, or `null` if it doesn't have one.
 * `getRoutes(): array` — a map of `'#^/regex/pattern$#' => ControllerClass::class`. Route patterns are plain regex; capture groups become controller action arguments.
 * `getMigrationClass(): ?string` — can return `null` in nearly every real module. Actual migrations are discovered by filename glob (see "Migrations" below), not by this method — the framework never consumes its return value elsewhere. Only bother returning a real FQCN if you have a specific reason to expose "the" migration class for this module to other code.
@@ -101,5 +101,6 @@ src/Modules/<Name>/
 ## Don't forget
 
 * Ship `Lang/{en,es,hr,mi}.php` for every user-facing string the module renders, and confirm none of them were added to `src/Lang/` instead.
+* Define a distinct, brand-representative hex accent color via `getAccentColor(): string` (Rule 2 in `GEMINI.md`).
 * Write at least one test under `src/Modules/<Name>/Tests/` — see the `test-suite-architecture` skill for the exact bootstrap-require convention (a direct require to `src/Support/TestBootstrap.php`, 3 `dirname()` levels deep for module tests).
 * Run `docker exec -w /data/misc/zero php83 bin/test` before considering the module done.
