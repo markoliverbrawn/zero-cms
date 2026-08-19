@@ -36,8 +36,7 @@ DB::query("DELETE FROM users WHERE email = ?", [$testEmail]);
 echo "  1. Simulating Demo Sandbox Site Creation...\n";
 $factory = new DemoSiteFactory();
 
-// Guard against the class seeders' verbose CLI-oriented echo() output (from BlogArticleSeeder,
-// ShopSeeder) leaking out of createDemoSite() -- fine on bin/seed's terminal, but
+// Guard against the class seeders' verbose CLI-oriented echo() output (from BlogArticleSeeder) leaking out of createDemoSite() -- fine on bin/seed's terminal, but
 // fatal for the admin/public HTTP controllers that call this same method and immediately
 // json_encode a response afterward.
 ob_start();
@@ -108,16 +107,10 @@ foreach ($pagesWithBlockImages as $contentJson) {
 assert_test($referentialIntegrityMaintained, "Referential media ID mapping between page-builder blocks and media rows maintained 100%");
 
 // Verify every enabled module's class seeder actually populated its sample content -- the
-// kitchensink preset enables blog/shop, and each has its own Seeders/*Seeder.php class that
+// kitchensink preset enables blog, and each has its own Seeders/*Seeder.php class that
 // DemoSiteFactory must discover and run against the new sandbox site.
 $blogPostsCount = intval(DB::query("SELECT COUNT(*) FROM blog_posts WHERE site_id = ?", [$siteId])->fetchColumn());
 assert_test($blogPostsCount > 0, "Blog articles seeded via BlogArticleSeeder: {$blogPostsCount} posts found");
-
-$shopProductsCount = intval(DB::query("SELECT COUNT(*) FROM shop_products WHERE site_id = ?", [$siteId])->fetchColumn());
-assert_test($shopProductsCount > 0, "Shop products seeded via ShopSeeder: {$shopProductsCount} products found");
-
-$shopOrdersCount = intval(DB::query("SELECT COUNT(*) FROM shop_orders WHERE site_id = ?", [$siteId])->fetchColumn());
-assert_test($shopOrdersCount > 0, "Shop orders seeded via ShopSeeder: {$shopOrdersCount} orders found");
 
 
 echo "\n  2. Simulating TeardownExpiredDemosJob Execution...\n";

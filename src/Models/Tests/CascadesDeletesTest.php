@@ -31,7 +31,7 @@ $_SERVER['HTTP_HOST'] = 'cascades.zero';
 $mockSiteId = \Zero\Support\Security::uuidv7();
 DB::query("
     INSERT INTO sites (id, name, domain, theme, enabled_modules, created_at, updated_at)
-    VALUES (?, 'Cascading Deletes Site', 'cascades.zero', 'default', '[\"blog\", \"shop\"]', NOW(), NOW())
+    VALUES (?, 'Cascading Deletes Site', 'cascades.zero', 'default', '[\"blog\"]', NOW(), NOW())
 ", [$mockSiteId]);
 
 App::bootstrap();

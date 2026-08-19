@@ -146,7 +146,7 @@ use Zero\Support\Str;
         <div class="preferences-widgets-grid">
           <?php
             $site = \Zero\Core\App::getCurrentSite();
-            $layout = $prefs['dashboard_layout'] ?? ['quick_links', 'recent_pages', 'recent_media', 'shop_orders_chart', 'shop_category_pie', 'recent_orders', 'security_state', 'security_logs', 'queue_summary', 'scheduler_summary'];
+            $layout = $prefs['dashboard_layout'] ?? ['quick_links', 'recent_pages', 'recent_media', 'security_state', 'security_logs', 'queue_summary', 'scheduler_summary'];
             
             $widgets = [];
             // Core Widgets
@@ -157,13 +157,6 @@ use Zero\Support\Str;
             // Blog Module Widget (Only if enabled!)
             if ($site && $site->isModuleEnabled('blog')) {
                 $widgets['recent_posts'] = ['title' => I18n::t('recent_posts'), 'desc' => I18n::t('recent_posts')];
-            }
-            
-            // Shop Module Widgets (Only if enabled!)
-            if ($site && $site->isModuleEnabled('shop')) {
-                $widgets['shop_orders_chart'] = ['title' => 'Shop Orders Chart', 'desc' => 'Interactive Sales Volume Over Time'];
-                $widgets['shop_category_pie'] = ['title' => 'Category Sales Pie', 'desc' => 'Solid Pie Chart of Sales By Category'];
-                $widgets['recent_orders'] = ['title' => 'Recent Shop Orders', 'desc' => 'List of Recent Transactions'];
             }
 
             // Security Module Widgets (Only if enabled!)

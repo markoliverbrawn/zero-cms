@@ -28,7 +28,7 @@ try {
 
 // 1. Test registration of single route
 echo "Testing route registration...\n";
-Router::register('#^/api/items$#', 'Zero\\Http\\Controllers\\ApiController', 'shop');
+Router::register('#^/api/items$#', 'Zero\\Http\\Controllers\\ApiController', 'custom');
 
 $routes = $routesProp->getValue();
 assert_test(isset($routes['#^/api/items$#']), "Route is successfully stored in registered routes mapping");
@@ -48,16 +48,16 @@ assert_test(isset($routes['#^/blog/post/([a-z0-9\-]+)$#']), "Batch route 2 regis
 // 3. Test Module namespace resolution
 echo "Testing controller-to-module namespace mapping...\n";
 Router::registerModuleNamespace('Zero\\Modules\\Blog\\', 'blog');
-Router::registerModuleNamespace('Zero\\Modules\\Shop\\', 'shop');
+Router::registerModuleNamespace('Zero\\Modules\\Custom\\', 'custom');
 
 $module1 = Router::getModuleForController('Zero\\Modules\\Blog\\Controllers\\BlogController');
-$module2 = Router::getModuleForController('Zero\\Modules\\Shop\\Controllers\\CheckoutController');
+$module2 = Router::getModuleForController('Zero\\Modules\\Custom\\Controllers\\CustomController');
 $module3 = Router::getModuleForController('Zero\\Http\\Controllers\\ApiController', '#^/api/items$#');
 $moduleNone = Router::getModuleForController('Zero\\Core\\App');
 
 assert_test($module1 === 'blog', "Resolves module 'blog' correctly from controller namespace prefix");
-assert_test($module2 === 'shop', "Resolves module 'shop' correctly from controller namespace prefix");
-assert_test($module3 === 'shop', "Resolves module 'shop' correctly from explicit route-pattern mappings overrides");
+assert_test($module2 === 'custom', "Resolves module 'custom' correctly from controller namespace prefix");
+assert_test($module3 === 'custom', "Resolves module 'custom' correctly from explicit route-pattern mappings overrides");
 assert_test($moduleNone === null, "Returns null for controller class not residing in any registered module namespace");
 
 echo "Router component tests completed.\n\n";

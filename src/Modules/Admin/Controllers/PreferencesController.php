@@ -49,7 +49,7 @@ class PreferencesController implements Controller
                 $layout = [];
             }
             
-            $allowedWidgets = ['recent_posts', 'recent_pages', 'recent_media', 'quick_links', 'recent_orders', 'shop_orders_chart', 'shop_category_pie'];
+            $allowedWidgets = ['recent_posts', 'recent_pages', 'recent_media', 'quick_links'];
             $layout = \array_values(\array_intersect($layout, $allowedWidgets));
             
             $prefs = User::getPreferencesForUser($userId);
@@ -91,7 +91,7 @@ class PreferencesController implements Controller
             }
             
             // Filter invalid layout items
-            $allowedWidgets = ['recent_posts', 'recent_pages', 'recent_media', 'quick_links', 'recent_orders', 'shop_orders_chart', 'shop_category_pie'];
+            $allowedWidgets = ['recent_posts', 'recent_pages', 'recent_media', 'quick_links'];
             $dashboardLayout = \array_values(\array_intersect($dashboardLayout, $allowedWidgets));
 
             $prefs = [

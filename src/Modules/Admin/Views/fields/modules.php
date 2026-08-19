@@ -40,9 +40,6 @@ $getModuleMeta = function (string $module) use ($moduleObjects): array {
     if ($moduleLower === 'blog') {
         $icon = 'edit-3';
         $label = 'Blog';
-    } elseif ($moduleLower === 'shop') {
-        $icon = 'shop';
-        $label = 'Shop';
     } elseif ($moduleLower === 'formbuilder') {
         $icon = 'clipboard';
         $label = 'Form Builder';

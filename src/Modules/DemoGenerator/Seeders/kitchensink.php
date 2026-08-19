@@ -21,7 +21,6 @@ return [
             'default_language' => 'en',
             'enabled_modules' => [
                 'blog',
-                'shop',
                 'formbuilder',
                 'security',
                 'queue',
@@ -331,17 +330,7 @@ return [
             ],
             'type' => 'page',
         ],
-        [
-            'title' => 'Luxe Shop',
-            'slug' => 'shop',
-            'status' => 'published',
-            'controller' => 'Zero\\Modules\\Shop\\Controllers\\CatalogController',
-            'view' => 'catalog',
-            'site_domain' => 'd6laptop.zero.kitchensink',
-            'content' => [
-            ],
-            'type' => 'page',
-        ],
+
 
         [
             'title' => 'Contact Us',

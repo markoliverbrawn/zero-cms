@@ -30,7 +30,6 @@ $derivedSuffixes = ['_help', '_desc'];
  */
 $legacyUnprefixed = [
     'blog' => ['manage_posts', 'recent_posts', 'no_posts_found'],
-    'shop' => ['product_name', 'base_sku', 'primary_image_path', 'rich_description', 'compare_at_price', 'category'],
 ];
 
 /**

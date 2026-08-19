@@ -31,7 +31,7 @@ class RedirectController implements Controller
     {
         $matches = $param;
         $modelName = $matches[1];
-        if (\in_array($modelName, ['files', 'pages', 'posts', 'users', 'products', 'productvariants', 'orders'])) {
+        if (\in_array($modelName, ['files', 'pages', 'posts', 'users'])) {
             \header('Location: /admin/list/' . $modelName);
             exit;
         }

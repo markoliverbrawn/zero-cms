@@ -18,19 +18,12 @@ To maintain the high-quality, professional, and scalable state of the Zero CMS w
 * **Rule:** Core CMS views, controllers, layouts, and system kernel classes must never hardcode module-specific variables, database schemas, templates, or HTML paths. **Modules must remain completely separate from the system Core.**
 * **Core Integrity:** Core directories (such as `src/Core/` and `src/Http/`) must contain strictly generic, module-agnostic logic. Under no circumstances should core files contain hardcoded references, fallback mappings, or conditional checks for specific modules (e.g. no hardcoding of `'shop'`, `'blog'`, or similar names inside `App.php` or `Router.php`).
 * **Convention:** Maintain a clean, decoupled separation of concerns by utilizing central registry hooks and generic dynamic fallbacks on bootstrap:
-  * Modular blocks must be registered dynamically on bootstrap. The core registers standard blocks, while independent modules (like `Shop`) are responsible for registering their custom blocks inside their own `init()` methods.
+  * Modular blocks must be registered dynamically on bootstrap. The core registers standard blocks, while independent modules are responsible for registering their custom blocks inside their own `init()` methods.
   * Register route pathways dynamically using `Router::register()`.
   * Register template directory fallbacks dynamically using `App::registerViewDir()`.
   * Register theme fallback inheritance dynamically using `App::registerThemeFallback()`.
-* **Module-Owned Block Editors:** Independent modules must house their own back-office admin block editors (e.g. `src/Modules/Shop/Views/blocks/categories.php` or `src/Modules/Blog/Views/blocks/latest_articles.php` rather than centralizing inside Admin views) and pass the path inside their registration configs as `'admin_view'`:
+* **Module-Owned Block Editors:** Independent modules must house their own back-office admin block editors (e.g. `src/Modules/Blog/Views/blocks/latest_articles.php` rather than centralizing inside Admin views) and pass the path inside their registration configs as `'admin_view'`:
   ```php
-  // Inside src/Modules/Shop/Module.php :: init()
-  \Zero\Core\App::registerBlock('categories', [
-      'label' => 'Product Categories Grid',
-      'icon' => 'zap',
-      'admin_view' => dirname(__FILE__) . '/Views/blocks/categories.php'
-  ]);
-
   // Inside src/Modules/Blog/Module.php :: init()
   \Zero\Core\App::registerBlock('latest_articles', [
       'label' => 'Latest Blog Articles',
@@ -38,7 +31,7 @@ To maintain the high-quality, professional, and scalable state of the Zero CMS w
       'admin_view' => dirname(__FILE__) . '/Views/blocks/latest_articles.php'
   ]);
   ```
-* **Module-Owned Language Dictionaries:** Independent modules must house their own translation dictionaries at `src/Modules/<Name>/Lang/{en,es,hr,mi}.php` and must never add module-specific keys to the core dictionaries in `src/Lang/`. The core dictionaries are reserved strictly for generic, framework-level vocabulary and the helper texts of core's own models (`Page`, `Media`, `User`, `Site`). `Zero\Support\I18n::init()` discovers and merges every `<Module>/Lang/<activeLang>.php` on disk automatically across all `App::getModuleSearchPaths()` — no registration call is required, the file on disk is the wiring. Deleting a module from the workspace must therefore remove its strings with it, leaving no orphaned keys behind in core. Because all module dictionaries merge into a single flat namespace, module keys must be prefixed with the owning module's id (`shop_products`, not `products`); the only exemption is field-derived `{field}_help`/`{field}_desc` keys, which take their name from the model field (Rule 6). `src/Integration/Tests/ModuleLangDictionaryTest.php` enforces this, along with cross-module key collisions and language-file completeness.
+* **Module-Owned Language Dictionaries:** Independent modules must house their own translation dictionaries at `src/Modules/<Name>/Lang/{en,es,hr,mi}.php` and must never add module-specific keys to the core dictionaries in `src/Lang/`. The core dictionaries are reserved strictly for generic, framework-level vocabulary and the helper texts of core's own models (`Page`, `Media`, `User`, `Site`). `Zero\Support\I18n::init()` discovers and merges every `<Module>/Lang/<activeLang>.php` on disk automatically across all `App::getModuleSearchPaths()` — no registration call is required, the file on disk is the wiring. Deleting a module from the workspace must therefore remove its strings with it, leaving no orphaned keys behind in core. Because all module dictionaries merge into a single flat namespace, module keys must be prefixed with the owning module's id (`blog_posts`, not `posts`); the only exemption is field-derived `{field}_help`/`{field}_desc` keys, which take their name from the model field (Rule 6). `src/Integration/Tests/ModuleLangDictionaryTest.php` enforces this, along with cross-module key collisions and language-file completeness.
 * **Scalability & Hot-Plugging:** The system must compile and scale automatically. Adding a new module or theme fallback must only require registering it dynamically with the core on bootstrap and placing its assets on disk—ensuring modules can be safely enabled, disabled, or permanently deleted from the workspace without causing any core kernel compilation or routing failures.
 * **Module Accent Colors:** Every module class implementing `Zero\Interfaces\Module` MUST define a `getAccentColor(): string` method returning its brand-representative hex color code (e.g. `#ef4444` for security, `#9333ea` for demogenerator). This color is then used for rendering the module's administrative pills and widgets consistently under the active admin theme.
 
@@ -122,10 +115,10 @@ To maintain the high-quality, professional, and scalable state of the Zero CMS w
 * **Convention:** Developers must include responsive `data-label` attributes on table cells to support viewport scaling automatically. This ensures design consistency and seamless visual theme adaptability (e.g., vintage-greenscreen or corporate) under core CSS styles, preventing frontend theme leakages.
 
 ### 20. Active Record Relational Cascade Deletions (`Zero\Models\Traits\CascadesDeletes`)
-* **Rule:** Active Record models with dependent relational children (e.g., Blog Posts with Comments, Shop Products with Product Variants, and Shop Orders with Order Items) MUST use the core `Zero\Models\Traits\CascadesDeletes` trait to automatically clean up child records.
+* **Rule:** Active Record models with dependent relational children (e.g., Blog Posts with Comments) MUST use the core `Zero\Models\Traits\CascadesDeletes` trait to automatically clean up child records.
 * **Convention:** 
   - To declare cascading relationships, the parent model class must define a protected static array `$cascadeDeletes` mapping child model FQNs to their foreign key column names (e.g., `Comment::class => 'post_id'`).
-  - To prevent accidental deletion of shared or external resources, cascade deletions must NEVER delete media assets, categories, or other shared records that could be referenced elsewhere (e.g., featured images or product categories are kept safe and preserved).
+  - To prevent accidental deletion of shared or external resources, cascade deletions must NEVER delete media assets or other shared records that could be referenced elsewhere (e.g., featured images are kept safe and preserved).
   - Conflict resolution on traits composition must alias `IsModel::delete` and `IsModel::forceDelete` as `traitDelete` and `traitForceDelete` respectively, letting the `CascadesDeletes` trait intercept the lifecycle, cascade deletions, and then safely proceed.
 
 ### 21. Avoid Native JavaScript Alerts and Prompts

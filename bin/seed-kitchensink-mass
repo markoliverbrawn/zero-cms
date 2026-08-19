@@ -119,153 +119,16 @@ function generateContent(string $title)
 // IDEMPOTENT PRUNING (Clear previous runs safely)
 // --------------------------------------------------
 echo "--> Safely clearing previous mass-seeded records inside tenant boundaries...\n";
-DB::query("DELETE FROM shop_product_variants WHERE site_id = ?", [$siteId]);
-DB::query("DELETE FROM shop_product_category_links WHERE site_id = ?", [$siteId]);
-DB::query("DELETE FROM shop_products WHERE site_id = ? AND sku LIKE 'KITCH-%'", [$siteId]);
-DB::query("DELETE FROM shop_categories WHERE site_id = ?", [$siteId]);
 DB::query("DELETE FROM pages WHERE site_id = ? AND slug LIKE 'page-%'", [$siteId]);
 DB::query("DELETE FROM blog_posts WHERE site_id = ? AND slug LIKE 'post-%'", [$siteId]);
 
 
 
 // --------------------------------------------------
-// SEEDING STAGE 0: MASS PRODUCT CATEGORIES (40 categories)
-// --------------------------------------------------
-echo "0. Seeding 40 procedurally unique cyberware Product Categories...\n";
-
-$categoryNames = [
-    'Apparel & Garments', 'Optic Modules', 'Cyberware Optics', 'Biometric Links', 'Netrunner Consoles',
-    'Exoskeleton Enhancers', 'Nanite Maintenance', 'Cryo-Cooling Units', 'Obsidian Plates', 'Thermal Underlayers',
-    'Tactical Rigging', 'Pulsar Chargers', 'Solid-State Neuro-Drives', 'Neuro-Voxel HUDs', 'Tox-Shield Filters',
-    'Cybernetic Gloves', 'Modular Apparel', 'Sub-Orbital Transceivers', 'Linear Actuators', 'Geometric Casts',
-    'Neural Synapse links', 'Bespoke Chronometers', 'Graphene Fiber Vests', 'Autonomous Drone Nodes', 'Pneumatic Pistons',
-    'Cyber City Access Keys', 'Obsidian Carbon Plating', 'Sub-Zero Vapor Coolers', 'Quantum Core Nodes', 'High-Contrast Visors',
-    'Fluid-Cell Injectors', 'Sub-Dermal Implants', 'Bionic Limb Sockets', 'Sonic Wave Dampeners', 'Graphene Weave Coats',
-    'Reinforced Utility Belts', 'Holographic Hulls', 'Synthetic Skin Patches', 'Netrunner Deck Cases', 'Cybernetic Boot Liners'
-];
-
-$categoryRows = [];
-$categoryCols = ['id', 'site_id', 'title', 'slug', 'description', 'image', 'created_at', 'updated_at'];
-$categoryIds = [];
-
-foreach ($categoryNames as $cName) {
-    $cId = Security::uuidv7();
-    $cSlug = App::slugify($cName);
-    $cDesc = "High-precision technical repository of premium {$cName} components designed to optimize performance.";
-    $media = $mediaRows[array_rand($mediaRows)];
-    $cImage = $media['id'] ?? $media['path'];
-
-    $categoryRows[] = [
-        'id' => $cId,
-        'site_id' => $siteId,
-        'title' => $cName,
-        'slug' => $cSlug,
-        'description' => $cDesc,
-        'image' => $cImage,
-        'created_at' => gmdate('Y-m-d H:i:s'),
-        'updated_at' => gmdate('Y-m-d H:i:s')
-    ];
-    $categoryIds[] = $cId;
-}
-batchInsert('shop_categories', $categoryCols, $categoryRows);
-
-// --------------------------------------------------
-// SEEDING STAGE 1: SHOP PRODUCTS (500 * scale)
-// --------------------------------------------------
-$productCount = 500 * $scale;
-echo "1. Seeding {$productCount} unique e-commerce products with custom SKUs, pricing, and multi-category linkages...\n";
-
-$productRows = [];
-$variantRows = [];
-$categoryLinkRows = [];
-
-$columns = ['id', 'site_id', 'category_id', 'title', 'slug', 'sku', 'description', 'price', 'compare_at_price', 'main_image', 'status', 'exclude_from_search', 'created_at', 'updated_at'];
-$variantCols = ['id', 'site_id', 'product_id', 'title', 'sku', 'price', 'stock', 'created_at', 'updated_at'];
-$linkCols = ['product_id', 'category_id', 'site_id'];
-
-for ($i = 0; $i < $productCount; $i++) {
-    $pId = Security::uuidv7();
-    $title = generateTitle() . ' ' . ($i + 1);
-    $slug = App::slugify($title);
-    $sku = 'KITCH-' . strtoupper(substr(md5($title), 0, 8)) . '-' . ($i + 1);
-    $desc = generateContent($title);
-    $price = rand(15, 1200) + (rand(0, 99) / 100);
-    $comparePrice = rand(0, 1) ? $price * 1.2 : null;
-
-    // Primary Category Legacy Assignment
-    $catId = $categoryIds[array_rand($categoryIds)];
-
-    $media = $mediaRows[array_rand($mediaRows)];
-    $mainImage = $media['id'] ?? $media['path']; // ID string or path
-
-    $productRows[] = [
-        'id' => $pId,
-        'site_id' => $siteId,
-        'category_id' => $catId,
-        'title' => $title,
-        'slug' => $slug,
-        'sku' => $sku,
-        'description' => $desc,
-        'price' => $price,
-        'compare_at_price' => $comparePrice,
-        'main_image' => $mainImage,
-        'status' => 'published',
-        'exclude_from_search' => 0,
-        'created_at' => gmdate('Y-m-d H:i:s'),
-        'updated_at' => gmdate('Y-m-d H:i:s')
-    ];
-
-    // Seed 2 product variants for each product
-    for ($v = 1; $v <= 2; $v++) {
-        $vId = Security::uuidv7();
-        $vTitle = "Standard Edition V{$v}";
-        $vSku = $sku . "-V{$v}";
-        $variantRows[] = [
-            'id' => $vId,
-            'site_id' => $siteId,
-            'product_id' => $pId,
-            'title' => $vTitle,
-            'sku' => $vSku,
-            'price' => $price,
-            'stock' => rand(5, 100),
-            'created_at' => gmdate('Y-m-d H:i:s'),
-            'updated_at' => gmdate('Y-m-d H:i:s')
-        ];
-    }
-
-    // Select 2 unique random categories for many-to-many linkages
-    $shuffledCats = $categoryIds;
-    shuffle($shuffledCats);
-    $selectedCats = array_slice($shuffledCats, 0, 2);
-
-    foreach ($selectedCats as $selectedCatId) {
-        $categoryLinkRows[] = [
-            'product_id' => $pId,
-            'category_id' => $selectedCatId,
-            'site_id' => $siteId
-        ];
-    }
-
-    // High-speed write flushing in chunks of 100
-    if (count($productRows) >= 100) {
-        batchInsert('shop_products', $columns, $productRows);
-        batchInsert('shop_product_variants', $variantCols, $variantRows);
-        batchInsert('shop_product_category_links', $linkCols, $categoryLinkRows);
-        $productRows = [];
-        $variantRows = [];
-        $categoryLinkRows = [];
-    }
-}
-// Flush remaining
-batchInsert('shop_products', $columns, $productRows);
-batchInsert('shop_product_variants', $variantCols, $variantRows);
-batchInsert('shop_product_category_links', $linkCols, $categoryLinkRows);
-
-// --------------------------------------------------
-// SEEDING STAGE 2: LAYOUT PAGES (300 * scale)
+// SEEDING STAGE 0: LAYOUT PAGES (300 * scale)
 // --------------------------------------------------
 $pageCount = 300 * $scale;
-echo "2. Seeding {$pageCount} layout Pages with embedded Page Builder block arrays...\n";
+echo "0. Seeding {$pageCount} layout Pages with embedded Page Builder block arrays...\n";
 
 $pageRows = [];
 $pageCols = ['id', 'site_id', 'title', 'slug', 'content', 'summary', 'status', 'precedence', 'show_in_nav', 'exclude_from_search', 'created_at', 'updated_at'];
@@ -323,10 +186,10 @@ for ($i = 0; $i < $pageCount; $i++) {
 batchInsert('pages', $pageCols, $pageRows);
 
 // --------------------------------------------------
-// SEEDING STAGE 3: BLOG POSTS (300 * scale)
+// SEEDING STAGE 1: BLOG POSTS (300 * scale)
 // --------------------------------------------------
 $postCount = 300 * $scale;
-echo "3. Seeding {$postCount} Blog Posts with rich cyberware keywords...\n";
+echo "1. Seeding {$postCount} Blog Posts with rich cyberware keywords...\n";
 
 $postRows = [];
 $postCols = ['id', 'site_id', 'title', 'slug', 'content', 'summary', 'status', 'exclude_from_search', 'created_at', 'updated_at'];

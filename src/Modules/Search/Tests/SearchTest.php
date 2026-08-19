@@ -8,7 +8,6 @@ use Zero\Core\App;
 use Zero\Database\DB;
 use Zero\Models\Page;
 use Zero\Modules\Blog\Models\Post;
-use Zero\Modules\Shop\Models\Product;
 use Zero\Modules\Search\Services\SearchService;
 use Zero\Support\Security;
 
@@ -97,38 +96,13 @@ $post2 = new Post([
 ]);
 $post2->save();
 
-// 6. Shop Product (Standard)
-$product1 = new Product([
-    'title' => 'Luxe Gaming Keyboard',
-    'slug' => 'luxe-keyboard',
-    'sku' => 'LUXE-KEY-100',
-    'description' => 'A sleek, mechanical high-contrast keyboard designed for purist developers.',
-    'price' => 149.99,
-    'status' => 'published',
-    'exclude_from_search' => 0
-]);
-$product1->save();
-
-// 7. Shop Product (Excluded from search)
-$product2 = new Product([
-    'title' => 'Secret Luxe Gaming Mouse',
-    'slug' => 'luxe-mouse',
-    'sku' => 'LUXE-MS-200',
-    'description' => 'A sleek, gaming mouse designed for developers.',
-    'price' => 79.99,
-    'status' => 'published',
-    'exclude_from_search' => 1
-]);
-$product2->save();
-
-assert_test(!empty($page1->id) && !empty($page2->id) && !empty($post1->id) && !empty($product1->id), "Successfully seeded mock search targets");
+assert_test(!empty($page1->id) && !empty($page2->id) && !empty($post1->id), "Successfully seeded mock search targets");
 
 // Verify Search Services and Decoupled Registrations
 echo "Verifying registered searchable providers...\n";
 $searchables = SearchService::getSearchables();
 assert_test(isset($searchables['Zero\Models\Page']), "Page model registered with SearchService");
 assert_test(isset($searchables['Zero\Modules\Blog\Models\Post']), "Blog Post model registered with SearchService");
-assert_test(isset($searchables['Zero\Modules\Shop\Models\Product']), "Shop Product model registered with SearchService");
 
 // Execute Search and Assert Matches
 echo "Testing global site search queries...\n";
@@ -149,20 +123,12 @@ assert_test($results[0]['id'] === $post1->id, "Matched record is the Ultimate PH
 assert_test($results[0]['type_label'] === 'Blog Post', "Result type label is correctly set to 'Blog Post'");
 assert_test($results[0]['url'] === '/post/php-guide', "Result URL correctly resolved via blog post getFrontendUrl()");
 
-// Query 3: "Keyboard" (should match Product 1)
-$searchData = SearchService::search("Keyboard");
-$results = $searchData['results'] ?? [];
-assert_test(count($results) === 1, "Query 'Keyboard' returns exactly 1 result (got: " . count($results) . ")");
-assert_test($results[0]['id'] === $product1->id, "Matched record is the Luxe Gaming Keyboard product");
-assert_test($results[0]['type_label'] === 'Product', "Result type label is correctly set to 'Product'");
-assert_test($results[0]['url'] === '/shop/product/luxe-keyboard', "Result URL correctly resolved via product getFrontendUrl()");
-
-// Query 4: "Secret" (matches nothing because both Page 2, Post 2, and Product 2 containing secret are excluded from search!)
+// Query 3: "Secret" (matches nothing because both Page 2 and Post 2 containing secret are excluded from search!)
 $searchData = SearchService::search("Secret");
 $results = $searchData['results'] ?? [];
 assert_test(count($results) === 0, "Query 'Secret' returns 0 results due to strict exclude_from_search checks (got: " . count($results) . ")");
 
-// Query 5: Empty/blank
+// Query 4: Empty/blank
 $searchData = SearchService::search(" ");
 $results = $searchData['results'] ?? [];
 assert_test(count($results) === 0, "Empty/blank search queries return 0 results safely");
@@ -174,8 +140,6 @@ $page2->forceDelete();
 $page3->forceDelete();
 $post1->forceDelete();
 $post2->forceDelete();
-$product1->forceDelete();
-$product2->forceDelete();
 
 DB::query("DELETE FROM sites WHERE id = ?", [$mockSiteId]);
 

@@ -43,14 +43,11 @@ class DemoSiteFactory
 
         // Build active modules list based on preset
         $enabledModules = ['blog'];
-        if ($preset === 'shop') {
-            $enabledModules[] = 'shop';
-        } elseif ($preset === 'kitchensink') {
+        if ($preset === 'kitchensink') {
             // Mirrors kitchensink.php's own 'enabled_modules' list exactly -- a demo site created
             // from this preset should have parity with the CLI-seeded kitchensink site, not a
             // narrower subset (previously missing security/queue/site-search entirely, which is
             // why e.g. site search 404s on every demo-created kitchensink site).
-            $enabledModules[] = 'shop';
             $enabledModules[] = 'formbuilder';
             $enabledModules[] = 'security';
             $enabledModules[] = 'queue';

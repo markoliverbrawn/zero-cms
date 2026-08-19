@@ -24,7 +24,7 @@ $mockSite = new Site([
     'name' => 'Mock Pipeline Site',
     'domain' => 'pipeline.zero',
     'theme' => 'default',
-    'enabled_modules' => json_encode(['shop', 'blog', 'security'])
+    'enabled_modules' => json_encode(['blog', 'security'])
 ]);
 $mockSite->save();
 
@@ -127,23 +127,23 @@ echo "Testing Router module activation enforcement...\n";
 
 $disabledSite = new Site([
     'id' => Security::uuidv7(),
-    'name' => 'Disabled Shop Site',
-    'domain' => 'disabled-shop.zero',
+    'name' => 'Disabled Blog Site',
+    'domain' => 'disabled-blog.zero',
     'theme' => 'default',
-    'enabled_modules' => json_encode([]) // Shop module is disabled!
+    'enabled_modules' => json_encode([]) // Blog module is disabled!
 ]);
 $disabledSite->save();
 
 App::setCurrentSite($disabledSite);
 
-// Attempt to resolve a Shop API route mapped to products list
-class MockShopController implements \Zero\Interfaces\Controller {
+// Attempt to resolve a Blog API route mapped to posts list
+class MockBlogController implements \Zero\Interfaces\Controller {
     public function handle($param) {}
 }
-Router::register('#^/api/v1/test-shop-endpoint$#', MockShopController::class, 'shop');
+Router::register('#^/api/v1/test-blog-endpoint$#', MockBlogController::class, 'blog');
 
-$shopRouteHandled = $router->handle('/api/v1/test-shop-endpoint');
-assert_test($shopRouteHandled === false, "Router correctly bypasses routing and treats as 404 if matching module is disabled for tenant");
+$blogRouteHandled = $router->handle('/api/v1/test-blog-endpoint');
+assert_test($blogRouteHandled === false, "Router correctly bypasses routing and treats as 404 if matching module is disabled for tenant");
 
 // 6. Test AuthMiddleware handling under valid and invalid sessions
 echo "Testing AuthMiddleware pass boundaries...\n";

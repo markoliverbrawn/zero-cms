@@ -54,7 +54,7 @@ services:
       QUEUE_TRIGGER_TOKEN: dev_queue_trigger_token_change_me
       SMTP_HOST: mailpit
       SMTP_PORT: 1025
-      SMTP_FROM_EMAIL: noreply@zero.shop
+      SMTP_FROM_EMAIL: noreply@zero.cms
       SMTP_FROM_NAME: Zero CMS
     volumes:
       - .:/var/www/html

@@ -42,7 +42,7 @@ class MigrationManager
         $hasTable = DB::query("SHOW TABLES LIKE 'migrations'")->fetch();
         if (!$hasTable) {
             echo "No migrations tracking table found. Wiping core and module tables manually...\n";
-            $tables = ['shop_order_items', 'shop_orders', 'shop_product_variants', 'shop_products', 'shop_categories', 'blog_posts', 'audit_logs', 'password_resets', 'media', 'pages', 'users', 'sites'];
+            $tables = ['blog_posts', 'audit_logs', 'password_resets', 'media', 'pages', 'users', 'sites'];
             foreach ($tables as $table) {
                 DB::query("DROP TABLE IF EXISTS {$table};");
             }

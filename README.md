@@ -73,19 +73,17 @@ Zero CMS is divided into fully decoupled, modular plug-ins under `src/Modules/`:
 
 1. **Pages & Dynamic Layout Block Builder (`Admin`):**
    Pages are stored in the database as serialized JSON arrays of content blocks (e.g. Accordions, Galleries, Testimonials, Sub-Pages). Adding a block admin view automatically registers editing schemas generically in the back-office, while custom blocks render on the frontend cascadingly.
-2. **Luxe E-Commerce Store (`Shop`):**
-   Manages product catalogs, parent categories, and SKU/variant matrices. Checkout (`CheckoutController`) decrements variant stock and writes order/order-item records; note there is currently **no row-level locking (`FOR UPDATE`)** around the stock decrement, so concurrent checkouts against the same low-stock variant are a known gap rather than a solved one.
-3. **Form Builder & archival Submissions (`FormBuilder`):**
+2. **Form Builder & archival Submissions (`FormBuilder`):**
    Enables designers to construct customized forms inside the page builder dynamically. Submissions are validated through `Validator` and archived securely as dynamic JSON structures, preserving exact submission history even if the source page or form is later deleted.
-4. **Blog & relational Comments with SMTP Emailer (`Blog`):**
+3. **Blog & relational Comments with SMTP Emailer (`Blog`):**
    Classic publishing module supporting secure comments with dynamic moderation lists. Selected administrative users receive instant comment notifications dispatched directly on raw TCP mail sockets (removing standard email dependency wrappers).
-5. **Platform Security Hardening & AI Auditing (`Security`):**
+4. **Platform Security Hardening & AI Auditing (`Security`):**
    Integrates globally enforced Content Security Policy (CSP), defensive HTTP shielding, secure forced password updates, security audit logging, and automated telemetry threat-modeling with Google's generative AI.
-6. **Background Jobs & Task Scheduler (`Queue`):**
+5. **Background Jobs & Task Scheduler (`Queue`):**
    Dispatches and processes queued jobs (e.g. `PurgeOldLogsJob`) via `QueueManager` and a cron-driven `Scheduler`, run out-of-band through the `bin/queue-runner` and `bin/scheduler` CLI entry points rather than inline on the request path.
-7. **Site Search (`Search`):**
+6. **Site Search (`Search`):**
    Decoupled search-driver architecture (`SearchDriverInterface`) with a `DatabaseSearchDriver` implementation, exposed via `SearchController`/`SearchService` and a `Searchable` model trait.
-8. **On-Demand Demo Site Generator (`DemoGenerator`):**
+7. **On-Demand Demo Site Generator (`DemoGenerator`):**
    Lets a super-admin provision a fully-seeded demo tenant on demand (`AdminCreateDemoSiteController` + `DemoSiteFactory`), and seeds the public kitchensink sandbox showcase via declarative seed datasets under `src/Modules/DemoGenerator/Seeders/`.
 
 ---
@@ -98,7 +96,7 @@ Zero CMS is divided into fully decoupled, modular plug-ins under `src/Modules/`:
 ├── public/                       # Webroot (document root points here)
 │   ├── index.php                 # Central Front-Controller Gateway
 │   ├── assets/                   # Publicly accessible static assets
-│   │   └── css/                  # Modular style files (admin.css, shop.css)
+│   │   └── css/                  # Modular style files (admin.css)
 │   └── storage/                  # Public-facing symlink/passthrough for uploaded media
 ├── bin/                          # CLI entry points (bin/seed, bin/test, bin/migrate, bin/queue-runner, bin/scheduler, etc.)
 ├── storage/                      # Private file storage (uploads, logs)
@@ -117,8 +115,7 @@ Zero CMS is divided into fully decoupled, modular plug-ins under `src/Modules/`:
 │   │   ├── FormBuilder/          # Dynamic forms creation and submission logs module
 │   │   ├── Queue/                # Background job queue & cron-style scheduler
 │   │   ├── Search/               # Decoupled site search driver architecture
-│   │   ├── Security/             # Platform security hardening & AI threat auditing module
-│   │   └── Shop/                 # Luxe E-Commerce transactional checkout storefront
+│   │   └── Security/             # Platform security hardening & AI threat auditing module
 │   ├── Services/                 # Cross-cutting services (e.g. AiService + Ai/Providers)
 │   ├── Support/                  # Security, Logger, Emailer, Seeder/SeederRunner, TestRunner, Str, I18n
 │   └── Views/                    # Cascading theme templates (themes/{site theme}/, themes/default/)

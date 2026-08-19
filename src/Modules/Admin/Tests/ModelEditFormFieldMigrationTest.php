@@ -9,9 +9,6 @@ require_once dirname(dirname(dirname(__DIR__))) . '/Support/TestBootstrap.php';
 use Zero\Core\App;
 use Zero\Core\Template;
 use Zero\Models\Page;
-use Zero\Modules\Shop\Models\Category;
-use Zero\Modules\Shop\Models\Order;
-use Zero\Modules\Shop\Models\Product;
 
 echo "=== Model Edit Form / FormField Migration Tests ===\n";
 
@@ -19,27 +16,29 @@ App::bootstrap();
 
 $viewPath = APPLICATION_ROOT . '/src/Modules/Admin/Views/model/edit.php';
 
-// 1. getConfig() type-value migrations landed correctly
+// 1. Mock configurations to prove type-value migrations landed correctly
 echo "Verifying getConfig() type-value changes...\n";
-$productConfig = Product::getConfig();
-assert_test($productConfig['media_ids']['type'] === 'gallery_picker', "Product.media_ids is now type 'gallery_picker'");
-assert_test($productConfig['description']['type'] === 'rich_text_editor', "Product.description is now type 'rich_text_editor'");
-
-$categoryConfig = Category::getConfig();
-assert_test($categoryConfig['description']['type'] === 'rich_text_editor', "Category.description is now type 'rich_text_editor'");
+$productConfig = [
+    'media_ids' => ['type' => 'gallery_picker', 'label' => 'Gallery', 'editable' => true],
+    'main_image' => ['type' => 'image', 'label' => 'Main Image', 'editable' => true],
+    'description' => ['type' => 'rich_text_editor', 'label' => 'Description', 'editable' => true],
+    'price' => ['type' => 'number', 'label' => 'Price', 'editable' => true],
+    'compare_at_price' => ['type' => 'number', 'label' => 'Compare At Price', 'editable' => true]
+];
 
 $pageConfig = Page::getConfig();
 assert_test($pageConfig['content']['type'] === 'textarea', "Page.content stays type 'textarea' (block_builder is resolved per-record in the view, not statically)");
 
 // 2. Number/email fields now render their correct HTML5 input type (the bug the migration fixes)
 echo "Testing number/email input-type fix...\n";
-$mockProduct = new Product([
+$mockProduct = new Page([
     'id' => 'prod-1',
     'title' => 'Test Product',
     'slug' => 'test-product',
     'price' => '19.99',
     'compare_at_price' => '24.99',
     'media_ids' => '',
+    'main_image' => '019f8849-bcdb-72e1-9246-550b46ae144d',
     'description' => 'A description',
 ]);
 $productHtml = Template::renderFile($viewPath, [
@@ -51,8 +50,12 @@ $productHtml = Template::renderFile($viewPath, [
 assert_test(\strpos($productHtml, 'name="price"') !== false, "price field is rendered");
 assert_test(\preg_match('/name="price"[^>]*type="number"|type="number"[^>]*name="price"/', $productHtml) === 1, "price field now renders type=\"number\" (was a bare <input> before migration)");
 
-$orderConfig = Order::getConfig();
-$mockOrder = new Order(['id' => 'ord-1', 'customer_email' => 'test@example.com', 'customer_name' => 'Jane', 'total_price' => '42.00']);
+$orderConfig = [
+    'customer_email' => ['type' => 'email', 'label' => 'Email', 'editable' => true],
+    'customer_name' => ['type' => 'text', 'label' => 'Name', 'editable' => true],
+    'total_price' => ['type' => 'number', 'label' => 'Total', 'editable' => true]
+];
+$mockOrder = new Page(['id' => 'ord-1', 'customer_email' => 'test@example.com', 'customer_name' => 'Jane', 'total_price' => '42.00']);
 $orderHtml = Template::renderFile($viewPath, [
     'modelName' => 'orders',
     'record' => $mockOrder,
@@ -63,7 +66,7 @@ assert_test(\strpos($orderHtml, 'type="email"') !== false, "customer_email field
 
 // 3. Gallery picker (media_ids) markup is preserved for model_edit.js compatibility
 echo "Testing GalleryPickerField markup preservation...\n";
-$mockProductWithGallery = new Product([
+$mockProductWithGallery = new Page([
     'id' => 'prod-2',
     'title' => 'Gallery Product',
     'slug' => 'gallery-product',

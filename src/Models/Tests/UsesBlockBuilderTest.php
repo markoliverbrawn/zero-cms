@@ -54,8 +54,12 @@ assert_test($normalPage->usesBlockBuilder() === true, "Standard page with empty 
 $blogPage = new Page(['title' => 'Blog landing page', 'controller' => 'Zero\\Modules\\Blog\\Controllers\\BlogController']);
 assert_test($blogPage->usesBlockBuilder() === true, "Blog page using BlogController with SupportsBlocks trait returns true for block builder compatibility");
 
-$shopPage = new Page(['title' => 'Shop landing page', 'controller' => 'Zero\\Modules\\Shop\\Controllers\\CatalogController']);
-assert_test($shopPage->usesBlockBuilder() === false, "Shop page using CatalogController without supportsBlocks returns false for block builder compatibility");
+class MockNonBlockController implements \Zero\Interfaces\Controller {
+    public function handle($param) {}
+}
+
+$shopPage = new Page(['title' => 'Shop landing page', 'controller' => 'MockNonBlockController']);
+assert_test($shopPage->usesBlockBuilder() === false, "Mock page using controller without supportsBlocks returns false for block builder compatibility");
 
 
 echo "UsesBlockBuilder and SupportsBlocks trait tests completed successfully.\n\n";
