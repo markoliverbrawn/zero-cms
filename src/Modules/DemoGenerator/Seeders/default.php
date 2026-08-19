@@ -133,6 +133,16 @@ return [
             ],
             'type' => 'page',
         ],
+        [
+            'title' => 'Events Calendar',
+            'slug' => 'events',
+            'status' => 'published',
+            'controller' => 'Zero\\Modules\\Events\\Controllers\\EventsController',
+            'view' => 'events_index',
+            'site_domain' => 'd6laptop.zero',
+            'content' => [],
+            'type' => 'page',
+        ],
     ],
     'blog_posts' => [
         [

@@ -409,6 +409,16 @@ return [
             ],
             'type' => 'page',
         ],
+        [
+            'title' => 'Upcoming Events',
+            'slug' => 'events',
+            'status' => 'published',
+            'controller' => 'Zero\\Modules\\Events\\Controllers\\EventsController',
+            'view' => 'events_index',
+            'site_domain' => 'd6laptop.zero.kitchensink',
+            'content' => [],
+            'type' => 'page',
+        ],
     ],
     'blog_posts' => [
         [
