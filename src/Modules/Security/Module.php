@@ -15,6 +15,7 @@ use Zero\Core\App;
 use Zero\Core\Env;
 use Zero\Http\Router;
 use Zero\Interfaces\Module as ModuleInterface;
+use Zero\Models\Site;
 use Zero\Modules\Queue\Support\Scheduler;
 use Zero\Modules\Security\Controllers\ChangePasswordController;
 use Zero\Modules\Security\Controllers\SecurityAuditController;
@@ -93,6 +94,7 @@ class Module implements ModuleInterface
         // Register the modular active record models dynamically on bootstrap
         App::registerModel('audit_logs', AuditLog::class);
         App::registerModel('security_audits', SecurityAudit::class);
+        App::registerCascadeDelete(Site::class, SecurityAudit::class, 'site_id');
 
         // Explicitly register our security controllers under 'admin' context to bypass DB enabled_modules constraints
         Router::register([

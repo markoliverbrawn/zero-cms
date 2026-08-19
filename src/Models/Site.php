@@ -47,14 +47,7 @@ class Site implements Model
         Page::class => 'site_id',
         Media::class => 'site_id',
         PasswordReset::class => 'site_id',
-        AuditLog::class => 'site_id',
-        Post::class => 'site_id',
-        Category::class => 'site_id',
-        Product::class => 'site_id',
-        Order::class => 'site_id',
-        ForumBoard::class => 'site_id',
-        Submission::class => 'site_id',
-        SecurityAudit::class => 'site_id'
+        AuditLog::class => 'site_id'
     ];
 
     public $id;

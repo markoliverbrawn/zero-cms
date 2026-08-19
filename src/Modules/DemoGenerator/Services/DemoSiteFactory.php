@@ -51,7 +51,6 @@ class DemoSiteFactory
             // narrower subset (previously missing security/queue/site-search entirely, which is
             // why e.g. site search 404s on every demo-created kitchensink site).
             $enabledModules[] = 'shop';
-            $enabledModules[] = 'forum';
             $enabledModules[] = 'formbuilder';
             $enabledModules[] = 'security';
             $enabledModules[] = 'queue';
@@ -249,59 +248,8 @@ class DemoSiteFactory
             }
         }
 
-        // 3. Copy Forum boards/threads (if declared by this preset). Each row gets a freshly
-        // generated ID -- the blueprint's own hardcoded IDs are shared across every demo instance
-        // cloned from it, so reusing them verbatim would collide on a table with a global (not
-        // per-site) primary key the second time this preset is seeded. This only lays down the
-        // boards/threads shell; ForumPostSeeder (invoked generically below) requires at least one
-        // thread to already exist before it will populate any replies.
-        $boardIdMap = [];
-        if (isset($data['forum_boards']) && \is_array($data['forum_boards'])) {
-            foreach ($data['forum_boards'] as $board) {
-                $newBoardId = Security::uuidv7();
-                if (isset($board['id'])) {
-                    $boardIdMap[$board['id']] = $newBoardId;
-                }
-
-                DB::query("
-                    INSERT INTO forum_boards (id, site_id, title, slug, description, precedence, created_at, updated_at)
-                    VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())
-                ", [
-                    $newBoardId,
-                    $siteId,
-                    $board['title'],
-                    $board['slug'],
-                    $board['description'] ?? null,
-                    $board['precedence'] ?? 0
-                ]);
-            }
-        }
-
-        if (isset($data['forum_threads']) && \is_array($data['forum_threads'])) {
-            foreach ($data['forum_threads'] as $thread) {
-                $boardId = $boardIdMap[$thread['board_id']] ?? null;
-                if (!$boardId) {
-                    continue; // Skip threads referencing a board that wasn't seeded above
-                }
-
-                DB::query("
-                    INSERT INTO forum_threads (id, site_id, board_id, user_id, title, slug, status, views_count, created_at, updated_at)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
-                ", [
-                    Security::uuidv7(),
-                    $siteId,
-                    $boardId,
-                    $adminUserId, // Attribute seeded sample threads to the sandbox's own admin user
-                    $thread['title'],
-                    $thread['slug'],
-                    $thread['status'] ?? 'published',
-                    $thread['views_count'] ?? 0
-                ]);
-            }
-        }
-
-        // 4. Run every module's dynamic class seeder (e.g. BlogArticleSeeder, ShopSeeder,
-        // ForumPostSeeder) whose module is enabled for this site -- the exact same discovery and
+        // 3. Run every module's dynamic class seeder (e.g. BlogArticleSeeder, ShopSeeder)
+        // whose module is enabled for this site -- the exact same discovery and
         // priority-ordering mechanism bin/seed uses (Zero\Support\SeederRunner), so any future
         // module's Seeders/*Seeder.php class automatically gains demo-site support with no changes
         // needed here.

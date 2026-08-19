@@ -37,7 +37,7 @@ echo "  1. Simulating Demo Sandbox Site Creation...\n";
 $factory = new DemoSiteFactory();
 
 // Guard against the class seeders' verbose CLI-oriented echo() output (from BlogArticleSeeder,
-// ShopSeeder, ForumPostSeeder) leaking out of createDemoSite() -- fine on bin/seed's terminal, but
+// ShopSeeder) leaking out of createDemoSite() -- fine on bin/seed's terminal, but
 // fatal for the admin/public HTTP controllers that call this same method and immediately
 // json_encode a response afterward.
 ob_start();
@@ -108,7 +108,7 @@ foreach ($pagesWithBlockImages as $contentJson) {
 assert_test($referentialIntegrityMaintained, "Referential media ID mapping between page-builder blocks and media rows maintained 100%");
 
 // Verify every enabled module's class seeder actually populated its sample content -- the
-// kitchensink preset enables blog/shop/forum, and each has its own Seeders/*Seeder.php class that
+// kitchensink preset enables blog/shop, and each has its own Seeders/*Seeder.php class that
 // DemoSiteFactory must discover and run against the new sandbox site.
 $blogPostsCount = intval(DB::query("SELECT COUNT(*) FROM blog_posts WHERE site_id = ?", [$siteId])->fetchColumn());
 assert_test($blogPostsCount > 0, "Blog articles seeded via BlogArticleSeeder: {$blogPostsCount} posts found");
@@ -118,15 +118,6 @@ assert_test($shopProductsCount > 0, "Shop products seeded via ShopSeeder: {$shop
 
 $shopOrdersCount = intval(DB::query("SELECT COUNT(*) FROM shop_orders WHERE site_id = ?", [$siteId])->fetchColumn());
 assert_test($shopOrdersCount > 0, "Shop orders seeded via ShopSeeder: {$shopOrdersCount} orders found");
-
-$forumBoardsCount = intval(DB::query("SELECT COUNT(*) FROM forum_boards WHERE site_id = ?", [$siteId])->fetchColumn());
-assert_test($forumBoardsCount > 0, "Forum boards seeded from blueprint: {$forumBoardsCount} boards found");
-
-$forumThreadsCount = intval(DB::query("SELECT COUNT(*) FROM forum_threads WHERE site_id = ?", [$siteId])->fetchColumn());
-assert_test($forumThreadsCount > 0, "Forum threads seeded from blueprint: {$forumThreadsCount} threads found");
-
-$forumPostsCount = intval(DB::query("SELECT COUNT(*) FROM forum_posts WHERE site_id = ?", [$siteId])->fetchColumn());
-assert_test($forumPostsCount > 0, "Forum replies seeded via ForumPostSeeder: {$forumPostsCount} posts found");
 
 
 echo "\n  2. Simulating TeardownExpiredDemosJob Execution...\n";

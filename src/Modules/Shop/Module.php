@@ -13,6 +13,7 @@ namespace Zero\Modules\Shop;
 
 use Zero\Core\App;
 use Zero\Interfaces\Module as ModuleInterface;
+use Zero\Models\Site;
 use Zero\Modules\Admin\Controllers\FrontendForgotController;
 use Zero\Modules\Admin\Controllers\FrontendLoginController;
 use Zero\Modules\Admin\Controllers\FrontendResetController;
@@ -150,9 +151,12 @@ class Module implements ModuleInterface
         ]);
 
         App::registerModel('products', Product::class);
+        App::registerCascadeDelete(Site::class, Product::class, 'site_id');
         App::registerModel('productvariants', ProductVariant::class);
         App::registerModel('orders', Order::class);
+        App::registerCascadeDelete(Site::class, Order::class, 'site_id');
         App::registerModel('categories', Category::class);
+        App::registerCascadeDelete(Site::class, Category::class, 'site_id');
 
         App::registerAdminSidebarSection('shop', [
             'title' => 'Shop Management',

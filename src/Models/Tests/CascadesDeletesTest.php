@@ -31,7 +31,7 @@ $_SERVER['HTTP_HOST'] = 'cascades.zero';
 $mockSiteId = \Zero\Support\Security::uuidv7();
 DB::query("
     INSERT INTO sites (id, name, domain, theme, enabled_modules, created_at, updated_at)
-    VALUES (?, 'Cascading Deletes Site', 'cascades.zero', 'default', '[\"blog\", \"forum\", \"shop\"]', NOW(), NOW())
+    VALUES (?, 'Cascading Deletes Site', 'cascades.zero', 'default', '[\"blog\", \"shop\"]', NOW(), NOW())
 ", [$mockSiteId]);
 
 App::bootstrap();
@@ -263,5 +263,16 @@ assert_test($softDeleteBlocked, "Soft deleting the active tenant site is success
 
 // Clean up DB mock active site
 DB::query("DELETE FROM sites WHERE id = ?", [$mockSiteId]);
+
+// 8. Verify dynamic cascade delete registration
+echo "Testing dynamic cascade delete registry...\n";
+$parentClass = 'Zero\Models\Site';
+$childClass = 'Zero\Modules\Blog\Models\Post';
+$foreignKey = 'site_id';
+
+App::registerCascadeDelete($parentClass, $childClass, $foreignKey);
+$cascades = App::getCascadeDeletesFor($parentClass);
+
+assert_test(isset($cascades[$childClass]) && $cascades[$childClass] === $foreignKey, "App::registerCascadeDelete and getCascadeDeletesFor correctly store and retrieve dynamic cascade configs");
 
 echo "CascadesDeletes trait component tests completed successfully!\n";

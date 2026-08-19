@@ -126,13 +126,7 @@ DB::query("DELETE FROM shop_categories WHERE site_id = ?", [$siteId]);
 DB::query("DELETE FROM pages WHERE site_id = ? AND slug LIKE 'page-%'", [$siteId]);
 DB::query("DELETE FROM blog_posts WHERE site_id = ? AND slug LIKE 'post-%'", [$siteId]);
 
-// Safe subquery-gated deletion for forum posts (retains standard seeded threads/replies)
-try {
-    DB::query("DELETE FROM forum_posts WHERE site_id = ? AND thread_id IN (SELECT id FROM forum_threads WHERE site_id = ? AND slug LIKE 'thread-%')", [$siteId, $siteId]);
-    DB::query("DELETE FROM forum_threads WHERE site_id = ? AND slug LIKE 'thread-%'", [$siteId]);
-} catch (\Exception $e) {
-    // Ignore if constraint error
-}
+
 
 // --------------------------------------------------
 // SEEDING STAGE 0: MASS PRODUCT CATEGORIES (40 categories)
@@ -364,78 +358,7 @@ for ($i = 0; $i < $postCount; $i++) {
 }
 batchInsert('blog_posts', $postCols, $postRows);
 
-// --------------------------------------------------
-// SEEDING STAGE 4: FORUM DATA (200 * scale Threads, 1000 * scale Posts)
-// --------------------------------------------------
-$threadCount = 200 * $scale;
-$replyCount = 5; // 5 posts per thread = 1000 * scale total posts!
-echo "4. Seeding {$threadCount} Forum Threads with " . ($threadCount * $replyCount) . " replies sequentially...\n";
 
-// Resolve forum boards
-$boards = DB::query("SELECT id FROM forum_boards WHERE site_id = ?", [$siteId])->fetchAll();
-$boardIds = !empty($boards) ? array_column($boards, 'id') : [null];
-
-$threadRows = [];
-$forumPostRows = [];
-$threadCols = ['id', 'site_id', 'board_id', 'user_id', 'title', 'slug', 'status', 'views_count', 'created_at', 'updated_at'];
-$forumPostCols = ['id', 'site_id', 'thread_id', 'user_id', 'content', 'parent_id', 'status', 'created_at', 'updated_at'];
-
-for ($i = 0; $i < $threadCount; $i++) {
-    $tId = Security::uuidv7();
-    $title = 'Community Inquiry: ' . generateTitle() . ' (' . ($i + 1) . ')';
-    $slug = 'thread-' . App::slugify($title);
-    $boardId = $boardIds[array_rand($boardIds)];
-
-    $threadRows[] = [
-        'id' => $tId,
-        'site_id' => $siteId,
-        'board_id' => $boardId,
-        'user_id' => $userId,
-        'title' => $title,
-        'slug' => $slug,
-        'status' => 'published',
-        'views_count' => rand(5, 500),
-        'created_at' => gmdate('Y-m-d H:i:s'),
-        'updated_at' => gmdate('Y-m-d H:i:s')
-    ];
-
-    // Seed replies (1 root post + 4 threaded replies)
-    $rootPostId = Security::uuidv7();
-    $forumPostRows[] = [
-        'id' => $rootPostId,
-        'site_id' => $siteId,
-        'thread_id' => $tId,
-        'user_id' => $userId,
-        'content' => generateContent($title),
-        'parent_id' => null,
-        'status' => 'approved',
-        'created_at' => gmdate('Y-m-d H:i:s'),
-        'updated_at' => gmdate('Y-m-d H:i:s')
-    ];
-
-    for ($r = 1; $r < $replyCount; $r++) {
-        $forumPostRows[] = [
-            'id' => Security::uuidv7(),
-            'site_id' => $siteId,
-            'thread_id' => $tId,
-            'user_id' => $userId,
-            'content' => "<p>Diagnostic follow-up: " . $actions[array_rand($actions)] . " to resolve performance metrics.</p>",
-            'parent_id' => $rootPostId,
-            'status' => 'approved',
-            'created_at' => gmdate('Y-m-d H:i:s'),
-            'updated_at' => gmdate('Y-m-d H:i:s')
-        ];
-    }
-
-    if (count($threadRows) >= 50) {
-        batchInsert('forum_threads', $threadCols, $threadRows);
-        batchInsert('forum_posts', $forumPostCols, $forumPostRows);
-        $threadRows = [];
-        $forumPostRows = [];
-    }
-}
-batchInsert('forum_threads', $threadCols, $threadRows);
-batchInsert('forum_posts', $forumPostCols, $forumPostRows);
 
 // --------------------------------------------------
 // FINALIZATION: GLOBAL INDEX REINDEXING

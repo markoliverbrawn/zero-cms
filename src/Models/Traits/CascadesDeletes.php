@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Zero\Models\Traits;
 
+use Zero\Core\App;
 use Zero\Database\DB;
 use Zero\Support\Security;
 
@@ -26,8 +27,10 @@ trait CascadesDeletes
      */
     protected function cascadeDeleteChildren()
     {
-        $cascadeList = \method_exists($this, 'getCascadeDeletes') ? $this->getCascadeDeletes() : (static::$cascadeDeletes ?? []);
-        if (empty($cascadeList) || !\is_array($cascadeList)) {
+        $dynamic = App::getCascadeDeletesFor(\get_class($this));
+        $static = \method_exists($this, 'getCascadeDeletes') ? $this->getCascadeDeletes() : (static::$cascadeDeletes ?? []);
+        $cascadeList = \array_merge($static, $dynamic);
+        if (empty($cascadeList)) {
             return;
         }
 
@@ -71,8 +74,10 @@ trait CascadesDeletes
      */
     protected function cascadeForceDeleteChildren()
     {
-        $cascadeList = \method_exists($this, 'getCascadeDeletes') ? $this->getCascadeDeletes() : (static::$cascadeDeletes ?? []);
-        if (empty($cascadeList) || !\is_array($cascadeList)) {
+        $dynamic = App::getCascadeDeletesFor(\get_class($this));
+        $static = \method_exists($this, 'getCascadeDeletes') ? $this->getCascadeDeletes() : (static::$cascadeDeletes ?? []);
+        $cascadeList = \array_merge($static, $dynamic);
+        if (empty($cascadeList)) {
             return;
         }
 

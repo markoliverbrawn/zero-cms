@@ -257,62 +257,7 @@ CREATE TABLE shop_order_items (
     INDEX (order_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- 13. Forum Module Boards
-CREATE TABLE forum_boards (
-    id VARCHAR(36) PRIMARY KEY,
-    site_id VARCHAR(36) NOT NULL,
-    title VARCHAR(255) NOT NULL,
-    slug VARCHAR(255) NOT NULL,
-    description TEXT NULL,
-    precedence INT NOT NULL DEFAULT 0,
-    created_at DATETIME,
-    updated_at DATETIME,
-    deleted_at DATETIME NULL,
-    UNIQUE KEY site_board_slug_unique (site_id, slug),
-    INDEX (site_id),
-    INDEX idx_forum_boards_site_deleted_precedence (site_id, deleted_at, precedence ASC) -- added 0015
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- 14. Forum Module Threads
-CREATE TABLE forum_threads (
-    id VARCHAR(36) PRIMARY KEY,
-    site_id VARCHAR(36) NOT NULL,
-    board_id VARCHAR(36) NOT NULL,
-    user_id VARCHAR(36) NOT NULL,
-    title VARCHAR(255) NOT NULL,
-    slug VARCHAR(255) NOT NULL,
-    status VARCHAR(50) NOT NULL DEFAULT 'published', -- published, locked, pinned
-    views_count INT NOT NULL DEFAULT 0,
-    created_at DATETIME,
-    updated_at DATETIME,
-    deleted_at DATETIME NULL,
-    UNIQUE KEY site_thread_slug_unique (site_id, slug),
-    INDEX (site_id),
-    INDEX (board_id),
-    INDEX (user_id),
-    INDEX idx_forum_threads_site_board_deleted_status (site_id, board_id, deleted_at, status) -- added 0015
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- 15. Forum Module Posts
-CREATE TABLE forum_posts (
-    id VARCHAR(36) PRIMARY KEY,
-    site_id VARCHAR(36) NOT NULL,
-    thread_id VARCHAR(36) NOT NULL,
-    user_id VARCHAR(36) NOT NULL,
-    content TEXT NOT NULL,
-    parent_id VARCHAR(36) NULL, -- For nesting/threading replies
-    status VARCHAR(50) NOT NULL DEFAULT 'approved', -- approved, pending, flagged
-    created_at DATETIME,
-    updated_at DATETIME,
-    deleted_at DATETIME NULL,
-    INDEX (site_id),
-    INDEX (thread_id),
-    INDEX (user_id),
-    INDEX (parent_id),
-    INDEX idx_forum_posts_site_thread_parent_deleted_status (site_id, thread_id, parent_id, deleted_at, status) -- added 0015
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- 16. Form Builder Submissions (see also the form-builder-engine skill)
+-- 13. Form Builder Submissions (see also the form-builder-engine skill)
 CREATE TABLE form_submissions (
     id VARCHAR(36) PRIMARY KEY,
     site_id VARCHAR(36) NOT NULL,

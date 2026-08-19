@@ -13,6 +13,7 @@ namespace Zero\Modules\Blog;
 
 use Zero\Core\App;
 use Zero\Interfaces\Module as ModuleInterface;
+use Zero\Models\Site;
 use Zero\Modules\Blog\Controllers\Api\CommentsController;
 use Zero\Modules\Blog\Controllers\Api\PostsController;
 use Zero\Modules\Blog\Controllers\PostViewController;
@@ -94,6 +95,7 @@ class Module implements ModuleInterface
     public function init()
     {
         App::registerModel('posts', Post::class);
+        App::registerCascadeDelete(Site::class, Post::class, 'site_id');
         App::registerModel('comments', Comment::class);
 
         // Register daily scheduled task to automatically purge rejected or spam comments (retention

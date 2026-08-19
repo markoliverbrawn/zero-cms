@@ -69,6 +69,8 @@ class MigrationManager
         // 5. Run down() method for each migration in the batch in reverse order
         foreach ($migrationsToRevert as $name) {
             $meta = $migrationsList[$name] ?? null;
+            $reverted = false;
+
             if ($meta) {
                 $file = $meta['file'];
                 $class = $meta['class'];
@@ -81,11 +83,16 @@ class MigrationManager
                     echo "Reverting sequential migration: {$name} (Batch {$latestBatch})...\n";
                     $instance = new $class();
                     $instance->down();
-
-                    // Delete the tracking record
-                    DB::query("DELETE FROM migrations WHERE migration = ?", [$name]);
+                    $reverted = true;
                 }
             }
+
+            if (!$reverted) {
+                echo "Warning: Migration file/class for '{$name}' not found or loadable. Removing tracking record.\n";
+            }
+
+            // Always delete the tracking record to avoid infinite loops during full schema resets
+            DB::query("DELETE FROM migrations WHERE migration = ?", [$name]);
         }
 
         // Drop migrations table itself if all migrations have been completely rolled back

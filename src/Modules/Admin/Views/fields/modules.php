@@ -46,9 +46,6 @@ $getModuleMeta = function (string $module) use ($moduleObjects): array {
     } elseif ($moduleLower === 'formbuilder') {
         $icon = 'clipboard';
         $label = 'Form Builder';
-    } elseif ($moduleLower === 'forum') {
-        $icon = 'users';
-        $label = 'Forum';
     } elseif ($moduleLower === 'security') {
         $icon = 'shield';
         $label = 'Security';

@@ -13,6 +13,7 @@ namespace Zero\Modules\FormBuilder;
 
 use Zero\Core\App;
 use Zero\Interfaces\Module as ModuleInterface;
+use Zero\Models\Site;
 use Zero\Modules\FormBuilder\Controllers\FormApiController;
 use Zero\Modules\FormBuilder\Models\Submission;
 
@@ -106,6 +107,7 @@ class Module implements ModuleInterface
         ]);
 
         App::registerModel('submissions', Submission::class);
+        App::registerCascadeDelete(Site::class, Submission::class, 'site_id');
 
         App::registerAdminSidebarLink('content', [
             'title' => 'Form Submissions',

@@ -79,15 +79,13 @@ Zero CMS is divided into fully decoupled, modular plug-ins under `src/Modules/`:
    Enables designers to construct customized forms inside the page builder dynamically. Submissions are validated through `Validator` and archived securely as dynamic JSON structures, preserving exact submission history even if the source page or form is later deleted.
 4. **Blog & relational Comments with SMTP Emailer (`Blog`):**
    Classic publishing module supporting secure comments with dynamic moderation lists. Selected administrative users receive instant comment notifications dispatched directly on raw TCP mail sockets (removing standard email dependency wrappers).
-5. **Community Forum (`Forum`):**
-   Features localized discussion boards, threads, and infinite recursive replies mapping via self-referencing `parent_id` foreign keys.
-6. **Platform Security Hardening & AI Auditing (`Security`):**
+5. **Platform Security Hardening & AI Auditing (`Security`):**
    Integrates globally enforced Content Security Policy (CSP), defensive HTTP shielding, secure forced password updates, security audit logging, and automated telemetry threat-modeling with Google's generative AI.
-7. **Background Jobs & Task Scheduler (`Queue`):**
+6. **Background Jobs & Task Scheduler (`Queue`):**
    Dispatches and processes queued jobs (e.g. `PurgeOldLogsJob`) via `QueueManager` and a cron-driven `Scheduler`, run out-of-band through the `bin/queue-runner` and `bin/scheduler` CLI entry points rather than inline on the request path.
-8. **Site Search (`Search`):**
+7. **Site Search (`Search`):**
    Decoupled search-driver architecture (`SearchDriverInterface`) with a `DatabaseSearchDriver` implementation, exposed via `SearchController`/`SearchService` and a `Searchable` model trait.
-9. **On-Demand Demo Site Generator (`DemoGenerator`):**
+8. **On-Demand Demo Site Generator (`DemoGenerator`):**
    Lets a super-admin provision a fully-seeded demo tenant on demand (`AdminCreateDemoSiteController` + `DemoSiteFactory`), and seeds the public kitchensink sandbox showcase via declarative seed datasets under `src/Modules/DemoGenerator/Seeders/`.
 
 ---
@@ -100,7 +98,7 @@ Zero CMS is divided into fully decoupled, modular plug-ins under `src/Modules/`:
 ├── public/                       # Webroot (document root points here)
 │   ├── index.php                 # Central Front-Controller Gateway
 │   ├── assets/                   # Publicly accessible static assets
-│   │   └── css/                  # Modular style files (admin.css, shop.css, forum.css)
+│   │   └── css/                  # Modular style files (admin.css, shop.css)
 │   └── storage/                  # Public-facing symlink/passthrough for uploaded media
 ├── bin/                          # CLI entry points (bin/seed, bin/test, bin/migrate, bin/queue-runner, bin/scheduler, etc.)
 ├── storage/                      # Private file storage (uploads, logs)
@@ -117,7 +115,6 @@ Zero CMS is divided into fully decoupled, modular plug-ins under `src/Modules/`:
 │   │   ├── Blog/                 # Classic publishing and Commenting Module
 │   │   ├── DemoGenerator/        # On-demand demo tenant provisioning & kitchensink seeding
 │   │   ├── FormBuilder/          # Dynamic forms creation and submission logs module
-│   │   ├── Forum/                # Community Forum (boards, threads, nested posts)
 │   │   ├── Queue/                # Background job queue & cron-style scheduler
 │   │   ├── Search/               # Decoupled site search driver architecture
 │   │   ├── Security/             # Platform security hardening & AI threat auditing module

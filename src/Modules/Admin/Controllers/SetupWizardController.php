@@ -157,7 +157,7 @@ class SetupWizardController
             $siteTheme,
             $siteTimezone,
             $siteLanguage,
-            \json_encode(['blog', 'shop', 'forum', 'formbuilder', 'security', 'queue', 'site-search'])
+            \json_encode(['blog', 'shop', 'formbuilder', 'security', 'queue', 'site-search'])
         ]);
 
         // 4. Create and hash the Super Admin credentials

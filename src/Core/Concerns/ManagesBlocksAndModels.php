@@ -21,6 +21,32 @@ trait ManagesBlocksAndModels
 {
     protected static $registeredBlocks = [];
     protected static $registeredModels = [];
+    protected static $registeredCascadeDeletes = [];
+
+    /**
+     * Registers a cascade-deletion target class and foreign key dynamically under a parent class.
+     * Prevents core parent classes (like Site) from needing hardcoded references to modular children models.
+     *
+     * @param string $parentClass Fully qualified parent class name (e.g. Zero\Models\Site)
+     * @param string $childClass Fully qualified child class name (e.g. Zero\Modules\Shop\Models\Product)
+     * @param string $foreignKey Foreign key column name mapping (e.g. site_id)
+     * @return void
+     */
+    public static function registerCascadeDelete(string $parentClass, string $childClass, string $foreignKey): void
+    {
+        self::$registeredCascadeDeletes[$parentClass][$childClass] = $foreignKey;
+    }
+
+    /**
+     * Retrieve all dynamically registered child cascade-deletion mappings for a given parent class.
+     *
+     * @param string $parentClass Fully qualified parent class name.
+     * @return array Map of [childClass => foreignKey] registered cascade mappings.
+     */
+    public static function getCascadeDeletesFor(string $parentClass): array
+    {
+        return self::$registeredCascadeDeletes[$parentClass] ?? [];
+    }
 
     /**
      * Dynamically and recursively collect and eager-load all media assets referenced inside page builder blocks
