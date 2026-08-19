@@ -21,6 +21,7 @@ return [
                 'security',
                 'queue',
                 'site-search',
+                'events',
             ],
         ],
     ],
