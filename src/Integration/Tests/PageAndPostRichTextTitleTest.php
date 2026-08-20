@@ -1,6 +1,6 @@
 <?php
 // tests/PageAndPostRichTextTitleTest.php
-// Integration test to verify that Page and Blog Post model schemas configure title fields as standard text,
+// Integration test to verify that the Page model schema configures the title field as standard text,
 // and that edit forms successfully render a standard input box for the title.
 
 require_once dirname(dirname(__DIR__)) . '/Support/TestBootstrap.php';
@@ -8,23 +8,18 @@ require_once dirname(dirname(__DIR__)) . '/Support/TestBootstrap.php';
 use Zero\Core\App;
 use Zero\Core\Template;
 use Zero\Models\Page;
-use Zero\Modules\Blog\Models\Post;
 
-echo "=== Page & Post Text Title Configuration & View Tests ===\n";
+echo "=== Page Text Title Configuration & View Tests ===\n";
 
 // Ensure App is bootstrapped
 App::bootstrap();
 
-// 1. Verify that both Page and Post models configure the title field with type "text"
-echo "  Verifying Page & Post Model title configuration types...\n";
+// 1. Verify that the Page model configures the title field with type "text"
+echo "  Verifying Page Model title configuration type...\n";
 
 $pageConfig = Page::getConfig();
 assert_test(isset($pageConfig['title']), "Page model has title field configured");
 assert_test($pageConfig['title']['type'] === 'text', "Page model title field type is reverted to 'text'");
-
-$postConfig = Post::getConfig();
-assert_test(isset($postConfig['title']), "Post model has title field configured");
-assert_test($postConfig['title']['type'] === 'text', "Post model title field type is reverted to 'text'");
 
 
 // 2. Setup mock record and compile model edit form views to check for input box rendering
@@ -59,4 +54,4 @@ assert_test(strpos($renderedEditForm, 'value="Welcome to our Zero CMS website"')
 assert_test(strpos($renderedEditForm, 'class="editor"') === false, "Editor container is NOT rendered for standard title field");
 assert_test(strpos($renderedEditForm, 'class="toolbar"') === false, "Editor toolbar is NOT rendered for standard title field");
 
-echo "\n✅ Page & Post Reverted Text Title Configuration & View Tests Passed Successfully!\n";
+echo "\n✅ Page Reverted Text Title Configuration & View Tests Passed Successfully!\n";

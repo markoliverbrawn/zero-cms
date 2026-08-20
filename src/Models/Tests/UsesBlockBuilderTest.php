@@ -51,8 +51,14 @@ echo "  Testing dynamic controller supportsBlocks capability verification...\n";
 $normalPage = new Page(['title' => 'Standard page', 'controller' => '']);
 assert_test($normalPage->usesBlockBuilder() === true, "Standard page with empty controller uses block builder by default");
 
-$blogPage = new Page(['title' => 'Blog landing page', 'controller' => 'Zero\\Modules\\Blog\\Controllers\\BlogController']);
-assert_test($blogPage->usesBlockBuilder() === true, "Blog page using BlogController with SupportsBlocks trait returns true for block builder compatibility");
+class MockBlockAwareController implements \Zero\Interfaces\Controller {
+    use SupportsBlocks;
+
+    public function handle($param) {}
+}
+
+$controllerPage = new Page(['title' => 'Controller-backed landing page', 'controller' => 'MockBlockAwareController']);
+assert_test($controllerPage->usesBlockBuilder() === true, "Page using a controller with the SupportsBlocks trait returns true for block builder compatibility");
 
 class MockNonBlockController implements \Zero\Interfaces\Controller {
     public function handle($param) {}

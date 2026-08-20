@@ -19,17 +19,12 @@ $renderedEmpty = Template::renderFile($viewFile, [
 ]);
 assert_test(strpos($renderedEmpty, 'No modules') !== false, "Displays fallback text 'No modules' when no modules are enabled");
 
-// Render view with blog, security, site-search, and formbuilder modules
-echo "Testing rendering with blog, security, site-search, and formbuilder modules...\n";
-$modulesPayload = json_encode(['blog', 'security', 'site-search', 'formbuilder']);
+// Render view with security, site-search, and formbuilder modules
+echo "Testing rendering with security, site-search, and formbuilder modules...\n";
+$modulesPayload = json_encode(['security', 'site-search', 'formbuilder']);
 $renderedModules = Template::renderFile($viewFile, [
     'value' => $modulesPayload
 ]);
-
-// Assert that Blog is rendered with its edit-3 icon
-assert_test(strpos($renderedModules, 'Blog') !== false, "Correctly renders 'Blog' label");
-// Assert presence of the edit-3 path segment
-assert_test(strpos($renderedModules, 'M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z') !== false, "Correctly includes SVG icon path for Blog (edit-3)");
 
 // Assert that Security is rendered with its shield icon
 assert_test(strpos($renderedModules, 'Security') !== false, "Correctly renders 'Security' label");
