@@ -27,7 +27,11 @@ try {
     $property->setAccessible(true);
     $data = $property->getValue();
 
-    $originalDbName = $data['DB_NAME'] ?? 'cms';
+    // A real environment variable outranks the .env file inside Env::get(), so a deployment that
+    // exports DB_NAME (CI does) must be read here too -- otherwise the per-worker suffix below is
+    // computed from the .env name while every worker actually connects to the exported one, and
+    // the parallel workers all share a single database instead of an isolated one each.
+    $originalDbName = \getenv('DB_NAME') ?: ($data['DB_NAME'] ?? 'cms');
     $testDbName = $originalDbName . '_test';
 
     if ($workerToken = getenv('TEST_TOKEN')) {
@@ -38,6 +42,16 @@ try {
     $data['GCS_PREDEFINED_ACL'] = '';
     $data['STORAGE_DRIVER'] = 'local';
     $property->setValue(null, $data);
+
+    // Overriding Env::$data alone is not enough for the same reason: Env::get() consults getenv()
+    // first, so the ambient DB_NAME would win right back. Push the isolated name into the process
+    // environment too, which also carries it into any subprocess a test spawns.
+    \putenv('DB_NAME=' . $testDbName);
+    $_ENV['DB_NAME'] = $testDbName;
+    \putenv('GCS_PREDEFINED_ACL=');
+    $_ENV['GCS_PREDEFINED_ACL'] = '';
+    \putenv('STORAGE_DRIVER=local');
+    $_ENV['STORAGE_DRIVER'] = 'local';
 } catch (Exception $e) {
     echo "Warning setting up test database override: " . $e->getMessage() . "\n";
 }

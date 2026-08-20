@@ -119,7 +119,7 @@ $pageId = Security::uuidv7();
 DB::query("
     INSERT INTO pages (id, site_id, title, slug, content, status, type, controller, created_at, updated_at)
     VALUES (?, ?, \'Mock Homepage\', \'home-handles-test\', \'[]\', \'published\', \'post\', ?, NOW(), NOW())
-", [$pageId, $siteId, \'Zero\\\\Modules\\\\Blog\\\\Controllers\\\\BlogController\']);
+", [$pageId, $siteId, \'Zero\\\\Modules\\\\Search\\\\Controllers\\\\SearchController\']);
 
 DB::query("UPDATE sites SET homepage_id = ? WHERE id = ?", [$pageId, $siteId]);
 ';

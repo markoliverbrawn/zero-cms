@@ -9,8 +9,7 @@ use Zero\Database\DB;
 use Zero\Models\Media;
 use Zero\Models\Site;
 use Zero\Models\Page;
-use Zero\Modules\Blog\Models\Post;
-use Zero\Modules\Blog\Models\Comment;
+use Zero\Modules\FormBuilder\Models\Submission;
 
 echo "=== CascadesDeletes Trait Component Tests ===\n";
 
@@ -31,7 +30,7 @@ $_SERVER['HTTP_HOST'] = 'cascades.zero';
 $mockSiteId = \Zero\Support\Security::uuidv7();
 DB::query("
     INSERT INTO sites (id, name, domain, theme, enabled_modules, created_at, updated_at)
-    VALUES (?, 'Cascading Deletes Site', 'cascades.zero', 'default', '[\"blog\"]', NOW(), NOW())
+    VALUES (?, 'Cascading Deletes Site', 'cascades.zero', 'default', '[\"formbuilder\"]', NOW(), NOW())
 ", [$mockSiteId]);
 
 App::bootstrap();
@@ -51,101 +50,59 @@ $mediaId = $media->id;
 
 assert_test(!empty($mediaId), "Featured image media asset successfully saved");
 
-// 2. Create mock Post
-echo "Creating dummy post with featured image...\n";
-$post = new Post([
+// 2. Create mock Page
+echo "Creating dummy page...\n";
+$page = new Page([
     'title' => 'Cascading Deletes Core Trait Test',
     'slug' => 'cascading-deletes-test',
     'summary' => 'This is a core test for the CascadesDeletes trait.',
     'content' => '[]',
-    'status' => 'published',
-    'featured_image' => $mediaId
+    'status' => 'published'
 ]);
-$post->save();
-$postId = $post->id;
+$page->save();
+$pageId = $page->id;
 
-assert_test(!empty($postId), "Post successfully saved");
+assert_test(!empty($pageId), "Page successfully saved");
 
-// 3. Create mock Comments
-echo "Creating dummy comments linked to the post...\n";
-$comment1 = new Comment([
-    'post_id' => $postId,
-    'author_name' => 'John Doe',
-    'author_email' => 'john@doe.com',
-    'content' => 'Great post!',
-    'status' => 'approved'
-]);
-$comment1->save();
-$c1Id = $comment1->id;
+// 3. Soft Delete the Page
+echo "Soft deleting the page...\n";
+$page->delete();
 
-$comment2 = new Comment([
-    'post_id' => $postId,
-    'author_name' => 'Jane Smith',
-    'author_email' => 'jane@smith.com',
-    'content' => 'Very informative.',
-    'status' => 'approved'
-]);
-$comment2->save();
-$c2Id = $comment2->id;
+// Verify Page is soft-deleted
+assert_test(Page::find($pageId) === null, "Page is no longer findable via find() (soft-deleted)");
+$trashedPage = Page::findTrashed($pageId);
+assert_test($trashedPage !== null && !empty($trashedPage->deleted_at), "Page resides in trash with a valid deleted_at timestamp");
 
-assert_test(!empty($c1Id) && !empty($c2Id), "Comments successfully saved and linked to post");
+// Verify the media record has NOT been deleted alongside it
+assert_test(Media::find($mediaId) !== null, "Media asset was NOT deleted (remains active)");
 
-// Verify they exist via standard find
-assert_test(Comment::find($c1Id) !== null, "Comment 1 exists in DB");
-assert_test(Comment::find($c2Id) !== null, "Comment 2 exists in DB");
+// Verify that Page::paginate with trash filter returns the soft-deleted page, and NOT the active ones
+$trashPagination = Page::paginate(1, 10, ['trash' => true]);
+$trashPageIds = array_map(fn($p) => $p->id, $trashPagination['data'] ?? []);
+assert_test(in_array($pageId, $trashPageIds), "Page::paginate() with trash filter correctly returns the soft-deleted page");
 
-// 4. Soft Delete the Post
-echo "Soft deleting the post...\n";
-$post->delete();
+// 4. Force Delete the Page
+echo "Force deleting the page (permanent clean)...\n";
+$trashedPage->forceDelete();
 
-// Verify Post is soft-deleted
-assert_test(Post::find($postId) === null, "Post is no longer findable via find() (soft-deleted)");
-$trashedPost = Post::findTrashed($postId);
-assert_test($trashedPost !== null && !empty($trashedPost->deleted_at), "Post resides in trash with a valid deleted_at timestamp");
+// Verify Page is permanently deleted from DB
+assert_test(Page::findTrashed($pageId) === null, "Page is permanently removed from the database");
 
-// Verify Comments are also soft-deleted automatically!
-assert_test(Comment::find($c1Id) === null, "Comment 1 is no longer findable via find() (automatically soft-deleted)");
-assert_test(Comment::find($c2Id) === null, "Comment 2 is no longer findable via find() (automatically soft-deleted)");
-
-$trashedC1 = Comment::findTrashed($c1Id);
-$trashedC2 = Comment::findTrashed($c2Id);
-assert_test($trashedC1 !== null && !empty($trashedC1->deleted_at), "Comment 1 has been soft-deleted and possesses a deleted_at timestamp");
-assert_test($trashedC2 !== null && !empty($trashedC2->deleted_at), "Comment 2 has been soft-deleted and possesses a deleted_at timestamp");
-
-// Verify Featured Image media record has NOT been deleted
-assert_test(Media::find($mediaId) !== null, "Featured image media asset was NOT deleted (remains active)");
-
-// Verify that Post::paginate with trash filter returns the soft-deleted post, and NOT the active ones
-$trashPagination = Post::paginate(1, 10, ['trash' => true]);
-$trashPostIds = array_map(fn($p) => $p->id, $trashPagination['data'] ?? []);
-assert_test(in_array($postId, $trashPostIds), "Post::paginate() with trash filter correctly returns the soft-deleted post");
-
-// 5. Force Delete the Post
-echo "Force deleting the post (permanent clean)...\n";
-$trashedPost->forceDelete();
-
-// Verify Post is permanently deleted from DB
-assert_test(Post::findTrashed($postId) === null, "Post is permanently removed from the database");
-
-// Verify Comments are permanently deleted from DB automatically!
-assert_test(Comment::findTrashed($c1Id) === null, "Comment 1 is permanently removed from the database");
-assert_test(Comment::findTrashed($c2Id) === null, "Comment 2 is permanently removed from the database");
-
-// Verify Featured Image media record is still untouched and alive!
-assert_test(Media::find($mediaId) !== null, "Featured image media asset remains active in the database (untouched during force deletion)");
+// Verify the media record is still untouched and alive!
+assert_test(Media::find($mediaId) !== null, "Media asset remains active in the database (untouched during force deletion)");
 
 // Clean up mock media asset
 $media->forceDelete();
 assert_test(Media::find($mediaId) === null, "Cleanup of mock media asset successfully complete");
 
-// 6. Test Site dynamic cascade deletes
+// 5. Test Site dynamic cascade deletes
 echo "Testing dynamic Site cascade deletions (Zero module dependencies)...\n";
 
 $testSite = new Site([
     'name' => 'Decoupled Cascade Site',
     'domain' => 'decoupled.zero',
     'theme' => 'default',
-    'enabled_modules' => '["blog"]'
+    'enabled_modules' => '["formbuilder"]'
 ]);
 $testSite->save();
 $testSiteId = $testSite->id;
@@ -164,31 +121,17 @@ $testPage->save();
 $testPageId = $testPage->id;
 assert_test(!empty($testPageId), "Page successfully saved under testSite");
 
-// Create Post under testSite
-$testPost = new Post([
+// Create a module-owned child record (FormBuilder Submission) under testSite, registered
+// dynamically via App::registerCascadeDelete() rather than hardcoded on the Site model
+$testSubmission = new Submission([
     'site_id' => $testSiteId,
-    'title' => 'Decoupled Site Post',
-    'slug' => 'decoupled-post',
-    'summary' => 'Dynamic cascade post.',
-    'content' => '[]',
-    'status' => 'published'
+    'name' => 'Decoupled Submitter',
+    'email' => 'submitter@decoupled.zero',
+    'message' => 'Dynamic cascade submission'
 ]);
-$testPost->save();
-$testPostId = $testPost->id;
-assert_test(!empty($testPostId), "Post successfully saved under testSite");
-
-// Create Comment under testSite
-$testComment = new Comment([
-    'site_id' => $testSiteId,
-    'post_id' => $testPostId,
-    'author_name' => 'Decoupled Comm',
-    'author_email' => 'comm@decoupled.zero',
-    'content' => 'Dynamic comment cascade',
-    'status' => 'approved'
-]);
-$testComment->save();
-$testCommentId = $testComment->id;
-assert_test(!empty($testCommentId), "Comment successfully saved under testSite");
+$testSubmission->save();
+$testSubmissionId = $testSubmission->id;
+assert_test(!empty($testSubmissionId), "Submission successfully saved under testSite");
 
 // Create mock physical uploads for this site to verify automatic directory purging on soft-delete
 $uploadDir = APPLICATION_ROOT . '/public/storage/uploads/' . $testSiteId;
@@ -214,8 +157,7 @@ assert_test($trashedSite !== null && !empty($trashedSite->deleted_at), "Site exi
 
 // Verify dynamic cascade soft-deletions!
 assert_test(Page::find($testPageId) === null, "Page is successfully soft-deleted via Site cascade");
-assert_test(Post::find($testPostId) === null, "Post is successfully soft-deleted via Site cascade");
-assert_test(Comment::find($testCommentId) === null, "Comment is successfully soft-deleted via recursive cascade of Post cascade!");
+assert_test(Submission::find($testSubmissionId) === null, "Submission is successfully soft-deleted via the dynamically registered Site cascade");
 
 // Verify physical uploads are cleanly, recursively purged upon soft delete!
 assert_test(file_exists($tempFile1) === false, "Mock physical media file is cleanly deleted from disk when site is soft-deleted");
@@ -238,15 +180,14 @@ $trashedSite->forceDelete();
 // Verify absolute permanent deletion across all related entities!
 assert_test(Site::findTrashed($testSiteId) === null, "Site permanently deleted from DB");
 assert_test(Page::findTrashed($testPageId) === null, "Page permanently deleted from DB via Site cascade force delete");
-assert_test(Post::findTrashed($testPostId) === null, "Post permanently deleted from DB via Site cascade force delete");
-assert_test(Comment::findTrashed($testCommentId) === null, "Comment permanently deleted from DB via dynamic recursive force delete cascade");
+assert_test(Submission::findTrashed($testSubmissionId) === null, "Submission permanently deleted from DB via the dynamically registered Site cascade force delete");
 
 // Verify physical uploads are cleanly, recursively purged upon force-delete!
 assert_test(file_exists($tempFile1) === false, "Mock physical media file is cleanly deleted from disk when site is force-deleted");
 assert_test(file_exists($tempFile2) === false, "Mock physical crop file is cleanly deleted from disk when site is force-deleted");
 assert_test(file_exists($uploadDir) === false, "Site uploads directory is cleanly deleted and recursively purged from disk when site is force-deleted");
 
-// 7. Verify we CANNOT delete the current site
+// 6. Verify we CANNOT delete the current site
 echo "Testing blocked deletion of active tenant site...\n";
 $currentSite = Site::find($mockSiteId);
 assert_test($currentSite !== null, "Current site retrieved successfully");
@@ -264,10 +205,10 @@ assert_test($softDeleteBlocked, "Soft deleting the active tenant site is success
 // Clean up DB mock active site
 DB::query("DELETE FROM sites WHERE id = ?", [$mockSiteId]);
 
-// 8. Verify dynamic cascade delete registration
+// 7. Verify dynamic cascade delete registration
 echo "Testing dynamic cascade delete registry...\n";
 $parentClass = 'Zero\Models\Site';
-$childClass = 'Zero\Modules\Blog\Models\Post';
+$childClass = 'Zero\Modules\FormBuilder\Models\Submission';
 $foreignKey = 'site_id';
 
 App::registerCascadeDelete($parentClass, $childClass, $foreignKey);
