@@ -419,7 +419,7 @@ class CoverageRecorder
 
     /**
      * Roll a src-relative path up to the component it belongs to, keeping each module distinct
-     * (e.g. "Modules/Blog") while collapsing everything else to its top-level directory.
+     * (e.g. "Modules/Search") while collapsing everything else to its top-level directory.
      *
      * @param string $relativePath Path relative to src/.
      * @return string

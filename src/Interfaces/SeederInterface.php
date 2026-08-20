@@ -21,7 +21,7 @@ namespace Zero\Interfaces;
 interface SeederInterface
 {
     /**
-     * Get the associated module identifier (e.g. 'shop', 'forum', 'blog').
+     * Get the associated module identifier (e.g. 'security', 'formbuilder', 'site-search').
      *
      * @return string
      */

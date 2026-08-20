@@ -25,7 +25,7 @@ Before considering any new or substantially-rewritten `.php` file finished, walk
 
 ## 4. Core architectural integrity (Rule 2)
 
-- [ ] Core directories (`src/Core/`, `src/Http/`) contain no hardcoded module-specific names, schemas, or paths (no `'shop'`, `'blog'`, etc. inside core kernel files).
+- [ ] Core directories (`src/Core/`, `src/Http/`) contain no hardcoded module-specific names, schemas, or paths (no `'search'`, `'formbuilder'`, etc. inside core kernel files).
 - [ ] New modules/blocks/routes/views/theme-fallbacks are registered dynamically on bootstrap (`Router::register()`, `App::registerViewDir()`, `App::registerThemeFallback()`, `App::registerBlock()`), never hardwired into core.
 - [ ] A module's own admin block editor views live inside that module's own `Views/blocks/` folder, passed via `'admin_view'` in its registration config — not centralized inside Admin views.
 - [ ] Any class implementing `Zero\Interfaces\Module` defines `getAccentColor(): string`.

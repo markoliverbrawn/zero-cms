@@ -29,7 +29,7 @@ interface Module
     public function getDashboardWidgetView(): ?string;
 
     /**
-     * Get the unique string identifier of the module (e.g., 'blog', 'shop', 'howtos', 'admin').
+     * Get the unique string identifier of the module (e.g., 'security', 'formbuilder', 'site-search', 'admin').
      */
     public function getId(): string;
 

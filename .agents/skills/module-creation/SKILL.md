@@ -25,7 +25,7 @@ src/Modules/<Name>/
 
 `src/Modules/<Name>/Module.php` must declare `namespace Zero\Modules\<Name>;` and `class Module implements Zero\Interfaces\Module`, implementing:
 
-* `getId(): string` — a unique lowercase identifier (e.g. `'blog'`, `'shop'`). This is the key the whole system uses: `enabled_modules` site config, `module_dependency` sidebar gating, and view/route registration all key off this string.
+* `getId(): string` — a unique lowercase identifier (e.g. `'security'`, `'formbuilder'`). This is the key the whole system uses: `enabled_modules` site config, `module_dependency` sidebar gating, and view/route registration all key off this string.
 * `getAccentColor(): string` — **MANDATORY.** A brand-representative hex color code (e.g. `'#ef4444'` for Security or `'#f43f5e'` for Search) used for the module's administrative pills and widgets. Every module MUST return a distinct, high-contrast, representative accent color; never use a generic standard default (Rule 2 in `GEMINI.md`).
 * `getDashboardWidgetView(): ?string` — the view name (relative to the module's `Views/`) of its dashboard widget, or `null` if it doesn't have one.
 * `getRoutes(): array` — a map of `'#^/regex/pattern$#' => ControllerClass::class`. Route patterns are plain regex; capture groups become controller action arguments.
@@ -79,7 +79,7 @@ Routes are always *registered*, but a request only actually reaches your control
 * **Models**: `App::registerModel($name, ModelClass::class)` — makes the model addressable by name for the generic admin list/edit controllers (e.g. `/admin/list/{name}`).
 * **Admin sidebar links**: `App::registerAdminSidebarLink($sectionId, ['title' => ..., 'url' => ..., 'icon' => ..., 'module_dependency' => $this->getId(), 'precedence' => 10])`. Always set `module_dependency` to your own module's ID so the link automatically hides on sites where the module is disabled — this is the actual enforcement point for sidebar visibility, distinct from the route-dispatch check above.
 * **Scheduled jobs**: `Scheduler::register(SomeJob::class, [], 'daily')` (see the Queue module for the scheduler's own conventions).
-* **Cross-module integration**: guard optional integrations with `class_exists(SomeOtherModule\Service::class)` before calling into another module (see Blog's `SearchService::register()` call) — a module must degrade gracefully if an optional sibling module isn't installed/enabled, never hard-depend on it.
+* **Cross-module integration**: guard optional integrations with `class_exists(SomeOtherModule\Service::class)` before calling into another module (as a module registering itself with `SearchService::register()` should) — a module must degrade gracefully if an optional sibling module isn't installed/enabled, never hard-depend on it.
 
 ## Suggested fuller layout (add only what you need)
 

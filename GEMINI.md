@@ -1,6 +1,6 @@
 # Zero CMS — Expert Architecture & Conventions
 
-This document is a foundational mandate of engineering standards for **Zero CMS** — a zero-dependency, high-contrast, multi-tenant CMS and e-commerce platform. It covers conventions and architecture that apply broadly across the codebase. Deep-dive documentation for individual subsystems (page builder, DB schema, emailer, seeder, OAuth, testing, validator, blog comments, and form builder) lives as on-demand Agent Skills under `.agents/skills/` instead — see "Subsystem Deep-Dives" at the bottom of this file.
+This document is a foundational mandate of engineering standards for **Zero CMS** — a zero-dependency, high-contrast, multi-tenant CMS and e-commerce platform. It covers conventions and architecture that apply broadly across the codebase. Deep-dive documentation for individual subsystems (page builder, DB schema, emailer, seeder, OAuth, testing, validator, and form builder) lives as on-demand Agent Skills under `.agents/skills/` instead — see "Subsystem Deep-Dives" at the bottom of this file.
 
 ---
 
@@ -16,22 +16,22 @@ To maintain the high-quality, professional, and scalable state of the Zero CMS w
 
 ### 2. Loose Coupling & Modular Registration (`register*` pattern)
 * **Rule:** Core CMS views, controllers, layouts, and system kernel classes must never hardcode module-specific variables, database schemas, templates, or HTML paths. **Modules must remain completely separate from the system Core.**
-* **Core Integrity:** Core directories (such as `src/Core/` and `src/Http/`) must contain strictly generic, module-agnostic logic. Under no circumstances should core files contain hardcoded references, fallback mappings, or conditional checks for specific modules (e.g. no hardcoding of `'shop'`, `'blog'`, or similar names inside `App.php` or `Router.php`).
+* **Core Integrity:** Core directories (such as `src/Core/` and `src/Http/`) must contain strictly generic, module-agnostic logic. Under no circumstances should core files contain hardcoded references, fallback mappings, or conditional checks for specific modules (e.g. no hardcoding of `'search'`, `'formbuilder'`, or similar names inside `App.php` or `Router.php`).
 * **Convention:** Maintain a clean, decoupled separation of concerns by utilizing central registry hooks and generic dynamic fallbacks on bootstrap:
   * Modular blocks must be registered dynamically on bootstrap. The core registers standard blocks, while independent modules are responsible for registering their custom blocks inside their own `init()` methods.
   * Register route pathways dynamically using `Router::register()`.
   * Register template directory fallbacks dynamically using `App::registerViewDir()`.
   * Register theme fallback inheritance dynamically using `App::registerThemeFallback()`.
-* **Module-Owned Block Editors:** Independent modules must house their own back-office admin block editors (e.g. `src/Modules/Blog/Views/blocks/latest_articles.php` rather than centralizing inside Admin views) and pass the path inside their registration configs as `'admin_view'`:
+* **Module-Owned Block Editors:** Independent modules must house their own back-office admin block editors (e.g. `src/Modules/FormBuilder/Views/blocks/admin/form_builder.php` rather than centralizing inside Admin views) and pass the path inside their registration configs as `'admin_view'`:
   ```php
-  // Inside src/Modules/Blog/Module.php :: init()
+  // Inside src/Modules/FormBuilder/Module.php :: init()
   \Zero\Core\App::registerBlock('latest_articles', [
-      'label' => 'Latest Blog Articles',
+      'label' => 'Contact Form',
       'icon' => 'edit-3',
       'admin_view' => dirname(__FILE__) . '/Views/blocks/latest_articles.php'
   ]);
   ```
-* **Module-Owned Language Dictionaries:** Independent modules must house their own translation dictionaries at `src/Modules/<Name>/Lang/{en,es,hr,mi}.php` and must never add module-specific keys to the core dictionaries in `src/Lang/`. The core dictionaries are reserved strictly for generic, framework-level vocabulary and the helper texts of core's own models (`Page`, `Media`, `User`, `Site`). `Zero\Support\I18n::init()` discovers and merges every `<Module>/Lang/<activeLang>.php` on disk automatically across all `App::getModuleSearchPaths()` — no registration call is required, the file on disk is the wiring. Deleting a module from the workspace must therefore remove its strings with it, leaving no orphaned keys behind in core. Because all module dictionaries merge into a single flat namespace, module keys must be prefixed with the owning module's id (`blog_posts`, not `posts`); the only exemption is field-derived `{field}_help`/`{field}_desc` keys, which take their name from the model field (Rule 6). `src/Integration/Tests/ModuleLangDictionaryTest.php` enforces this, along with cross-module key collisions and language-file completeness.
+* **Module-Owned Language Dictionaries:** Independent modules must house their own translation dictionaries at `src/Modules/<Name>/Lang/{en,es,hr,mi}.php` and must never add module-specific keys to the core dictionaries in `src/Lang/`. The core dictionaries are reserved strictly for generic, framework-level vocabulary and the helper texts of core's own models (`Page`, `Media`, `User`, `Site`). `Zero\Support\I18n::init()` discovers and merges every `<Module>/Lang/<activeLang>.php` on disk automatically across all `App::getModuleSearchPaths()` — no registration call is required, the file on disk is the wiring. Deleting a module from the workspace must therefore remove its strings with it, leaving no orphaned keys behind in core. Because all module dictionaries merge into a single flat namespace, module keys must be prefixed with the owning module's id (`formbuilder_submissions`, not `submissions`); the only exemption is field-derived `{field}_help`/`{field}_desc` keys, which take their name from the model field (Rule 6). `src/Integration/Tests/ModuleLangDictionaryTest.php` enforces this, along with cross-module key collisions and language-file completeness.
 * **Scalability & Hot-Plugging:** The system must compile and scale automatically. Adding a new module or theme fallback must only require registering it dynamically with the core on bootstrap and placing its assets on disk—ensuring modules can be safely enabled, disabled, or permanently deleted from the workspace without causing any core kernel compilation or routing failures.
 * **Module Accent Colors:** Every module class implementing `Zero\Interfaces\Module` MUST define a `getAccentColor(): string` method returning its brand-representative hex color code (e.g. `#ef4444` for security, `#f43f5e` for site-search). This color is then used for rendering the module's administrative pills and widgets consistently under the active admin theme.
 
@@ -71,7 +71,7 @@ To maintain the high-quality, professional, and scalable state of the Zero CMS w
 
 ### 10. Database-Driven Block ID Resolution
 * **Rule:** Configurable block attributes containing sensitive target variables (such as recipient email addresses) must NEVER be exposed in the frontend markup, even if obfuscated (e.g. in Base64).
-* **Convention:** Centrally generate and assign a unique block ID (`block_id`) to every block type saved in a page layout (handled automatically by `block_builder.php` and `block_builder.js` via the `.block-id-input` hidden fields). On form submission, transmit only this stateless `block_id`. The backend controller must securely query the active tenant's `pages` and `blog_posts` columns in the database, parsing the layout JSON to extract the secure configuration fully on the server side.
+* **Convention:** Centrally generate and assign a unique block ID (`block_id`) to every block type saved in a page layout (handled automatically by `block_builder.php` and `block_builder.js` via the `.block-id-input` hidden fields). On form submission, transmit only this stateless `block_id`. The backend controller must securely query the active tenant's block-carrying tables (e.g. `pages`) in the database, parsing the layout JSON to extract the secure configuration fully on the server side.
 
 ### 11. Hardened Honeypot Spam Protection
 * **Rule:** Public forms must employ zero-friction honeypot spam traps. The word `"honeypot"` must NEVER appear in any class names, selectors, or input properties to prevent advanced bot crawlers from detecting the trap.
@@ -115,7 +115,7 @@ To maintain the high-quality, professional, and scalable state of the Zero CMS w
 * **Convention:** Developers must include responsive `data-label` attributes on table cells to support viewport scaling automatically. This ensures design consistency and seamless visual theme adaptability (e.g., vintage-greenscreen or corporate) under core CSS styles, preventing frontend theme leakages.
 
 ### 20. Active Record Relational Cascade Deletions (`Zero\Models\Traits\CascadesDeletes`)
-* **Rule:** Active Record models with dependent relational children (e.g., Blog Posts with Comments) MUST use the core `Zero\Models\Traits\CascadesDeletes` trait to automatically clean up child records.
+* **Rule:** Active Record models with dependent relational children (e.g., a Site with its Pages and Media) MUST use the core `Zero\Models\Traits\CascadesDeletes` trait to automatically clean up child records.
 * **Convention:** 
   - To declare cascading relationships, the parent model class must define a protected static array `$cascadeDeletes` mapping child model FQNs to their foreign key column names (e.g., `Comment::class => 'post_id'`).
   - To prevent accidental deletion of shared or external resources, cascade deletions must NEVER delete media assets or other shared records that could be referenced elsewhere (e.g., featured images are kept safe and preserved).
@@ -218,7 +218,6 @@ Detailed architecture references for individual subsystems are no longer inlined
 * `google-oauth-integration` — zero-dependency Google OAuth 2.0 SSO flow and tenant-scoping checks
 * `test-suite-architecture` — how the test suite is laid out, discovered, and run (`bin/test`, `TestRunner`, `TestBootstrap`)
 * `input-validator` — the declarative `Zero\Core\Validator` engine
-* `blog-comments-pipeline` — Blog module commenting/moderation pipeline
 * `form-builder-engine` — Form Builder block, dynamic field schemas, submissions archival
 * `php-file-conventions` — enforcement checklist for creating/rewriting any PHP file
 * `view-template-conventions` — how views actually execute (no auto-escaping, theme/prefix resolution) and template-specific rules (inline styles/scripts, back-office tables, UTC display, block preview sanitizer-safety)

@@ -142,9 +142,9 @@ trait IsModel
             $values[] = $this->site_id ?? App::getCurrentSiteId();
         }
 
-        // Add type if static::$modelType is set and the table is a polymorphic table (pages, blog_posts)
+        // Add type if static::$modelType is set and the table is a polymorphic table (e.g. pages)
         $modelType = \property_exists(static::class, 'modelType') ? static::$modelType : null;
-        if ($modelType !== null && !\in_array('type', $fields) && (static::$tableName === 'pages' || static::$tableName === 'blog_posts')) {
+        if ($modelType !== null && !\in_array('type', $fields) && static::$tableName === 'pages') {
             $fields[] = 'type';
             $placeholders[] = '?';
             $values[] = $modelType;

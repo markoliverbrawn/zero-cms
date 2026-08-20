@@ -117,7 +117,7 @@ class Router
      *
      * @param string|array $routes Either a single regex pattern string, or an associative array [pattern => controllerClass].
      * @param string|null $controllerClass The Controller class name string (only if $routes is a string pattern).
-     * @param string|null $moduleName The optional Module identifier this route belongs to (e.g. 'shop', 'blog', 'howtos').
+     * @param string|null $moduleName The optional Module identifier this route belongs to (e.g. 'security', 'formbuilder', 'site-search').
      */
     public static function register($routes, string $controllerClass = null, string $moduleName = null)
     {

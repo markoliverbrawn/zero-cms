@@ -144,7 +144,7 @@ class MigrationManager
             }
 
             foreach ($moduleFiles as $file) {
-                $filename = \basename($file, '.php'); // e.g. "0002_CreateBlogTables"
+                $filename = \basename($file, '.php'); // e.g. "0005_CreateFormBuilderTables"
                 $className = \preg_replace('/^\d+_/', '', $filename);
 
                 // Derive the module folder name from the path segment right after $modulesDir

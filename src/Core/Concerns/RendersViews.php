@@ -124,7 +124,7 @@ trait RendersViews
      * Preserves active query parameters automatically and scales up safely.
      *
      * @param array $pagination Pagination metadata array
-     * @param string $baseUrl Base URL string (e.g. '/shop/catalog' or '/blog')
+     * @param string $baseUrl Base URL string (e.g. '/search' or '/admin/list/pages')
      * @param array $queryParams Current $_GET parameters array to merge and preserve
      * @return string Compiled HTML string
      */

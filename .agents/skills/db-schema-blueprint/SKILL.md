@@ -122,45 +122,6 @@ CREATE TABLE audit_logs (
     INDEX (user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- 7. Blog Module Posts
-CREATE TABLE blog_posts (
-    id VARCHAR(36) PRIMARY KEY,
-    site_id VARCHAR(36) NULL,
-    title VARCHAR(255) NOT NULL,
-    summary TEXT NULL,                                 -- added 0009
-    slug VARCHAR(255) NOT NULL,
-    content TEXT, -- Block-builder JSON data
-    type VARCHAR(50) NULL,
-    status VARCHAR(20) DEFAULT 'draft',
-    featured_image VARCHAR(36) NULL,                   -- added 0018 -- media.id
-    exclude_from_search TINYINT(1) NOT NULL DEFAULT 0,  -- added 0026
-    allow_comments TINYINT(1) DEFAULT 1,                -- added 0007
-    comment_notifiers TEXT NULL,                        -- added 0008 -- serialized JSON array of user UUIDv7 strings
-    created_at DATETIME,
-    updated_at DATETIME,
-    deleted_at DATETIME NULL,
-    UNIQUE KEY site_slug_unique (site_id, slug),
-    INDEX idx_blog_site_status_deleted_created (site_id, status, deleted_at, created_at DESC) -- added 0014
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- 7b. Blog Comments (see also the blog-comments-pipeline skill)
-CREATE TABLE blog_comments (
-    id VARCHAR(36) PRIMARY KEY,
-    site_id VARCHAR(36) NULL,
-    post_id VARCHAR(36) NOT NULL,
-    author_name VARCHAR(255) NOT NULL,
-    author_email VARCHAR(255) NOT NULL,
-    content TEXT NOT NULL,
-    status VARCHAR(50) DEFAULT 'approved', -- NOTE: default here is 'approved' at the DB level; the actual
-                                            -- application-level moderation default is 'pending' -- see the
-                                            -- blog-comments-pipeline skill, which documents the real behavior
-    created_at DATETIME,
-    updated_at DATETIME,
-    deleted_at DATETIME NULL,
-    INDEX (site_id),
-    INDEX (post_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
 -- 8. Shop Module Categories
 CREATE TABLE shop_categories (
     id VARCHAR(36) PRIMARY KEY,
@@ -338,6 +299,5 @@ CREATE TABLE search_index (
 
 ## Notes on tables intentionally not detailed here
 
-* **`blog_comments`** — full schema is above, but see the `blog-comments-pipeline` skill for the moderation-flow behavior.
 * **`form_submissions`** — full schema is above, but see the `form-builder-engine` skill for how `message` is structured as JSON.
 * Every module's migrations live at `src/Modules/<Module>/Database/Migrations/*.php`; core's own live at `src/Database/Migrations/*.php`. `MigrationManager` discovers and runs both sets by filename glob, in a single flat numeric order — always check the highest existing number across *all* of them before adding a new migration (see the `module-creation` skill).
