@@ -178,8 +178,6 @@ class DatabaseSearchDriver implements SearchDriverInterface
                 $typeLabel = 'Item';
                 if ($row['model_type'] === 'page') {
                     $typeLabel = 'Page';
-                } elseif ($row['model_type'] === 'post') {
-                    $typeLabel = 'Blog Post';
                 } elseif ($row['model_type'] === 'product') {
                     $typeLabel = 'Product';
                 }

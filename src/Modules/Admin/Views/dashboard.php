@@ -48,7 +48,6 @@ if ($currentUser && $currentUser->role === 'super_admin') {
 }
 
 // Fetch recent items for core system widgets strictly filtered by active site/domain!
-$recentPosts = DB::query("SELECT * FROM blog_posts WHERE site_id = ? AND deleted_at IS NULL ORDER BY created_at DESC LIMIT 5", [$activeSiteId])->fetchAll();
 $recentPages = DB::query("SELECT * FROM pages WHERE site_id = ? AND deleted_at IS NULL ORDER BY created_at DESC LIMIT 5", [$activeSiteId])->fetchAll();
 $recentMedia = DB::query("SELECT * FROM media WHERE site_id = ? AND deleted_at IS NULL ORDER BY created_at DESC LIMIT 5", [$activeSiteId])->fetchAll();
 ?>
@@ -77,14 +76,6 @@ $recentMedia = DB::query("SELECT * FROM media WHERE site_id = ? AND deleted_at I
             <?php echo I18n::t('quick_links'); ?>
           </h3>
           <ul class="dashboard-quick-links">
-            <?php if ($activeSite && $activeSite->isModuleEnabled('blog')): ?>
-              <li>
-                <a href="/admin/list/posts">
-                  <span><?php echo I18n::t('manage_posts'); ?></span> 
-                  <span>&rarr;</span>
-                </a>
-              </li>
-            <?php endif; ?>
             <li>
               <a href="/admin/list/pages">
                 <span><?php echo I18n::t('manage_pages'); ?></span> 
@@ -173,7 +164,7 @@ $recentMedia = DB::query("SELECT * FROM media WHERE site_id = ? AND deleted_at I
         </div>
       <?php endif; ?>
 
-      <!-- DYNAMIC WIDGETS DELEGATION (shop, blog, etc.) -->
+      <!-- DYNAMIC WIDGETS DELEGATION (module-provided widgets) -->
       <?php if ($widgetKey !== 'quick_links' && $widgetKey !== 'recent_pages' && $widgetKey !== 'recent_media'): ?>
         <?php 
         foreach (App::getModules() as $module) {

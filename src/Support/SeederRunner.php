@@ -271,7 +271,7 @@ class SeederRunner
                         "name" => "My New Standalone Site",
                         "domain" => $targetDomain,
                         "theme" => "default",
-                        "enabled_modules" => ["blog", "security", "queue", "site-search", "formbuilder"]
+                        "enabled_modules" => ["security", "queue", "site-search", "formbuilder"]
                     ]
                 ];
 

@@ -77,12 +77,13 @@ class CssBundleController implements Controller
                     '/public/assets/css/blocks/testimonials.css',
                     '/public/assets/css/blocks/code.css',
                     '/public/assets/css/blocks/chart.css',
-                    '/public/assets/css/blocks/grid.css'
+                    '/public/assets/css/blocks/grid.css',
+                    '/public/assets/css/blocks/sub_pages.css'
                 ]
             ));
 
             // B. Module-contributed stylesheets, registered dynamically via
-            // App::registerModuleStylesheet() (e.g. FormBuilder, Blog, Shop) -- only appended
+            // App::registerModuleStylesheet() (e.g. FormBuilder) -- only appended
             // when that module is actually enabled for the requesting site.
             foreach (App::getRegisteredModuleStylesheets() as $moduleStylesheet) {
                 if ($site->isModuleEnabled($moduleStylesheet['module'])) {

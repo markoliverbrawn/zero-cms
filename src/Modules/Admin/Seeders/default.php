@@ -7,8 +7,8 @@ declare(strict_types=1);
  *
  * This file returns the declarative structure used by bin/seed to initialise the base
  * default site: a single tenant, its super administrator, and a minimal published homepage.
- * Module-specific content (blog articles, ...) is seeded separately by each module's
- * own class seeder under src/Modules/<Module>/Seeders/.
+ * Any module-specific content is seeded separately by that module's own class seeder under
+ * src/Modules/<Module>/Seeders/.
  */
 
 return [
@@ -18,7 +18,6 @@ return [
             'domain' => 'd6laptop.zero',
             'theme' => 'default',
             'enabled_modules' => [
-                'blog',
                 'formbuilder',
                 'security',
                 'queue',

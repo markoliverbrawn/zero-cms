@@ -53,8 +53,6 @@ class ModulesGridField extends AbstractFormField
     protected function resolveModuleMeta(string $id): array
     {
         switch ($id) {
-            case 'blog':
-                return ['name' => 'Blog Module', 'desc' => 'Articles, Posts, Feeds'];
             case 'shop':
                 return ['name' => 'Luxe E-Commerce Store', 'desc' => 'Catalog, Products, Variants, Cart, Checkout'];
             case 'formbuilder':
@@ -77,7 +75,7 @@ class ModulesGridField extends AbstractFormField
     {
         $activeModules = \json_decode((string)($this->value ?? '[]'), true);
         if (!\is_array($activeModules)) {
-            $activeModules = ['blog', 'shop'];
+            $activeModules = [];
         }
 
         $modules = [];

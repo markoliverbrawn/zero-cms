@@ -154,11 +154,6 @@ use Zero\Support\Str;
             $widgets['recent_media'] = ['title' => I18n::t('recent_media'), 'desc' => I18n::t('recent_media')];
             $widgets['quick_links'] = ['title' => I18n::t('quick_links'), 'desc' => I18n::t('quick_links')];
             
-            // Blog Module Widget (Only if enabled!)
-            if ($site && $site->isModuleEnabled('blog')) {
-                $widgets['recent_posts'] = ['title' => I18n::t('recent_posts'), 'desc' => I18n::t('recent_posts')];
-            }
-
             // Security Module Widgets (Only if enabled!)
             if ($site && $site->isModuleEnabled('security')) {
                 $widgets['security_state'] = ['title' => 'Platform Security State', 'desc' => 'Shows the latest security score and parameters matrix'];

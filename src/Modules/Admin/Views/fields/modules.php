@@ -37,10 +37,7 @@ $getModuleMeta = function (string $module) use ($moduleObjects): array {
     $label = Str::escape($module);
     $accentColor = '#64748b'; // default fallback for unrecognized/addons
 
-    if ($moduleLower === 'blog') {
-        $icon = 'edit-3';
-        $label = 'Blog';
-    } elseif ($moduleLower === 'formbuilder') {
+    if ($moduleLower === 'formbuilder') {
         $icon = 'clipboard';
         $label = 'Form Builder';
     } elseif ($moduleLower === 'security') {

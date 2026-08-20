@@ -6,12 +6,9 @@ use Zero\Core\Storage\Storage;
 use Zero\Core\Template;
 use Zero\Database\DB;
 use Zero\Models\Media;
-use Zero\Modules\Blog\Models\Post;
 use Zero\Support\BlockHelper;
 use Zero\Support\Security;
 use Zero\Support\Str;
-
-$isBlogPost = $post instanceof Post;
 
 $hasHeroBlock = false;
 if (!empty($post->content)) {
@@ -34,11 +31,6 @@ $shouldOmitTitle = !empty($post->omit_title) || $hasHeroBlock;
     </h1>
   <?php endif; ?>
   
-  <?php if ($isBlogPost): ?>
-    <div class="post-meta" style="font-family: var(--font-mono); font-size: 0.85rem; color: var(--neon-pink); margin-bottom: 2rem;">
-      Published: <?php echo date('F d, Y', strtotime($post->created_at)); ?>
-    </div>
-  <?php endif; ?>
 
   <?php if (!empty($post->featured_image)): ?>
     <div class="post-featured-image-wrapper" style="margin-bottom: 2.5rem; border-radius: var(--border-radius); overflow: hidden; max-height: 400px; border: 1px solid var(--border-color); box-shadow: 0 4px 20px rgba(0,0,0,0.15);">
@@ -48,9 +40,7 @@ $shouldOmitTitle = !empty($post->omit_title) || $hasHeroBlock;
 
   <?php include APPLICATION_ROOT . '/src/Views/themes/kitchensink/blocks.php'; ?>
 
-  <?php if (!$isBlogPost): ?>
-    <div class="post-meta meta-bottom" style="font-family: var(--font-mono); font-size: 0.85rem; color: var(--neon-pink); margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--border-color); margin-bottom: 0;">
-      Published: <?php echo date('F d, Y', strtotime($post->created_at)); ?>
-    </div>
-  <?php endif; ?>
+  <div class="post-meta meta-bottom" style="font-family: var(--font-mono); font-size: 0.85rem; color: var(--neon-pink); margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--border-color); margin-bottom: 0;">
+    Published: <?php echo date('F d, Y', strtotime($post->created_at)); ?>
+  </div>
 </article>

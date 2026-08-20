@@ -6,10 +6,9 @@ use Zero\Database\DB;
 use Zero\Support\I18n;
 use Zero\Support\Str;
 
-// Fetch dynamic pages, blog posts, and shop categories for the Kitchen Sink widgets
+// Fetch dynamic pages for the Kitchen Sink widgets
 $siteId = App::getCurrentSiteId();
 $sidebarPages = DB::query("SELECT title, slug FROM pages WHERE status = 'published' AND site_id = ? AND show_in_nav = 1 ORDER BY precedence ASC, title ASC", [$siteId])->fetchAll();
-$sidebarPosts = DB::query("SELECT title, slug FROM blog_posts WHERE status = 'published' AND site_id = ? ORDER BY created_at DESC LIMIT 5", [$siteId])->fetchAll();
 $sidebarCategories = DB::query("SELECT title, slug FROM shop_categories WHERE site_id = ? ORDER BY title ASC LIMIT 5", [$siteId])->fetchAll();
 ?>
 <!doctype html>
@@ -55,7 +54,6 @@ $sidebarCategories = DB::query("SELECT title, slug FROM shop_categories WHERE si
             </h1>
             <nav>
                 <a href="/">Home Showcase</a>
-                <a href="/blog">Blog News</a>
                 <a href="/shop">Luxe Shop</a>
                 <a href="/admin/dashboard" class="admin-btn">Admin Panel</a>
             </nav>
@@ -127,25 +125,6 @@ $sidebarCategories = DB::query("SELECT title, slug FROM shop_categories WHERE si
                 </div>
             <?php endif; ?>
 
-            <!-- WIDGET 3: Recent Editorial News -->
-            <?php if (!empty($sidebarPosts)): ?>
-                <div class="sidebar-widget">
-                    <h3>Recent News</h3>
-                    <ul>
-                        <?php foreach ($sidebarPosts as $post): ?>
-                            <li>
-                                <a href="/post/<?php echo Str::escape($post['slug']); ?>">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--accent-color);">
-                                        <path d="M12 20h9"></path>
-                                        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
-                                    </svg>
-                                    <?php echo Str::escape($post['title']); ?>
-                                </a>
-                            </li>
-                        <?php endforeach; ?>
-                    </ul>
-                </div>
-            <?php endif; ?>
         </aside>
 
     </div>

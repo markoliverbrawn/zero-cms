@@ -223,7 +223,7 @@ class DB
             // Rapid truncate to guarantee 100% clean test isolation on every run
             $pdo->exec("SET FOREIGN_KEY_CHECKS = 0;");
 
-            $tables = ['pages', 'blog_posts', 'audit_logs', 'password_resets', 'sites', 'blog_comments', 'form_submissions', 'queue_jobs', 'queue_scheduled_tasks'];
+            $tables = ['pages', 'audit_logs', 'password_resets', 'sites', 'form_submissions', 'queue_jobs', 'queue_scheduled_tasks'];
             foreach ($tables as $t) {
                 $stmt = $pdo->query("SHOW TABLES LIKE '{$t}'");
                 if ($stmt->fetch()) {

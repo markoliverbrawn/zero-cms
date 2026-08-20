@@ -6,10 +6,9 @@ use Zero\Database\DB;
 use Zero\Support\I18n;
 use Zero\Support\Str;
 
-// Fetch dynamic pages and posts for corporate sidebar
+// Fetch dynamic pages for corporate sidebar
 $siteId = App::getCurrentSiteId();
 $sidebarPages = DB::query("SELECT title, slug FROM pages WHERE status = 'published' AND site_id = ? AND show_in_nav = 1 ORDER BY precedence ASC, title ASC", [$siteId])->fetchAll();
-$sidebarPosts = DB::query("SELECT title, slug FROM blog_posts WHERE status = 'published' AND site_id = ? ORDER BY created_at DESC LIMIT 5", [$siteId])->fetchAll();
 ?>
 <!doctype html>
 <html>
@@ -84,21 +83,6 @@ $sidebarPosts = DB::query("SELECT title, slug FROM blog_posts WHERE status = 'pu
                 </div>
             <?php endif; ?>
 
-            <!-- WIDGET 2: Recent Corporate Blog Posts -->
-            <?php if (!empty($sidebarPosts)): ?>
-                <div class="sidebar-widget">
-                    <h3>Recent News</h3>
-                    <ul>
-                        <?php foreach ($sidebarPosts as $post): ?>
-                            <li>
-                                <a href="/post/<?php echo Str::escape($post['slug']); ?>">
-                                    <?php echo Str::escape($post['title']); ?>
-                                </a>
-                            </li>
-                        <?php endforeach; ?>
-                    </ul>
-                </div>
-            <?php endif; ?>
         </aside>
 
     </div>

@@ -157,7 +157,7 @@ class SetupWizardController
             $siteTheme,
             $siteTimezone,
             $siteLanguage,
-            \json_encode(['blog', 'formbuilder', 'security', 'queue', 'site-search'])
+            \json_encode(['formbuilder', 'security', 'queue', 'site-search'])
         ]);
 
         // 4. Create and hash the Super Admin credentials
@@ -181,7 +181,7 @@ class SetupWizardController
             [
                 'type' => 'text',
                 'title' => 'Welcome to Zero CMS!',
-                'content' => '<p>Your new multi-tenant portal has been successfully bootstrapped using the interactive Setup Wizard! Zero CMS has run database schema handshakes, registered your super admin credentials, and initialized this website dynamically.</p><p>You can now log into your <a href="/admin/login">Admin Dashboard</a> to configure pages, publish blog articles, moderate community boards, and analyze AI security threat audits.</p>'
+                'content' => '<p>Your new multi-tenant portal has been successfully bootstrapped using the interactive Setup Wizard! Zero CMS has run database schema handshakes, registered your super admin credentials, and initialized this website dynamically.</p><p>You can now log into your <a href="/admin/login">Admin Dashboard</a> to configure pages, manage media, and analyze AI security threat audits.</p>'
             ]
         ]);
 

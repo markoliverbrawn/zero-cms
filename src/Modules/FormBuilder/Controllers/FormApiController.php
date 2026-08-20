@@ -76,7 +76,6 @@ class FormApiController implements Controller
 
         // 1. Resolve and load the block configuration dynamically from the database
         if (!empty($blockId)) {
-            // Check pages first
             $pages = DB::query("SELECT title, content FROM pages WHERE site_id = ? AND deleted_at IS NULL", [$siteId])->fetchAll();
             foreach ($pages as $p) {
                 $blocks = \json_decode($p['content'], true);
@@ -86,23 +85,6 @@ class FormApiController implements Controller
                             $matchedBlock = $b;
                             $sourcePageTitle = $p['title'];
                             break 2;
-                        }
-                    }
-                }
-            }
-
-            // Fallback to blog posts
-            if (!$matchedBlock) {
-                $posts = DB::query("SELECT title, content FROM blog_posts WHERE site_id = ? AND deleted_at IS NULL", [$siteId])->fetchAll();
-                foreach ($posts as $po) {
-                    $blocks = \json_decode($po['content'], true);
-                    if (\is_array($blocks)) {
-                        foreach ($blocks as $b) {
-                            if (($b['type'] ?? '') === 'form_builder' && ($b['id'] ?? '') === $blockId) {
-                                $matchedBlock = $b;
-                                $sourcePageTitle = $po['title'];
-                                break 2;
-                            }
                         }
                     }
                 }

@@ -5,12 +5,9 @@ use Zero\Core\App;
 use Zero\Core\Storage\Storage;
 use Zero\Core\Template;
 use Zero\Database\DB;
-use Zero\Modules\Blog\Models\Post;
 use Zero\Support\BlockHelper;
 use Zero\Support\Security;
 use Zero\Support\Str;
-
-$isBlogPost = $post instanceof Post;
 
 $hasHeroBlock = false;
 if (!empty($post->content)) {
@@ -33,14 +30,6 @@ $shouldOmitTitle = !empty($post->omit_title) || $hasHeroBlock;
     </h1>
   <?php endif; ?>
 
-  <?php if ($isBlogPost): ?>
-    <div class="post-meta">
-      <span class="icon-svg">
-        <?php echo App::svg('clock'); ?>
-      </span>
-      <span class="post-date"><?php echo date('F j, Y', strtotime($post->created_at)); ?></span>
-    </div>
-  <?php endif; ?>
 
   <?php if (!empty($post->featured_image)): ?>
     <div class="post-featured-image-wrapper" style="margin-bottom: 2rem; border-radius: var(--border-radius, 8px); overflow: hidden; max-height: 400px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid var(--border-color, #e2e8f0);">
@@ -113,12 +102,10 @@ $shouldOmitTitle = !empty($post->omit_title) || $hasHeroBlock;
     <?php endif; ?>
   </div>
 
-  <?php if (!$isBlogPost): ?>
-    <div class="post-meta meta-bottom">
-      <span class="icon-svg">
-        <?php echo App::svg('clock'); ?>
-      </span>
-      <span class="post-date">Published: <?php echo date('F j, Y', strtotime($post->created_at)); ?></span>
-    </div>
-  <?php endif; ?>
+  <div class="post-meta meta-bottom">
+    <span class="icon-svg">
+      <?php echo App::svg('clock'); ?>
+    </span>
+    <span class="post-date">Published: <?php echo date('F j, Y', strtotime($post->created_at)); ?></span>
+  </div>
 </article>
