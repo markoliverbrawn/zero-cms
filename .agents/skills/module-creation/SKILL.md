@@ -26,7 +26,7 @@ src/Modules/<Name>/
 `src/Modules/<Name>/Module.php` must declare `namespace Zero\Modules\<Name>;` and `class Module implements Zero\Interfaces\Module`, implementing:
 
 * `getId(): string` — a unique lowercase identifier (e.g. `'blog'`, `'shop'`). This is the key the whole system uses: `enabled_modules` site config, `module_dependency` sidebar gating, and view/route registration all key off this string.
-* `getAccentColor(): string` — **MANDATORY.** A brand-representative hex color code (e.g. `'#ef4444'` for Security or `'#9333ea'` for DemoGenerator) used for the module's administrative pills and widgets. Every module MUST return a distinct, high-contrast, representative accent color; never use a generic standard default (Rule 2 in `GEMINI.md`).
+* `getAccentColor(): string` — **MANDATORY.** A brand-representative hex color code (e.g. `'#ef4444'` for Security or `'#f43f5e'` for Search) used for the module's administrative pills and widgets. Every module MUST return a distinct, high-contrast, representative accent color; never use a generic standard default (Rule 2 in `GEMINI.md`).
 * `getDashboardWidgetView(): ?string` — the view name (relative to the module's `Views/`) of its dashboard widget, or `null` if it doesn't have one.
 * `getRoutes(): array` — a map of `'#^/regex/pattern$#' => ControllerClass::class`. Route patterns are plain regex; capture groups become controller action arguments.
 * `getMigrationClass(): ?string` — can return `null` in nearly every real module. Actual migrations are discovered by filename glob (see "Migrations" below), not by this method — the framework never consumes its return value elsewhere. Only bother returning a real FQCN if you have a specific reason to expose "the" migration class for this module to other code.

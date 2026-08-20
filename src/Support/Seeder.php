@@ -200,17 +200,7 @@ class Seeder
                 unset($row['content_base64']);
             } elseif (isset($row['filename']) && ($row['mime'] ?? '') !== 'directory') {
                 $filename = $row['filename'];
-                $seedImgPath = APPLICATION_ROOT . '/src/Modules/DemoGenerator/Seeders/data/images/' . $filename;
-                if (!\file_exists($seedImgPath)) {
-                    $seedImgPath = APPLICATION_ROOT . '/src/Modules/DemoGenerator/Seeders/data/videos/' . $filename;
-                }
-                
-                if (\file_exists($seedImgPath)) {
-                    $content = \file_get_contents($seedImgPath);
-                    $physicalPath = $seederInstance->getUploadsDir() . '/' . $siteId . '/' . $filename;
-                    Storage::write($physicalPath, $content);
-                }
-                
+
                 if (!isset($row['path']) || $row['path'] === '') {
                     $row['path'] = '/storage/uploads/' . $siteId . '/' . $filename;
                 }

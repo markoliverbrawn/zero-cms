@@ -49,9 +49,6 @@ $getModuleMeta = function (string $module) use ($moduleObjects): array {
     } elseif ($moduleLower === 'site-search') {
         $icon = 'search';
         $label = 'Search';
-    } elseif ($moduleLower === 'demogenerator') {
-        $icon = 'zap';
-        $label = 'Demo Generator';
     }
 
     if (isset($moduleObjects[$moduleLower])) {

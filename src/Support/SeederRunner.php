@@ -130,9 +130,9 @@ class SeederRunner
     /**
      * Dynamic Class Seeder Auto-Discovery Engine (OOP Seeders). Scans every module's own
      * Seeders/ folder for classes named *Seeder.php (excluding the base Seeder.php itself)
-     * implementing SeederInterface, sorted by getPriority(). Public so DemoSiteFactory can reuse
-     * the exact same discovery+priority mechanism when seeding an on-demand sandbox site, instead
-     * of hardcoding a duplicate list of module seeder class names.
+     * implementing SeederInterface, sorted by getPriority(). Public so any caller seeding a
+     * single site outside the full bin/seed pipeline can reuse the exact same discovery+priority
+     * mechanism instead of hardcoding a duplicate list of module seeder class names.
      *
      * @param string $modulesDir
      * @return SeederInterface[]
@@ -184,7 +184,6 @@ class SeederRunner
     {
         $priorityMap = [
             'default.php' => 10,
-            'kitchensink.php' => 50,
         ];
 
         $discoveredFiles = [];

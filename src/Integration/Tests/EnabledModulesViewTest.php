@@ -19,9 +19,9 @@ $renderedEmpty = Template::renderFile($viewFile, [
 ]);
 assert_test(strpos($renderedEmpty, 'No modules') !== false, "Displays fallback text 'No modules' when no modules are enabled");
 
-// Render view with blog, security, site-search, and demogenerator modules
-echo "Testing rendering with blog, security, site-search, and demogenerator modules...\n";
-$modulesPayload = json_encode(['blog', 'security', 'site-search', 'demogenerator']);
+// Render view with blog, security, site-search, and formbuilder modules
+echo "Testing rendering with blog, security, site-search, and formbuilder modules...\n";
+$modulesPayload = json_encode(['blog', 'security', 'site-search', 'formbuilder']);
 $renderedModules = Template::renderFile($viewFile, [
     'value' => $modulesPayload
 ]);
@@ -41,9 +41,9 @@ assert_test(strpos($renderedModules, 'Search') !== false, "Correctly renders 'Se
 // Assert presence of the search icon circle path segment
 assert_test(strpos($renderedModules, '<circle cx="11" cy="11" r="8"></circle>') !== false, "Correctly includes SVG icon path for Search Module (search)");
 
-// Assert that DemoGenerator is rendered with its zap icon and "Demo Generator" label
-assert_test(strpos($renderedModules, 'Demo Generator') !== false, "Correctly renders 'Demo Generator' label for demogenerator module");
-// Assert presence of the zap icon polygon path segment
-assert_test(strpos($renderedModules, 'points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"') !== false, "Correctly includes SVG icon path for Demo Generator Module (zap)");
+// Assert that FormBuilder is rendered with its clipboard icon and "Form Builder" label
+assert_test(strpos($renderedModules, 'Form Builder') !== false, "Correctly renders 'Form Builder' label for formbuilder module");
+// Assert presence of the clipboard icon rect segment
+assert_test(strpos($renderedModules, '<rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>') !== false, "Correctly includes SVG icon path for Form Builder Module (clipboard)");
 
 echo "Enabled modules view component tests completed successfully!\n\n";

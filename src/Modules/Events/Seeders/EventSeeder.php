@@ -73,7 +73,7 @@ class EventSeeder implements SeederInterface
         $loadFeaturedImage = function(string $slug) use ($siteId): ?string {
             try {
                 $filename = "event-featured-{$slug}.jpg";
-                $seedImgPath = APPLICATION_ROOT . '/src/Modules/DemoGenerator/Seeders/data/images/' . $filename;
+                $seedImgPath = APPLICATION_ROOT . '/src/Modules/Events/Seeders/data/images/' . $filename;
                 
                 if (!\file_exists($seedImgPath)) {
                     return null;

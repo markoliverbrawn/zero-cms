@@ -65,8 +65,6 @@ class ModulesGridField extends AbstractFormField
                 return ['name' => 'Search', 'desc' => 'Page and Posts'];
             case 'security':
                 return ['name' => 'Security', 'desc' => 'Hardening & AI threat auditing'];
-            case 'demogenerator':
-                return ['name' => 'Demo Generator', 'desc' => 'Sandbox site creator form block'];
             default:
                 return ['name' => \ucwords(\str_replace('-', ' ', $id)), 'desc' => 'Additional addon capability'];
         }

@@ -83,8 +83,6 @@ Zero CMS is divided into fully decoupled, modular plug-ins under `src/Modules/`:
    Dispatches and processes queued jobs (e.g. `PurgeOldLogsJob`) via `QueueManager` and a cron-driven `Scheduler`, run out-of-band through the `bin/queue-runner` and `bin/scheduler` CLI entry points rather than inline on the request path.
 6. **Site Search (`Search`):**
    Decoupled search-driver architecture (`SearchDriverInterface`) with a `DatabaseSearchDriver` implementation, exposed via `SearchController`/`SearchService` and a `Searchable` model trait.
-7. **On-Demand Demo Site Generator (`DemoGenerator`):**
-   Lets a super-admin provision a fully-seeded demo tenant on demand (`AdminCreateDemoSiteController` + `DemoSiteFactory`), and seeds the public kitchensink sandbox showcase via declarative seed datasets under `src/Modules/DemoGenerator/Seeders/`.
 
 ---
 
@@ -111,7 +109,6 @@ Zero CMS is divided into fully decoupled, modular plug-ins under `src/Modules/`:
 │   ├── Modules/                  # Decoupled extensible modules
 │   │   ├── Admin/                # Unified Back-Office dashboard controller & views
 │   │   ├── Blog/                 # Classic publishing and Commenting Module
-│   │   ├── DemoGenerator/        # On-demand demo tenant provisioning & kitchensink seeding
 │   │   ├── FormBuilder/          # Dynamic forms creation and submission logs module
 │   │   ├── Queue/                # Background job queue & cron-style scheduler
 │   │   ├── Search/               # Decoupled site search driver architecture
