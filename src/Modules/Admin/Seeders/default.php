@@ -7,7 +7,7 @@ declare(strict_types=1);
  *
  * This file returns the declarative structure used by bin/seed to initialise the base
  * default site: a single tenant, its super administrator, and a minimal published homepage.
- * Module-specific content (blog articles, events, ...) is seeded separately by each module's
+ * Module-specific content (blog articles, ...) is seeded separately by each module's
  * own class seeder under src/Modules/<Module>/Seeders/.
  */
 
@@ -23,7 +23,6 @@ return [
                 'security',
                 'queue',
                 'site-search',
-                'events',
             ],
         ],
     ],
@@ -51,16 +50,6 @@ return [
                     'content' => '<p>Your Zero CMS site is up and running. Log in to the <a href="/admin">admin area</a> to start building pages, blocks, and themes.</p>',
                 ],
             ],
-            'type' => 'page',
-        ],
-        [
-            'title' => 'Events Calendar',
-            'slug' => 'events',
-            'status' => 'published',
-            'controller' => 'Zero\\Modules\\Events\\Controllers\\EventsController',
-            'view' => 'events_index',
-            'site_domain' => 'd6laptop.zero',
-            'content' => [],
             'type' => 'page',
         ],
     ],

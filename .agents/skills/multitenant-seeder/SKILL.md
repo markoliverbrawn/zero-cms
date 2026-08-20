@@ -18,6 +18,6 @@ description: Explains Zero CMS's self-healing multi-tenant database seeder syste
 ## Where things live
 
 - **Orchestrator**: `src/Support/SeederRunner.php` (`Zero\Support\SeederRunner`) + entry point `bin/seed`.
-- **Core per-dataset engine**: `Zero\Support\Seeder` — takes one dataset's array and actually writes rows and builds the identity map. Media rows carry their bytes inline as `content_base64`; modules that ship physical seed images keep them under their own `Seeders/data/images/` folder and copy them in from their class seeder (see `Events/Seeders/EventSeeder.php`).
+- **Core per-dataset engine**: `Zero\Support\Seeder` — takes one dataset's array and actually writes rows and builds the identity map. Media rows carry their bytes inline as `content_base64`; a module that ships physical seed images keeps them under its own `Seeders/data/images/` folder and copies them in from its class seeder.
 - **The base tenant dataset**: `src/Modules/Admin/Seeders/default.php` — the single site, super-admin user, and minimal homepage that `bin/seed` initialises.
 - **Other modules' class seeders**: e.g. `src/Modules/Blog/Seeders/BlogArticleSeeder.php`, `src/Modules/Forum/Seeders/ForumPostSeeder.php`, `src/Modules/Shop/Seeders/ShopSeeder.php` — these can `require` their own sibling data files (e.g. `Blog/Seeders/handwritten_articles.php`) that aren't part of the dataset-discovery priority map at all.

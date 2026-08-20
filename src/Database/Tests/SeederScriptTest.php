@@ -96,12 +96,12 @@ $siteName = DB::query("SELECT name FROM sites LIMIT 1")->fetchColumn();
 assert_test($siteName === "My New Standalone Site", "Blank site is named My New Standalone Site");
 
 
-// 5. Test Multiple Comma-Separated Values: --sites=default,events
-echo "  Testing multiple targets via --sites=default,events...\n";
+// 5. Test Multiple Comma-Separated Values: --sites=default,blog
+echo "  Testing multiple targets via --sites=default,blog...\n";
 
-$output = run_seeder_test_proc('--sites=default,events');
+$output = run_seeder_test_proc('--sites=default,blog');
 
-assert_test(strpos($output, "Selective seeding enabled for: [default, events]") !== false, "Multiple comma-separated list of targets parsed correctly");
+assert_test(strpos($output, "Selective seeding enabled for: [default, blog]") !== false, "Multiple comma-separated list of targets parsed correctly");
 assert_test(strpos($output, "SEEDING DATASET: default.php") !== false, "Default dataset ran");
 
 $siteCount = (int) DB::query("SELECT COUNT(*) FROM sites")->fetchColumn();
