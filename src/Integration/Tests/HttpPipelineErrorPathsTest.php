@@ -33,12 +33,30 @@ putenv('BENCHMARKING=true');
 // 2. Test Site Not Found Diagnostic Page (renderSiteNotFoundPage)
 echo "Testing site-not-found diagnostic rendering...\n";
 
+// renderSiteNotFoundPage() gates the tenant diagnostic list behind ENVIRONMENT=development, so the
+// environment has to be forced here rather than inherited: Env::get() reads the real environment
+// before .env, and a deployment with no .env at all (CI) defaults to 'production', which renders
+// the deliberately information-free variant of this page.
+putenv('ENVIRONMENT=development');
+
 ob_start();
 App::renderSiteNotFoundPage('unregistered.zero');
 $siteNotFoundHtml = ob_get_clean();
 
 assert_test(str_contains($siteNotFoundHtml, 'unregistered.zero'), "Site-not-found layout includes target host");
 assert_test(str_contains($siteNotFoundHtml, 'Error Pipeline Site'), "Site-not-found lists active sites registered in multi-tenant DB");
+
+// The converse of that gate: in production the page must not disclose the tenant list to a visitor
+// who guessed an unregistered host.
+putenv('ENVIRONMENT=production');
+
+ob_start();
+App::renderSiteNotFoundPage('unregistered.zero');
+$productionNotFoundHtml = ob_get_clean();
+
+assert_test(!str_contains($productionNotFoundHtml, 'Error Pipeline Site'), "Site-not-found withholds the registered tenant list outside development");
+
+putenv('ENVIRONMENT=development');
 
 // 3. Test Access Denied and Role Rejection UI compilation
 echo "Testing 403 access denied template compilation...\n";

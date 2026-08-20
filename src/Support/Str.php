@@ -180,19 +180,61 @@ class Str
     }
 
     /**
-     * Standard web-safe URL portion slugifier.
+     * Accented-letter to ASCII map used by slug(). Deliberately explicit rather than delegating to
+     * iconv()'s '//TRANSLIT': that transliteration is supplied by the host system's iconv
+     * implementation, so the same input slugs differently (or fails outright, returning false and
+     * collapsing the whole slug to 'n-a') depending on the libc and locale the deployment happens
+     * to run on -- glibc renders 'é' as "'e", musl has no //TRANSLIT support at all. Covers Latin-1,
+     * the Latin Extended-A letters used by the shipped hr dictionary, and macrons used by mi.
+     *
+     * @var array<string, string>
+     */
+    private static array $asciiFolding = [
+        'À' => 'A', 'Á' => 'A', 'Â' => 'A', 'Ã' => 'A', 'Ä' => 'A', 'Å' => 'A', 'Ā' => 'A', 'Ă' => 'A', 'Ą' => 'A',
+        'à' => 'a', 'á' => 'a', 'â' => 'a', 'ã' => 'a', 'ä' => 'a', 'å' => 'a', 'ā' => 'a', 'ă' => 'a', 'ą' => 'a',
+        'Æ' => 'AE', 'æ' => 'ae',
+        'Ç' => 'C', 'Ć' => 'C', 'Č' => 'C', 'Ĉ' => 'C', 'Ċ' => 'C',
+        'ç' => 'c', 'ć' => 'c', 'č' => 'c', 'ĉ' => 'c', 'ċ' => 'c',
+        'Ď' => 'D', 'Đ' => 'D', 'Ð' => 'D', 'ď' => 'd', 'đ' => 'd', 'ð' => 'd',
+        'È' => 'E', 'É' => 'E', 'Ê' => 'E', 'Ë' => 'E', 'Ē' => 'E', 'Ĕ' => 'E', 'Ė' => 'E', 'Ę' => 'E', 'Ě' => 'E',
+        'è' => 'e', 'é' => 'e', 'ê' => 'e', 'ë' => 'e', 'ē' => 'e', 'ĕ' => 'e', 'ė' => 'e', 'ę' => 'e', 'ě' => 'e',
+        'Ĝ' => 'G', 'Ğ' => 'G', 'Ġ' => 'G', 'Ģ' => 'G', 'ĝ' => 'g', 'ğ' => 'g', 'ġ' => 'g', 'ģ' => 'g',
+        'Ĥ' => 'H', 'Ħ' => 'H', 'ĥ' => 'h', 'ħ' => 'h',
+        'Ì' => 'I', 'Í' => 'I', 'Î' => 'I', 'Ï' => 'I', 'Ĩ' => 'I', 'Ī' => 'I', 'Ĭ' => 'I', 'Į' => 'I', 'İ' => 'I',
+        'ì' => 'i', 'í' => 'i', 'î' => 'i', 'ï' => 'i', 'ĩ' => 'i', 'ī' => 'i', 'ĭ' => 'i', 'į' => 'i', 'ı' => 'i',
+        'Ĵ' => 'J', 'ĵ' => 'j', 'Ķ' => 'K', 'ķ' => 'k',
+        'Ĺ' => 'L', 'Ļ' => 'L', 'Ľ' => 'L', 'Ł' => 'L', 'ĺ' => 'l', 'ļ' => 'l', 'ľ' => 'l', 'ł' => 'l',
+        'Ñ' => 'N', 'Ń' => 'N', 'Ņ' => 'N', 'Ň' => 'N', 'ñ' => 'n', 'ń' => 'n', 'ņ' => 'n', 'ň' => 'n',
+        'Ò' => 'O', 'Ó' => 'O', 'Ô' => 'O', 'Õ' => 'O', 'Ö' => 'O', 'Ø' => 'O', 'Ō' => 'O', 'Ŏ' => 'O', 'Ő' => 'O',
+        'ò' => 'o', 'ó' => 'o', 'ô' => 'o', 'õ' => 'o', 'ö' => 'o', 'ø' => 'o', 'ō' => 'o', 'ŏ' => 'o', 'ő' => 'o',
+        'Œ' => 'OE', 'œ' => 'oe',
+        'Ŕ' => 'R', 'Ŗ' => 'R', 'Ř' => 'R', 'ŕ' => 'r', 'ŗ' => 'r', 'ř' => 'r',
+        'Ś' => 'S', 'Ŝ' => 'S', 'Ş' => 'S', 'Š' => 'S', 'ś' => 's', 'ŝ' => 's', 'ş' => 's', 'š' => 's',
+        'ß' => 'ss',
+        'Ţ' => 'T', 'Ť' => 'T', 'Ŧ' => 'T', 'Þ' => 'TH',
+        'ţ' => 't', 'ť' => 't', 'ŧ' => 't', 'þ' => 'th',
+        'Ù' => 'U', 'Ú' => 'U', 'Û' => 'U', 'Ü' => 'U', 'Ũ' => 'U', 'Ū' => 'U', 'Ŭ' => 'U', 'Ů' => 'U', 'Ű' => 'U', 'Ų' => 'U',
+        'ù' => 'u', 'ú' => 'u', 'û' => 'u', 'ü' => 'u', 'ũ' => 'u', 'ū' => 'u', 'ŭ' => 'u', 'ů' => 'u', 'ű' => 'u', 'ų' => 'u',
+        'Ŵ' => 'W', 'ŵ' => 'w',
+        'Ý' => 'Y', 'Ŷ' => 'Y', 'Ÿ' => 'Y', 'ý' => 'y', 'ŷ' => 'y', 'ÿ' => 'y',
+        'Ź' => 'Z', 'Ż' => 'Z', 'Ž' => 'Z', 'ź' => 'z', 'ż' => 'z', 'ž' => 'z',
+    ];
+
+    /**
+     * Standard web-safe URL portion slugifier. Folds accented letters down to ASCII from the
+     * explicit map above (host-independent), then drops anything left that is not a word character.
      *
      * @param string $text
      * @return string
      */
     public static function slug(string $text): string
     {
+        $text = \strtr($text, self::$asciiFolding);
         $text = \preg_replace('~[^\pL\d]+~u', '-', $text);
-        $text = \iconv('utf-8', 'us-ascii//TRANSLIT', $text);
-        $text = \preg_replace('~[^-\w]+~', '', $text);
-        $text = \trim($text, '-');
+        $text = \preg_replace('~[^-\w]+~', '', (string)$text);
+        $text = \trim((string)$text, '-');
         $text = \preg_replace('~-+~', '-', $text);
-        $text = \strtolower($text);
+        $text = \strtolower((string)$text);
 
         if (empty($text)) {
             return 'n-a';
