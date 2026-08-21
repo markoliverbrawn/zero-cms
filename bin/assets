@@ -1,0 +1,225 @@
+#!/usr/bin/env php
+<?php
+// bin/assets - Image variant cache maintenance utility for Zero CMS
+//
+// The variant cache is self-healing: every URL is signed over its source's version stamp, so
+// editing an image publishes it under new URLs and the old files simply stop being referenced.
+// Nothing here is required for correctness -- it exists to reclaim the space those unreferenced
+// renditions occupy, and to pre-render a site's variants so the first visitor after a bulk
+// import does not pay for them.
+
+define('APPLICATION_ROOT', dirname(__DIR__));
+define('CLI_CONTEXT', true);
+
+// Register global PSR-4 Autoloader for Zero namespace mapping
+spl_autoload_register(function ($class) {
+    $prefix = 'Zero\\';
+    $baseDir = APPLICATION_ROOT . '/src/';
+
+    $len = strlen($prefix);
+    if (strncmp($prefix, $class, $len) !== 0) {
+        return;
+    }
+
+    $file = $baseDir . str_replace('\\', '/', substr($class, $len)) . '.php';
+    if (file_exists($file)) {
+        require_once $file;
+    }
+});
+
+use Zero\Core\App;
+use Zero\Core\Env;
+use Zero\Core\Storage\Storage;
+use Zero\Database\DB;
+use Zero\Support\Assets;
+use Zero\Support\ImageProcessor;
+use Zero\Support\VariantCache;
+
+Env::load(APPLICATION_ROOT);
+App::bootstrap();
+
+/**
+ * Print usage information and exit.
+ *
+ * @return void
+ */
+function assetsUsage(): void
+{
+    echo "Zero CMS - image variant cache maintenance\n\n";
+    echo "Usage: bin/assets <command> [options]\n\n";
+    echo "Commands:\n";
+    echo "  prune     Delete cached variants not read since a cutoff (default 90 days)\n";
+    echo "  clear     Delete every cached variant\n";
+    echo "  warm      Pre-render a size ladder for a site's images\n";
+    echo "  stats     Report cache file count and disk usage\n\n";
+    echo "Options:\n";
+    echo "  --site=<uuid>       Limit the command to one tenant\n";
+    echo "  --older-than=<age>  Prune cutoff, e.g. 30d, 12h, 604800 (seconds). Default 90d\n";
+    echo "  --widths=<list>     Comma-separated widths for warm. Default 400,800,1600\n";
+    echo "  --limit=<n>         Maximum images to warm. Default 500\n";
+    exit(1);
+}
+
+/**
+ * Parse a human-readable age string into seconds.
+ *
+ * @param string $value An age such as "90d", "12h", "30m", or a bare second count.
+ * @return int The age in seconds.
+ */
+function assetsParseAge(string $value): int
+{
+    if (preg_match('/^(\d+)\s*([smhdw]?)$/i', trim($value), $matches) !== 1) {
+        echo "Unrecognized age '{$value}'. Use a form like 90d, 12h, 30m, or a plain number of seconds.\n";
+        exit(1);
+    }
+
+    $amount = (int)$matches[1];
+    $multipliers = ['' => 1, 's' => 1, 'm' => 60, 'h' => 3600, 'd' => 86400, 'w' => 604800];
+
+    return $amount * $multipliers[strtolower($matches[2])];
+}
+
+/**
+ * Report a human-readable byte count.
+ *
+ * @param int $bytes Raw byte count.
+ * @return string
+ */
+function assetsFormatBytes(int $bytes): string
+{
+    $units = ['B', 'KB', 'MB', 'GB', 'TB'];
+    $index = 0;
+    $size = (float)$bytes;
+
+    while ($size >= 1024 && $index < count($units) - 1) {
+        $size /= 1024;
+        $index++;
+    }
+
+    return round($size, $index === 0 ? 0 : 1) . ' ' . $units[$index];
+}
+
+// --- Argument parsing ---
+$command = $argv[1] ?? '';
+$options = [];
+foreach (array_slice($argv, 2) as $argument) {
+    if (preg_match('/^--([a-z\-]+)(?:=(.*))?$/', $argument, $matches) === 1) {
+        $options[$matches[1]] = $matches[2] ?? '';
+    }
+}
+
+$site = isset($options['site']) && $options['site'] !== '' ? $options['site'] : null;
+
+switch ($command) {
+    case 'prune':
+        $age = assetsParseAge($options['older-than'] ?? '90d');
+        $deleted = VariantCache::prune($age, $site);
+        echo "Pruned {$deleted} cached variant(s) older than " . ($age / 86400) . " day(s)";
+        echo $site !== null ? " for site {$site}.\n" : ".\n";
+        break;
+
+    case 'clear':
+        $deleted = VariantCache::clear($site);
+        echo "Cleared {$deleted} cached variant(s)";
+        echo $site !== null ? " for site {$site}.\n" : ".\n";
+        break;
+
+    case 'stats':
+        $root = Storage::getVariantsRoot() . ($site !== null ? '/' . $site : '');
+        $count = 0;
+        $bytes = 0;
+        if (is_dir($root)) {
+            $iterator = new RecursiveIteratorIterator(
+                new RecursiveDirectoryIterator($root, FilesystemIterator::SKIP_DOTS)
+            );
+            foreach ($iterator as $file) {
+                if ($file->isFile()) {
+                    $count++;
+                    $bytes += $file->getSize();
+                }
+            }
+        }
+        echo "Variant cache: {$count} file(s), " . assetsFormatBytes($bytes) . "\n";
+        echo "Location: {$root}\n";
+        echo 'Durable copy: ' . (Storage::isLocalDriver() ? 'local disk only' : 'mirrored to the configured bucket') . "\n";
+        break;
+
+    case 'warm':
+        if ($site === null) {
+            echo "warm requires --site=<uuid>, since a variant URL is scoped to one tenant.\n";
+            exit(1);
+        }
+
+        $widths = array_values(array_filter(array_map(
+            'intval',
+            explode(',', $options['widths'] ?? '400,800,1600')
+        )));
+        $limit = max(1, (int)($options['limit'] ?? 500));
+
+        $rows = DB::query(
+            "SELECT id, site_id, path, mime, title, filename, focus_x, focus_y, width, height, visibility, created_at, updated_at
+             FROM media
+             WHERE site_id = ? AND mime LIKE 'image/%' AND deleted_at IS NULL
+             ORDER BY created_at DESC
+             LIMIT {$limit}",
+            [$site]
+        )->fetchAll();
+
+        Assets::prime($rows);
+
+        $rendered = 0;
+        $skipped = 0;
+        foreach ($rows as $row) {
+            $sourceBytes = null;
+            try {
+                $sourceBytes = Storage::isLocalDriver()
+                    ? (is_file(Storage::getRoot() . '/public/' . ltrim((string)$row['path'], '/'))
+                        ? file_get_contents(Storage::getRoot() . '/public/' . ltrim((string)$row['path'], '/'))
+                        : false)
+                    : Storage::read((string)$row['path']);
+            } catch (\Exception $exception) {
+                $sourceBytes = false;
+            }
+
+            if (empty($sourceBytes)) {
+                $skipped++;
+                continue;
+            }
+
+            foreach ($widths as $width) {
+                $url = Assets::url((string)$row['id'], $width, null, Assets::FIT_CONTAIN);
+                if ($url === '' || strpos($url, '/' . Assets::CACHE_DIRECTORY) !== 0) {
+                    // Not resizable (vector, animated, private); nothing to pre-render.
+                    continue;
+                }
+
+                $relativePath = ltrim($url, '/');
+                if (VariantCache::fetch($relativePath) !== null) {
+                    continue;
+                }
+
+                try {
+                    $variant = ImageProcessor::render(
+                        (string)$sourceBytes,
+                        $width,
+                        0,
+                        Assets::FIT_CONTAIN,
+                        (int)$row['focus_x'],
+                        (int)$row['focus_y']
+                    );
+                    VariantCache::store($relativePath, $variant['bytes']);
+                    $rendered++;
+                } catch (\Exception $exception) {
+                    echo "  ! {$row['filename']} @ {$width}px: " . $exception->getMessage() . "\n";
+                    $skipped++;
+                }
+            }
+        }
+
+        echo "Warmed {$rendered} variant(s) across " . count($rows) . " image(s) for site {$site}";
+        echo $skipped > 0 ? " ({$skipped} skipped).\n" : ".\n";
+        break;
+
+    default:
+        assetsUsage();
+}

@@ -12,7 +12,9 @@ declare(strict_types=1);
 
 namespace Zero\Core\Concerns;
 
+use Zero\Core\Storage\Storage;
 use Zero\Database\DB;
+use Zero\Support\Assets;
 
 /**
  * Trait ManagesBlocksAndModels
@@ -52,6 +54,14 @@ trait ManagesBlocksAndModels
      * Dynamically and recursively collect and eager-load all media assets referenced inside page builder blocks
      * by scanning for standardized 'media_id' and 'media_ids' fields. Prevents any N+1 query loops!
      * Returns an associative array of [media_id => physical_path].
+     *
+     * The single batched query deliberately selects more than the path: the extra columns are
+     * handed to Assets::prime(), which is what allows Assets::url() to mint focal-point-aware
+     * variant URLs during rendering without performing any I/O of its own. The query count is
+     * unchanged -- the same one round trip now serves both purposes.
+     *
+     * @param array $blocks Decoded page-builder block data.
+     * @return array Map of [media_id => stored path].
      */
     public static function eagerLoadBlockMedia(array $blocks): array
     {
@@ -63,11 +73,15 @@ trait ManagesBlocksAndModels
             }
             
             foreach ($data as $key => $val) {
-                if ($key === 'media_id') {
+                // 'image_path' and 'images' are the legacy spellings of 'media_id'/'media_ids'
+                // still present in older block payloads and seeded content. They are collected
+                // here so every render path resolves them from the one batched query rather than
+                // each theme growing its own collector for the keys it happens to know about.
+                if ($key === 'media_id' || $key === 'image_path') {
                     if (\is_string($val) && \strlen($val) === 36 && \strpos($val, '/') === false) {
                         $mediaIds[] = $val;
                     }
-                } elseif ($key === 'media_ids' && \is_array($val)) {
+                } elseif (($key === 'media_ids' || $key === 'images') && \is_array($val)) {
                     foreach ($val as $v) {
                         if (\is_string($v) && \strlen($v) === 36 && \strpos($v, '/') === false) {
                             $mediaIds[] = $v;
@@ -89,11 +103,20 @@ trait ManagesBlocksAndModels
             $filteredIds = \array_filter(\array_unique($mediaIds));
             if (!empty($filteredIds)) {
                 $placeholders = \implode(',', \array_fill(0, \count($filteredIds), '?'));
-                $sql = "SELECT id, path FROM media WHERE id IN ($placeholders) AND deleted_at IS NULL";
-                $stmt = DB::query($sql, \array_values($filteredIds));
+                $sql = "SELECT id, site_id, path, mime, title, filename, focus_x, focus_y, visibility, created_at, updated_at
+                        FROM media
+                        WHERE id IN ($placeholders) AND site_id = ? AND deleted_at IS NULL";
+                $params = \array_values($filteredIds);
+                $params[] = self::getCurrentSiteId();
+                $stmt = DB::query($sql, $params);
+
+                $rows = [];
                 while ($row = $stmt->fetch()) {
                     $mediaIdMap[$row['id']] = $row['path'];
+                    $rows[] = $row;
                 }
+
+                Assets::prime($rows);
             }
         }
         return $mediaIdMap;
@@ -128,6 +151,43 @@ trait ManagesBlocksAndModels
     public static function getRegisteredModels(): array
     {
         return self::$registeredModels;
+    }
+
+    /**
+     * Build the canonical media resolver closure for a set of page-builder blocks.
+     *
+     * Every block template receives a $resolveMedia callable that turns a media id (or an
+     * already-resolved path) into a public URL. This is the single implementation of that
+     * contract: it eager-loads every media record the blocks reference in one query, primes the
+     * variant URL registry from the same rows, and hands back a closure that only ever reads
+     * from the resulting in-memory map -- so a template can resolve a hundred images without
+     * issuing a hundred queries.
+     *
+     * Previously each render path grew its own copy of this closure, and they had already
+     * drifted apart in what they returned; funnelling them all through here removes both the
+     * duplication and the drift.
+     *
+     * @param array $blocks Decoded page-builder block data.
+     * @return callable A closure accepting a media id or path and returning a public URL.
+     */
+    public static function mediaResolver(array $blocks): callable
+    {
+        $mediaIdMap = self::eagerLoadBlockMedia($blocks);
+
+        return function ($idOrPath) use ($mediaIdMap) {
+            if (empty($idOrPath)) {
+                return '';
+            }
+
+            // An already-absolute path is passed straight through the storage driver, which is
+            // what lets a template reference a file that has no media record behind it.
+            $path = \strpos($idOrPath, '/') === 0 ? $idOrPath : ($mediaIdMap[$idOrPath] ?? '');
+            if (empty($path)) {
+                return '';
+            }
+
+            return Storage::getUrl($path);
+        };
     }
 
     /**

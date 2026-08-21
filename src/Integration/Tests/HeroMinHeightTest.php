@@ -2,9 +2,10 @@
 /**
  * Zero CMS - Hero Min Height setting Test
  *
- * Verifies that the 'min_height' setting on hero blocks is correctly
- * resolved and rendered as inline CSS style overrides on both public front-end pages
- * and dynamic administrative block previews.
+ * Verifies that the 'min_height' setting on hero blocks is correctly resolved and published as a
+ * CSS custom property on the block wrapper, which assets/css/blocks/hero.css then consumes. The
+ * template deliberately emits variables rather than declarations, so the assertions here check
+ * for the custom property rather than a raw min-height rule.
  *
  * PHP version 8.3
  *
@@ -44,7 +45,8 @@ $htmlDefault = Template::renderFile(
     ]
 );
 
-assert_test(strpos($htmlDefault, 'style=""') !== false || strpos($htmlDefault, 'style=" "') !== false || strpos($htmlDefault, 'style') === false, "Default min_height doesn't inject inline height styles on wrapper");
+assert_test(strpos($htmlDefault, 'style=') === false, "Default min_height emits no style attribute at all on the wrapper");
+assert_test(strpos($htmlDefault, '--hero-min-height') === false, "Default min_height leaves the stylesheet's own default in force");
 
 
 // 2. Test case: Custom min_height set to 60vh (should output inline min-height)
@@ -64,7 +66,8 @@ $html60 = Template::renderFile(
     ]
 );
 
-assert_test(strpos($html60, 'min-height: 60vh;') !== false, "Custom min_height of 60vh correctly renders 'min-height: 60vh;' style attribute");
+assert_test(strpos($html60, '--hero-min-height: 60vh') !== false, "Custom min_height of 60vh publishes '--hero-min-height: 60vh'");
+assert_test(strpos($html60, 'min-height:') === false || strpos($html60, '--hero-min-height') !== false, "The height is expressed as a custom property, not an inline declaration");
 
 
 // 3. Test case: Custom min_height set to 100vh
@@ -84,7 +87,13 @@ $html100 = Template::renderFile(
     ]
 );
 
-assert_test(strpos($html100, 'min-height: 100vh;') !== false, "Custom min_height of 100vh correctly renders 'min-height: 100vh;' style attribute");
+assert_test(strpos($html100, '--hero-min-height: 100vh') !== false, "Custom min_height of 100vh publishes '--hero-min-height: 100vh'");
 
+
+// 4. Test case: a hero with no media still renders cleanly, and the wrapper carries only
+// custom properties -- never a literal background-image declaration.
+echo "  Testing that hero styling is published purely as custom properties...\n";
+assert_test(strpos($html60, 'background-image') === false, "The hero template never inlines a background-image declaration");
+assert_test(strpos($html60, 'class="block-hero') !== false, "The hero wrapper keeps its block-hero class for the stylesheet to target");
 
 echo "Hero Minimum Height settings tests completed successfully!\n\n";

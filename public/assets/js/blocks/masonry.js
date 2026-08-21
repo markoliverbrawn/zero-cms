@@ -13,7 +13,10 @@ document.addEventListener('DOMContentLoaded', () => {
         triggers.forEach(img => {
             // Click listener to open Lightbox
             img.addEventListener('click', () => {
-                const src = img.getAttribute('src');
+                // Prefer the large rendition published on data-src, falling back to whatever is
+                // already displayed. The tile itself is a small scaled variant, so opening the
+                // lightbox on src alone would show a blown-up thumbnail.
+                const src = img.getAttribute('data-src') || img.getAttribute('src');
                 const title = img.parentElement.querySelector('h4') ? img.parentElement.querySelector('h4').textContent : '';
 
                 // Populate lightbox sources

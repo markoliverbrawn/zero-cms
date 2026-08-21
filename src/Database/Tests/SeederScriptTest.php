@@ -15,14 +15,25 @@ echo "=== Seeder Script CLI & Fallback Option Tests ===\n";
 $testDb = Env::get('DB_NAME');
 $phpBinary = 'php';
 
+// bin/seed legitimately wipes the uploads tree before reseeding. Pointing it at a throwaway
+// storage root keeps that from destroying the real public/storage/uploads directory -- which is
+// shared global state, so a seeder run here was previously deleting the fixture files of any
+// other suite running concurrently in another worker slot (and, when run on a developer's
+// machine, their actual uploaded media).
+$seederStorageRoot = APPLICATION_ROOT . '/storage/seeder-test-root-' . \bin2hex(\random_bytes(4));
+if (!\is_dir($seederStorageRoot . '/public/storage/uploads')) {
+    \mkdir($seederStorageRoot . '/public/storage/uploads', 0775, true);
+}
+
 // Helper to run seeder with specific arguments and environment variables
 function run_seeder_test_proc(string $args = '', array $envOverrides = []): string {
-    global $testDb, $phpBinary;
+    global $testDb, $phpBinary, $seederStorageRoot;
     
     // Merge standard test database name with any test-specific env overrides
     $envVars = array_merge([
         'DB_NAME' => $testDb,
-        'STORAGE_DRIVER' => 'local'
+        'STORAGE_DRIVER' => 'local',
+        'STORAGE_ROOT' => $seederStorageRoot
     ], $envOverrides);
     
     $envPrefix = '';
@@ -122,5 +133,17 @@ $adminHash = DB::query("SELECT password_hash FROM users WHERE username = 'admin'
 assert_test(!empty($adminHash), "Admin user is present in the database after seeding");
 assert_test(password_verify('CustomTestAdminPassword555', $adminHash) === true, "Admin user password hash matches CustomTestAdminPassword555");
 
+
+// Remove the throwaway storage root the seeded runs wrote into.
+if (\is_dir($seederStorageRoot)) {
+    $iterator = new RecursiveIteratorIterator(
+        new RecursiveDirectoryIterator($seederStorageRoot, FilesystemIterator::SKIP_DOTS),
+        RecursiveIteratorIterator::CHILD_FIRST
+    );
+    foreach ($iterator as $entry) {
+        $entry->isDir() ? \rmdir($entry->getPathname()) : \unlink($entry->getPathname());
+    }
+    \rmdir($seederStorageRoot);
+}
 
 echo "\n✅ Seeder Script CLI & Fallback Option Integration Tests Passed Successfully!\n";

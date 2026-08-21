@@ -70,6 +70,7 @@ class CssBundleController implements Controller
             $cssFiles = \array_merge($cssFiles, \array_map(
                 fn($f) => APPLICATION_ROOT . $f,
                 [
+                    '/public/assets/css/blocks/hero.css',
                     '/public/assets/css/blocks/text.css',
                     '/public/assets/css/blocks/text_image.css',
                     '/public/assets/css/blocks/gallery.css',

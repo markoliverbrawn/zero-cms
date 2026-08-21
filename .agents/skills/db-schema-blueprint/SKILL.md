@@ -55,6 +55,8 @@ CREATE TABLE media (
     title VARCHAR(255) NULL,                    -- added 0016
     focus_x INT NOT NULL DEFAULT 50,             -- added 0017 -- crop/focal-point %, 0-100
     focus_y INT NOT NULL DEFAULT 50,             -- added 0017
+    width INT NOT NULL DEFAULT 0,                -- added 0031 -- intrinsic pixel size, 0 = unmeasured
+    height INT NOT NULL DEFAULT 0,               -- added 0031
     filename VARCHAR(255) NOT NULL,
     path VARCHAR(255) NOT NULL,
     mime VARCHAR(255) NOT NULL, -- Core uses 'mime' column

@@ -2,9 +2,8 @@
 // src/Views/themes/default/post.php
 
 use Zero\Core\App;
-use Zero\Core\Storage\Storage;
 use Zero\Core\Template;
-use Zero\Database\DB;
+use Zero\Support\Assets;
 use Zero\Support\BlockHelper;
 use Zero\Support\Security;
 use Zero\Support\Str;
@@ -33,7 +32,7 @@ $shouldOmitTitle = !empty($post->omit_title) || $hasHeroBlock;
 
   <?php if (!empty($post->featured_image)): ?>
     <div class="post-featured-image-wrapper" style="margin-bottom: 2rem; border-radius: var(--border-radius, 8px); overflow: hidden; max-height: 400px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid var(--border-color, #e2e8f0);">
-      <img src="<?php echo Str::escape($post->featured_image); ?>" alt="" style="width: 100%; height: 100%; object-fit: cover; display: block;" />
+      <img src="<?php echo Assets::url($post->featured_image, width: 1600); ?>" srcset="<?php echo Str::escape(Assets::srcset($post->featured_image, [640, 960, 1280, 1600])); ?>" sizes="100vw" alt="" style="width: 100%; height: 100%; object-fit: cover; display: block;" />
     </div>
   <?php endif; ?>
 
@@ -42,23 +41,10 @@ $shouldOmitTitle = !empty($post->omit_title) || $hasHeroBlock;
     $content = $post->content ?? '';
     $decodedBlocks = json_decode($content, true);
     
-    // 1. Eager load all media assets referenced across all blocks (resolves both media_id and media_ids recursively)
-    $mediaIdMap = [];
-    if (json_last_error() === JSON_ERROR_NONE && is_array($decodedBlocks)) {
-        $mediaIdMap = App::eagerLoadBlockMedia($decodedBlocks);
-    }
-
-    // 2. Ultra-fast media resolver helper (no DB hits!)
-    $resolveMedia = function($idOrPath) use ($mediaIdMap) {
-        if (empty($idOrPath)) {
-            return '';
-        }
-        $path = strpos($idOrPath, '/') === 0 ? $idOrPath : ($mediaIdMap[$idOrPath] ?? '');
-        if (empty($path)) {
-            return '';
-        }
-        return Storage::getUrl($path);
-    };
+    // 1. Eager load every media asset referenced across all blocks in one query and take the
+    // canonical resolver closure built from it (also primes Assets, so block templates can mint
+    // resized variant URLs without any further I/O).
+    $resolveMedia = App::mediaResolver(is_array($decodedBlocks) ? $decodedBlocks : []);
 
     if (json_last_error() === JSON_ERROR_NONE && is_array($decodedBlocks)): ?>
       <?php foreach ($decodedBlocks as $block): ?>

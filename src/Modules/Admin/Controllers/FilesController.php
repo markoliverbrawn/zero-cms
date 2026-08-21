@@ -268,6 +268,8 @@ class FilesController implements Controller
             $filename = $fileRecord['filename'];
             $dbPath = $fileRecord['path'];
             $mime = $fileRecord['mime'];
+            $width = (int)($fileRecord['width'] ?? 0);
+            $height = (int)($fileRecord['height'] ?? 0);
 
             // Handle optional file re-upload (overwriting physical asset while keeping DB ID)
             if (isset($_FILES['file']) && $_FILES['file']['error'] === UPLOAD_ERR_OK) {
@@ -285,19 +287,23 @@ class FilesController implements Controller
                 $filename = $result['filename'];
                 $dbPath = $result['path'];
                 $mime = $result['mime'];
+                $width = (int)($result['width'] ?? 0);
+                $height = (int)($result['height'] ?? 0);
             }
 
             $focusX = \max(0, \min(100, \intval($_POST['focus_x'] ?? 50)));
             $focusY = \max(0, \min(100, \intval($_POST['focus_y'] ?? 50)));
 
-            // Update record in database
+            // Update record in database. Bumping updated_at is what rotates every resized
+            // variant URL for this image, so a moved focal point or a replaced file is published
+            // under fresh URLs instead of being masked by a cached rendition.
             DB::query(
-                "UPDATE media SET title = ?, filename = ?, path = ?, mime = ?, focus_x = ?, focus_y = ?, updated_at = NOW() WHERE id = ? AND site_id = ?",
-                [$title, $filename, $dbPath, $mime, $focusX, $focusY, $fileId, $siteId]
+                "UPDATE media SET title = ?, filename = ?, path = ?, mime = ?, focus_x = ?, focus_y = ?, width = ?, height = ?, updated_at = NOW() WHERE id = ? AND site_id = ?",
+                [$title, $filename, $dbPath, $mime, $focusX, $focusY, $width, $height, $fileId, $siteId]
             );
 
-            // Reset cached cropped images for this media item
-            FileManagerService::clearCropCache($siteId, $fileId);
+            // Reclaim the now-unreferenced renditions of this media item
+            FileManagerService::clearVariantCache($siteId, $fileId);
 
             Logger::log($_SESSION['user_id'] ?? null, 'update', 'files', $fileId, [
                 'title' => $title ?: $filename

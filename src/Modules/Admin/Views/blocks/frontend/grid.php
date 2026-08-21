@@ -1,9 +1,7 @@
 <?php
 // src/Modules/Admin/Views/blocks/frontend/grid.php
 
-use Zero\Core\App;
-use Zero\Database\DB;
-use Zero\Models\Media;
+use Zero\Support\Assets;
 use Zero\Support\Str;
 
 $gap = $block['gap'] ?? '16px';
@@ -12,26 +10,11 @@ $colsTablet = $block['cols_tablet'] ?? '2';
 $colsMobile = $block['cols_mobile'] ?? '1';
 $items = $block['items'] ?? [];
 
-// Eager load all media records in a single database query to prevent N+1 queries!
-$mediaIds = [];
-foreach ($items as $item) {
-    if (!empty($item['media_id'])) {
-        $mediaIds[] = $item['media_id'];
-    }
-}
-
-$mediaRecords = [];
-if (!empty($mediaIds)) {
-    $uniqueIds = array_unique(array_filter($mediaIds));
-    if (!empty($uniqueIds)) {
-        $placeholders = implode(',', array_fill(0, count($uniqueIds), '?'));
-        $stmt = DB::query("SELECT * FROM media WHERE id IN ($placeholders)", array_values($uniqueIds));
-        $rows = $stmt->fetchAll();
-        foreach ($rows as $row) {
-            $mediaRecords[$row['id']] = $row;
-        }
-    }
-}
+// This block used to run its own unscoped "SELECT * FROM media WHERE id IN (...)" purely to
+// learn each item's mime type. Every referenced record is already loaded, tenant-scoped, by the
+// eager-loader that built $resolveMedia, so the mime type is read straight from that primed
+// registry instead -- one query fewer per grid, and no second place for tenant scoping to drift.
+$cardWidth = 800;
 ?>
 <div class="block-grid" style="--gap: <?php echo Str::escape($gap); ?>; --cols-desktop: <?php echo Str::escape($colsDesktop); ?>; --cols-tablet: <?php echo Str::escape($colsTablet); ?>; --cols-mobile: <?php echo Str::escape($colsMobile); ?>;">
     <?php foreach ($items as $item): 
@@ -44,12 +27,13 @@ if (!empty($mediaIds)) {
         
         $isSvg = false;
         $isVideo = false;
-        if (!empty($iMediaId) && isset($mediaRecords[$iMediaId])) {
-            $media = $mediaRecords[$iMediaId];
-            $mime = $media['mime'] ?? '';
-            $path = $media['path'] ?? '';
-            $isSvg = ($mime === 'image/svg+xml' || str_ends_with(strtolower($path), '.svg'));
-            $isVideo = (str_starts_with($mime, 'video/') || str_ends_with(strtolower($path), '.mp4'));
+        $iMediaUrl = '';
+        if (!empty($iMediaId)) {
+            $iMediaUrl = $resolveMedia($iMediaId);
+            $mime = Assets::mime($iMediaId);
+            $lowerUrl = strtolower($iMediaUrl);
+            $isSvg = ($mime === 'image/svg+xml' || str_ends_with($lowerUrl, '.svg'));
+            $isVideo = (str_starts_with($mime, 'video/') || str_ends_with($lowerUrl, '.mp4'));
         }
 
         $hasLink = !empty($iLinkUrl);
@@ -70,9 +54,15 @@ if (!empty($mediaIds)) {
             <?php if (!empty($iMediaId)): ?>
                 <div class="grid-card-image-wrapper<?php echo $isSvg ? ' is-svg' : ($isVideo ? ' is-video' : ''); ?>">
                     <?php if ($isVideo): ?>
-                        <video src="<?php echo Str::escape($resolveMedia($iMediaId)); ?>" autoplay loop muted playsinline class="grid-card-video"></video>
+                        <video src="<?php echo Str::escape($iMediaUrl); ?>" autoplay loop muted playsinline class="grid-card-video"></video>
                     <?php else: ?>
-                        <img src="<?php echo Str::escape($resolveMedia($iMediaId)); ?>" class="grid-card-image" alt="" />
+                        <img src="<?php echo Assets::url($iMediaUrl, width: $cardWidth, fit: Assets::FIT_CONTAIN); ?>"
+                             srcset="<?php echo Str::escape(Assets::srcset($iMediaUrl, [300, 600, 800])); ?>"
+                             sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                             class="grid-card-image"
+                             alt="<?php echo Str::escape($iTitle); ?>"
+                             loading="lazy"
+                             decoding="async" />
                     <?php endif; ?>
                 </div>
             <?php endif; ?>

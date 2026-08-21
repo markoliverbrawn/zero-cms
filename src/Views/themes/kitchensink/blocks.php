@@ -2,9 +2,8 @@
 // src/Views/themes/kitchensink/blocks.php
 
 use Zero\Core\App;
-use Zero\Core\Storage\Storage;
 use Zero\Core\Template;
-use Zero\Database\DB;
+use Zero\Support\Assets;
 use Zero\Support\BlockHelper;
 use Zero\Support\Security;
 use Zero\Support\Str;
@@ -12,66 +11,12 @@ use Zero\Support\Str;
 $content = $post->content ?? '';
 $decodedBlocks = json_decode($content, true);
 
-// 1. Collect all media IDs referenced across all blocks
-$mediaIds = [];
-if (json_last_error() === JSON_ERROR_NONE && is_array($decodedBlocks)) {
-    foreach ($decodedBlocks as $block) {
-        $type = $block['type'] ?? '';
-        if ($type === 'text_image' && !empty($block['image_path'])) {
-            $mediaIds[] = $block['image_path'];
-        } elseif ($type === 'gallery' && !empty($block['images'])) {
-            foreach ($block['images'] as $imgId) {
-                $mediaIds[] = $imgId;
-            }
-        } elseif ($type === 'gallery' && !empty($block['media_ids'])) {
-            // Support 'media_ids' fallback key for Showcase Grid Galleries seeding compatibility!
-            foreach ($block['media_ids'] as $imgId) {
-                $mediaIds[] = $imgId;
-            }
-        } elseif ($type === 'masonry' && !empty($block['items'])) {
-            foreach ($block['items'] as $item) {
-                if (!empty($item['image_path'])) {
-                    $mediaIds[] = $item['image_path'];
-                }
-            }
-        }
-    }
-}
-
-// 2. Fetch all media records (including path, title, and filename) in a single SQL query
-$mediaIdMap = [];
-if (!empty($mediaIds)) {
-    $filteredIds = array_filter(array_unique($mediaIds), function($id) {
-        return !empty($id) && strpos($id, '/') !== 0;
-    });
-    
-    if (!empty($filteredIds)) {
-        $placeholders = implode(',', array_fill(0, count($filteredIds), '?'));
-        $sql = "SELECT id, path, title, filename FROM media WHERE id IN ($placeholders) AND deleted_at IS NULL";
-        $stmt = DB::query($sql, array_values($filteredIds));
-        while ($row = $stmt->fetch()) {
-            $mediaIdMap[$row['id']] = [
-                'path' => $row['path'],
-                'title' => $row['title'] ?: $row['filename']
-            ];
-        }
-    }
-}
-
-// 3. Ultra-fast media resolver helper (no DB hits!)
-$resolveMedia = function($idOrPath) use ($mediaIdMap) {
-    if (empty($idOrPath)) {
-        return '';
-    }
-    if (strpos($idOrPath, '/') === 0) {
-        return Storage::getUrl($idOrPath);
-    }
-    $path = $mediaIdMap[$idOrPath]['path'] ?? '';
-    if (empty($path)) {
-        return '';
-    }
-    return Storage::getUrl($path);
-};
+// 1. Eager load every media asset referenced across all blocks in one query and take the
+// canonical resolver closure built from it. This theme used to carry its own collector and its
+// own resolver closure, which had already drifted from the core implementation; the shared one
+// understands every media key spelling and also primes Assets so resized variant URLs below
+// cost nothing to mint.
+$resolveMedia = App::mediaResolver(is_array($decodedBlocks) ? $decodedBlocks : []);
 
 if (json_last_error() === JSON_ERROR_NONE && is_array($decodedBlocks)): ?>
   <div class="post-blocks" style="display: flex; flex-direction: column; gap: 3rem;">
@@ -114,7 +59,8 @@ if (json_last_error() === JSON_ERROR_NONE && is_array($decodedBlocks)): ?>
               echo '</div>';
               echo '<div class="block-image-col" style="flex: 1 1 35%; min-width: 250px; border-radius: var(--border-radius); overflow: hidden; border: 1px solid var(--border-color);">';
               if (!empty($img)) {
-                  echo '<img src="' . Str::escape($resolveMedia($img)) . '" style="width: 100%; height: 100%; object-fit: cover; display: block;" alt="" />';
+                  $imgUrl = $resolveMedia($img);
+                  echo '<img src="' . Assets::url($imgUrl, width: 800, height: 600) . '" srcset="' . Str::escape(Assets::srcset($imgUrl, [400, 800, 1200], 4 / 3)) . '" sizes="(max-width: 700px) 100vw, 35vw" loading="lazy" decoding="async" style="width: 100%; height: 100%; object-fit: cover; display: block;" alt="" />';
               }
               echo '</div>';
               echo '</div>';
@@ -160,11 +106,12 @@ if (json_last_error() === JSON_ERROR_NONE && is_array($decodedBlocks)): ?>
                   echo '<div class="gallery-grid">';
                   foreach ($galleryImages as $imgId) {
                       $mediaUrl = $resolveMedia($imgId);
-                      // Access the pre-fetched title fully in-memory with 0 database queries!
-                      $titleText = $mediaIdMap[$imgId]['title'] ?? '';
-                      
+                      // Titles come from the same primed registry as the URLs, so labelling
+                      // every image still costs zero additional database queries.
+                      $titleText = Assets::title($imgId);
+
                       echo '<div class="gallery-item">';
-                      echo '<img src="' . Str::escape($mediaUrl) . '" class="gallery-lightbox-trigger" data-src="' . Str::escape($mediaUrl) . '" data-title="' . Str::escape($titleText) . '" style="cursor: pointer; transition: transform 0.2s ease;" alt="" />';
+                      echo '<img src="' . Assets::url($mediaUrl, width: 600, height: 450) . '" class="gallery-lightbox-trigger" data-src="' . Assets::url($mediaUrl, width: 1800, fit: Assets::FIT_CONTAIN) . '" data-title="' . Str::escape($titleText) . '" loading="lazy" decoding="async" alt="" />';
                       echo '</div>';
                   }
                   echo '</div>';

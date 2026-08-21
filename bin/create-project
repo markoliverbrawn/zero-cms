@@ -749,7 +749,23 @@ chmod("{$target}/bin/setup-symlinks", 0755);
 // --- 9. Environment configuration ---
 if (file_exists("{$target}/{$vendorDir}/.env.example")) {
     copy("{$target}/{$vendorDir}/.env.example", "{$target}/.env");
+
+    // Mint a real signing key up front rather than leaving the placeholder empty. It signs the
+    // on-demand image variant URLs, and generating it here means a fresh project starts with a
+    // per-installation secret instead of silently relying on the derived fallback.
+    $envContents = file_get_contents("{$target}/.env");
+    if ($envContents !== false && strpos($envContents, 'APP_KEY=') !== false) {
+        $envContents = preg_replace(
+            '/^APP_KEY=.*$/m',
+            'APP_KEY=' . bin2hex(random_bytes(32)),
+            $envContents,
+            1
+        );
+        file_put_contents("{$target}/.env", $envContents);
+    }
+
     echo "-> Copied {$vendorDir}/.env.example to .env (edit DB credentials before running the seeder)\n";
+    echo "-> Generated a random APP_KEY in .env\n";
 }
 
 // Copy Core's own .htaccess files as-is rather than re-authoring their rewrite/hardening rules

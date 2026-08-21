@@ -1,7 +1,4 @@
 /* Corporate Deep Blue Theme Stylesheet */
-@import url('../../blocks/hero.css');
-@import url('../../blocks/sub_pages.css');
-
 :root {
     --bg-color: #f1f5f9;
     --card-bg: #ffffff;

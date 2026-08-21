@@ -15,8 +15,10 @@ namespace Zero\Modules\Admin\Services;
 
 use Zero\Core\Storage\Storage;
 use Zero\Database\DB;
+use Zero\Support\ImageProcessor;
 use Zero\Support\Logger;
 use Zero\Support\Security;
+use Zero\Support\VariantCache;
 
 /**
  * Class FileManagerService
@@ -159,10 +161,11 @@ class FileManagerService
         }
 
         $dbPath = Storage::getUrl($targetPath);
+        $dimensions = self::probeDimensions($dbPath);
         $newFileId = Security::uuidv7();
         DB::query(
-            "INSERT INTO media (id, site_id, filename, path, mime, folder, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())",
-            [$newFileId, $siteId, $filename, $dbPath, $detectedMime, $folder]
+            "INSERT INTO media (id, site_id, filename, path, mime, folder, width, height, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())",
+            [$newFileId, $siteId, $filename, $dbPath, $detectedMime, $folder, $dimensions['width'], $dimensions['height']]
         );
 
         Logger::log($_SESSION['user_id'] ?? null, 'create', 'files', $newFileId, [
@@ -178,6 +181,8 @@ class FileManagerService
                 'path' => $dbPath,
                 'mime' => $detectedMime,
                 'folder' => $folder,
+                'width' => $dimensions['width'],
+                'height' => $dimensions['height'],
                 'created_at' => \gmdate('Y-m-d H:i:s')
             ]
         ];
@@ -227,30 +232,80 @@ class FileManagerService
             return ['success' => false, 'error' => 'Could not save the re-uploaded file.', 'statusHint' => 500];
         }
 
+        $dbPath = Storage::getUrl($targetPath);
+        $dimensions = self::probeDimensions($dbPath);
+
         return [
             'success' => true,
             'statusHint' => 200,
             'filename' => $newFilename,
-            'path' => Storage::getUrl($targetPath),
-            'mime' => $detectedMime
+            'path' => $dbPath,
+            'mime' => $detectedMime,
+            'width' => $dimensions['width'],
+            'height' => $dimensions['height']
         ];
     }
 
     /**
-     * Delete cached crop variants for a media item (used after replacing/re-focusing an image).
+     * Delete cached resized variants for a media item (used after replacing/re-focusing an image).
+     *
+     * Also sweeps the legacy uploads/{site}/_crops folder, which is where square thumbnails used
+     * to be written before the variant cache moved out of the uploads tree. Installations
+     * upgrading through this change will still have those files sitting among a user's own media,
+     * and nothing writes them any more, so this is their only route to being reclaimed.
      */
-    public static function clearCropCache(string $siteId, string $mediaId): void
+    public static function clearVariantCache(string $siteId, string $mediaId): void
     {
-        $cropsDir = Storage::getUploadsRoot() . "/{$siteId}/_crops";
-        if (!\file_exists($cropsDir)) {
+        VariantCache::forget($siteId, $mediaId);
+
+        $legacyCropsDir = Storage::getUploadsRoot() . "/{$siteId}/_crops";
+        if (!\file_exists($legacyCropsDir)) {
             return;
         }
-        $files = \glob("{$cropsDir}/crop_{$mediaId}_*.jpg");
+        $files = \glob("{$legacyCropsDir}/crop_{$mediaId}_*.jpg");
         if (\is_array($files)) {
-            foreach ($files as $f) {
-                @\unlink($f);
+            foreach ($files as $legacyFile) {
+                if (\is_file($legacyFile) && !\unlink($legacyFile)) {
+                    \error_log("File manager: could not remove legacy crop cache file {$legacyFile}");
+                }
             }
         }
+    }
+
+    /**
+     * Measure a stored image's intrinsic dimensions.
+     *
+     * Recorded at upload time so that markup can carry accurate width/height attributes -- which
+     * lets a browser reserve the right amount of space before an image arrives, removing the
+     * layout shift that otherwise happens as each one loads -- and so that variant sizing can
+     * avoid upscaling without inspecting the file on every page render.
+     *
+     * Deliberately measured after the file has been stored rather than from the upload's
+     * temporary copy: Storage::putFile() downscales oversized images on the way in, so the
+     * temporary file's dimensions are not necessarily the ones that end up on disk.
+     *
+     * @param string $storedPath The stored path of the image.
+     * @return array{width: int, height: int} Zeroes when the file is not a measurable image.
+     */
+    protected static function probeDimensions(string $storedPath): array
+    {
+        try {
+            $bytes = Storage::read($storedPath);
+        } catch (\Exception $exception) {
+            \error_log('File manager: could not read stored file to measure it: ' . $exception->getMessage());
+
+            return ['width' => 0, 'height' => 0];
+        }
+
+        if ($bytes === null || $bytes === '') {
+            return ['width' => 0, 'height' => 0];
+        }
+
+        $probe = ImageProcessor::probe($bytes);
+
+        return $probe === null
+            ? ['width' => 0, 'height' => 0]
+            : ['width' => $probe['width'], 'height' => $probe['height']];
     }
 
     /**

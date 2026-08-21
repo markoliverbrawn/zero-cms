@@ -12,9 +12,7 @@ declare(strict_types=1);
 namespace Zero\Modules\Admin\Controllers\Api;
 
 use Zero\Core\App;
-use Zero\Core\Storage\Storage;
 use Zero\Core\Template;
-use Zero\Models\Media;
 use Zero\Support\Security;
 
 /**
@@ -70,13 +68,10 @@ class BlockPreviewApiController extends AdminApiControllerBase
             }
         }
 
-        // Custom mock resolver helper
-        $resolveMedia = function($idOrPath) {
-            if (empty($idOrPath)) return '';
-            if (\strpos($idOrPath, '/') === 0) return Storage::getUrl($idOrPath);
-            $media = Media::find($idOrPath);
-            return $media ? Storage::getUrl($media->path) : '';
-        };
+        // The same resolver the frontend uses, so a preview resolves media (and mints resized
+        // variant URLs) through exactly the code path the published page will. The previous
+        // bespoke closure issued one model lookup per image; this batches the whole block.
+        $resolveMedia = App::mediaResolver([$block]);
 
         if (\file_exists($blockPath)) {
             \ob_start();

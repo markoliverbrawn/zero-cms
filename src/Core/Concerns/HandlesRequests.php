@@ -15,6 +15,7 @@ use Zero\Core\Env;
 use Zero\Core\Template;
 use Zero\Database\DB;
 use Zero\Http\Controllers\CssBundleController;
+use Zero\Http\Controllers\MediaVariantController;
 use Zero\Http\Router;
 
 /**
@@ -87,6 +88,12 @@ trait HandlesRequests
         // Statically register the dynamic theme-specific CSS asset bundler route
         Router::register('#^/assets/css/main-([a-zA-Z0-9_\-]+)\.css$#', CssBundleController::class);
 
+        // Statically register the on-demand image variant renderer. This route is only ever
+        // reached on a cache miss: public/.htaccess lets the web server serve an already
+        // generated variant straight off disk and rewrites to the front controller solely when
+        // the file is absent, so a warm variant costs no PHP execution at all.
+        Router::register(MediaVariantController::ROUTE_PATTERN, MediaVariantController::class);
+
         // Router middleware for all dynamic and admin routes (view post by slug, admin list, edit, new, delete, login, logout, forgot, reset, dashboard)
         $router = new Router();
         if ($router->handle($uri)) {
@@ -113,6 +120,7 @@ trait HandlesRequests
                 'jpg' => 'image/jpeg',
                 'jpeg' => 'image/jpeg',
                 'gif' => 'image/gif',
+                'webp' => 'image/webp',
                 'mp4' => 'video/mp4'
             ];
             $mime = $mimes[$ext] ?? \mime_content_type($static);

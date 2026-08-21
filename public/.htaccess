@@ -4,6 +4,15 @@ RewriteBase /
 # Intercept and rewrite the dynamic theme-specific CSS bundlers directly to index.php
 RewriteRule ^assets/css/main-([a-zA-Z0-9_\-]+)\.css$ index.php [L,QSA]
 
+# 0. ON-DEMAND IMAGE VARIANTS (must precede the static whitelist below)
+# Generated image renditions live at the exact path their URL describes, so once a variant
+# exists Apache serves it directly as a static file and PHP is never invoked. Only a cache
+# miss -- the very first request for that specific rendition -- is rewritten to the front
+# controller, which renders it, writes it to disk, and streams it back.
+RewriteCond %{REQUEST_URI} ^/storage/variants/ [NC]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^ index.php [L,QSA]
+
 # 1. EXCLUSIVELY WHITELIST web-accessible public asset folders and entry gateways
 # (This allows Apache to serve styles, scripts, images, and public uploads directly)
 RewriteCond %{REQUEST_URI} !^/assets/ [NC]
@@ -31,6 +40,7 @@ RewriteRule ^ index.php [L,QSA]
     ExpiresByType image/svg+xml "access plus 1 year"
     ExpiresByType image/png "access plus 1 year"
     ExpiresByType image/jpeg "access plus 1 year"
+    ExpiresByType image/webp "access plus 1 year"
     ExpiresByType image/x-icon "access plus 1 year"
     ExpiresByType image/vnd.microsoft.icon "access plus 1 year"
     
@@ -45,7 +55,7 @@ RewriteRule ^ index.php [L,QSA]
 
 <IfModule mod_headers.c>
     # Set Cache-Control header for static assets recursively
-    <FilesMatch "\.(css|js|woff2|png|jpg|jpeg|gif|ico|svg|mp4|webm|ogv)$">
+    <FilesMatch "\.(css|js|woff2|png|jpg|jpeg|gif|webp|ico|svg|mp4|webm|ogv)$">
         Header set Cache-Control "public, max-age=31536000, immutable"
     </FilesMatch>
 </IfModule>

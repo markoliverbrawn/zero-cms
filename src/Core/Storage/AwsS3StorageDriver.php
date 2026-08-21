@@ -128,6 +128,7 @@ class AwsS3StorageDriver implements StorageDriver
             'jpg' => 'image/jpeg',
             'jpeg' => 'image/jpeg',
             'gif' => 'image/gif',
+            'webp' => 'image/webp',
             'svg' => 'image/svg+xml',
             'txt' => 'text/plain',
             'pdf' => 'application/pdf',
@@ -242,6 +243,28 @@ class AwsS3StorageDriver implements StorageDriver
         }
         $content = \file_get_contents($tmpFilePath);
         return $this->write($path, $content);
+    }
+
+    /**
+     * Read the raw bytes of an object out of S3 via a SigV4-signed GET.
+     *
+     * @param string $path The file path.
+     * @return string|null The object contents, or null when the object does not exist.
+     * @throws \Exception If the bucket responds with an unexpected status.
+     */
+    public function read(string $path): ?string
+    {
+        $cleanPath = $this->cleanPath($path);
+        $response = $this->sendRequest('GET', $cleanPath);
+
+        if ($response['status'] === 404) {
+            return null;
+        }
+        if ($response['status'] !== 200 || $response['body'] === false) {
+            throw new \Exception("S3 read failed with HTTP status {$response['status']} for object: {$cleanPath}");
+        }
+
+        return (string)$response['body'];
     }
 
     /**

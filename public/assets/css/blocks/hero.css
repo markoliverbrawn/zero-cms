@@ -1,1 +1,79 @@
-/* public/assets/css/blocks/baseline.css - baseline styles are compiled inside combined main.css */
+/* public/assets/css/blocks/hero.css - hero block layout and background compositing.
+   The two values the template cannot know statically arrive as custom properties:
+   --hero-bg-image (the focal-point-cropped variant URL) and --hero-min-height. */
+.block-hero {
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    overflow: hidden;
+    margin-bottom: 3rem;
+    padding: 4rem 3rem;
+    border-radius: var(--border-radius, 8px);
+    min-height: var(--hero-min-height, 45vh);
+    background-color: var(--bg-color, #051424);
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-size: cover;
+
+    /* Two gradient layers fade the artwork into the page background and hold down the left
+       edge so overlaid text stays legible, with the image itself as the bottom layer. When no
+       image is set the layer resolves to none and only the gradients remain. */
+    background-image:
+        linear-gradient(to bottom, transparent 60%, var(--bg-color, #051424) 100%),
+        linear-gradient(to right, var(--bg-color, #051424) 0%, rgba(5, 20, 36, 0.75) 50%, rgba(5, 20, 36, 0.25) 100%),
+        var(--hero-bg-image, none);
+
+    &.full-width-hero {
+        border-radius: 0;
+        width: 100vw;
+        max-width: none;
+        margin-left: calc(50% - 50vw);
+        margin-right: calc(50% - 50vw);
+    }
+
+    .hero-video-bg {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        z-index: 0;
+    }
+
+    .hero-video-overlay {
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        background-image: linear-gradient(to right, var(--bg-color, #051424) 0%, rgba(5, 20, 36, 0.6) 60%, rgba(5, 20, 36, 0.2) 100%);
+    }
+
+    .hero-text-container {
+        position: relative;
+        z-index: 2;
+        max-width: 46rem;
+
+        h1 {
+            margin: 0 0 1rem 0;
+            font-size: clamp(1.9rem, 5vw, 3.2rem);
+            font-weight: 800;
+            line-height: 1.1;
+            color: #ffffff;
+        }
+    }
+
+    .hero-content-area {
+        font-size: 1.05rem;
+        line-height: 1.6;
+        color: rgba(255, 255, 255, 0.86);
+
+        p:last-child {
+            margin-bottom: 0;
+        }
+    }
+}
+
+@media (max-width: 768px) {
+    .block-hero {
+        padding: 2.5rem 1.5rem;
+    }
+}

@@ -77,6 +77,14 @@ interface StorageDriver
     public function putFile(string $path, string $tmpFilePath): bool;
 
     /**
+     * Read the raw bytes of a stored file.
+     *
+     * @param string $path The file path.
+     * @return string|null The file contents, or null when the object does not exist.
+     */
+    public function read(string $path): ?string;
+
+    /**
      * Rename or move a file or directory.
      *
      * @param string $oldPath The original path.

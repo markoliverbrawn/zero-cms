@@ -25,6 +25,7 @@ class Storage
 {
     protected static $driverInstance = null;
     protected static $root = null;
+    protected static $envRoot = null;
 
     /**
      * Register the absolute root directory under which this app's own local storage lives:
@@ -44,13 +45,29 @@ class Storage
     }
 
     /**
-     * Get the configured storage root, defaulting to APPLICATION_ROOT when none is registered.
+     * Get the configured storage root.
+     *
+     * Resolution order: an explicitly registered root, then a STORAGE_ROOT environment variable,
+     * then APPLICATION_ROOT. The environment variable is the non-programmatic equivalent of
+     * setRoot(), for contexts that cannot call it before the storage layer is first touched --
+     * a CLI process such as bin/seed, whose behaviour includes wiping the uploads tree, and which
+     * therefore has to be pointable at a throwaway root when it is being exercised by a test
+     * rather than run for real.
      *
      * @return string
      */
     public static function getRoot(): string
     {
-        return self::$root ?? APPLICATION_ROOT;
+        if (self::$root !== null) {
+            return self::$root;
+        }
+
+        if (self::$envRoot === null) {
+            $configured = (string)Env::get('STORAGE_ROOT', '');
+            self::$envRoot = $configured !== '' ? \rtrim($configured, '/') : APPLICATION_ROOT;
+        }
+
+        return self::$envRoot;
     }
 
     /**
@@ -71,6 +88,21 @@ class Storage
     public static function getPrivateStorageRoot(): string
     {
         return self::getRoot() . '/storage/private';
+    }
+
+    /**
+     * Get the absolute directory where derived image variants are cached on local disk.
+     *
+     * Deliberately a sibling of storage/uploads rather than a folder inside it: variants are a
+     * disposable, regenerable cache, so keeping them out of the uploads tree means the media
+     * library never lists them, Media::forceDelete() never trips over them, and the whole cache
+     * can be discarded with a single recursive delete without endangering a user's originals.
+     *
+     * @return string
+     */
+    public static function getVariantsRoot(): string
+    {
+        return self::getRoot() . '/public/storage/variants';
     }
 
     /**
@@ -150,6 +182,19 @@ class Storage
     public static function getSignedUrl(string $path, int $expires = 3600): string
     {
         return self::getDriver()->getSignedUrl($path, $expires);
+    }
+
+    /**
+     * Determine whether the active driver stores objects on this machine's own filesystem.
+     *
+     * Callers use this to decide whether a locally written cache file is durable (local driver)
+     * or merely a per-instance hot cache that also needs pushing to the remote bucket.
+     *
+     * @return bool
+     */
+    public static function isLocalDriver(): bool
+    {
+        return self::getDriver() instanceof LocalStorageDriver;
     }
 
     /**
@@ -283,6 +328,17 @@ class Storage
     }
 
     /**
+     * Reads the raw bytes of a stored file through the active storage driver.
+     *
+     * @param string $path Argument descriptor.
+     * @return string|null Response output, null when the object does not exist.
+     */
+    public static function read(string $path): ?string
+    {
+        return self::getDriver()->read($path);
+    }
+
+    /**
      * Renames or moves a file path using the active storage driver.
      *
      * @param string $oldPath Argument descriptor.
@@ -314,6 +370,23 @@ class Storage
                 @\unlink($tmp);
             }
         }
+        return self::getDriver()->write($path, $content);
+    }
+
+    /**
+     * Write raw bytes through the active driver *without* running the image optimizer.
+     *
+     * write() transparently re-encodes any image it is handed, which is the right default for
+     * user uploads but actively harmful for content that is already an optimized derivative --
+     * it would decode and re-compress a freshly generated variant, paying a second full GD pass
+     * and a second generation of lossy quality loss for no benefit. Cache writers use this.
+     *
+     * @param string $path Argument descriptor.
+     * @param string $content Argument descriptor.
+     * @return bool Response output.
+     */
+    public static function writeRaw(string $path, string $content): bool
+    {
         return self::getDriver()->write($path, $content);
     }
 }

@@ -94,7 +94,9 @@ Zero CMS is divided into fully decoupled, modular plug-ins under `src/Modules/`:
 │   ├── assets/                   # Publicly accessible static assets
 │   │   └── css/                  # Modular style files (admin.css)
 │   └── storage/                  # Public-facing symlink/passthrough for uploaded media
-├── bin/                          # CLI entry points (bin/seed, bin/test, bin/migrate, bin/queue-runner, bin/scheduler, etc.)
+│       ├── uploads/              # Tenant-scoped originals, exactly as uploaded
+│       └── variants/             # Derived image renditions (disposable cache, never mixed with uploads)
+├── bin/                          # CLI entry points (bin/seed, bin/test, bin/migrate, bin/assets, bin/queue-runner, bin/scheduler, etc.)
 ├── storage/                      # Private file storage (uploads, logs)
 ├── src/                          # OOP core framework engine
 │   ├── Core/                     # Kernel, Bootstrapping (App.php + Concerns/ traits), Env, Validator, Storage/ drivers (local, AWS S3, Google Cloud Storage)
@@ -111,14 +113,81 @@ Zero CMS is divided into fully decoupled, modular plug-ins under `src/Modules/`:
 │   │   ├── Search/               # Decoupled site search driver architecture
 │   │   └── Security/             # Platform security hardening & AI threat auditing module
 │   ├── Services/                 # Cross-cutting services (e.g. AiService + Ai/Providers)
-│   ├── Support/                  # Security, Logger, Emailer, Seeder/SeederRunner, TestRunner, Str, I18n
+│   ├── Support/                  # Security, Logger, Emailer, Seeder/SeederRunner, TestRunner, Str, I18n, Assets/ImageProcessor/VariantCache
 │   └── Views/                    # Cascading theme templates (themes/{site theme}/, themes/default/)
 ```
-Per-component tests live alongside the code they cover (e.g. `src/Core/Tests/`, `src/Modules/Search/Tests/`) rather than in a single top-level `tests/` directory — see Section 5.
+Per-component tests live alongside the code they cover (e.g. `src/Core/Tests/`, `src/Modules/Search/Tests/`) rather than in a single top-level `tests/` directory — see Section 6.
 
 ---
 
-## 4. System Security & Threat Model
+## 4. On-Demand Image Variants
+
+Templates never reference an original image directly. They ask `Zero\Support\Assets` for the
+rendition they actually need, and the engine produces it the first time a browser requests it:
+
+```php
+<img src="<?php echo Assets::url($mediaUrl, width: 600, height: 450); ?>"
+     srcset="<?php echo Str::escape(Assets::srcset($mediaUrl, [400, 600, 900], 4 / 3)); ?>"
+     sizes="(max-width: 600px) 100vw, 300px"
+     loading="lazy" decoding="async" alt="" />
+```
+
+Supplying both dimensions crops to fill, positioned on the image's stored focal point
+(`media.focus_x` / `focus_y`), so the subject stays in frame instead of being centre-cropped out
+of it. Supplying one scales proportionally without cropping. Renditions are never upscaled past
+their source. Arguments are designed to be passed by name.
+
+**Nothing that cannot be resized safely is rewritten.** Animated GIFs, SVGs, videos, non-image
+files, access-gated private media and paths with no media record behind them are all returned
+untouched, so `Assets::url()` is safe to wrap around every image URL unconditionally.
+
+### How it stays fast
+
+| Stage | Cost |
+| :--- | :--- |
+| `Assets::url()` during render | Pure computation — no filesystem stat, no query, no network |
+| Extra queries per page | **Zero.** The existing batched block-media eager-load primes the registry |
+| Warm HTTP request | Static file served by the web server; PHP is never invoked |
+| Cold HTTP request | One primary-key lookup plus one GD render — once per rendition, ever |
+
+The URL *is* the cache path (`/storage/variants/{site}/{shard}/{media}/{w}x{h}-{fit}-q{q}-{sig}.webp`).
+A rewrite rule in `public/.htaccess` lets the web server satisfy the request off disk whenever that
+file exists and falls through to the front controller only on a miss, where
+`MediaVariantController` renders it, publishes it by atomic rename, and streams it back with
+far-future immutable caching headers.
+
+### Signed URLs and invalidation
+
+Every URL embeds a truncated HMAC (keyed by `APP_KEY`) over the tenant, media id, dimensions, fit
+mode, quality, and the source's version stamp. Two properties follow:
+
+* **Only renditions the CMS itself minted can be generated.** The endpoint cannot be walked with
+  arbitrary dimensions to burn CPU or fill the disk; an unsigned request is a flat 404 before any
+  image work happens. A cross-tenant replay is refused for the same reason.
+* **Editing an image rotates its URLs.** Because the signature covers `media.updated_at`, moving a
+  focal point or replacing a file republishes every rendition under new URLs, which is what makes
+  the `immutable` caching header truthful rather than optimistic.
+
+Superseded files therefore stop being referenced rather than becoming stale. `bin/assets` reclaims
+them:
+
+```bash
+bin/assets stats                              # cache file count and disk usage
+bin/assets prune --older-than=90d             # drop renditions nothing has requested lately
+bin/assets warm --site=<uuid> --widths=400,800  # pre-render a ladder after a bulk import
+bin/assets clear [--site=<uuid>]              # discard the cache entirely
+```
+
+The cache is a deliberate sibling of the uploads tree, not a folder inside it: the media library
+only ever lists uploads, deleting a media record only ever touches its own object, and the whole
+cache can be discarded without endangering an original. Under the cloud storage drivers a variant
+is written both to local disk (a hot per-instance cache the web server can serve statically) and
+to the configured bucket (the durable copy a freshly started instance rehydrates from instead of
+re-rendering); putting a CDN in front is recommended there.
+
+---
+
+## 5. System Security & Threat Model
 
 The security boundaries of Zero CMS are rigorously isolated. Below is the **Threat Model & trust Boundaries Diagram** representing request validation, isolation checks, and security remediations:
 
@@ -171,7 +240,7 @@ Zero CMS is engineered under a strict, zero-trust security blueprint. Below is t
 
 ---
 
-## 5. Automated Testing & Continuous Integration
+## 6. Automated Testing & Continuous Integration
 
 Zero CMS maintains absolute stability and multi-tenant isolation via a **Zero-Dependency Automated Testing Suite**, with tests housed alongside the code they cover in each component's own `Tests/` folder (e.g. `src/Core/Tests/`, `src/Modules/Search/Tests/`), sharing one common `src/Support/TestBootstrap.php`:
 

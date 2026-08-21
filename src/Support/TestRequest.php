@@ -86,6 +86,13 @@ final class TestRequest
     private string $method;
 
     /**
+     * Media rows to create before the request runs, in declaration order.
+     *
+     * @var array<int, array<string, mixed>>
+     */
+    private array $media = [];
+
+    /**
      * Page rows to create before the request runs, in declaration order.
      *
      * @var array<int, array{attributes: array<string, mixed>, homepage: bool}>
@@ -186,6 +193,24 @@ final class TestRequest
     }
 
     /**
+     * Declare a media library row to create before the request runs.
+     *
+     * The row is inserted in the child process, so it is owned by whichever tenant onSite()
+     * created. Media is not among the tables the child truncates, but declaring fixtures here
+     * rather than inserting them in the parent keeps every fixture's lifetime tied to the one
+     * request that uses it.
+     *
+     * @param array<string, mixed> $attributes Column overrides for the media row.
+     * @return self
+     */
+    public function withMedia(array $attributes): self
+    {
+        $this->media[] = $attributes;
+
+        return $this;
+    }
+
+    /**
      * Begin a POST request.
      *
      * A route behind CsrfMiddleware also needs withCsrf(); without it the request is rejected at the
@@ -216,6 +241,10 @@ final class TestRequest
 
         if ($specification['site'] !== null) {
             $siteId = self::insertSite($specification['site']);
+        }
+
+        foreach ($specification['media'] as $mediaAttributes) {
+            self::insertMedia($mediaAttributes, $siteId);
         }
 
         foreach ($specification['pages'] as $page) {
@@ -388,6 +417,50 @@ final class TestRequest
     }
 
     /**
+     * Insert a media row, returning its identifier.
+     *
+     * @param array<string, mixed> $attributes Column overrides.
+     * @param string|null $siteId Owning tenant, or null for an unowned record.
+     * @return string
+     */
+    private static function insertMedia(array $attributes, ?string $siteId): string
+    {
+        $id = !empty($attributes['id']) ? (string)$attributes['id'] : Security::uuidv7();
+        $now = \gmdate('Y-m-d H:i:s');
+
+        // media is not among the tables the child truncates on startup, so a fixture pinned to a
+        // known id -- which anything asserting on a signed media URL needs -- would collide with
+        // the row an earlier request in the same test already inserted. Clearing it first makes
+        // the fixture idempotent across the several requests one test typically dispatches. The
+        // delete is hard rather than soft because a soft-deleted row still holds the primary key.
+        DB::query('DELETE FROM media WHERE id = ?', [$id]);
+
+        DB::query(
+            'INSERT INTO media (id, site_id, filename, path, mime, folder, title, focus_x, focus_y, width, height, visibility, created_at, updated_at, deleted_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            [
+                $id,
+                $attributes['site_id'] ?? $siteId,
+                $attributes['filename'] ?? 'fixture.jpg',
+                $attributes['path'] ?? '',
+                $attributes['mime'] ?? 'image/jpeg',
+                $attributes['folder'] ?? '',
+                $attributes['title'] ?? '',
+                $attributes['focus_x'] ?? 50,
+                $attributes['focus_y'] ?? 50,
+                $attributes['width'] ?? 0,
+                $attributes['height'] ?? 0,
+                $attributes['visibility'] ?? 'public',
+                $attributes['created_at'] ?? $now,
+                $attributes['updated_at'] ?? $now,
+                $attributes['deleted_at'] ?? null,
+            ]
+        );
+
+        return $id;
+    }
+
+    /**
      * Insert a pages row, returning its generated identifier.
      *
      * @param array<string, mixed> $attributes Column overrides.
@@ -426,14 +499,20 @@ final class TestRequest
     }
 
     /**
-     * Insert a sites row, returning its generated identifier.
+     * Insert a sites row, returning its identifier.
+     *
+     * The identifier may be supplied through the attributes rather than generated. That matters
+     * for anything whose request URI embeds the tenant id -- a signed image variant URL, for
+     * instance -- because the URI is fixed before the child process runs, while the site itself
+     * can only be created inside it (the child truncates the sites table on its first database
+     * access, so a tenant inserted by the parent would not survive to be resolved against).
      *
      * @param array<string, mixed> $attributes Column overrides, already carrying a resolved domain.
      * @return string
      */
     private static function insertSite(array $attributes): string
     {
-        $id = Security::uuidv7();
+        $id = !empty($attributes['id']) ? (string)$attributes['id'] : Security::uuidv7();
         $now = \gmdate('Y-m-d H:i:s');
 
         $modules = $attributes['enabled_modules'] ?? [];
@@ -507,7 +586,7 @@ final class TestRequest
      * Freeze the fluent state into the plain data structure handed to the child process, resolving
      * the tenant domain and the Host header the request will be resolved against.
      *
-     * @return array{method: string, uri: string, server: array<string, string>, query: array<string, mixed>, body: array<string, mixed>, site: array<string, mixed>|null, pages: array<int, array{attributes: array<string, mixed>, homepage: bool}>, user: array<string, mixed>|null, authenticate: bool, csrf: string|null}
+     * @return array{method: string, uri: string, server: array<string, string>, query: array<string, mixed>, body: array<string, mixed>, site: array<string, mixed>|null, media: array<int, array<string, mixed>>, pages: array<int, array{attributes: array<string, mixed>, homepage: bool}>, user: array<string, mixed>|null, authenticate: bool, csrf: string|null}
      */
     private function specification(): array
     {
@@ -540,6 +619,7 @@ final class TestRequest
             'query' => $this->query,
             'body' => $this->body,
             'site' => $site,
+            'media' => $this->media,
             'pages' => $this->pages,
             'user' => $this->user,
             'authenticate' => $this->authenticateUser,

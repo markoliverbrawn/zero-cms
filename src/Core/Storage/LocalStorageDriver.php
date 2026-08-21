@@ -255,6 +255,26 @@ class LocalStorageDriver implements StorageDriver
     }
 
     /**
+     * Reads the raw bytes of a file from local disk.
+     *
+     * @param string $path Argument descriptor.
+     * @return string|null Response output.
+     * @throws \Exception If the file exists but cannot be read.
+     */
+    public function read(string $path): ?string
+    {
+        $resolved = $this->resolvePath($path);
+        if (!\file_exists($resolved) || !\is_file($resolved)) {
+            return null;
+        }
+        $contents = \file_get_contents($resolved);
+        if ($contents === false) {
+            throw new \Exception("Read failed: Could not read the file (" . \basename($resolved) . ").");
+        }
+        return $contents;
+    }
+
+    /**
      * Renames or moves a file to a new target path on local disk.
      *
      * @param string $oldPath Argument descriptor.

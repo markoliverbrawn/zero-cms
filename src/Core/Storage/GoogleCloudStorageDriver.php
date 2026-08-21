@@ -379,6 +379,41 @@ class GoogleCloudStorageDriver implements StorageDriver
     }
 
     /**
+     * Read the raw bytes of an object out of GCS via an authenticated media download.
+     *
+     * @param string $path The file path.
+     * @return string|null The object contents, or null when the object does not exist.
+     * @throws Exception If the bucket responds with an unexpected status.
+     */
+    public function read(string $path): ?string
+    {
+        $cleanPath = $this->cleanPath($path);
+        $token = $this->getAccessToken();
+
+        $url = "https://storage.googleapis.com/storage/v1/b/{$this->bucketName}/o/" . \urlencode($cleanPath) . "?alt=media";
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_CUSTOMREQUEST => 'GET',
+            CURLOPT_HTTPHEADER => ["Authorization: Bearer {$token}"],
+            CURLOPT_TIMEOUT => 20
+        ]);
+
+        $body = curl_exec($ch);
+        $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($status === 404) {
+            return null;
+        }
+        if ($status !== 200 || $body === false) {
+            throw new Exception("GCS read failed with HTTP status {$status} for object: {$cleanPath}");
+        }
+
+        return (string)$body;
+    }
+
+    /**
      * Rename/move a file on GCS.
      *
      * @param string $oldPath The original path.

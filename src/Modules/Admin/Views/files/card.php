@@ -49,12 +49,18 @@ if ($mime === 'directory'): ?>
           $mediaModel->filename = $filename;
           $mediaModel->path = $path;
           $mediaModel->mime = $mime;
+          $mediaModel->title = $f['title'] ?? '';
           $mediaModel->site_id = $f['site_id'] ?? '';
           $mediaModel->focus_x = $f['focus_x'] ?? 50;
           $mediaModel->focus_y = $f['focus_y'] ?? 50;
+          $mediaModel->width = (int)($f['width'] ?? 0);
+          $mediaModel->height = (int)($f['height'] ?? 0);
+          $mediaModel->visibility = $f['visibility'] ?? 'public';
+          $mediaModel->created_at = $f['created_at'] ?? null;
+          $mediaModel->updated_at = $f['updated_at'] ?? null;
           $thumbnailPath = $mediaModel->getSquareCropUrl(300);
         ?>
-        <img src="<?php echo Str::escape($thumbnailPath); ?>" alt="<?php echo Str::escape(!empty($f['title']) ? $f['title'] : $filename); ?>" style="width: 100%; height: 100%; object-fit: cover; display: block;" />
+        <img src="<?php echo Str::escape($thumbnailPath); ?>" width="300" height="300" loading="lazy" decoding="async" alt="<?php echo Str::escape(!empty($f['title']) ? $f['title'] : $filename); ?>" style="width: 100%; height: 100%; object-fit: cover; display: block;" />
       <?php else: ?>
         <div class="file-mime-placeholder" style="width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative;">
           <span class="icon-svg" style="width: 60%; height: 60%; color: var(--text-color);">

@@ -381,7 +381,7 @@ class SeederRunner
     {
         if (\function_exists('posix_getuid') && \posix_getuid() === 0) {
             echo "--> Automatically adjusting ownership of storage folder recursively to 'www-data'...\n";
-            @\exec("chown -R www-data:www-data " . APPLICATION_ROOT . "/storage");
+            \exec("chown -R www-data:www-data " . \escapeshellarg(Storage::getRoot() . "/storage") . " 2>/dev/null");
         }
     }
 }
