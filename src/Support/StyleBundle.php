@@ -19,14 +19,15 @@ use Zero\Core\App;
  * Owns the compiled theme stylesheet: which source files make it up, in what order, what its
  * content-addressed URL is, and how it is minified and published to disk.
  *
- * The bundle's filename embeds a fingerprint of its own inputs -- every source file's path,
- * modification time and size. That single decision resolves what was previously a three-way bind:
+ * The bundle's filename embeds a fingerprint of its own inputs -- every source file's path and a
+ * digest of its contents. That single decision resolves what was previously a three-way bind:
  *
  *  - **Staleness.** The compiler used to write a fixed `main-{theme}.css` and serve it forever
  *    once it existed, with no way to notice its inputs had changed. Editing theme CSS did nothing
  *    until someone deleted the file by hand, and a deployment could serve the previous release's
  *    stylesheet indefinitely. A fingerprinted name cannot go stale: different inputs are a
- *    different URL.
+ *    different URL. Equally, *identical* inputs are the same URL, so a deployment that changes no
+ *    stylesheet leaves every visitor's cached bundle intact.
  *  - **Cacheability.** Because a given URL's bytes can now never change, the far-future
  *    `immutable` response header is truthful rather than optimistic, and the hand-maintained
  *    `?v=1.0` query string it replaced becomes unnecessary.
@@ -142,11 +143,16 @@ class StyleBundle
     /**
      * Fingerprint a theme's bundle inputs.
      *
-     * Hashes each source file's path, modification time and size rather than its contents: it
-     * gives the same "did anything change" answer for a fraction of the work, since a stat is
-     * cheaper than a read, and the read would otherwise happen on every page render just to
-     * decide a URL. Editing any source file, adding one, or enabling a module that contributes
-     * one all move the fingerprint.
+     * Derived from each source file's *contents*, folded together with its path so that reordering
+     * the set, adding to it, or enabling a module that contributes to it all move the fingerprint
+     * as well.
+     *
+     * Contents rather than modification time, for the same reason AssetVersion hashes contents: a
+     * git checkout or a docker build stamps every file with the build time, so an mtime-derived
+     * fingerprint would change on every deployment and discard a cached bundle that was still
+     * perfectly valid -- and a rollback would not get its old bundle back either. Content is the
+     * only signal that answers "did this actually change". The reads are a few kilobytes across the
+     * whole set and memoized per process, so the render path pays them at most once.
      *
      * @param string $theme Theme name.
      * @return string A short hex digest.
@@ -160,10 +166,13 @@ class StyleBundle
 
         $material = '';
         foreach (self::sourceFiles($theme) as $sourceFile) {
-            $modified = \filemtime($sourceFile);
-            $size = \filesize($sourceFile);
-            $material .= $sourceFile . ':' . ($modified === false ? '0' : $modified)
-                . ':' . ($size === false ? '0' : $size) . '|';
+            $contents = \file_get_contents($sourceFile);
+
+            // Each file is digested separately and the digests concatenated, rather than hashing
+            // one giant concatenation, so peak memory stays at the size of the largest source
+            // file however many of them there are.
+            $material .= $sourceFile . ':'
+                . ($contents === false ? 'unreadable' : \hash('xxh128', $contents)) . '|';
         }
 
         self::$fingerprints[$memoKey] = \substr(\hash('xxh128', $material), 0, self::FINGERPRINT_LENGTH);

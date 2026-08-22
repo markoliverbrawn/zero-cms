@@ -1,9 +1,10 @@
 <?php
 use Zero\Core\App;
+use Zero\Support\AssetVersion;
 use Zero\Support\Str;
 // src/Views/themes/default/register.php
 ?>
-<link rel="stylesheet" href="/assets/css/auth.css?v=1.3">
+<link rel="stylesheet" href="<?php echo Str::escape(AssetVersion::url('/assets/css/auth.css')); ?>">
 <div class="auth-container">
     <h2 class="auth-title">Create Account</h2>
     

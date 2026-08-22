@@ -2,6 +2,7 @@
 use Zero\Core\App;
 use Zero\Database\DB;
 use Zero\Models\User;
+use Zero\Support\AssetVersion;
 use Zero\Support\I18n;
 use Zero\Support\Security;
 use Zero\Support\Str;
@@ -203,4 +204,4 @@ $recentMedia = DB::query("SELECT * FROM media WHERE site_id = ? AND deleted_at I
 <script nonce="<?php echo \Zero\Core\App::getNonce(); ?>">
 window.ADMIN_CSRF_TOKEN = "<?php echo Str::escape($csrf ?? Security::csrfToken()); ?>";
 </script>
-<script src="/assets/js/admin/dashboard.js"></script>
+<script src="<?php echo Str::escape(AssetVersion::url('/assets/js/admin/dashboard.js')); ?>"></script>

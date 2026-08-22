@@ -1,6 +1,7 @@
 <?php
 use Zero\Core\App;
 use Zero\Core\Template;
+use Zero\Support\AssetVersion;
 use Zero\Support\Str;
 use Zero\Support\I18n;
 ?>
@@ -231,4 +232,4 @@ use Zero\Support\I18n;
 window.ADMIN_MODEL_NAME = "<?php echo Str::escape($modelName ?? ''); ?>";
 </script>
 <?php endif; ?>
-<script src="/assets/js/admin/model_list.js"></script>
+<script src="<?php echo Str::escape(AssetVersion::url('/assets/js/admin/model_list.js')); ?>"></script>

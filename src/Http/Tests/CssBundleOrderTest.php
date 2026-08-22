@@ -160,12 +160,7 @@ assert_test(
     "Fingerprint is a fixed-length hex digest, got '{$fingerprint}'"
 );
 assert_test($fingerprint === StyleBundle::fingerprint('default'), 'Fingerprint is stable across calls');
-$scope = StyleBundle::siteScope();
-assert_test(
-    preg_match('/^[0-9a-f]{' . StyleBundle::SCOPE_LENGTH . '}$/', $scope) === 1,
-    "Tenant scope is a fixed-length hex digest, got '{$scope}'"
-);
-assert_test(strpos($scope, '019fa1f1') !== 0, 'The tenant scope is a digest, not the site id itself');
+
 assert_test($filename === "main-default.{$scope}.{$fingerprint}.css", "Filename embeds the tenant scope and the fingerprint: {$filename}");
 assert_test($url === "/assets/css/cache/{$filename}", "URL is the published path: {$url}");
 assert_test(
@@ -186,6 +181,60 @@ assert_test(
     'The active theme is the last source file, so it wins the cascade'
 );
 assert_test($sources === array_values(array_filter($sources, 'is_file')), 'Every source file in the set exists');
+
+// --- The fingerprint follows content, not modification time -------------------------------
+// A git checkout or docker build restamps every file's mtime, so an mtime-derived fingerprint
+// would invalidate the bundle on every deployment even when no stylesheet changed -- and a
+// rollback would not recover the previously cached bundle either. Exercised through a scratch
+// stylesheet registered as a module contribution, so no shared source file is edited.
+echo "  Testing that the fingerprint follows content rather than mtime...\n";
+$scratchToken = bin2hex(random_bytes(5));
+$scratchStylesheet = APPLICATION_ROOT . '/public/assets/css/zz-fp-' . $scratchToken . '.css';
+file_put_contents($scratchStylesheet, ".zz-fp-probe { color: red; }\n");
+
+App::registerModuleStylesheet('site-search', $scratchStylesheet);
+App::setCurrentSite(new Site([
+    'id' => '019fa1f1-eeee-72f0-8c3b-9732ab7f9e3b',
+    'name' => 'Fingerprint Basis Site',
+    'domain' => 'fp-basis.local',
+    'theme' => 'default',
+    'enabled_modules' => '["site-search"]'
+]));
+StyleBundle::clearFingerprintCache();
+
+$baseline = StyleBundle::fingerprint('default');
+assert_test(
+    in_array($scratchStylesheet, StyleBundle::sourceFiles('default'), true),
+    'The scratch stylesheet is part of the source set, so it can influence the fingerprint'
+);
+
+touch($scratchStylesheet, time() + 500);
+StyleBundle::clearFingerprintCache();
+assert_test(
+    StyleBundle::fingerprint('default') === $baseline,
+    'Touching a source file without changing it leaves the fingerprint alone, so a deploy does not discard valid caches'
+);
+
+file_put_contents($scratchStylesheet, ".zz-fp-probe { color: blue; }\n");
+StyleBundle::clearFingerprintCache();
+$afterEdit = StyleBundle::fingerprint('default');
+assert_test($afterEdit !== $baseline, "Editing a source file changes the fingerprint ({$baseline} -> {$afterEdit})");
+
+file_put_contents($scratchStylesheet, ".zz-fp-probe { color: red; }\n");
+StyleBundle::clearFingerprintCache();
+assert_test(
+    StyleBundle::fingerprint('default') === $baseline,
+    'Reverting the edit restores the original fingerprint, so a rollback reuses the cached bundle'
+);
+
+unlink($scratchStylesheet);
+StyleBundle::clearFingerprintCache();
+$scope = StyleBundle::siteScope();
+assert_test(
+    preg_match('/^[0-9a-f]{' . StyleBundle::SCOPE_LENGTH . '}$/', $scope) === 1,
+    "Tenant scope is a fixed-length hex digest, got '{$scope}'"
+);
+assert_test(strpos($scope, '019fa1f1') !== 0, 'The tenant scope is a digest, not the site id itself');
 
 // --- Pruning is tenant-aware ---------------------------------------------------------------
 // Content-addressed names publish a new file rather than replacing one, so without pruning every

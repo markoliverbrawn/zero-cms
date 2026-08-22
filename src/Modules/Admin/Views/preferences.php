@@ -1,6 +1,7 @@
 <?php
 // views/admin/preferences.php
 use Zero\Core\App;
+use Zero\Support\AssetVersion;
 use Zero\Support\I18n;
 use Zero\Support\Str;
 ?>
@@ -198,6 +199,6 @@ use Zero\Support\Str;
 </div>
 
 <!-- Extra link for live preview load of preset CSS if selected -->
-<link id="vintage-greenscreen-stylesheet" rel="stylesheet" href="/assets/css/admin-themes/admin-vintage-greenscreen.css" style="display:none">
+<link id="vintage-greenscreen-stylesheet" rel="stylesheet" href="<?php echo Str::escape(AssetVersion::url('/assets/css/admin-themes/admin-vintage-greenscreen.css')); ?>" style="display:none">
 
-<script src="/assets/js/admin/preferences.js"></script>
+<script src="<?php echo Str::escape(AssetVersion::url('/assets/js/admin/preferences.js')); ?>"></script>

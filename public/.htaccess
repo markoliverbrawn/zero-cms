@@ -11,6 +11,14 @@ RewriteCond %{REQUEST_URI} ^/assets/css/(cache/)?main-[a-zA-Z0-9_\-]+(\.[0-9a-f]
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteRule ^ index.php [L,QSA]
 
+# VERSIONED STATIC ASSETS
+# Scripts and stylesheets are referenced with a digest of their contents in the filename
+# (see Zero\Support\AssetVersion), so they can carry a far-future immutable cache header and
+# still be replaceable on deploy. Nothing is generated: the digest is stripped back off here and
+# the authored file is served, so no PHP runs and no directory needs to be writable.
+# The compiled-bundle names handled above carry two longer hex segments and do not match this.
+RewriteRule ^assets/(?!css/cache/)(.+)\.[0-9a-f]{8}\.(js|css)$ assets/$1.$2 [L]
+
 # 0. ON-DEMAND IMAGE VARIANTS (must precede the static whitelist below)
 # Generated image renditions live at the exact path their URL describes, so once a variant
 # exists Apache serves it directly as a static file and PHP is never invoked. Only a cache

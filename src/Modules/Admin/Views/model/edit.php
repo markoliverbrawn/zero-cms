@@ -4,6 +4,7 @@
 use Zero\Core\App;
 use Zero\Models\User;
 use Zero\Services\AiService;
+use Zero\Support\AssetVersion;
 use Zero\Support\I18n;
 use Zero\Support\Str;
 
@@ -319,4 +320,4 @@ $renderField = function ($field, $fieldConfig) use ($record, $modelName, $csrf, 
   </div>
 </div>
 
-<script src="/assets/js/admin/model_edit.js"></script>
+<script src="<?php echo Str::escape(AssetVersion::url('/assets/js/admin/model_edit.js')); ?>"></script>

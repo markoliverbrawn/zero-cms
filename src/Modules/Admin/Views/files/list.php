@@ -2,6 +2,7 @@
 // src/Modules/Admin/Views/files/list.php
 
 use Zero\Core\App;
+use Zero\Support\AssetVersion;
 use Zero\Support\Str;
 
 $errorMessage = $_SESSION['error'] ?? null;
@@ -141,4 +142,4 @@ $currentFolder = $folder ?? '';
   </div>
 </div>
 
-<script src="/assets/js/admin/files.js"></script>
+<script src="<?php echo Str::escape(AssetVersion::url('/assets/js/admin/files.js')); ?>"></script>

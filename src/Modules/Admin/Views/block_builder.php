@@ -2,6 +2,7 @@
 // src/Modules/Admin/Views/block_builder.php
 
 use Zero\Core\App;
+use Zero\Support\AssetVersion;
 use Zero\Support\Str;
 
 $blockField = $blockBuilderField ?? 'content';
@@ -246,4 +247,4 @@ window.SVG_ARROW_DOWN = <?php echo json_encode(App::svg('arrow-down')); ?>;
 window.SVG_TRASH_2 = <?php echo json_encode(App::svg('trash-2')); ?>;
 window.SVG_SETTINGS = <?php echo json_encode(App::svg('settings')); ?>;
 </script>
-<script src="/assets/js/admin/block_builder.js"></script>
+<script src="<?php echo Str::escape(AssetVersion::url('/assets/js/admin/block_builder.js')); ?>"></script>

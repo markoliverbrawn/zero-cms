@@ -3,6 +3,7 @@
 
 use Zero\Core\App;
 use Zero\Models\User;
+use Zero\Support\AssetVersion;
 use Zero\Support\I18n;
 use Zero\Support\Str;
 
@@ -170,4 +171,4 @@ use Zero\Support\Str;
 </div>
 
 <!-- Load External Zero-Dependency Interactive Audit Scripts -->
-<script src="/assets/js/admin/security_audit.js?v=<?php echo time(); ?>"></script>
+<script src="<?php echo Str::escape(AssetVersion::url('/assets/js/admin/security_audit.js')); ?>"></script>

@@ -114,7 +114,7 @@ Zero CMS is divided into fully decoupled, modular plug-ins under `src/Modules/`:
 │   │   ├── Search/               # Decoupled site search driver architecture
 │   │   └── Security/             # Platform security hardening & AI threat auditing module
 │   ├── Services/                 # Cross-cutting services (e.g. AiService + Ai/Providers)
-│   ├── Support/                  # Security, Logger, Emailer, Seeder/SeederRunner, TestRunner, Str, I18n, Assets/ImageProcessor/VariantCache, StyleBundle
+│   ├── Support/                  # Security, Logger, Emailer, Seeder/SeederRunner, TestRunner, Str, I18n, Assets/ImageProcessor/VariantCache, StyleBundle, AssetVersion
 │   └── Views/                    # Cascading theme templates (themes/{site theme}/, themes/default/)
 ```
 Per-component tests live alongside the code they cover (e.g. `src/Core/Tests/`, `src/Modules/Search/Tests/`) rather than in a single top-level `tests/` directory — see Section 6.
@@ -123,10 +123,12 @@ Per-component tests live alongside the code they cover (e.g. `src/Core/Tests/`, 
 
 ## 4. Derived Assets: Image Variants & Theme Stylesheets
 
-Two things the platform serves are *derived* from other files rather than authored directly: a
-resized image rendition, and a theme's compiled stylesheet. Both follow the same shape — the URL is
-also the cache path, its name encodes everything the content depends on, the web server serves it
-statically once it exists, and PHP is invoked only to produce it the first time.
+Every asset the platform serves carries its identity in its URL, so all of them can be cached
+indefinitely and still be replaceable on deploy. Resized image renditions and compiled theme
+stylesheets are *generated* on first request and cached at the path their URL describes; scripts and
+standalone stylesheets are authored files whose URL merely carries a digest of their contents. In
+all three cases the web server serves the file directly once it exists, and PHP is involved only to
+produce something that does not.
 
 ### Image variants
 
@@ -194,6 +196,36 @@ to the configured bucket (the durable copy a freshly started instance rehydrates
 re-rendering); putting a CDN in front is recommended there.
 
 ---
+
+### Scripts and standalone stylesheets
+
+Anything referenced directly rather than compiled — the block scripts, the admin JS, `auth.css` —
+goes through `Zero\Support\AssetVersion`, which inserts a digest of the file's contents into its
+URL:
+
+```php
+<script src="<?php echo Str::escape(AssetVersion::url('/assets/js/blocks/gallery.js')); ?>"></script>
+<!-- renders: /assets/js/blocks/gallery.81166959.js -->
+```
+
+Nothing is generated, merged or minified. The bytes served are the authored file; a rewrite rule
+strips the digest back off before the web server resolves the path, so no PHP runs and no directory
+needs to be writable. It exists purely so the URL changes when the file does.
+
+Without it, `public/.htaccess` serves every `.js` and `.css` as `immutable, max-age=31536000` under
+a filename that never changes — and `immutable` instructs a browser never to revalidate. A deployed
+fix therefore could not reach anyone who had already visited, for up to a year. Two hand-rolled
+workarounds had grown around the same problem and are now retired: a manual `?v=1.3` somebody had
+to remember to bump, and a `?v=<?= time() ?>` that changed every request and so discarded caching
+altogether.
+
+Digests are over content, not mtime: a git checkout or docker build restamps every file, so an
+mtime digest would invalidate every asset on every deploy even when nothing changed. A rollback
+reuses the previously cached copy for the same reason.
+
+> A URL bearing an out-of-date digest still resolves, serving the file's current contents rather
+> than 404ing. That is deliberate — a page served from externally cached HTML keeps working — and
+> harmless, since the next render points at the current digest.
 
 ### Theme stylesheets
 

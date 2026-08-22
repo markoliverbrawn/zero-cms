@@ -3,6 +3,7 @@
 
 use Zero\Core\App;
 use Zero\Database\DB;
+use Zero\Support\AssetVersion;
 use Zero\Support\I18n;
 use Zero\Support\Str;
 use Zero\Support\StyleBundle;
@@ -98,11 +99,21 @@ $sidebarPages = DB::query("SELECT title, slug FROM pages WHERE status = 'publish
         <small>Zero CMS Corporate &copy; <?php echo date('Y'); ?>. Standard corporate licensing rights reserved.</small>
     </footer>
 
-    <script src="/assets/js/blocks/testimonials.js"></script>
-    <script src="/assets/js/blocks/accordion.js"></script>
-    <script src="/assets/js/blocks/gallery.js"></script>
-    <script src="/assets/js/blocks/masonry.js"></script>
-    <script src="/assets/js/blocks/sub_pages.js"></script>
-    <script src="/assets/js/blocks/form_builder.js"></script>
+    <?php // hero.js was absent from this list, and it is the only thing that copies a hero
+          // video's data-src onto its source element -- so background videos never started on a
+          // published page, working solely inside the admin block-builder preview which injects
+          // the script itself. Each src carries a digest of the file's contents so the
+          // far-future immutable cache header on .js is honest and a deployed fix still lands. ?>
+    <?php foreach ([
+        'hero',
+        'testimonials',
+        'accordion',
+        'gallery',
+        'masonry',
+        'sub_pages',
+        'form_builder',
+    ] as $blockScript): ?>
+    <script src="<?php echo Str::escape(AssetVersion::url('/assets/js/blocks/' . $blockScript . '.js')); ?>"></script>
+    <?php endforeach; ?>
 </body>
 </html>
