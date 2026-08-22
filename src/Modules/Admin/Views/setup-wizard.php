@@ -2,6 +2,7 @@
 // src/Modules/Admin/Views/setup-wizard.php
 
 use Zero\Core\App;
+use Zero\Models\Site;
 use Zero\Support\Str;
 ?>
 <!DOCTYPE html>
@@ -294,9 +295,14 @@ use Zero\Support\Str;
 
                 <div class="form-group">
                     <label for="site_theme">Active Layout Theme</label>
+                    <?php // Enumerated rather than hardcoded, so a theme contributed from outside
+                          // this repo via App::registerThemePath() is selectable at setup time --
+                          // which is the only way a host project's own theme can be chosen before
+                          // the back-office exists. Site::getThemeOptions() already merges the
+                          // on-disk themes with the registered ones for the admin site editor. ?>
                     <?php echo App::makeFormField('select', 'site_theme', [
                         'value' => $inputs['site_theme'],
-                        'options' => ['default' => 'Default Theme', 'kitchensink' => 'Kitchen Sink Showroom'],
+                        'options' => Site::getThemeOptions(),
                         'attributes' => ['id' => 'site_theme'],
                         'showLabel' => false,
                         'guessHelperTextKey' => false,

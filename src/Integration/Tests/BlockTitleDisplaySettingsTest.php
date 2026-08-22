@@ -1,7 +1,7 @@
 <?php
 // tests/BlockTitleDisplaySettingsTest.php
 // Unit/Integration test to verify that block Title Display settings ('0' => H2, '1' => Hide, '2' => H1)
-// are correctly respected and rendered across all themes (default, guide, and kitchensink).
+// are correctly respected and rendered by the theme layer and the admin block preview.
 // Also asserts that block previews correctly render block titles reflecting the active theme.
 
 require_once dirname(dirname(__DIR__)) . '/Support/TestBootstrap.php';
@@ -98,16 +98,6 @@ assert_test(strpos($html0_default, '<h2 class="block-section-title">') !== false
 assert_test(strpos($html1_default, 'Title Hide Option') === false, "Default theme correctly hides Title");
 assert_test(strpos($html2_default, '<h1 class="block-section-title">') !== false && strpos($html2_default, 'Title H1 Option') !== false, "Default theme correctly renders Show Title (H1)");
 
-// Test Theme: kitchensink
-echo "  Testing kitchensink theme block title display render output...\n";
-$html0_ks = renderThemePost('kitchensink', $post0);
-$html1_ks = renderThemePost('kitchensink', $post1);
-$html2_ks = renderThemePost('kitchensink', $post2);
-
-assert_test(strpos($html0_ks, '<h3 style="color: var(--neon-cyan); margin-bottom: 1.25rem;">') !== false && strpos($html0_ks, 'Title H2 Option') !== false, "Kitchensink theme correctly renders Show Title (H2) as h3 with neon cyan style");
-assert_test(strpos($html1_ks, 'Title Hide Option') === false, "Kitchensink theme correctly hides Title");
-assert_test(strpos($html2_ks, '<h1 style="color: var(--neon-cyan); margin-bottom: 1.25rem;">') !== false && strpos($html2_ks, 'Title H1 Option') !== false, "Kitchensink theme correctly renders Show Title (H1) with neon cyan style");
-
 
 // 2. Test Block Preview endpoint output in admin back-office
 echo "  Testing block preview rendering for admin back-office...\n";
@@ -178,48 +168,34 @@ $respHide_default = $controller->testBlockPreview([
 assert_test(strpos($respHide_default['html'], 'Preview Default Hidden Title') === false, "Block preview hides block section title in default theme when hidden is selected");
 
 
-// Now switch site to kitchensink theme for preview tests
-$ksSite = new Site([
+// An unknown theme falls back through the same generic, class-based title markup rather than
+// producing theme-specific headings from inside core.
+$fallbackSite = new Site([
     'id' => '019fa1f1-efgh-72f0-8c3b-9732ab7f9e3b',
-    'name' => 'Cyber Site',
+    'name' => 'Unregistered Theme Site',
     'domain' => 'testsite.local',
-    'theme' => 'kitchensink',
+    'theme' => 'a-theme-that-does-not-exist',
     'enabled_modules' => '[]'
 ]);
-App::setCurrentSite($ksSite);
+App::setCurrentSite($fallbackSite);
 
-// Test Preview Kitchensink Theme with H3 (value 0)
-$respH2_ks = $controller->testBlockPreview([
+$respFallback = $controller->testBlockPreview([
     'block' => [
         'type' => 'text',
-        'title' => 'Preview Cyber H2 Title',
-        'content' => '<p>Cyber block</p>',
+        'title' => 'Preview Fallback Title',
+        'content' => '<p>Fallback block</p>',
         'hide_title' => '0'
     ]
 ]);
-assert_test(strpos($respH2_ks['html'], '<h3 style="color: var(--neon-cyan); margin-bottom: 1.25rem;">') !== false && strpos($respH2_ks['html'], 'Preview Cyber H2 Title') !== false, "Block preview renders H3 neon title in kitchensink theme when default H2 (0) is selected");
-
-// Test Preview Kitchensink Theme with H1 (value 2)
-$respH1_ks = $controller->testBlockPreview([
-    'block' => [
-        'type' => 'text',
-        'title' => 'Preview Cyber H1 Title',
-        'content' => '<p>Cyber block</p>',
-        'hide_title' => '2'
-    ]
-]);
-assert_test(strpos($respH1_ks['html'], '<h1 style="color: var(--neon-cyan); margin-bottom: 1.25rem;">') !== false && strpos($respH1_ks['html'], 'Preview Cyber H1 Title') !== false, "Block preview renders H1 neon title in kitchensink theme when H1 (2) is selected");
-
-// Test Preview Kitchensink Theme with Hide Title (value 1)
-$respHide_ks = $controller->testBlockPreview([
-    'block' => [
-        'type' => 'text',
-        'title' => 'Preview Cyber Hidden Title',
-        'content' => '<p>Cyber block</p>',
-        'hide_title' => '1'
-    ]
-]);
-assert_test(strpos($respHide_ks['html'], 'Preview Cyber Hidden Title') === false, "Block preview hides neon title in kitchensink theme when hidden is selected");
+assert_test($respFallback['success'] === true, "Block preview succeeds for a theme with no bundled views");
+assert_test(
+    strpos($respFallback['html'], '<h2 class="block-section-title">') !== false && strpos($respFallback['html'], 'Preview Fallback Title') !== false,
+    "Block preview emits the generic class-based title for any theme, with no theme-specific markup in core"
+);
+assert_test(
+    strpos($respFallback['html'], 'style="color: var(') === false,
+    "Block preview never inlines a theme's colours; themes restyle .block-section-title themselves"
+);
 
 
 echo "\n✅ Block Title Display settings tests completed successfully!\n";

@@ -5,8 +5,6 @@ use Zero\Core\App;
 use Zero\Support\I18n;
 use Zero\Support\Str;
 ?>
-<link rel="stylesheet" href="/assets/css/search.css?v=1.0">
-
 <div class="search-container">
     <div class="search-header">
         <h2>Search Results</h2>

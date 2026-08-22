@@ -1,7 +1,12 @@
 /* Search Results Page Styles - Fully Theme-Adaptive */
 :root {
-    --site-search-accent: var(--neon-pink, #f43f5e); /* Futuristic Neon Pink site-search brand accent color */
-    --site-search-accent-hover: #e11d48;
+    /* Inherit the active theme's accent so search results sit inside the site's palette rather
+       than imposing their own. Changed together, not individually: these two are consumed as a
+       pair (button background and its hover, link colour and its hover), so pointing only the
+       base at the theme would leave a themed control reverting to the fallback accent on hover.
+       The fallbacks preserve the original standalone pink for a theme defining neither. */
+    --site-search-accent: var(--accent-color, #f43f5e);
+    --site-search-accent-hover: var(--accent-hover, #e11d48);
     --search-card-bg: var(--card-bg, #ffffff);
     --search-border: var(--border-color, #cbd5e1);
     --search-text: var(--text-color, #0f172a);

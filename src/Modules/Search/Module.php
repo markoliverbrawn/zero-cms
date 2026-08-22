@@ -86,6 +86,13 @@ class Module implements ModuleInterface
      */
     public function init()
     {
+        // Folded into the compiled theme bundle rather than linked from the search view. A <link>
+        // emitted mid-body cost an extra blocking request on every search, could not be cached
+        // immutably, and sat after the theme in the cascade -- so the module's own base styles
+        // outranked the theme that should have been able to restyle them. Registered here, it is
+        // concatenated only for sites with this module enabled, ahead of the theme.
+        App::registerModuleStylesheet('site-search', APPLICATION_ROOT . '/public/assets/css/search.css');
+
         App::registerModuleSettings('site-search', [
             'results_per_page' => [
                 'type' => 'number',

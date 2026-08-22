@@ -262,7 +262,7 @@ use Zero\Support\Str;
                 </li>
                 <li>
                     <strong>Map Domain in Local Hosts:</strong> Ensure that your local hosts mapping configuration redirects this domain to your server's IP address (typically <code>127.0.0.1</code>) inside <code>/etc/hosts</code>:
-                    <code class="command-block">127.0.0.1  d6laptop.zero d6laptop.zero.guide d6laptop.zero.kitchensink</code>
+                    <code class="command-block">127.0.0.1  d6laptop.zero</code>
                 </li>
                 <li>
                     <strong>Register Tenant inside Back-office:</strong> If you are a platform Super Administrator, log in via a valid configured domain to manage and register new site configurations in the central administrative panel.

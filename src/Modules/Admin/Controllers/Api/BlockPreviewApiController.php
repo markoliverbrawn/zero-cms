@@ -95,14 +95,13 @@ class BlockPreviewApiController extends AdminApiControllerBase
             $title = $block['title'] ?? '';
 
             if ($hideTitle !== '1' && !empty($title) && $type !== 'hero') {
-                if ($theme === 'kitchensink') {
-                    $tag = $hideTitle === '2' ? 'h1' : 'h3';
-                    $colorVar = \in_array($type, ['text_image', 'testimonials', 'gallery']) ? '--neon-pink' : '--neon-cyan';
-                    $titleHtml = '<' . $tag . ' style="color: var(' . $colorVar . '); margin-bottom: 1.25rem;">' . Security::sanitizeHtml($title) . '</' . $tag . '>';
-                } else {
-                    $tag = $hideTitle === '2' ? 'h1' : 'h2';
-                    $titleHtml = '<' . $tag . ' class="block-section-title">' . Security::sanitizeHtml($title) . '</' . $tag . '>';
-                }
+                // One generic, class-based title for every theme. A named-theme special case used
+                // to live here, emitting that theme's own heading level and inline neon colours
+                // from inside core -- which put a specific theme's styling decisions in a core
+                // controller and meant the preview only matched the frontend for that one theme.
+                // Themes restyle .block-section-title from their own stylesheet instead.
+                $tag = $hideTitle === '2' ? 'h1' : 'h2';
+                $titleHtml = '<' . $tag . ' class="block-section-title">' . Security::sanitizeHtml($title) . '</' . $tag . '>';
             }
 
             $html = $titleHtml . $html;

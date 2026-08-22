@@ -85,8 +85,10 @@ trait HandlesRequests
             exit;
         }
 
-        // Statically register the dynamic theme-specific CSS asset bundler route
-        Router::register('#^/assets/css/main-([a-zA-Z0-9_\-]+)\.css$#', CssBundleController::class);
+        // Statically register the theme stylesheet compiler. Like the image variant route below,
+        // this is only reached on a cache miss: bundle URLs are content-addressed, so the web
+        // server serves an already compiled stylesheet directly and only an absent one reaches PHP.
+        Router::register(CssBundleController::ROUTE_PATTERN, CssBundleController::class);
 
         // Statically register the on-demand image variant renderer. This route is only ever
         // reached on a cache miss: public/.htaccess lets the web server serve an already

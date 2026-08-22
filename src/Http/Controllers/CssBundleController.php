@@ -12,158 +12,90 @@ declare(strict_types=1);
 namespace Zero\Http\Controllers;
 
 use Zero\Core\App;
-use Zero\Core\Env;
 use Zero\Interfaces\Controller;
+use Zero\Support\StyleBundle;
 
 /**
  * Class CssBundleController
  *
- * Compiles a theme's stylesheets into one minified bundle cached at
- * public/assets/css/main-{theme}.css and serves it as text/css, resolving the theme from the
- * matched route or the active site.
+ * The cache-miss handler for a theme's compiled stylesheet: compiles the bundle on demand,
+ * publishes it at the exact path its own URL describes, and streams it back.
  *
- * Concatenation order defines the cascade: fonts, then core block base styles, then the enabled
- * modules' own block styles, then the active theme. Because block and theme rules share the same
- * selector specificity, that ordering is the only thing that lets a theme restyle a core block.
+ * Reached only when the requested bundle is not already on disk. Bundle URLs are content-addressed
+ * (see StyleBundle, which owns the source list, the cascade order and the fingerprint), so the
+ * rewrite rule in public/.htaccess lets the web server satisfy them directly and falls through to
+ * the front controller solely when the file is absent -- once per unique stylesheet per host.
+ * Previously that rewrite was unconditional, so every single page view's stylesheet request booted
+ * the framework, resolved the tenant and discovered every module purely to read a cached file back
+ * off disk and echo it, costing roughly twenty times what letting the web server serve it costs.
  *
- * A consequence worth knowing when authoring a theme: an @import inside any of these files is
- * dead. The bundle concatenates raw file contents, and CSS requires @import to precede all other
- * rules, so an import landing after the font declarations is invalid and dropped by the browser.
- * Register additional stylesheets through the bundler instead.
+ * There is deliberately no development-mode branch any more. One used to force a recompile on every
+ * request, gated on an APP_ENV value that nothing in the project ever set -- so it never fired, and
+ * a stale bundle was served in every environment until someone deleted the file by hand. A
+ * fingerprinted filename makes the distinction unnecessary: edited sources produce a different URL,
+ * which is by definition a miss, which recompiles.
  */
 class CssBundleController implements Controller
 {
     /**
-     * Concatenate and dynamically compile the theme-specific CSS stylesheets into a cached, minified main-*.css file.
+     * Matches the content-addressed bundle URL and every earlier shape of it.
      *
-     * @param mixed $param
-     * @throws \Exception If files cannot be read or written.
+     * Current form is main-{theme}.{tenantScope}.{fingerprint}.css. A single hex segment (an
+     * earlier fingerprint-only name) and a bare main-{theme}.css are both still accepted, so an
+     * externally cached page, or a host project whose own layout has not been updated, keeps
+     * receiving a working stylesheet rather than a 404.
+     */
+    public const ROUTE_PATTERN = '#^/assets/css/main-([a-zA-Z0-9_\-]+?)(?:\.([0-9a-f]{6,32}))?(?:\.([0-9a-f]{6,32}))?\.css$#';
+
+    /**
+     * Compile, publish, and serve a theme's stylesheet bundle.
+     *
+     * @param mixed $param The route's regex match array.
+     * @return void
+     * @throws \Exception If the bundle cannot be compiled or written to disk.
      */
     public function handle($param)
     {
-        // 1. Resolve target theme name from regex match or site fallback
+        // 1. Resolve the target theme from the matched route, falling back to the active site's.
         $theme = $param[1] ?? '';
         if (empty($theme)) {
             $theme = App::getCurrentSite()->theme ?? 'default';
         }
 
-        $targetFile = APPLICATION_ROOT . "/public/assets/css/main-{$theme}.css";
-        $isDevelopment = Env::get('APP_ENV', 'production') === 'development';
-
-        // 2. If we are in production and the compiled file already exists on disk, serve it immediately.
-        // We only re-compile if the file is missing, or if we are actively in development mode.
-        if (!$isDevelopment && \file_exists($targetFile)) {
-            $cachedContent = \file_get_contents($targetFile);
-            if ($cachedContent === false) {
-                throw new \Exception("Failed to read cached CSS bundle from disk path: {$targetFile}");
-            }
-            \header('Content-Type: text/css; charset=UTF-8');
-            \header('Cache-Control: public, max-age=31536000, immutable');
-            echo $cachedContent;
-            exit;
+        // With both hex segments present the URL is the current shape: scope then fingerprint.
+        // With only one it is an earlier fingerprint-only name, which carries no tenant scope and
+        // therefore cannot be confirmed as current.
+        $requestedScope = (string)($param[2] ?? '');
+        $requestedFingerprint = (string)($param[3] ?? '');
+        if ($requestedFingerprint === '') {
+            $requestedFingerprint = $requestedScope;
+            $requestedScope = '';
         }
 
-        // 3. Define the exact files and load sequence.
-        //
-        // The order below IS the cascade, because this bundler concatenates raw file contents and
-        // every block rule is written at the same specificity as the theme rule that wants to
-        // restyle it. Whichever file comes last wins. Base styles therefore load first and the
-        // active theme's stylesheet loads LAST, so a theme can override any block simply by
-        // restating the selector -- which is the whole point of having a theme layer.
-        //
-        // Getting this backwards is not a subtle bug: it makes theme customization of core blocks
-        // silently impossible, with the theme author's rules present in the bundle but inert.
-        $cssFiles = [APPLICATION_ROOT . '/public/assets/css/fonts.css'];
+        // 2. The bundle may already exist: this instance's disk starts empty, but any deployment
+        // whose rewrite rules are not in force -- PHP's built-in development server, for one --
+        // routes even a warm request through here.
+        $target = StyleBundle::path($theme);
+        $bundle = \is_file($target) ? \file_get_contents($target) : false;
 
-        $site = App::getCurrentSite();
-        if ($site) {
-            // A. Core Block Stylesheets (Core-level layout blocks available to any site)
-            $cssFiles = \array_merge($cssFiles, \array_map(
-                fn($f) => APPLICATION_ROOT . $f,
-                [
-                    '/public/assets/css/blocks/hero.css',
-                    '/public/assets/css/blocks/text.css',
-                    '/public/assets/css/blocks/text_image.css',
-                    '/public/assets/css/blocks/gallery.css',
-                    '/public/assets/css/blocks/masonry.css',
-                    '/public/assets/css/blocks/testimonials.css',
-                    '/public/assets/css/blocks/code.css',
-                    '/public/assets/css/blocks/chart.css',
-                    '/public/assets/css/blocks/grid.css',
-                    '/public/assets/css/blocks/sub_pages.css'
-                ]
-            ));
-
-            // B. Module-contributed stylesheets, registered dynamically via
-            // App::registerModuleStylesheet() (e.g. FormBuilder) -- only appended
-            // when that module is actually enabled for the requesting site. Still base styles,
-            // so these sit ahead of the theme too and remain theme-overridable.
-            foreach (App::getRegisteredModuleStylesheets() as $moduleStylesheet) {
-                if ($site->isModuleEnabled($moduleStylesheet['module'])) {
-                    $cssFiles[] = $moduleStylesheet['path'];
-                }
-            }
+        if ($bundle === false) {
+            $bundle = StyleBundle::publish($theme);
         }
 
-        // C. The active theme, last, so it has the final say over everything above it. Resolved
-        // via App::resolveThemeStylesheetFile() so a host project can register its own theme's CSS
-        // from outside this repo.
-        $themeStylesheetFile = App::resolveThemeStylesheetFile($theme);
-        if ($themeStylesheetFile !== null) {
-            $cssFiles[] = $themeStylesheetFile;
-        }
-
-        $combinedCss = '';
-
-        foreach ($cssFiles as $fullPath) {
-            if (\file_exists($fullPath)) {
-                $content = \file_get_contents($fullPath);
-                if ($content === false) {
-                    throw new \Exception("Failed to read source stylesheet file from disk path: {$fullPath}");
-                }
-                $combinedCss .= $content . "\n\n";
-            }
-        }
-
-        // 4. Minify compiled CSS (0% Package dependency)
-        $minifiedCss = $this->minify($combinedCss);
-        $minifiedCss = "/* --- Compiled & Minified Theme Asset Bundle: " . \gmdate('Y-m-d H:i:s') . " UTC [Theme: {$theme}] --- */\n" . $minifiedCss;
-
-        // 5. Save the compiled & minified bundle onto disk so Apache serves it directly next time in production!
-        $bytesWritten = \file_put_contents($targetFile, $minifiedCss);
-        if ($bytesWritten === false) {
-            throw new \Exception("Failed to write compiled CSS bundle to disk path: {$targetFile}");
-        }
+        // 3. A URL carrying the current fingerprint may be cached forever, because its bytes can
+        // never change. Anything else -- a legacy un-fingerprinted URL, or a stale one minted
+        // before a stylesheet edit -- is still answered with the current bundle so the page renders
+        // normally, but must not be pinned in a cache: that URL's content just changed under it.
+        $isImmutable = ($requestedScope !== '' && $requestedScope === StyleBundle::siteScope()
+            && $requestedFingerprint !== '' && $requestedFingerprint === StyleBundle::fingerprint($theme));
 
         \header('Content-Type: text/css; charset=UTF-8');
-        \header('Cache-Control: public, max-age=31536000, immutable');
-        echo $minifiedCss;
-        exit;
-    }
+        \header($isImmutable
+            ? 'Cache-Control: public, max-age=31536000, immutable'
+            : 'Cache-Control: public, max-age=60');
+        \header('Content-Length: ' . \strlen($bundle));
 
-    /**
-     * Clean and minify raw CSS code natively in PHP with 0% library dependencies.
-     *
-     * @param string $css The raw combined CSS content.
-     * @return string The minified CSS content.
-     */
-    protected function minify($css)
-    {
-        // 1. Strip all CSS comments
-        $css = \preg_replace('!/\*[^*]*\*+([^/*][^*]*\*+)*/!', '', $css);
-        
-        // 2. Strip tabs, carriage returns, and newlines
-        $css = \str_replace(["\r\n", "\r", "\n", "\t"], '', $css);
-        
-        // 3. Strip redundant multiple spaces
-        $css = \preg_replace('/\s+/', ' ', $css);
-        
-        // 4. Strip spaces around structural delimiters and braces
-        $css = \preg_replace('/\s*([{}|:;,])\s*/', '$1', $css);
-        
-        // 5. Remove trailing semi-colons inside braces
-        $css = \str_replace(';}', '}', $css);
-        
-        return \trim($css);
+        echo $bundle;
+        exit;
     }
 }

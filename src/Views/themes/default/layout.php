@@ -5,6 +5,7 @@ use Zero\Core\App;
 use Zero\Database\DB;
 use Zero\Support\I18n;
 use Zero\Support\Str;
+use Zero\Support\StyleBundle;
 
 // Fetch dynamic pages for corporate sidebar
 $siteId = App::getCurrentSiteId();
@@ -33,7 +34,12 @@ $sidebarPages = DB::query("SELECT title, slug FROM pages WHERE status = 'publish
     <meta name="description" content="<?php echo Str::escape($metaDescription); ?>"/>
     <title>Zero CMS Corporate Portal</title>
     <link rel="icon" type="image/svg+xml" href="/assets/favicons/default.svg">
-    <link rel="stylesheet" href="/assets/css/main-default.css?v=1.0">
+    <?php // Content-addressed, so the URL changes whenever any source stylesheet does. That is
+          // what lets the response be cached immutably and removes the hand-maintained ?v= query
+          // string this replaced. Resolved for the ACTIVE theme rather than hardcoded: a theme
+          // that supplies no layout.php of its own inherits this one, and would otherwise be
+          // served the default theme's stylesheet. ?>
+    <link rel="stylesheet" href="<?php echo Str::escape(StyleBundle::url(App::getCurrentSite()->theme ?? 'default')); ?>">
     <meta name="csrf-token" content="<?php echo Str::escape($csrf ?? ''); ?>">
 </head>
 <body>

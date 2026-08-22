@@ -113,14 +113,21 @@ Zero CMS is divided into fully decoupled, modular plug-ins under `src/Modules/`:
 │   │   ├── Search/               # Decoupled site search driver architecture
 │   │   └── Security/             # Platform security hardening & AI threat auditing module
 │   ├── Services/                 # Cross-cutting services (e.g. AiService + Ai/Providers)
-│   ├── Support/                  # Security, Logger, Emailer, Seeder/SeederRunner, TestRunner, Str, I18n, Assets/ImageProcessor/VariantCache
+│   ├── Support/                  # Security, Logger, Emailer, Seeder/SeederRunner, TestRunner, Str, I18n, Assets/ImageProcessor/VariantCache, StyleBundle
 │   └── Views/                    # Cascading theme templates (themes/{site theme}/, themes/default/)
 ```
 Per-component tests live alongside the code they cover (e.g. `src/Core/Tests/`, `src/Modules/Search/Tests/`) rather than in a single top-level `tests/` directory — see Section 6.
 
 ---
 
-## 4. On-Demand Image Variants
+## 4. Derived Assets: Image Variants & Theme Stylesheets
+
+Two things the platform serves are *derived* from other files rather than authored directly: a
+resized image rendition, and a theme's compiled stylesheet. Both follow the same shape — the URL is
+also the cache path, its name encodes everything the content depends on, the web server serves it
+statically once it exists, and PHP is invoked only to produce it the first time.
+
+### Image variants
 
 Templates never reference an original image directly. They ask `Zero\Support\Assets` for the
 rendition they actually need, and the engine produces it the first time a browser requests it:
@@ -184,6 +191,54 @@ cache can be discarded without endangering an original. Under the cloud storage 
 is written both to local disk (a hot per-instance cache the web server can serve statically) and
 to the configured bucket (the durable copy a freshly started instance rehydrates from instead of
 re-rendering); putting a CDN in front is recommended there.
+
+---
+
+### Theme stylesheets
+
+A theme's stylesheet is compiled from many sources — `fonts.css`, the core block stylesheets, the
+enabled modules' block stylesheets, then the active theme last — concatenated and minified into one
+bundle. `Zero\Support\StyleBundle` owns that list, the order, and the naming; `CssBundleController`
+is just the miss handler.
+
+**Concatenation order is the cascade.** Block rules and the theme rules that restyle them share the
+same selector specificity, so whichever file comes last wins. The theme therefore loads last and can
+override any block by simply restating the selector — no `!important`, no deeper nesting. Reversing
+that order does not break loudly; it silently makes every theme's block customization inert.
+
+**The bundle's filename is content-addressed and tenant-scoped:**
+`main-{theme}.{tenantScope}.{fingerprint}.css`. The fingerprint hashes every source file's path,
+mtime and size; the scope is a short digest of the site id — a digest rather than the id itself, so
+asset URLs do not publish tenant identifiers. Together they do a lot of work:
+
+* A stylesheet edit changes the fingerprint, which changes the URL, which is a cache miss, which
+  recompiles. There is no staleness to manage and no development-mode flag to remember.
+* Because a given URL's bytes can never change, the far-future `immutable` header is truthful, and
+  the hand-maintained `?v=` query string it replaced is gone.
+* An ephemeral host — a fresh Cloud Run instance — simply compiles once. That costs well under a
+  millisecond for the whole set, and the inputs ship inside the container image, so nothing is
+  fetched or persisted remotely. Concurrent cold requests may each compile; the work is
+  deterministic and published by atomic rename, so duplicating it is harmless.
+
+* Two tenants never share a bundle. They can already compile different bytes from one theme,
+  because the source set follows each site's enabled modules — so a shared name would have them
+  serving each other's stylesheet from cache, and would leak one site's styling into another the
+  moment anything else about a bundle becomes site-specific.
+
+Pruning on publish keeps an edit or a deployment from leaving orphans behind, and is tenant-aware:
+this site's own superseded bundles go immediately, while another tenant's are reclaimed only once
+untouched for a grace period. Without that split each tenant would evict the others' bundles on
+every publish and all of them would recompile indefinitely.
+
+A request carrying a stale name, or one of the earlier naming shapes, is still answered with the
+current bundle so the page renders — but with a short `max-age` rather than `immutable`, since that
+URL's content just changed underneath it.
+
+> **Authoring note:** never use `@import` in any bundled stylesheet. The bundle concatenates raw file
+> contents and opens with `@font-face` declarations, and CSS requires `@import` to precede all other
+> rules — so an imported stylesheet or webfont arriving later is invalid and silently discarded. It
+> will look configured and never load. Register additional stylesheets through
+> `App::registerModuleStylesheet()` / `App::registerThemeStylesheetFile()` instead.
 
 ---
 
