@@ -3,8 +3,11 @@ set -e
 
 # The source tree is bind-mounted from the host, so build-time permissions
 # don't apply to it - make sure the webserver can write logs/uploads/media.
-mkdir -p storage/logs storage/private public/storage/uploads
-chmod -R 777 storage public/storage 2>/dev/null || true
+# Runtime-writable directories. public/assets/css/cache holds the compiled theme stylesheet
+# bundles; it is deliberately a separate directory from the authored stylesheets beside it, so
+# only it needs to be writable rather than the whole css tree.
+mkdir -p storage/logs storage/private public/storage/uploads public/assets/css/cache
+chmod -R 777 storage public/storage public/assets/css/cache 2>/dev/null || true
 
 # Works whether this project *is* Zero CMS Core (no vendor/ needed - it
 # self-autoloads via src/Core/Autoloader.php) or is a separate host project

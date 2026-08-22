@@ -167,7 +167,15 @@ assert_test(
 );
 assert_test(strpos($scope, '019fa1f1') !== 0, 'The tenant scope is a digest, not the site id itself');
 assert_test($filename === "main-default.{$scope}.{$fingerprint}.css", "Filename embeds the tenant scope and the fingerprint: {$filename}");
-assert_test($url === "/assets/css/{$filename}", "URL is the published path: {$url}");
+assert_test($url === "/assets/css/cache/{$filename}", "URL is the published path: {$url}");
+assert_test(
+    strpos(StyleBundle::path('default'), '/assets/css/cache/') !== false,
+    'Compiled bundles are published to a dedicated cache directory, not the stylesheet source tree'
+);
+assert_test(
+    !file_exists(APPLICATION_ROOT . '/public/assets/css/' . $filename),
+    'Nothing generated is written alongside the authored stylesheets'
+);
 assert_test(strpos($url, '?') === false, 'URL carries no hand-maintained query-string cache buster');
 
 $sources = StyleBundle::sourceFiles('default');
@@ -188,7 +196,7 @@ assert_test($sources === array_values(array_filter($sources, 'is_file')), 'Every
 // Run against a throwaway theme name, because main-default.*.css is shared global state that
 // other suites publish to concurrently in other worker slots.
 echo "  Testing tenant-aware pruning...\n";
-$cssDir = APPLICATION_ROOT . '/public/assets/css';
+$cssDir = APPLICATION_ROOT . '/public/' . StyleBundle::OUTPUT_DIRECTORY;
 $scratchTheme = 'zz-prune-fixture';
 $ownScope = StyleBundle::siteScope();
 

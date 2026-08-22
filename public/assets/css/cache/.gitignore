@@ -1,0 +1,4 @@
+# Compiled stylesheet bundles are generated output: ignore the contents, keep the directory
+# so a fresh checkout has it with the right permissions and nothing has to mkdir at runtime.
+*
+!.gitignore

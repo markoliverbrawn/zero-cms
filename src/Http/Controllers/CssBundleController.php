@@ -40,12 +40,12 @@ class CssBundleController implements Controller
     /**
      * Matches the content-addressed bundle URL and every earlier shape of it.
      *
-     * Current form is main-{theme}.{tenantScope}.{fingerprint}.css. A single hex segment (an
-     * earlier fingerprint-only name) and a bare main-{theme}.css are both still accepted, so an
-     * externally cached page, or a host project whose own layout has not been updated, keeps
-     * receiving a working stylesheet rather than a 404.
+     * Current form is cache/main-{theme}.{tenantScope}.{fingerprint}.css. The earlier shapes --
+     * without the cache/ directory, with a single hex segment, or a bare main-{theme}.css -- are
+     * all still accepted, so an externally cached page, or a host project whose own layout has not
+     * been updated, keeps receiving a working stylesheet rather than a 404.
      */
-    public const ROUTE_PATTERN = '#^/assets/css/main-([a-zA-Z0-9_\-]+?)(?:\.([0-9a-f]{6,32}))?(?:\.([0-9a-f]{6,32}))?\.css$#';
+    public const ROUTE_PATTERN = '#^/assets/css/(?:cache/)?main-([a-zA-Z0-9_\-]+?)(?:\.([0-9a-f]{6,32}))?(?:\.([0-9a-f]{6,32}))?\.css$#';
 
     /**
      * Compile, publish, and serve a theme's stylesheet bundle.

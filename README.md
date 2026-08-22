@@ -92,7 +92,8 @@ Zero CMS is divided into fully decoupled, modular plug-ins under `src/Modules/`:
 ├── public/                       # Webroot (document root points here)
 │   ├── index.php                 # Central Front-Controller Gateway
 │   ├── assets/                   # Publicly accessible static assets
-│   │   └── css/                  # Modular style files (admin.css)
+│   │   └── css/                  # Authored stylesheets (admin.css, blocks/, themes/)
+│   │       └── cache/            # Compiled theme bundles (generated, disposable, gitignored)
 │   └── storage/                  # Public-facing symlink/passthrough for uploaded media
 │       ├── uploads/              # Tenant-scoped originals, exactly as uploaded
 │       └── variants/             # Derived image renditions (disposable cache, never mixed with uploads)
@@ -206,7 +207,12 @@ same selector specificity, so whichever file comes last wins. The theme therefor
 override any block by simply restating the selector — no `!important`, no deeper nesting. Reversing
 that order does not break loudly; it silently makes every theme's block customization inert.
 
-**The bundle's filename is content-addressed and tenant-scoped:**
+**The bundle is published to `assets/css/cache/`** — a dedicated directory, never the stylesheet
+source tree it is compiled from. That keeps generated output discardable with one recursive delete,
+keeps the ignore rule a directory rather than a filename pattern, and means a deployment makes only
+that directory writable instead of recursively chmod-ing every authored stylesheet in the image.
+
+**Its filename is content-addressed and tenant-scoped:**
 `main-{theme}.{tenantScope}.{fingerprint}.css`. The fingerprint hashes every source file's path,
 mtime and size; the scope is a short digest of the site id — a digest rather than the id itself, so
 asset URLs do not publish tenant identifiers. Together they do a lot of work:

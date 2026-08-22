@@ -7,7 +7,7 @@ RewriteBase /
 # is rewritten to the front controller, which compiles it, writes it, and streams it back. This
 # rule used to be unconditional, which meant every page view's stylesheet request booted PHP just
 # to hand back a file already sitting on disk.
-RewriteCond %{REQUEST_URI} ^/assets/css/main-[a-zA-Z0-9_\-]+(\.[0-9a-f]+)*\.css$ [NC]
+RewriteCond %{REQUEST_URI} ^/assets/css/(cache/)?main-[a-zA-Z0-9_\-]+(\.[0-9a-f]+)*\.css$ [NC]
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteRule ^ index.php [L,QSA]
 

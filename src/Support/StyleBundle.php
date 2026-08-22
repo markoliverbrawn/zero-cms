@@ -56,8 +56,19 @@ class StyleBundle
     /** Length of the hex tenant scope embedded in a bundle filename. */
     public const SCOPE_LENGTH = 8;
 
-    /** Web-root-relative directory the compiled bundles are published to. */
-    public const OUTPUT_DIRECTORY = 'assets/css';
+    /**
+     * Web-root-relative directory the compiled bundles are published to.
+     *
+     * A dedicated directory, not the stylesheet source tree it is compiled from. Keeping generated
+     * output separate from authored files is what lets the whole cache be discarded with one
+     * recursive delete instead of globbing a filename prefix among sources, keeps the ignore rule
+     * a directory rather than a `main-*` pattern that would silently swallow an authored
+     * `main-nav.css`, and -- most importantly -- means a deployment only has to make *this*
+     * directory writable by the web server. Previously the entire css tree was recursively
+     * chmod 775 for the sake of one generated file, which left every authored stylesheet in the
+     * image rewritable by the PHP process.
+     */
+    public const OUTPUT_DIRECTORY = 'assets/css/cache';
 
     /**
      * Core block stylesheets, available to every theme regardless of which modules are enabled.
