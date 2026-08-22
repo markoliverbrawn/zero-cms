@@ -469,6 +469,12 @@ class Assets
      * allocated, which is usually the single largest bandwidth saving available on an
      * image-heavy page. Like url(), this is pure computation.
      *
+     * Returns an empty string when the source yields no variants at all -- an SVG, an animated
+     * GIF, a private file. Listing one unresized URL under several width descriptors would tell
+     * the browser three renditions exist when only one file does, so it could pick the "800w"
+     * candidate believing it is getting 800px of detail. Better to publish nothing and let the
+     * caller's plain src attribute stand alone.
+     *
      * @param string $source A media id, stored path, or web path.
      * @param array<int, int> $widths Candidate widths in pixels.
      * @param float|null $aspect Width-to-height ratio to crop each candidate to, or null to scale freely.
@@ -496,7 +502,10 @@ class Assets
                 : null;
 
             $url = self::url($source, $candidateWidth, $candidateHeight, $candidateHeight === null ? self::FIT_CONTAIN : $fit, $quality);
-            if ($url === '') {
+
+            // url() hands back its own argument when the source cannot be resized, which is the
+            // signal that there is no ladder of renditions to describe here.
+            if ($url === '' || $url === $source) {
                 continue;
             }
 

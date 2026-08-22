@@ -21,6 +21,15 @@ use Zero\Interfaces\Controller;
  * Compiles a theme's stylesheets into one minified bundle cached at
  * public/assets/css/main-{theme}.css and serves it as text/css, resolving the theme from the
  * matched route or the active site.
+ *
+ * Concatenation order defines the cascade: fonts, then core block base styles, then the enabled
+ * modules' own block styles, then the active theme. Because block and theme rules share the same
+ * selector specificity, that ordering is the only thing that lets a theme restyle a core block.
+ *
+ * A consequence worth knowing when authoring a theme: an @import inside any of these files is
+ * dead. The bundle concatenates raw file contents, and CSS requires @import to precede all other
+ * rules, so an import landing after the font declarations is invalid and dropped by the browser.
+ * Register additional stylesheets through the bundler instead.
  */
 class CssBundleController implements Controller
 {
@@ -54,16 +63,18 @@ class CssBundleController implements Controller
             exit;
         }
 
-        // 3. Define the exact files and load sequence (preserving styling dependencies).
-        // The theme stylesheet is resolved via App::resolveThemeStylesheetFile() so a host
-        // project can register its own theme's CSS from outside this repo.
+        // 3. Define the exact files and load sequence.
+        //
+        // The order below IS the cascade, because this bundler concatenates raw file contents and
+        // every block rule is written at the same specificity as the theme rule that wants to
+        // restyle it. Whichever file comes last wins. Base styles therefore load first and the
+        // active theme's stylesheet loads LAST, so a theme can override any block simply by
+        // restating the selector -- which is the whole point of having a theme layer.
+        //
+        // Getting this backwards is not a subtle bug: it makes theme customization of core blocks
+        // silently impossible, with the theme author's rules present in the bundle but inert.
         $cssFiles = [APPLICATION_ROOT . '/public/assets/css/fonts.css'];
-        $themeStylesheetFile = App::resolveThemeStylesheetFile($theme);
-        if ($themeStylesheetFile !== null) {
-            $cssFiles[] = $themeStylesheetFile;
-        }
 
-        // Dynamically append block-specific stylesheets if those modules are active on the current site
         $site = App::getCurrentSite();
         if ($site) {
             // A. Core Block Stylesheets (Core-level layout blocks available to any site)
@@ -85,12 +96,21 @@ class CssBundleController implements Controller
 
             // B. Module-contributed stylesheets, registered dynamically via
             // App::registerModuleStylesheet() (e.g. FormBuilder) -- only appended
-            // when that module is actually enabled for the requesting site.
+            // when that module is actually enabled for the requesting site. Still base styles,
+            // so these sit ahead of the theme too and remain theme-overridable.
             foreach (App::getRegisteredModuleStylesheets() as $moduleStylesheet) {
                 if ($site->isModuleEnabled($moduleStylesheet['module'])) {
                     $cssFiles[] = $moduleStylesheet['path'];
                 }
             }
+        }
+
+        // C. The active theme, last, so it has the final say over everything above it. Resolved
+        // via App::resolveThemeStylesheetFile() so a host project can register its own theme's CSS
+        // from outside this repo.
+        $themeStylesheetFile = App::resolveThemeStylesheetFile($theme);
+        if ($themeStylesheetFile !== null) {
+            $cssFiles[] = $themeStylesheetFile;
         }
 
         $combinedCss = '';

@@ -210,7 +210,8 @@ assert_test(strpos($parts[2], '1200x900-cover-') !== false, "The largest candida
 $freeSrcset = Assets::srcset($mediaPath, [400, 800]);
 assert_test(strpos($freeSrcset, '400x0-contain-') !== false, "Omitting the aspect ratio scales freely instead of cropping");
 
-assert_test(Assets::srcset('gif-id', [400, 800]) === 'gif-id 400w, gif-id 800w', "srcset over an unresizable source degrades to the original URL");
+assert_test(Assets::srcset('gif-id', [400, 800]) === '', "srcset over an unresizable source is empty rather than listing one file under several widths");
+assert_test(Assets::srcset('svg-id', [400, 800]) === '', "An SVG advertises no responsive ladder; it is already resolution independent");
 assert_test(Assets::srcset($mediaPath, []) === '', "No candidate widths yields an empty srcset");
 
 // --- 13. Metadata helpers read from the same primed registry ---

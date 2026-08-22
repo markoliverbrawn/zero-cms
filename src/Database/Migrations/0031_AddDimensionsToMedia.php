@@ -58,9 +58,13 @@ class AddDimensionsToMedia extends \Zero\Database\Migration
      */
     protected function backfill(): void
     {
+        // SVG is excluded rather than merely failing to measure: it is a vector format with no
+        // intrinsic pixel size, so reading every one off disk only to have the probe return
+        // nothing is wasted I/O on installations with a large icon library.
         $rows = DB::query(
             "SELECT id, path, mime FROM media
-             WHERE mime LIKE 'image/%' AND (width = 0 OR height = 0) AND deleted_at IS NULL"
+             WHERE mime LIKE 'image/%' AND mime <> 'image/svg+xml'
+               AND (width = 0 OR height = 0) AND deleted_at IS NULL"
         )->fetchAll();
 
         if (empty($rows)) {
