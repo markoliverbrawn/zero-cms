@@ -18,6 +18,7 @@ use Zero\Models\Site;
 use Zero\Models\User;
 use Zero\Modules\Security\Models\AuditLog;
 use Zero\Modules\Security\Models\SecurityAudit;
+use Zero\Support\Session\DatabaseSessionHandler;
 
 /**
  * Trait ResolvesTenantContext
@@ -154,6 +155,15 @@ trait ResolvesTenantContext
     public static function ensureSession()
     {
         if (\session_status() === PHP_SESSION_NONE) {
+            // CLI processes (migrate/seed/scheduler) are single-shot and have no cross-instance
+            // sharing need, so they keep PHP's default file handler; this also sidesteps the
+            // handler querying a `sessions` table that a fresh install's migration hasn't created
+            // yet. Everywhere else, sessions must survive being served by a different app server
+            // instance on the next request, so they're backed by the database instead of local disk.
+            if (!self::isCli()) {
+                \session_set_save_handler(new DatabaseSessionHandler(), true);
+            }
+
             // SECURITY REMEDIATION: Enforce strict secure session cookie configurations
             \session_start([
                 'cookie_httponly' => true,

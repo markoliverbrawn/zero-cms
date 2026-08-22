@@ -102,48 +102,57 @@ class Scheduler
                 $expression = $task['expression'];
 
                 try {
-                    // Check if task is already tracked in database
+                    $pdo->beginTransaction();
+
+                    // Ensure a tracking row exists first (no-op upsert when already present), so the
+                    // SELECT ... FOR UPDATE below always has a real row to lock -- a lock request
+                    // against a not-yet-existing row cannot be relied on to serialize concurrent
+                    // callers the way a row lock can. Concurrent HTTP-triggered invocations of this
+                    // method (see SchedulerApiController) must not both see the same task as due and
+                    // dispatch it twice, which an unlocked SELECT-then-decide would allow.
+                    $insertStmt = $pdo->prepare("
+                        INSERT INTO queue_scheduled_tasks
+                        (id, site_id, task_key, payload, expression, last_run_at, created_at, updated_at)
+                        VALUES (?, ?, ?, ?, ?, NULL, ?, ?)
+                        ON DUPLICATE KEY UPDATE task_key = task_key
+                    ");
+                    $insertStmt->execute([
+                        Security::uuidv7(),
+                        $siteId,
+                        $jobClass,
+                        \json_encode($payload),
+                        $expression,
+                        $now,
+                        $now
+                    ]);
+
                     $stmt = $pdo->prepare("
-                        SELECT id, last_run_at FROM queue_scheduled_tasks 
+                        SELECT id, last_run_at FROM queue_scheduled_tasks
                         WHERE site_id = ? AND task_key = ? AND deleted_at IS NULL
+                        FOR UPDATE
                     ");
                     $stmt->execute([$siteId, $jobClass]);
                     $row = $stmt->fetch();
 
-                    $lastRunAt = $row ? $row['last_run_at'] : null;
-
-                    if (self::isDue($expression, $lastRunAt)) {
+                    if (self::isDue($expression, $row['last_run_at'])) {
                         // 1. Dispatch job to queue asynchronously
                         QueueManager::dispatch($jobClass, $payload, $siteId);
 
-                        // 2. Insert or update the scheduled tasks tracking row
-                        if ($row) {
-                            $updateStmt = $pdo->prepare("
-                                UPDATE queue_scheduled_tasks 
-                                SET last_run_at = ?, updated_at = ? 
-                                WHERE id = ?
-                            ");
-                            $updateStmt->execute([$now, $now, $row['id']]);
-                        } else {
-                            $id = Security::uuidv7();
-                            $insertStmt = $pdo->prepare("
-                                INSERT INTO queue_scheduled_tasks 
-                                (id, site_id, task_key, payload, expression, last_run_at, created_at, updated_at) 
-                                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                            ");
-                            $insertStmt->execute([
-                                $id, 
-                                $siteId, 
-                                $jobClass, 
-                                \json_encode($payload), 
-                                $expression, 
-                                $now, 
-                                $now, 
-                                $now
-                            ]);
-                        }
+                        // 2. Record that this task just ran, while still holding the row lock
+                        $updateStmt = $pdo->prepare("
+                            UPDATE queue_scheduled_tasks
+                            SET last_run_at = ?, updated_at = ?
+                            WHERE id = ?
+                        ");
+                        $updateStmt->execute([$now, $now, $row['id']]);
                     }
+
+                    $pdo->commit();
                 } catch (\Throwable $e) {
+                    if ($pdo->inTransaction()) {
+                        $pdo->rollBack();
+                    }
+
                     Logger::log(
                         userId: null,
                         action: 'scheduler_error',

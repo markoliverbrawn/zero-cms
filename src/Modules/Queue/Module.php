@@ -14,6 +14,7 @@ namespace Zero\Modules\Queue;
 use Zero\Core\App;
 use Zero\Interfaces\Module as ModuleInterface;
 use Zero\Modules\Queue\Controllers\QueueApiController;
+use Zero\Modules\Queue\Controllers\SchedulerApiController;
 use Zero\Modules\Queue\Jobs\PurgeOldLogsJob;
 use Zero\Modules\Queue\Models\QueueJob;
 use Zero\Modules\Queue\Support\Scheduler;
@@ -74,7 +75,8 @@ class Module implements ModuleInterface
     public function getRoutes(): array
     {
         return [
-            '#^/api/v1/queue/process$#' => QueueApiController::class
+            '#^/api/v1/queue/process$#' => QueueApiController::class,
+            '#^/api/v1/queue/schedule$#' => SchedulerApiController::class
         ];
     }
 
