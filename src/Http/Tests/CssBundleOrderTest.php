@@ -161,6 +161,12 @@ assert_test(
 );
 assert_test($fingerprint === StyleBundle::fingerprint('default'), 'Fingerprint is stable across calls');
 
+$scope = StyleBundle::siteScope();
+assert_test(
+    preg_match('/^[0-9a-f]{' . StyleBundle::SCOPE_LENGTH . '}$/', $scope) === 1,
+    "Tenant scope is a fixed-length hex digest, got '{$scope}'"
+);
+assert_test(strpos($scope, '019fa1f1') !== 0, 'The tenant scope is a digest, not the site id itself');
 assert_test($filename === "main-default.{$scope}.{$fingerprint}.css", "Filename embeds the tenant scope and the fingerprint: {$filename}");
 assert_test($url === "/assets/css/cache/{$filename}", "URL is the published path: {$url}");
 assert_test(
