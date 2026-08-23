@@ -54,6 +54,30 @@ trait RendersViews
     }
 
     /**
+     * Appends a floating "Edit This Page" shortcut widget for logged-in users
+     * with permission to edit the currently viewed page.
+     *
+     * @param mixed $post Current page record (or null if not applicable).
+     * @return mixed Response output.
+     */
+    public static function appendEditPageWidget($post = null)
+    {
+        if (empty($post->id)) {
+            return;
+        }
+
+        $role = self::getCurrentUserRole();
+        if ($role !== 'editor' && $role !== 'super_admin') {
+            return;
+        }
+
+        echo Template::renderFile(APPLICATION_ROOT . '/src/Views/components/EditPageWidget.php', [
+            'pageId' => $post->id,
+            'nonce' => self::getNonce()
+        ]);
+    }
+
+    /**
      * Registers the view dir component definition dynamically.
      *
      * @param string $prefix Argument descriptor.
@@ -110,6 +134,7 @@ trait RendersViews
                 $data['error'] = $data['error'] ?? '';
                 echo Template::renderFile($layoutFile, $data);
                 self::appendBenchmarkWidget(); // Inject unified benchmark overlay!
+                self::appendEditPageWidget($data['post'] ?? null); // Inject frontend "Edit This Page" shortcut!
                 return;
             }
         }
