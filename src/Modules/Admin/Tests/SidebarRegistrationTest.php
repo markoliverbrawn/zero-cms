@@ -137,7 +137,8 @@ $superAdminUser = new User([
 ]);
 $property->setValue(null, $superAdminUser);
 assert_test(App::isSidebarItemVisible($superAdminItem, $siteWithShop), "Super Admin user can see super_admin_only items");
-assert_test(App::isSidebarItemVisible($shopDependentItem, $siteWithoutShop), "Super Admin user can see shop items even if shop module is disabled (bypasses restrictions)");
+assert_test(App::isSidebarItemVisible($shopDependentItem, $siteWithShop), "Super Admin user can see shop items if shop module is enabled on the active site");
+assert_test(!App::isSidebarItemVisible($shopDependentItem, $siteWithoutShop), "Super Admin user cannot see shop items if shop module is disabled on the active site");
 
 echo "✅ All Sidebar Navigation Registration Tests Passed Successfully!\n";
 exit(0);

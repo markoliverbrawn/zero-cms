@@ -151,11 +151,11 @@ trait ManagesAdminSidebar
             return false;
         }
 
-        // 2. Check module dependency (super admins bypass module-disabled restrictions in the back-office)
+        // 2. Check module dependency (applies to every role, including super admins:
+        // a link gated to a module should only ever be visible if the module is enabled)
         if (!empty($item['module_dependency'])) {
             $module = $item['module_dependency'];
-            $isEnabled = $site && $site->isModuleEnabled($module);
-            if (!$isEnabled && $role !== 'super_admin') {
+            if (!$site || !$site->isModuleEnabled($module)) {
                 return false;
             }
         }
