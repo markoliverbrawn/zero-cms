@@ -37,9 +37,11 @@ if (!file_exists(APPLICATION_ROOT . '/public' . $adminFavicon)) {
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Zero</title>
     <link rel="icon" type="image/svg+xml" href="<?php echo Str::escape($adminFavicon); ?>">
-    <?php // Was ?v=<?= time() ?>, which changed on every request and so re-downloaded the
-          // stylesheet on every single page load. A content digest caches it properly while
-          // still replacing it the moment the file actually changes. ?>
+    <?php
+    // Was a timestamp-based cache-buster, which changed on every request and so
+    // re-downloaded the stylesheet on every single page load. A content digest
+    // caches it properly while still replacing it the moment the file actually changes.
+    ?>
     <link rel="stylesheet" href="<?php echo Str::escape(AssetVersion::url('/assets/css/admin.css')); ?>">
     <?php if ($themePreset !== 'default' && file_exists(APPLICATION_ROOT . '/public/assets/css/admin-themes/admin-' . $themePreset . '.css')): ?>
         <link rel="stylesheet" href="<?php echo Str::escape(AssetVersion::url('/assets/css/admin-themes/admin-' . $themePreset . '.css')); ?>">
