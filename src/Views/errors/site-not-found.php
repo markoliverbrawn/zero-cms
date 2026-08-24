@@ -283,9 +283,10 @@ use Zero\Support\Str;
             <?php if (!empty($activeSites)): ?>
                 <div class="tenants-grid">
                     <?php foreach ($activeSites as $site): ?>
+                        <?php $siteDomainDisplay = Str::escape($site['domain']) . (strpos($site['domain'], ':') === false ? $portSuffix : ''); ?>
                         <div class="tenant-card">
                             <div class="tenant-name"><?= Str::escape($site['name']) ?></div>
-                            <a class="tenant-domain" href="http://<?= Str::escape($site['domain']) . $portSuffix ?>"><?= Str::escape($site['domain']) . $portSuffix ?></a>
+                            <a class="tenant-domain" href="http://<?= $siteDomainDisplay ?>"><?= $siteDomainDisplay ?></a>
                         </div>
                     <?php endforeach; ?>
                 </div>
