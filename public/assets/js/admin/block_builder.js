@@ -214,7 +214,11 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             if (fieldClass) {
                 var fieldName = fieldClass.replace('block-', '').replace('-input', '').replace('-select', '').replace('-textarea', '');
-                blockData[fieldName] = el.value;
+                if (el.type === 'checkbox') {
+                    blockData[fieldName] = el.checked ? '1' : '0';
+                } else {
+                    blockData[fieldName] = el.value;
+                }
             }
         });
 

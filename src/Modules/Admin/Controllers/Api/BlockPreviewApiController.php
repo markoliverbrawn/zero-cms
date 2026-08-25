@@ -13,6 +13,7 @@ namespace Zero\Modules\Admin\Controllers\Api;
 
 use Zero\Core\App;
 use Zero\Core\Template;
+use Zero\Support\BlockHelper;
 use Zero\Support\Security;
 
 /**
@@ -104,7 +105,10 @@ class BlockPreviewApiController extends AdminApiControllerBase
                 $titleHtml = '<' . $tag . ' class="block-section-title">' . Security::sanitizeHtml($title) . '</' . $tag . '>';
             }
 
-            $html = $titleHtml . $html;
+            $isBreakout = ($type === 'hero' && !empty($block['full_width']) && $block['full_width'] === '1');
+            $rowClass = BlockHelper::getRowClasses($block, $type, $isBreakout);
+            $containerClass = $isBreakout ? 'block-container-fluid' : 'block-container';
+            $html = '<section class="' . $rowClass . '"><div class="' . $containerClass . '">' . $titleHtml . $html . '</div></section>';
 
             // Determine appropriate theme stylesheets dynamically using App theme registry
             $themeStylesheets = [];
