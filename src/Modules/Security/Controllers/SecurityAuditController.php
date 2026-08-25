@@ -231,7 +231,7 @@ class SecurityAuditController implements Controller
     public function handle($param)
     {
         App::applyAuthMiddleware();
-        App::applyRoleMiddleware('super_admin');
+        App::requirePermission('security.audit');
 
         $siteId = App::getCurrentSiteId();
 

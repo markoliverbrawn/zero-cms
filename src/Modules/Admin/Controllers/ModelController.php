@@ -59,22 +59,15 @@ class ModelController implements Controller
         }
 
         // Enforce Role-Based Access Control (RBAC) security checks
-        $restrictedModelsForEditor = [
-            'users', 
-            'sites', 
-            'audit_logs', 
-            'shop_orders', 
-            'password_resets', 
-            'security_audits'
-        ];
-        
-        if (\in_array($modelName, $restrictedModelsForEditor)) {
-            App::applyRoleMiddleware('super_admin');
+        $requiredPermission = App::permissionForModel($modelName);
+        if ($requiredPermission !== null) {
+            App::requirePermission($requiredPermission);
         }
 
-        // Restrict destructive actions (restore and force-delete) on any model strictly to super_admin
+        // Restrict destructive actions (restore and force-delete) on any model to those with
+        // explicit destructive-action rights
         if ($action === 'restore' || $action === 'force-delete') {
-            App::applyRoleMiddleware('super_admin');
+            App::requirePermission('content.destructive');
         }
 
         $model = App::getModelClass($modelName);

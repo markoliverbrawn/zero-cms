@@ -177,10 +177,14 @@ class ModelApiController extends AdminApiControllerBase
             $this->respond(['success' => false, 'error' => 'Invalid model name'], 400);
         }
 
-        // Apply Super Admin middleware protection for highly sensitive tables or force-deletes
+        // Enforce Role-Based Access Control (RBAC) protection for sensitive tables or force-deletes
         $isForce = isset($_GET['force']) && $_GET['force'] === 'true';
-        if ($modelName === 'users' || $modelName === 'sites' || $isForce) {
-            App::applyRoleMiddleware('super_admin');
+        $requiredPermission = App::permissionForModel($modelName);
+        if ($requiredPermission !== null) {
+            App::requirePermission($requiredPermission);
+        }
+        if ($isForce) {
+            App::requirePermission('content.destructive');
         }
 
         $record = $isForce ? $model::findTrashed($id) : $model::find($id);
@@ -221,9 +225,10 @@ class ModelApiController extends AdminApiControllerBase
             $this->respond(['success' => false, 'error' => 'Invalid model name'], 400);
         }
 
-        // Apply Super Admin middleware protection for highly sensitive tables
-        if ($modelName === 'users' || $modelName === 'sites') {
-            App::applyRoleMiddleware('super_admin');
+        // Enforce Role-Based Access Control (RBAC) protection for sensitive tables
+        $requiredPermission = App::permissionForModel($modelName);
+        if ($requiredPermission !== null) {
+            App::requirePermission($requiredPermission);
         }
 
         // Check if model has IsOrderable trait or supports reordering
@@ -265,9 +270,10 @@ class ModelApiController extends AdminApiControllerBase
             $this->respond(['success' => false, 'error' => 'Invalid model name'], 400);
         }
 
-        // Apply Super Admin middleware protection for highly sensitive tables
-        if ($modelName === 'users' || $modelName === 'sites') {
-            App::applyRoleMiddleware('super_admin');
+        // Enforce Role-Based Access Control (RBAC) protection for sensitive tables
+        $requiredPermission = App::permissionForModel($modelName);
+        if ($requiredPermission !== null) {
+            App::requirePermission($requiredPermission);
         }
 
         $config = $model::getConfig();

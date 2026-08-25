@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 /**
  * File: src/Core/Concerns/EnforcesAccessControl.php
- * Architectural Purpose: Authentication/authorization middleware application and the
- * role-based-access-denied view configuration, extracted out of App.php.
+ * Architectural Purpose: Authentication/authorization middleware application, the RBAC permission
+ * checks (authorize()/requirePermission()) backed by Zero\Support\Permissions, and the
+ * access-denied view configuration, extracted out of App.php.
  * Package: Zero\Core\Concerns
  */
 
@@ -16,6 +17,7 @@ use Zero\Http\Middleware\CsrfMiddleware;
 use Zero\Http\Middleware\RateLimitMiddleware;
 use Zero\Modules\Security\Middleware\ContentSecurityPolicyMiddleware;
 use Zero\Modules\Security\Middleware\ForcePasswordChangeMiddleware;
+use Zero\Support\Permissions;
 
 /**
  * Trait EnforcesAccessControl
@@ -96,25 +98,77 @@ trait EnforcesAccessControl
     }
 
     /**
-     * Enforce Role-Based Access Control (RBAC) security checks on sensitive admin features.
+     * Determine whether the current logged-in user's role has been granted a given RBAC
+     * permission key, either explicitly or via the 'super_admin' universal wildcard.
+     *
+     * @param string $permission Argument descriptor.
+     * @return bool Response output.
      */
-    public static function applyRoleMiddleware(string $requiredRole)
+    public static function authorize(string $permission): bool
+    {
+        return Permissions::roleHas(self::getCurrentUserRole(), $permission);
+    }
+
+    /**
+     * Look up the RBAC permission key required to edit/delete/export a given model's records, or
+     * null if that model has no restriction beyond the generic backoffice/content permissions.
+     *
+     * @param string $modelName Argument descriptor.
+     * @return string|null Response output.
+     */
+    public static function permissionForModel(string $modelName): ?string
+    {
+        return Permissions::permissionForModel($modelName);
+    }
+
+    /**
+     * Register (or overwrite) the RBAC permission key required to edit/delete/export a given
+     * model's records via the generic admin controllers. Intended to be called from a module's
+     * own Module::init() for models that module owns.
+     *
+     * @param string $model Argument descriptor.
+     * @param string $permission Argument descriptor.
+     * @return void
+     */
+    public static function registerModelPermission(string $model, string $permission): void
+    {
+        Permissions::registerModelPermission($model, $permission);
+    }
+
+    /**
+     * Grant an RBAC permission key to one or more roles. Intended to be called from a module's own
+     * Module::init() to declare permissions that module's own domain owns.
+     *
+     * @param string $permission Argument descriptor.
+     * @param array $grantedToRoles Argument descriptor.
+     * @return void
+     */
+    public static function registerPermission(string $permission, array $grantedToRoles): void
+    {
+        Permissions::register($permission, $grantedToRoles);
+    }
+
+    /**
+     * Enforce Role-Based Access Control (RBAC): hard-fail with a 403 access-denied page unless the
+     * current logged-in user's role has been granted the given permission key.
+     *
+     * @param string $permission Argument descriptor.
+     * @return mixed Response output.
+     */
+    public static function requirePermission(string $permission)
     {
         self::ensureSession();
-        
-        $currentRole = self::getCurrentUserRole();
-        if ($currentRole === 'super_admin') {
+
+        if (self::authorize($permission)) {
             return;
         }
 
-        if ($currentRole !== $requiredRole) {
-            \http_response_code(403);
-            self::render(self::$accessDeniedView, [
-                'currentRole' => $currentRole,
-                'requiredRole' => $requiredRole
-            ]);
-            exit;
-        }
+        \http_response_code(403);
+        self::render(self::$accessDeniedView, [
+            'currentRole' => self::getCurrentUserRole(),
+            'requiredPermission' => $permission
+        ]);
+        exit;
     }
 
     /**

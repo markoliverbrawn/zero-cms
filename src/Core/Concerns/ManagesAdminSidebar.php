@@ -83,21 +83,23 @@ trait ManagesAdminSidebar
             'precedence' => 50
         ]);
 
-        // Standalone Sites Management (System, Super Admin only)
+        // Standalone Sites Management (System, requires the cross-tenant sites.manage permission)
         self::registerAdminSidebarSection('sites', [
             'title' => 'Manage Sites',
             'url' => '/admin/list/sites',
             'icon' => 'home',
-            'super_admin_only' => true,
+            'permission' => 'sites.manage',
             'is_system' => true,
             'precedence' => 400
         ]);
 
-        // Collapsible Security Management (System, Super Admin only)
+        // Collapsible Security Management (System). The section itself carries no permission --
+        // it auto-collapses once none of its links are visible (see Admin/Views/layout.php).
+        // Security-owned links (audit logs, security audits) are registered by
+        // Security\Module::init(), not here, since this is a core file.
         self::registerAdminSidebarSection('security', [
             'title' => I18n::t('security'),
             'icon' => 'shield',
-            'super_admin_only' => true,
             'is_system' => true,
             'precedence' => 410
         ]);
@@ -106,21 +108,8 @@ trait ManagesAdminSidebar
             'title' => I18n::t('manage_users'),
             'url' => '/admin/list/users',
             'icon' => 'user',
+            'permission' => 'users.manage',
             'precedence' => 10
-        ]);
-
-        self::registerAdminSidebarLink('security', [
-            'title' => 'Security Logs',
-            'url' => '/admin/list/audit_logs',
-            'icon' => 'clock',
-            'precedence' => 20
-        ]);
-
-        self::registerAdminSidebarLink('security', [
-            'title' => 'Security Audits',
-            'url' => '/admin/list/security_audits',
-            'icon' => 'clipboard',
-            'precedence' => 30
         ]);
 
         // Collapsible Module Settings (populated dynamically as each module calls
@@ -128,7 +117,7 @@ trait ManagesAdminSidebar
         self::registerAdminSidebarSection('module_settings', [
             'title' => 'Module Settings',
             'icon' => 'settings',
-            'super_admin_only' => true,
+            'permission' => 'modules.manage',
             'is_system' => true,
             'precedence' => 420
         ]);
@@ -144,10 +133,8 @@ trait ManagesAdminSidebar
      */
     public static function isSidebarItemVisible(array $item, ?\Zero\Models\Site $site): bool
     {
-        $role = self::getCurrentUserRole();
-
-        // 1. Check super admin only restriction
-        if (!empty($item['super_admin_only']) && $role !== 'super_admin') {
+        // 1. Check RBAC permission requirement
+        if (!empty($item['permission']) && !self::authorize($item['permission'])) {
             return false;
         }
 
@@ -184,7 +171,7 @@ trait ManagesAdminSidebar
             'url' => '',
             'icon' => 'file',
             'module_dependency' => null,
-            'super_admin_only' => false,
+            'permission' => null,
             'precedence' => 100
         ], $linkConfig);
     }
@@ -204,7 +191,7 @@ trait ManagesAdminSidebar
             'icon' => 'file',
             'url' => null,
             'module_dependency' => null,
-            'super_admin_only' => false,
+            'permission' => null,
             'is_system' => false,
             'precedence' => 100,
             'links' => []

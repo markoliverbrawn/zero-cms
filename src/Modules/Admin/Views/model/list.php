@@ -90,7 +90,7 @@ use Zero\Support\I18n;
           <?php endforeach; ?>
       <?php else: ?>
           <a href="/admin/export/<?php echo Str::escape($modelName ?? ''); ?>" class="btn btn-continue">Export CSV</a>
-          <button type="button" id="btn-purge-logs" class="btn btn-danger" data-csrf="<?php echo Str::escape($csrf ?? ''); ?>" data-is-super="<?php echo (App::getCurrentUserRole() === 'super_admin') ? '1' : '0'; ?>">Purge Logs</button>
+          <button type="button" id="btn-purge-logs" class="btn btn-danger" data-csrf="<?php echo Str::escape($csrf ?? ''); ?>" data-is-super="<?php echo App::authorize('audit.purge_global') ? '1' : '0'; ?>">Purge Logs</button>
       <?php endif; ?>
     </div>
   </div>

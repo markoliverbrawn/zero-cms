@@ -42,7 +42,7 @@ $enabledWidgets = $userPrefs['dashboard_layout'] ?? $allPossibleWidgets;
 
 // Super Admin widget auto-activation hook (strictly enforcing Guideline 24)
 $currentUser = App::getCurrentUser();
-if ($currentUser && $currentUser->role === 'super_admin') {
+if ($currentUser && App::authorize('sites.manage')) {
     if (!in_array('site_search_summary', $enabledWidgets)) {
         $enabledWidgets[] = 'site_search_summary';
     }

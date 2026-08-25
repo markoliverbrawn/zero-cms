@@ -36,7 +36,7 @@ class SearchReindexController implements Controller
     {
         // Enforce administrative permissions
         $user = App::getCurrentUser();
-        if (!$user || ($user->role !== 'super_admin' && $user->role !== 'editor')) {
+        if (!$user || !App::authorize('content.edit')) {
             \header('Content-Type: application/json');
             \http_response_code(403);
             echo \json_encode(['error' => 'Unauthorized back-office access.']);

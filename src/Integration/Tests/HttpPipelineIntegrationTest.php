@@ -65,20 +65,20 @@ assert_test(str_contains($paginationHtml, 'Prev'), "Pagination includes 'Prev' n
 assert_test(str_contains($paginationHtml, 'unified-pagination-wrapper'), "Pagination wraps correct unified class descriptor");
 assert_test(str_contains($paginationHtml, 'search=purist'), "Pagination successfully preserves active GET query variables");
 
-// 3. Test Access Control and Role Management Middleware (EnforcesAccessControl)
-echo "Testing role middleware authorization checks...\n";
+// 3. Test Access Control and Permission Management (EnforcesAccessControl / Permissions)
+echo "Testing RBAC permission authorization checks...\n";
 
-// A. Super Admin should pass any role checks cleanly
+// A. Super Admin should pass any permission checks cleanly, including unregistered ones
 $passedSuperAdminCheck = false;
 try {
-    App::applyRoleMiddleware('editor');
+    App::requirePermission('content.edit');
     $passedSuperAdminCheck = true;
 } catch (Exception $e) {
     // Should not reach here
 }
-assert_test($passedSuperAdminCheck === true, "applyRoleMiddleware cleanly allows Super Admins to pass");
+assert_test($passedSuperAdminCheck === true, "requirePermission cleanly allows Super Admins to pass");
 
-// B. Mock normal user and verify middleware pass/fail logic
+// B. Mock normal user and verify permission pass/fail logic
 $mockEditor = new User([
     'id' => Security::uuidv7(),
     'site_id' => $siteId,
@@ -89,12 +89,29 @@ App::setCurrentUser($mockEditor);
 
 $passedEditorCheck = false;
 try {
-    App::applyRoleMiddleware('editor');
+    App::requirePermission('content.edit');
     $passedEditorCheck = true;
 } catch (Exception $e) {
     // Should not reach here
 }
-assert_test($passedEditorCheck === true, "applyRoleMiddleware successfully permits editor role check");
+assert_test($passedEditorCheck === true, "requirePermission successfully permits editor's granted content.edit permission");
+
+assert_test(App::authorize('content.edit') === true, "Editor is authorized for content.edit");
+assert_test(App::authorize('users.manage') === false, "Editor is NOT authorized for users.manage");
+
+// C. Mock an admin user and verify the mid-tier permission grants
+$mockAdmin = new User([
+    'id' => Security::uuidv7(),
+    'site_id' => $siteId,
+    'username' => 'testadminrole',
+    'role' => 'admin'
+]);
+App::setCurrentUser($mockAdmin);
+
+assert_test(App::authorize('users.manage') === true, "Admin is authorized for users.manage");
+assert_test(App::authorize('modules.manage') === true, "Admin is authorized for modules.manage");
+assert_test(App::authorize('sites.manage') === false, "Admin is NOT authorized for sites.manage");
+assert_test(App::authorize('content.destructive') === false, "Admin is NOT authorized for content.destructive");
 
 // Revert back to Super Admin for subsequent tests
 App::setCurrentUser($mockUser);

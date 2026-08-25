@@ -40,7 +40,7 @@ class ListController implements Controller
 
         // Enforce Role-Based Access Control (RBAC) security checks
         if ($modelName === 'users' || $modelName === 'sites') {
-            App::applyRoleMiddleware('super_admin');
+            App::requirePermission(App::permissionForModel($modelName));
         }
 
         $model = App::getModelClass($modelName);

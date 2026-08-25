@@ -52,12 +52,11 @@ class AuthMiddleware
         }
 
         // Centralized RBAC Hardening: Restrict back-office access to administrative roles only
-        $currentRole = App::getCurrentUserRole();
-        if ($currentRole !== 'editor' && $currentRole !== 'super_admin') {
+        if (!App::authorize('backoffice.access')) {
             \http_response_code(403);
-            App::render('admin/access_denied', [
-                'currentRole' => $currentRole,
-                'requiredRole' => 'editor'
+            App::render('admin/access-denied', [
+                'currentRole' => App::getCurrentUserRole(),
+                'requiredPermission' => 'backoffice.access'
             ]);
             exit();
         }

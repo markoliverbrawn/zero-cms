@@ -14,6 +14,7 @@ namespace Zero\Modules\Admin\Controllers\Api;
 use Zero\Core\App;
 use Zero\Database\DB;
 use Zero\Support\Logger;
+use Zero\Support\Permissions;
 
 /**
  * Class AuditLogApiController
@@ -54,8 +55,8 @@ class AuditLogApiController extends AdminApiControllerBase
         $purgeAll = !empty($body['purge_all_sites']);
 
         if ($purgeAll) {
-            // Enforce that only Super Admins can purge all sites globally!
-            if (($user['role'] ?? '') !== 'super_admin') {
+            // Enforce that only roles granted audit.purge_global can purge all sites globally!
+            if (!Permissions::roleHas($user['role'] ?? '', 'audit.purge_global')) {
                 $this->respond([
                     'success' => false,
                     'error' => 'Forbidden: Only super administrators can purge logs globally across all sites'
@@ -76,6 +77,14 @@ class AuditLogApiController extends AdminApiControllerBase
                 'message' => 'Successfully purged all audit logs globally across all sites'
             ]);
         } else {
+            // Enforce that the role has rights to purge this tenant's own logs
+            if (!Permissions::roleHas($user['role'] ?? '', 'audit.purge')) {
+                $this->respond([
+                    'success' => false,
+                    'error' => 'Forbidden: You do not have permission to purge audit logs'
+                ], 403);
+            }
+
             // Purge only the active site's logs!
             DB::query("DELETE FROM audit_logs WHERE site_id = ?", [$siteId]);
 

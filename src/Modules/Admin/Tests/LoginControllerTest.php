@@ -124,6 +124,43 @@ assert_test(
     "Valid administrator credentials do not trip the role check"
 );
 
+// 6b. The mid-tier 'admin' role must also be accepted at login, since it's a first-class
+//     administrative role alongside editor/super_admin.
+echo "Testing POST /admin/login with valid 'admin' role credentials...\n";
+
+$adminRoleResponse = TestRequest::post('/admin/login', [
+        'username' => 'site_manager',
+        'password' => 'CorrectHorse123',
+    ])
+    ->onSite(['enabled_modules' => $adminModules])
+    ->withUser(['username' => 'site_manager', 'password' => 'CorrectHorse123', 'role' => 'admin'])
+    ->withCsrf()
+    ->send();
+
+assert_test(
+    stripos($adminRoleResponse['stdout'], 'Invalid credentials') === false,
+    "Valid 'admin' role credentials are not refused"
+);
+assert_test(
+    stripos($adminRoleResponse['stdout'], 'Unauthorized administrative role') === false,
+    "Valid 'admin' role credentials do not trip the role check"
+);
+
+// 6c. Regression test for the bug this RBAC work fixes: an 'admin'-role user must be able to reach
+//     a back-office route (AuthMiddleware's backoffice.access gate), not be walled out the way it
+//     used to be when that gate only recognized editor/super_admin.
+echo "Testing an 'admin'-role user can reach a back-office route...\n";
+
+$adminDashboardResponse = TestRequest::get('/admin/dashboard')
+    ->onSite(['enabled_modules' => $adminModules])
+    ->asUser(['username' => 'admin_backoffice', 'role' => 'admin'])
+    ->send();
+
+assert_test(
+    stripos($adminDashboardResponse['stdout'], 'Administrative Access Denied') === false,
+    "An 'admin'-role user is not shown the access-denied page when visiting the dashboard"
+);
+
 // 7. An already-authenticated visitor is bounced to the dashboard before the sign-in form is ever
 //    rendered, so a logged-in user cannot be shown a login prompt.
 echo "Testing GET /admin/login while already authenticated...\n";

@@ -64,7 +64,7 @@ echo "Testing 403 access denied template compilation...\n";
 ob_start();
 App::render('admin/access-denied', [
     'currentRole' => 'editor',
-    'requiredRole' => 'super_admin'
+    'requiredPermission' => 'users.manage'
 ]);
 $accessDeniedHtml = ob_get_clean();
 

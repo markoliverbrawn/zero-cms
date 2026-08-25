@@ -66,8 +66,7 @@ trait RendersViews
             return;
         }
 
-        $role = self::getCurrentUserRole();
-        if ($role !== 'editor' && $role !== 'super_admin') {
+        if (!self::authorize('content.edit')) {
             return;
         }
 

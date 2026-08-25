@@ -96,6 +96,32 @@ class Module implements ModuleInterface
         App::registerModel('security_audits', SecurityAudit::class);
         App::registerCascadeDelete(Site::class, SecurityAudit::class, 'site_id');
 
+        // Register the RBAC permission keys this module owns and grant them to the 'admin' role
+        // (super_admin already has universal access via its wildcard). audit.purge_global is
+        // intentionally left ungranted here -- it stays super_admin-only.
+        App::registerPermission('audit.manage', ['admin']);
+        App::registerPermission('audit.purge', ['admin']);
+        App::registerPermission('security.audit', ['admin']);
+        App::registerModelPermission('audit_logs', 'audit.manage');
+        App::registerModelPermission('security_audits', 'security.audit');
+
+        // Security-owned admin sidebar links, gated by the permissions registered above
+        App::registerAdminSidebarLink('security', [
+            'title' => 'Security Logs',
+            'url' => '/admin/list/audit_logs',
+            'icon' => 'clock',
+            'permission' => 'audit.manage',
+            'precedence' => 20
+        ]);
+
+        App::registerAdminSidebarLink('security', [
+            'title' => 'Security Audits',
+            'url' => '/admin/list/security_audits',
+            'icon' => 'clipboard',
+            'permission' => 'security.audit',
+            'precedence' => 30
+        ]);
+
         // Explicitly register our security controllers under 'admin' context to bypass DB enabled_modules constraints
         Router::register([
             '#^/admin/change-password$#' => ChangePasswordController::class,

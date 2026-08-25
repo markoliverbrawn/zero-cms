@@ -34,7 +34,7 @@ class SecureDownloadController implements Controller
     {
         // 1. Enforce strict administrative authorization
         App::applyAuthMiddleware();
-        App::applyRoleMiddleware('editor'); // Editors and Super Admins only!
+        App::requirePermission('content.edit');
 
         $fileId = $param[1] ?? null;
         $siteId = App::getCurrentSiteId();

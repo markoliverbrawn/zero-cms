@@ -44,7 +44,7 @@ trait ManagesModelListActions
      * super_admin bypass on module_dependency: a list action gated to a module should only ever
      * appear when that module is genuinely active for the current site. Reusing the sidebar's
      * bypass would make the gate a no-op on any model whose listing page is itself
-     * super_admin-only (e.g. 'sites'), since only super admins could ever reach it.
+     * permission-restricted (e.g. 'sites'), since only permitted roles could ever reach it.
      *
      * @param array $action
      * @param \Zero\Models\Site|null $site
@@ -52,9 +52,7 @@ trait ManagesModelListActions
      */
     public static function isModelListActionVisible(array $action, ?\Zero\Models\Site $site): bool
     {
-        $role = self::getCurrentUserRole();
-
-        if (!empty($action['super_admin_only']) && $role !== 'super_admin') {
+        if (!empty($action['permission']) && !self::authorize($action['permission'])) {
             return false;
         }
 
@@ -75,7 +73,7 @@ trait ManagesModelListActions
      *     @var string $method 'get' renders a plain link; 'post' renders a confirm+fetch button.
      *     @var string $confirm Confirmation message shown before a 'post' action runs.
      *     @var string|null $module_dependency Module ID gating visibility, mirroring sidebar links.
-     *     @var bool $super_admin_only
+     *     @var string|null $permission RBAC permission key required to see this action.
      *     @var int $precedence
      * }
      * @return void
@@ -88,7 +86,7 @@ trait ManagesModelListActions
             'method' => 'get',
             'confirm' => '',
             'module_dependency' => null,
-            'super_admin_only' => false,
+            'permission' => null,
             'precedence' => 100,
         ], $actionConfig);
     }

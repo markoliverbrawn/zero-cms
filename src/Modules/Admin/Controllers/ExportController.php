@@ -34,9 +34,10 @@ class ExportController implements Controller
         
         $modelName = $matches[1] ?? '';
 
-        // Restrict sensitive model exports to Super Administrators
-        if ($modelName === 'audit_logs' || $modelName === 'users' || $modelName === 'sites') {
-            App::applyRoleMiddleware('super_admin');
+        // Restrict sensitive model exports to roles with the corresponding manage permission
+        $requiredPermission = App::permissionForModel($modelName);
+        if ($requiredPermission !== null) {
+            App::requirePermission($requiredPermission);
         }
 
         $modelClass = App::getModelClass($modelName);

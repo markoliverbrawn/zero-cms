@@ -41,7 +41,7 @@ trait ManagesModuleSettings
             'url' => '/admin/settings/' . $moduleId,
             'icon' => 'settings',
             'module_dependency' => $moduleId,
-            'super_admin_only' => true,
+            'permission' => 'modules.manage',
             'precedence' => 100
         ]);
     }

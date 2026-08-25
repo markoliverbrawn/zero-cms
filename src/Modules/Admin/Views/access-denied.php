@@ -11,7 +11,7 @@ use Zero\Support\Str;
     </div>
     <h2 class="access-denied-title">Administrative Access Denied</h2>
     <p class="access-denied-desc">
-        Your active user profile is designated as <strong class="access-denied-role-strong">&ldquo;<?php echo Str::escape($currentRole); ?>&rdquo;</strong>. This resource requires elevated <strong class="access-denied-role-strong">&ldquo;<?php echo Str::escape($requiredRole); ?>&rdquo;</strong> administrative clearance.
+        Your active user profile is designated as <strong class="access-denied-role-strong">&ldquo;<?php echo Str::escape($currentRole); ?>&rdquo;</strong>. This resource requires the <strong class="access-denied-role-strong">&ldquo;<?php echo Str::escape($requiredPermission); ?>&rdquo;</strong> permission.
     </p>
     <div class="access-denied-footer">
         <a href="/admin/dashboard" class="access-denied-back-btn">Return to Dashboard</a>

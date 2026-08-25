@@ -36,7 +36,7 @@ class ModuleSettingsController implements Controller
     public function handle($param)
     {
         App::applyAuthMiddleware();
-        App::applyRoleMiddleware('super_admin');
+        App::requirePermission('modules.manage');
 
         $moduleId = $param[1] ?? '';
         $schema = App::getModuleSettingsSchema($moduleId);

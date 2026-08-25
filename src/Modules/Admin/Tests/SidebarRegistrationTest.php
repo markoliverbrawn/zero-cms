@@ -77,14 +77,14 @@ $contentLinksSorted = $sectionsWithCustomLink['content']['links'] ?? [];
 assert_test(!empty($contentLinksSorted), "Content links are not empty after registering custom link");
 assert_test($contentLinksSorted[0]['url'] === '/admin/alpha', "Alpha content link with lower precedence is sorted first");
 
-// 4. Test visibility filtering by role (super_admin vs editor) and module active state
+// 4. Test visibility filtering by RBAC permission and module active state
 $superAdminItem = [
     'title' => 'Super Admin Section',
-    'super_admin_only' => true
+    'permission' => 'sites.manage'
 ];
 $editorItem = [
     'title' => 'Editor Section',
-    'super_admin_only' => false
+    'permission' => null
 ];
 $shopDependentItem = [
     'title' => 'Shop Management',
@@ -114,7 +114,7 @@ $property->setAccessible(true);
 
 // Case A: User is Guest/null
 $property->setValue(null, null);
-assert_test(!App::isSidebarItemVisible($superAdminItem, $siteWithShop), "Guest user cannot see super_admin_only items");
+assert_test(!App::isSidebarItemVisible($superAdminItem, $siteWithShop), "Guest user cannot see items requiring sites.manage");
 assert_test(App::isSidebarItemVisible($editorItem, $siteWithShop), "Guest user can see standard items");
 
 // Case B: User is Standard Editor
@@ -124,19 +124,28 @@ $editorUser = new User([
     'role' => 'editor'
 ]);
 $property->setValue(null, $editorUser);
-assert_test(!App::isSidebarItemVisible($superAdminItem, $siteWithShop), "Editor user cannot see super_admin_only items");
+assert_test(!App::isSidebarItemVisible($superAdminItem, $siteWithShop), "Editor user cannot see items requiring sites.manage");
 assert_test(App::isSidebarItemVisible($editorItem, $siteWithShop), "Editor user can see standard items");
 assert_test(App::isSidebarItemVisible($shopDependentItem, $siteWithShop), "Editor user can see shop items if shop module is enabled on the active site");
 assert_test(!App::isSidebarItemVisible($shopDependentItem, $siteWithoutShop), "Editor user cannot see shop items if shop module is disabled on the active site");
 
-// Case C: User is Super Admin
+// Case C: User is Admin (mid-tier role, still lacks sites.manage)
+$adminUser = new User([
+    'id' => 'admin-id',
+    'username' => 'admin_user',
+    'role' => 'admin'
+]);
+$property->setValue(null, $adminUser);
+assert_test(!App::isSidebarItemVisible($superAdminItem, $siteWithShop), "Admin user cannot see items requiring sites.manage");
+
+// Case D: User is Super Admin
 $superAdminUser = new User([
     'id' => 'superadmin-id',
     'username' => 'super_admin_user',
     'role' => 'super_admin'
 ]);
 $property->setValue(null, $superAdminUser);
-assert_test(App::isSidebarItemVisible($superAdminItem, $siteWithShop), "Super Admin user can see super_admin_only items");
+assert_test(App::isSidebarItemVisible($superAdminItem, $siteWithShop), "Super Admin user can see items requiring sites.manage");
 assert_test(App::isSidebarItemVisible($shopDependentItem, $siteWithShop), "Super Admin user can see shop items if shop module is enabled on the active site");
 assert_test(!App::isSidebarItemVisible($shopDependentItem, $siteWithoutShop), "Super Admin user cannot see shop items if shop module is disabled on the active site");
 
