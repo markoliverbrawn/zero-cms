@@ -54,12 +54,25 @@ class QueueManager
     }
 
     /**
+     * Jobs that never reach a caught try/catch failure (an OOM kill, a hard process termination, a
+     * request timeout mid-execute()) leave their row in 'reserved' forever, only for it to become
+     * reclaimable again once $lockTimeout elapses -- with no ceiling, a job whose worker crashes
+     * every single time would retry forever, every $lockTimeout seconds, indefinitely. This caps how
+     * many times a row may be reclaimed via the stale-lock path before it's dead-lettered instead.
+     * Caught-exception failures (see the outer catch below) are unaffected -- they already terminate
+     * in a single attempt via status='failed', which this same ceiling also applies to for jobs that
+     * fail every retry through that path.
+     */
+    public const MAX_ATTEMPTS = 5;
+
+    /**
      * Atomically selects and processes the next pending or expired job row.
      *
      * @param int|null $lockTimeout Inseconds (default: 900)
-     * @return bool True if a job was found and processed, false otherwise
+     * @param int $maxAttempts Reclaim/attempt ceiling before a job is dead-lettered (default: self::MAX_ATTEMPTS)
+     * @return bool True if a job was found and handled (run or dead-lettered), false otherwise
      */
-    public static function runNextPendingJob(?int $lockTimeout = 900): bool
+    public static function runNextPendingJob(?int $lockTimeout = 900, int $maxAttempts = self::MAX_ATTEMPTS): bool
     {
         $pdo = DB::getPDO();
         $now = \gmdate('Y-m-d H:i:s');
@@ -71,14 +84,14 @@ class QueueManager
 
             // 1. Row-lock selection for double-locking race safety
             $stmt = $pdo->prepare("
-                SELECT id, site_id, job_class, payload, attempts FROM queue_jobs 
+                SELECT id, site_id, job_class, payload, attempts FROM queue_jobs
                 WHERE (
-                    status = 'pending' 
+                    status = 'pending'
                     OR (status = 'reserved' AND reserved_at < ?)
                 )
-                AND deleted_at IS NULL 
-                ORDER BY created_at ASC 
-                LIMIT 1 
+                AND deleted_at IS NULL
+                ORDER BY created_at ASC
+                LIMIT 1
                 FOR UPDATE
             ");
             $stmt->execute([$expiredTime]);
@@ -95,13 +108,47 @@ class QueueManager
             $payloadData = \json_decode($row['payload'], true) ?? [];
             $attempts = \intval($row['attempts']) + 1;
 
+            // 1b. Dead-letter a job that has exhausted its retry ceiling rather than reclaiming it
+            // again -- this only fires for rows that keep going stale without ever reaching the
+            // caught-exception failure path below, since that path already stops retries in one shot.
+            if ($attempts > $maxAttempts) {
+                $deadLetterTime = \gmdate('Y-m-d H:i:s');
+                $deadLetterStmt = $pdo->prepare("
+                    UPDATE queue_jobs
+                    SET status = 'failed',
+                        attempts = ?,
+                        failed_at = ?,
+                        error_message = ?,
+                        updated_at = ?
+                    WHERE id = ?
+                ");
+                $deadLetterStmt->execute([
+                    $attempts,
+                    $deadLetterTime,
+                    "Exceeded max retry attempts ({$maxAttempts}) after repeatedly going stale without completing -- worker likely crashed, was killed, or timed out mid-execution each time.",
+                    $deadLetterTime,
+                    $jobId
+                ]);
+                $pdo->commit();
+
+                Logger::log(
+                    userId: null,
+                    action: 'job_dead_lettered',
+                    objectType: 'queue_jobs',
+                    objectId: $jobId,
+                    meta: ['job_class' => $jobClass, 'attempts' => $attempts]
+                );
+
+                return true; // A row was found and handled (dead-lettered), even though not executed
+            }
+
             // 2. Transition state immediately to reserved
             $updateStmt = $pdo->prepare("
-                UPDATE queue_jobs 
-                SET status = 'reserved', 
-                    attempts = ?, 
-                    reserved_at = ?, 
-                    updated_at = ? 
+                UPDATE queue_jobs
+                SET status = 'reserved',
+                    attempts = ?,
+                    reserved_at = ?,
+                    updated_at = ?
                 WHERE id = ?
             ");
             $updateStmt->execute([$attempts, $now, $now, $jobId]);

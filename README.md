@@ -354,3 +354,47 @@ Every merge to `main` is automatically versioned and published — **no Node/npm
 * **`.github/workflows/lint-commit-messages.yml`** runs `bin/check-commit-messages` on every pull request, failing fast if any commit's subject line doesn't match the convention above.
 * **`.github/workflows/release.yml`** runs `bin/release` after `Run Automated Tests (CI)` succeeds on `main` — it never releases a commit the test suite hasn't already passed. It reads every commit since the last `v*` tag, computes the next version (`feat` → minor, `fix`/`perf` → patch, any breaking change → major), appends a `CHANGELOG.md` section, tags the release, and publishes it via `gh release create`.
 * Run `bin/release --dry-run` at any time locally to preview the next version and changelog without tagging, committing, or publishing anything.
+
+## 7. Deployment (Google Cloud Run)
+
+`deployments/gcp/` is a self-contained shell toolkit that takes this repo from zero to a fully
+running, scale-to-zero site on Google Cloud: a Cloud Run web service, a `db-f1-micro` Cloud SQL
+MySQL instance (connected over a Unix socket, never a public IP), a public Cloud Storage bucket for
+media (`STORAGE_DRIVER=gcs`), one-shot Cloud Run Jobs for migrations/seeding, and two Cloud
+Scheduler HTTP jobs that wake the same web service every 5 minutes to drive the job queue and
+recurring-task scheduler — no separate always-on worker process.
+
+### Running it
+
+From the repo root, with `gcloud` authenticated and `docker` installed (or set
+`USE_LOCAL_DOCKER=false` to build via Cloud Build instead):
+
+```bash
+export GCP_PROJECT_ID="your-project"        # omitted: resolved from `gcloud config get-value project`
+export CREATE_CLOUDSQL=true                 # false to reuse an existing instance instead of provisioning one
+export CREATE_STORAGE_BUCKET=true           # false to reuse an existing bucket
+export RUN_MIGRATIONS=true                  # safe, up-only schema migrations
+export RUN_SEED=false                       # DESTRUCTIVE -- wipes all data and reseeds. Confirm before setting true.
+
+./deployments/gcp/setup.sh
+```
+
+`setup.sh` runs `cloud_run_setup.sh` → `cloud_storage_setup.sh` → `cloud_sql_setup.sh` →
+`deploy_app.sh` → `cloud_scheduler_setup.sh` in order; every step is idempotent, so re-running the
+whole pipeline against an existing deployment updates it in place. To ship a code-only change
+without touching infrastructure, run `./deployments/gcp/deploy_app.sh` alone. Generated
+credentials/tokens (`DB_PASS`, `ADMIN_PASS`, `QUEUE_TRIGGER_TOKEN`, `SCHEDULER_TRIGGER_TOKEN`)
+persist across runs in `deployments/gcp/.env.gcp` (gitignored, mode `600`) so redeploys don't drift.
+See `deployments/gcp/common.sh` for every flag's default (region, resource names, image tag, etc.).
+
+### Deploying a host project instead of Core itself
+
+These scripts assume they're run from a repo whose own `public/index.php` sits at its root, matching
+this repo's standalone layout. A host project created via `bin/create-project` (Core installed at
+`vendor/markoliverbrawn/zero-cms-core/` instead) needs its own adapted copy: a `bin/migrate` wrapper
+(not scaffolded by `bin/create-project` — mirror `bin/seed`'s `APPLICATION_ROOT`/`APP_ROOT` split),
+a `Dockerfile` that runs `composer install` at build time rather than deferring to local dev's
+runtime fallback, and an `entrypoint.sh` whitelist extended with any of the host project's own
+env vars that are read at request time (anything read via `Env::get()` outside a CLI job needs to
+be in that whitelist, or it silently never reaches the app despite being set on the Cloud Run
+resource).

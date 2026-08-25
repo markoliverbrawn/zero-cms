@@ -197,4 +197,34 @@ assert_test(!empty($newLogExistsAfter), "New log entry (less than a year old) wa
 // Cleanup test logs
 DB::query("DELETE FROM audit_logs WHERE id IN (?, ?)", [$oldLogId, $newLogId]);
 
+// 9. Test Dead-Lettering After Exhausted Retry Attempts
+// Simulates a job whose worker crashes every time (never reaches the caught-exception 'failed'
+// path) -- its row keeps going stale and getting reclaimed. Fast-forward past that ceiling directly
+// via SQL (reserved_at far enough in the past to be reclaimable, attempts already at the ceiling)
+// rather than looping runNextPendingJob() MAX_ATTEMPTS times, since MockSuccessJob always succeeds.
+echo "Testing dead-lettering after exhausted retry attempts...\n";
+DB::query("TRUNCATE TABLE queue_jobs");
+MockSuccessJob::$wasExecuted = false;
+
+$staleJobId = QueueManager::dispatch(MockSuccessJob::class, ['action' => 'test_dead_letter'], $siteId);
+DB::query(
+    "UPDATE queue_jobs SET status = 'reserved', attempts = ?, reserved_at = ? WHERE id = ?",
+    [QueueManager::MAX_ATTEMPTS, gmdate('Y-m-d H:i:s', time() - 1000), $staleJobId]
+);
+
+$deadLetterProcessed = QueueManager::runNextPendingJob(900);
+assert_test($deadLetterProcessed === true, "runNextPendingJob() reports the exhausted job as handled");
+assert_test(MockSuccessJob::$wasExecuted === false, "Job past its attempt ceiling is dead-lettered instead of executed");
+
+DB::clearIdentityMap();
+$deadLetteredJob = QueueJob::find($staleJobId);
+assert_test($deadLetteredJob->status === 'failed', "Exhausted job's status transitioned to 'failed'");
+assert_test($deadLetteredJob->attempts == QueueManager::MAX_ATTEMPTS + 1, "Attempts recorded the final over-ceiling increment");
+assert_test(strpos($deadLetteredJob->error_message, 'Exceeded max retry attempts') !== false, "Dead-letter error_message explains why it stopped retrying");
+
+// A subsequent call must not find the now-'failed' row claimable again (status='failed' is excluded
+// from the reclaim WHERE clause), proving this doesn't loop.
+$afterDeadLetter = QueueManager::runNextPendingJob(900);
+assert_test($afterDeadLetter === false, "Dead-lettered job is not reclaimed again on a subsequent call");
+
 echo "Job Queue & Runner System tests completed successfully!\n\n";
