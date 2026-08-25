@@ -102,7 +102,7 @@ class BlockPreviewApiController extends AdminApiControllerBase
                 // controller and meant the preview only matched the frontend for that one theme.
                 // Themes restyle .block-section-title from their own stylesheet instead.
                 $tag = $hideTitle === '2' ? 'h1' : 'h2';
-                $titleHtml = '<' . $tag . ' class="block-section-title">' . Security::sanitizeHtml($title) . '</' . $tag . '>';
+                $titleHtml = '<' . $tag . ' class="block-section-title">' . Security::sanitizeTitleHtml($title) . '</' . $tag . '>';
             }
 
             $isBreakout = ($type === 'hero' && !empty($block['full_width']) && $block['full_width'] === '1');

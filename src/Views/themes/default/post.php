@@ -74,7 +74,7 @@ $shouldOmitTitle = !empty($post->omit_title) || $hasHeroBlock;
             $hideTitle = $block['hide_title'] ?? '0';
             if ($hideTitle !== '1' && !empty($block['title']) && $type !== 'hero') {
                 $titleTag = $hideTitle === '2' ? 'h1' : 'h2';
-                echo '<' . $titleTag . ' class="block-section-title">' . Security::sanitizeHtml($block['title']) . '</' . $titleTag . '>';
+                echo '<' . $titleTag . ' class="block-section-title">' . Security::sanitizeTitleHtml($block['title']) . '</' . $titleTag . '>';
             }
 
             echo Template::renderFile($blockPath, [

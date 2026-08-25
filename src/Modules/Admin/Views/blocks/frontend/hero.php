@@ -51,7 +51,7 @@ $styleAttr = empty($styleVars) ? '' : ' style="' . implode('; ', $styleVars) . '
 
     <div class="hero-text-container">
         <?php if (!empty($title)): ?>
-            <h1><?php echo Security::sanitizeHtml($title); ?></h1>
+            <h1><?php echo Security::sanitizeTitleHtml($title); ?></h1>
         <?php endif; ?>
         <?php if (!empty($content)): ?>
             <div class="hero-content-area">

@@ -14,7 +14,7 @@ $highlightedCode = Str::highlightCode($code, $language);
 <div class="block-code-container">
     <?php if (!empty($title)): ?>
         <div class="block-code-header">
-            <span><?php echo Security::sanitizeHtml($title); ?></span>
+            <span><?php echo Security::sanitizeTitleHtml($title); ?></span>
             <span class="block-code-lang-label"><?php echo Str::escape($language); ?></span>
         </div>
     <?php endif; ?>

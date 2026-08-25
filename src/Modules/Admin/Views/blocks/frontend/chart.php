@@ -22,7 +22,7 @@ foreach ($items as $item) {
 ?>
 <div class="block-chart-container">
     <?php if (!empty($title)): ?>
-        <h3 class="block-chart-title"><?php echo Security::sanitizeHtml($title); ?></h3>
+        <h3 class="block-chart-title"><?php echo Security::sanitizeTitleHtml($title); ?></h3>
     <?php endif; ?>
 
     <!-- Beautiful Dashboard Window Header Toolbar -->

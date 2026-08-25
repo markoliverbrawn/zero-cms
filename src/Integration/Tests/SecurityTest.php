@@ -176,4 +176,21 @@ assert_test(strpos($sanitizedContent, 'Safe text') !== false, "Preserves safe el
 
 unlink($tempSvgFile);
 
+// 11. Test Title HTML Sanitizer (sanitizeTitleHtml)
+echo "Testing Title Rich Text Sanitizer...\n";
+$richTitle = '<b>Bold</b> and <i>italic</i> and <small>small</small>';
+assert_test(Security::sanitizeTitleHtml($richTitle) === $richTitle, "Preserves inline formatting tags allowed by the title toolbar");
+
+$blockLevelTitle = '<p>First line</p><p>Second line</p>';
+$sanitizedBlockTitle = Security::sanitizeTitleHtml($blockLevelTitle);
+assert_test(strpos($sanitizedBlockTitle, '<p>') === false, "Strips <p> tags injected via Enter/paste in a title's contenteditable field");
+assert_test($sanitizedBlockTitle === 'First line Second line', "Collapses stripped block tags to a space instead of concatenating words together");
+
+$nestedHeadingTitle = '<h1><p>Nested heading text</p></h1>';
+$sanitizedNestedHeading = Security::sanitizeTitleHtml($nestedHeadingTitle);
+assert_test(strpos($sanitizedNestedHeading, '<h1>') === false && strpos($sanitizedNestedHeading, '<p>') === false, "Strips both outer and nested block-level tags, never nesting a block tag inside a heading");
+
+$maliciousTitle = '<b>Bold</b><script>alert(1)</script>';
+assert_test(strpos(Security::sanitizeTitleHtml($maliciousTitle), '<script>') === false, "sanitizeTitleHtml still strips dangerous tags via the underlying sanitizeHtml pass");
+
 echo "Security component tests completed.\n\n";

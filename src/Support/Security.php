@@ -215,6 +215,29 @@ class Security {
     }
 
     /**
+     * Sanitise a block title's rich text HTML down to inline formatting only.
+     *
+     * A block title's contenteditable field only exposes bold/italic/small formatting, but the
+     * underlying contenteditable region still lets Enter or a paste inject block-level markup
+     * (<p>, headings, lists, blockquotes...). Titles are always rendered inside their own
+     * heading wrapper (<h1>/<h2>/<h3>), so any block-level tag surviving sanitizeHtml() would
+     * nest illegally inside it. Collapse line-separating tags to a space, then strip anything
+     * that isn't inline formatting.
+     */
+    public static function sanitizeTitleHtml(string $html): string
+    {
+        $html = self::sanitizeHtml($html);
+        if ($html === '') {
+            return '';
+        }
+
+        $html = \preg_replace('#</(p|div|h[1-6]|li|blockquote|tr)\s*>#i', ' ', $html);
+        $html = \strip_tags($html, '<b><strong><i><em><u><small><br>');
+
+        return \trim(\preg_replace('/\s+/', ' ', $html));
+    }
+
+    /**
      * Globally sanitise incoming user inputs recursively.
      */
     public static function sanitizeInput($data, bool $stripHtml = false, array $exceptKeys = ['password', 'confirm_password', 'content', 'description'])
