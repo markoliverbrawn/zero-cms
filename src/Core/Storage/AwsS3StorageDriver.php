@@ -75,9 +75,19 @@ class AwsS3StorageDriver implements StorageDriver
 
     /**
      * Strip leading local paths to keep the cloud layout clean.
+     *
+     * Same round-trip requirement as GoogleCloudStorageDriver::cleanPath() -- media.path is
+     * populated from this driver's own getUrl() output, so it must be unwrapped back to a bare
+     * object key here or every read()/exists()/delete()/rename() call 404s against the literal
+     * URL string.
      */
     protected function cleanPath(string $path): string
     {
+        $publicUrlPrefix = "https://{$this->bucketName}.s3.{$this->region}.amazonaws.com/";
+        if (\strpos($path, $publicUrlPrefix) === 0) {
+            return \substr($path, \strlen($publicUrlPrefix));
+        }
+
         if (\strpos($path, APPLICATION_ROOT) === 0) {
             $path = \substr($path, \strlen(APPLICATION_ROOT));
         }

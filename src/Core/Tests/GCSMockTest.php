@@ -134,6 +134,42 @@ $mockCurlHttpCodes[$mockMetaUrl] = 204; // 204 No Content is standard GCS succes
 $deleteResult = $driver->delete('mock-folder/test.txt');
 assert_test($deleteResult === true, "Mocked GCS delete operation successfully completed with HTTP 204");
 
+// Regression test: media.path is populated from this driver's own getUrl() output (see
+// FileManagerService::uploadFile()), so exists()/read()/delete() must be able to unwrap that same
+// full public URL back down to the underlying object key. Before this was fixed, cleanPath() had
+// no logic for its own getUrl() prefix, so every read-back of an uploaded file's path 404'd
+// silently -- breaking on-demand image variant generation and dimension probing under
+// STORAGE_DRIVER=gcs.
+echo "  Testing getUrl() output round-trips back through exists()/read()...\n";
+global $mockCurlResponses;
+$publicUrl = $driver->getUrl('mock-folder/round-trip.txt');
+assert_test(
+    $publicUrl === "https://storage.googleapis.com/{$bucketName}/mock-folder/round-trip.txt",
+    "getUrl() produced the expected fully-qualified public URL"
+);
+
+// The mock's curl_getinfo() defaults an unrecognized URL to HTTP 200 (see top of file), so an
+// exists()-only assertion would pass even if cleanPath() regressed to a no-op that leaves the
+// full URL intact -- it would just query a different (wrong) URL that also defaults to 200.
+// Explicitly mapping that exact wrong/pre-fix URL to a 404 closes that hole and makes this a real
+// regression guard rather than a false-positive-prone one.
+$mockRoundTripMetaUrl = "https://storage.googleapis.com/storage/v1/b/{$bucketName}/o/mock-folder%2Fround-trip.txt";
+$mockCurlHttpCodes[$mockRoundTripMetaUrl] = 200;
+$mockBrokenMetaUrl = "https://storage.googleapis.com/storage/v1/b/{$bucketName}/o/" . urlencode($publicUrl);
+$mockCurlHttpCodes[$mockBrokenMetaUrl] = 404;
+assert_test(
+    $driver->exists($publicUrl) === true,
+    "exists() correctly unwraps a getUrl()-shaped public URL back to its object key"
+);
+
+$mockRoundTripReadUrl = "https://storage.googleapis.com/storage/v1/b/{$bucketName}/o/mock-folder%2Fround-trip.txt?alt=media";
+$mockCurlResponses[$mockRoundTripReadUrl] = 'round trip payload';
+$mockCurlHttpCodes[$mockRoundTripReadUrl] = 200;
+assert_test(
+    $driver->read($publicUrl) === 'round trip payload',
+    "read() correctly unwraps a getUrl()-shaped public URL back to its object key"
+);
+
 echo "Mocked GCS driver component tests completed.\n\n";
 
 // Clean up mock JSON key file from system temp folder

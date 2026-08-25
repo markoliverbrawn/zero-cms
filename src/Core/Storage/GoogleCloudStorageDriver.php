@@ -88,9 +88,23 @@ class GoogleCloudStorageDriver implements StorageDriver
 
     /**
      * Strip leading local paths to keep the cloud layout clean.
+     *
+     * media.path is populated from this driver's own getUrl() output (see
+     * FileManagerService::uploadFile()), so every read()/exists()/delete()/rename() call this
+     * driver receives back from the rest of the app is that full public URL, not a bare object
+     * key. Without unwrapping it back to an object key here first, every one of those calls
+     * builds its GCS API request against the literal URL string and 404s -- silently, since
+     * read() treats a 404 as "not found" rather than an error -- which is what breaks on-demand
+     * image variant generation (MediaVariantController re-reads the original via Storage::read())
+     * and dimension probing (FileManagerService::probeDimensions()) under STORAGE_DRIVER=gcs.
      */
     protected function cleanPath(string $path): string
     {
+        $publicUrlPrefix = "https://storage.googleapis.com/{$this->bucketName}/";
+        if (\strpos($path, $publicUrlPrefix) === 0) {
+            return \substr($path, \strlen($publicUrlPrefix));
+        }
+
         if (\strpos($path, APPLICATION_ROOT) === 0) {
             $path = \substr($path, \strlen(APPLICATION_ROOT));
         }

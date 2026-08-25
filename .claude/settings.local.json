@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(docker exec *)",
+      "Bash(mkdir -p /data/misc/zero/tests/tmp_scratch && cp /tmp/theme_registry_smoke.php /data/misc/zero/tests/tmp_scratch/smoke.php *)"
+    ],
+    "additionalDirectories": [
+      "/tmp"
+    ]
+  }
+}

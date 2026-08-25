@@ -202,12 +202,16 @@ class FileManagerService
             return ['success' => false, 'error' => $validationError, 'statusHint' => $isMissing ? 400 : 403];
         }
 
-        // Delete the old physical file if it exists. $existingRecord['path'] is DB-relative (e.g.
-        // /storage/uploads/{siteId}/file.ext) -- \is_file() needs a real absolute path, so the
-        // /public segment (omitted from the stored DB path) must be inserted here explicitly.
-        $oldPhysicalPath = Storage::getRoot() . '/public' . $existingRecord['path'];
-        if (Storage::exists($oldPhysicalPath) && \is_file($oldPhysicalPath)) {
-            Storage::delete($oldPhysicalPath);
+        // Delete the old physical file if it exists. $existingRecord['path'] is whatever the
+        // active storage driver's own getUrl() produced at upload time -- a DB-relative path for
+        // the local driver, but a full external URL (https://storage.googleapis.com/... or
+        // https://bucket.s3.region.amazonaws.com/...) for the GCS/S3 drivers. Each driver's own
+        // resolvePath()/cleanPath() already knows how to turn its own path shape back into a
+        // concrete address, so hand it the raw stored value rather than string-concatenating a
+        // local filesystem root onto it (which corrupts non-local URLs) or gating on the raw
+        // \is_file() (which bypasses the storage abstraction and is never true for a remote URL).
+        if (Storage::exists($existingRecord['path'])) {
+            Storage::delete($existingRecord['path']);
         }
 
         $newFilename = \preg_replace('/[^a-zA-Z0-9._-]/', '_', \basename($file['name']));
