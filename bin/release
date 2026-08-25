@@ -100,20 +100,35 @@ function parseConventionalCommit(string $subject): ?array
 }
 
 /**
+ * Extract the explanatory text of a "BREAKING CHANGE:" footer from a commit body, or null if
+ * the body doesn't have one. The footer runs from the marker to the next footer token (e.g.
+ * "Refs:") or the end of the body, and is collapsed to a single line for changelog rendering.
+ */
+function extractBreakingChangeNote(string $body): ?string
+{
+    if (preg_match('/^BREAKING[ -]CHANGE:\s*(.+)/ms', $body, $m) !== 1) {
+        return null;
+    }
+    $note = preg_split('/\n(?=[A-Za-z-]+(: | #))/', trim($m[1]), 2)[0];
+    return trim(preg_replace('/\s+/', ' ', $note));
+}
+
+/**
  * Determine the required semver bump ('major'|'minor'|'patch'|null) across a set of parsed
  * commits, and group them by Conventional Commits type for the changelog.
  */
 function classifyCommits(array $commits): array
 {
     $bump = null;
-    $groups = ['feat' => [], 'fix' => [], 'perf' => []];
+    $groups = ['breaking' => [], 'feat' => [], 'fix' => [], 'perf' => []];
 
     foreach ($commits as $commit) {
         $parsed = parseConventionalCommit($commit['subject']);
         if ($parsed === null) {
             continue;
         }
-        $isBreaking = $parsed['breaking'] || preg_match('/^BREAKING[ -]CHANGE:/mi', $commit['body']) === 1;
+        $breakingNote = extractBreakingChangeNote($commit['body']);
+        $isBreaking = $parsed['breaking'] || $breakingNote !== null;
 
         if ($isBreaking) {
             $bump = 'major';
@@ -123,9 +138,15 @@ function classifyCommits(array $commits): array
             $bump = 'patch';
         }
 
+        $entry = $parsed['scope'] !== '' ? "**{$parsed['scope']}:** {$parsed['description']}" : $parsed['description'];
+
         if (isset($groups[$parsed['type']])) {
-            $entry = $parsed['scope'] !== '' ? "**{$parsed['scope']}:** {$parsed['description']}" : $parsed['description'];
             $groups[$parsed['type']][] = "{$entry} ({$commit['hash']})";
+        }
+
+        if ($isBreaking) {
+            $breakingEntry = $breakingNote !== null ? "{$entry} -- {$breakingNote}" : $entry;
+            $groups['breaking'][] = "{$breakingEntry} ({$commit['hash']})";
         }
     }
 
@@ -153,7 +174,7 @@ function applyBump(array $version, string $bump): array
  */
 function renderChangelogSection(string $tag, array $groups): string
 {
-    $sectionTitles = ['feat' => 'Features', 'fix' => 'Bug Fixes', 'perf' => 'Performance'];
+    $sectionTitles = ['breaking' => '⚠ BREAKING CHANGES', 'feat' => 'Features', 'fix' => 'Bug Fixes', 'perf' => 'Performance'];
     $date = date('Y-m-d');
     $lines = ["## {$tag} ({$date})", ''];
 
