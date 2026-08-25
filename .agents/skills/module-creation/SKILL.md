@@ -26,6 +26,8 @@ src/Modules/<Name>/
 `src/Modules/<Name>/Module.php` must declare `namespace Zero\Modules\<Name>;` and `class Module implements Zero\Interfaces\Module`, implementing:
 
 * `getId(): string` — a unique lowercase identifier (e.g. `'security'`, `'formbuilder'`). This is the key the whole system uses: `enabled_modules` site config, `module_dependency` sidebar gating, and view/route registration all key off this string.
+* `getName(): string` — the friendly display name shown in the site-level module toggle grid and other administrative surfaces (e.g. `'Form Builder'`, `'Search'`).
+* `getDescription(): string` — a short friendly description shown alongside `getName()` in the same toggle grid (e.g. `'Dynamic Custom Contact Forms'`).
 * `getAccentColor(): string` — **MANDATORY.** A brand-representative hex color code (e.g. `'#ef4444'` for Security or `'#f43f5e'` for Search) used for the module's administrative pills and widgets. Every module MUST return a distinct, high-contrast, representative accent color; never use a generic standard default (Rule 2 in `GEMINI.md`).
 * `getDashboardWidgetView(): ?string` — the view name (relative to the module's `Views/`) of its dashboard widget, or `null` if it doesn't have one.
 * `getRoutes(): array` — a map of `'#^/regex/pattern$#' => ControllerClass::class`. Route patterns are plain regex; capture groups become controller action arguments.
