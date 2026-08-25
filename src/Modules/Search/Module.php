@@ -55,6 +55,26 @@ class Module implements ModuleInterface
     }
 
     /**
+     * Get the friendly display name of this module.
+     *
+     * @return string
+     */
+    public function getName(): string
+    {
+        return 'Search';
+    }
+
+    /**
+     * Get the short friendly description of this module.
+     *
+     * @return string
+     */
+    public function getDescription(): string
+    {
+        return 'Page and Posts';
+    }
+
+    /**
      * Get the Migration class associated with this module if any.
      *
      * @return string|null

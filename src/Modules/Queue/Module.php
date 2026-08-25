@@ -58,6 +58,26 @@ class Module implements ModuleInterface
     }
 
     /**
+     * Retrieves the name attribute value.
+     *
+     * @return string Response output.
+     */
+    public function getName(): string
+    {
+        return 'Job Queue';
+    }
+
+    /**
+     * Retrieves the description attribute value.
+     *
+     * @return string Response output.
+     */
+    public function getDescription(): string
+    {
+        return 'Background job queue and recurring task scheduler';
+    }
+
+    /**
      * Retrieves the migration class attribute value.
      *
      * @return string Response output.

@@ -53,8 +53,7 @@ class AuditLog implements ModelInterface
                 'type' => 'readonly',
                 'label' => 'Actor',
                 'editable' => false,
-                'listDisplay' => true,
-                'listView' => 'fields/forum_user'
+                'listDisplay' => true
             ],
             'action' => [
                 'type' => 'text',

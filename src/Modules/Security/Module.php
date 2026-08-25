@@ -63,6 +63,26 @@ class Module implements ModuleInterface
     }
 
     /**
+     * Retrieves the name attribute value.
+     *
+     * @return string Response output.
+     */
+    public function getName(): string
+    {
+        return 'Security';
+    }
+
+    /**
+     * Retrieves the description attribute value.
+     *
+     * @return string Response output.
+     */
+    public function getDescription(): string
+    {
+        return 'Hardening & AI threat auditing';
+    }
+
+    /**
      * Retrieves the migration class attribute value.
      *
      * @return string Response output.

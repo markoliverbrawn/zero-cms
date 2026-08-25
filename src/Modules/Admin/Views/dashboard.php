@@ -20,11 +20,6 @@ $activeSite = App::getCurrentSite();
 $activeSiteId = App::getCurrentSiteId();
 
 if ($activeSite) {
-    if ($activeSite->isModuleEnabled('shop')) {
-        $allPossibleWidgets[] = 'shop_orders_chart';
-        $allPossibleWidgets[] = 'shop_category_pie';
-        $allPossibleWidgets[] = 'recent_orders';
-    }
     if ($activeSite->isModuleEnabled('security')) {
         $allPossibleWidgets[] = 'security_state';
         $allPossibleWidgets[] = 'security_logs';

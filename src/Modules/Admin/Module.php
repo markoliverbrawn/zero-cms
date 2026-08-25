@@ -54,6 +54,26 @@ class Module implements ModuleInterface
     }
 
     /**
+     * Retrieves the name attribute value.
+     *
+     * @return string Response output.
+     */
+    public function getName(): string
+    {
+        return 'Admin';
+    }
+
+    /**
+     * Retrieves the description attribute value.
+     *
+     * @return string Response output.
+     */
+    public function getDescription(): string
+    {
+        return 'Back-office authentication, dashboard, and CRUD screens';
+    }
+
+    /**
      * Retrieves the migration class attribute value.
      *
      * @return string Response output.

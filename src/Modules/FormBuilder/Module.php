@@ -56,6 +56,26 @@ class Module implements ModuleInterface
     }
 
     /**
+     * Retrieves the name attribute value.
+     *
+     * @return string Response output.
+     */
+    public function getName(): string
+    {
+        return 'Form Builder';
+    }
+
+    /**
+     * Retrieves the description attribute value.
+     *
+     * @return string Response output.
+     */
+    public function getDescription(): string
+    {
+        return 'Dynamic Custom Contact Forms';
+    }
+
+    /**
      * Retrieves the migration class attribute value.
      *
      * @return string Response output.

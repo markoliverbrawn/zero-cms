@@ -52,8 +52,7 @@ class SecurityAudit implements ModelInterface
                 'type' => 'readonly',
                 'label' => 'Auditor',
                 'editable' => false,
-                'listDisplay' => true,
-                'listView' => 'fields/forum_user'
+                'listDisplay' => true
             ],
             'score' => ['type' => 'number', 'label' => 'Audit Score', 'editable' => false, 'listDisplay' => true],
             'environment' => ['type' => 'text', 'label' => 'Environment', 'editable' => false, 'listDisplay' => true],

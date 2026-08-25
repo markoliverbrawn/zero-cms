@@ -34,6 +34,18 @@ interface Module
     public function getId(): string;
 
     /**
+     * Get the friendly display name of the module (e.g., 'Form Builder'), as shown in the
+     * site-level module toggle grid and other administrative surfaces.
+     */
+    public function getName(): string;
+
+    /**
+     * Get the short friendly description of the module (e.g., 'Dynamic Custom Contact Forms'),
+     * as shown alongside getName() in the site-level module toggle grid.
+     */
+    public function getDescription(): string;
+
+    /**
      * Get the database migration class associated with the module, if any.
      */
     public function getMigrationClass(): ?string;

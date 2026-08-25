@@ -4,12 +4,9 @@ declare(strict_types=1);
 
 /**
  * File: src/Support/Forms/ModulesGridField.php
- * Architectural Purpose: Site-level module-toggle checkbox grid -- ports the existing bespoke
- * Site.enabled_modules widget (one checkbox per registered module, with a friendly name/
- * description) into a reusable component. The module id -> name/description map is moved
- * verbatim from the legacy view; sourcing it from each Module's own metadata instead is a
- * reasonable future improvement but a separate, larger, cross-cutting change (touching every
- * Module.php), deliberately out of scope here.
+ * Architectural Purpose: Site-level module-toggle checkbox grid -- one checkbox per registered
+ * module, with the friendly name/description sourced from each Module's own getName()/
+ * getDescription().
  * Package: Zero\Support\Forms
  * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
  */
@@ -45,30 +42,6 @@ class ModulesGridField extends AbstractFormField
     }
 
     /**
-     * Friendly name/description for a module id, matching the legacy hardcoded map.
-     *
-     * @param string $id
-     * @return array{name: string, desc: string}
-     */
-    protected function resolveModuleMeta(string $id): array
-    {
-        switch ($id) {
-            case 'shop':
-                return ['name' => 'Luxe E-Commerce Store', 'desc' => 'Catalog, Products, Variants, Cart, Checkout'];
-            case 'formbuilder':
-                return ['name' => 'Form Builder', 'desc' => 'Dynamic Custom Contact Forms'];
-            case 'forum':
-                return ['name' => 'Community Forum', 'desc' => 'Discussions, Boards, Threads, Replies'];
-            case 'site-search':
-                return ['name' => 'Search', 'desc' => 'Page and Posts'];
-            case 'security':
-                return ['name' => 'Security', 'desc' => 'Hardening & AI threat auditing'];
-            default:
-                return ['name' => \ucwords(\str_replace('-', ' ', $id)), 'desc' => 'Additional addon capability'];
-        }
-    }
-
-    /**
      * @return string
      */
     public function render(): string
@@ -85,11 +58,10 @@ class ModulesGridField extends AbstractFormField
             if ($id === 'admin' || $id === 'queue') {
                 continue;
             }
-            $meta = $this->resolveModuleMeta($id);
             $modules[] = [
                 'id' => $id,
-                'name' => $meta['name'],
-                'desc' => $meta['desc'],
+                'name' => $module->getName(),
+                'desc' => $module->getDescription(),
                 'checked' => \in_array($id, $activeModules, true),
             ];
         }
