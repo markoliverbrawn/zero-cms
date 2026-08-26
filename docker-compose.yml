@@ -81,10 +81,11 @@ services:
   queue-worker:
     build: *app-build
     restart: unless-stopped
-    # bin/queue-runner lives at repo root in Core itself, but only inside
-    # vendor/markoliverbrawn/zero-cms-core in a sub-project checkout (see
-    # docker/entrypoint.sh for the same core-vs-sub-project detection idiom).
-    command: ["sh", "-c", "php $([ -f vendor/markoliverbrawn/zero-cms-core/bin/queue-runner ] && echo vendor/markoliverbrawn/zero-cms-core/bin/queue-runner || echo bin/queue-runner)"]
+    # Prefers this checkout's own bin/queue-runner (Core repo itself, or a sub-project's
+    # scaffolded copy -- see bin/create-project -- which also registers the sub-project's own
+    # App\ namespace/modules) over Core's vendored copy, which only ever knows Zero\ and can
+    # never autoload a site-owned job class.
+    command: ["sh", "-c", "php $([ -f bin/queue-runner ] && echo bin/queue-runner || echo vendor/markoliverbrawn/zero-cms-core/bin/queue-runner)"]
     depends_on:
       app:
         condition: service_healthy
@@ -96,7 +97,8 @@ services:
   scheduler:
     build: *app-build
     restart: unless-stopped
-    command: ["sh", "-c", "php $([ -f vendor/markoliverbrawn/zero-cms-core/bin/scheduler ] && echo vendor/markoliverbrawn/zero-cms-core/bin/scheduler || echo bin/scheduler)"]
+    # Same reasoning as queue-worker above.
+    command: ["sh", "-c", "php $([ -f bin/scheduler ] && echo bin/scheduler || echo vendor/markoliverbrawn/zero-cms-core/bin/scheduler)"]
     depends_on:
       app:
         condition: service_healthy

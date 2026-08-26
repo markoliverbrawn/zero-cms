@@ -581,6 +581,134 @@ PHP;
 writeFile("{$target}/bin/seed", str_replace('__VENDOR_DIR__', $vendorDir, $seedPhp));
 chmod("{$target}/bin/seed", 0755);
 
+// --- 6b. Generate bin/queue-runner and bin/scheduler ---
+// Core's own vendored bin/queue-runner and bin/scheduler use a minimal autoloader
+// that only knows the Zero\ namespace and never registers App\ or this sub-project's
+// src/Modules/*, so a site-owned queue job class (e.g. App\Modules\Backup\Jobs\BackupSiteJob)
+// can never be autoloaded, and a site-owned Scheduler::register() call made from a module's
+// init() never runs (its module is never discovered by App::bootstrap() in that process). These
+// mirror bin/seed's bootstrap (both namespaces + App::registerModulePath()) so site-owned jobs
+// and scheduled tasks actually work, then reuse the identical daemon loop Core's own copies use.
+// docker-compose.yml prefers these local copies over the vendored fallback when both exist.
+$queueRunnerPhp = <<<'PHP'
+#!/usr/bin/env php
+<?php
+// bin/queue-runner - CLI daemon background worker for Zero CMS Job Queue, for this sub-project.
+
+use Zero\Core\App;
+use Zero\Core\Env;
+use Zero\Core\Storage\Storage;
+use Zero\Modules\Queue\Support\QueueManager;
+
+define('SUBPROJECT_ROOT', dirname(__DIR__));
+define('APPLICATION_ROOT', SUBPROJECT_ROOT . '/__VENDOR_DIR__');
+define('CORE_ROOT', APPLICATION_ROOT);
+define('APP_ROOT', SUBPROJECT_ROOT);
+
+require_once CORE_ROOT . '/src/Core/Autoloader.php';
+\Zero\Core\Autoloader::init();
+\Zero\Core\Autoloader::registerNamespace('App\\', APP_ROOT . '/src');
+Storage::setRoot(APP_ROOT);
+App::registerModulePath(APP_ROOT . '/src/Modules', 'App\\Modules\\');
+
+Env::load(APP_ROOT);
+App::bootstrap();
+
+echo "==================================================\n";
+echo "  ZERO CMS BACKEND QUEUE DAEMON WORKER (sub-project) \n";
+echo "==================================================\n";
+echo "--> Active Database: " . Env::get('DB_NAME') . "\n";
+echo "--> Polling Interval: 100ms\n";
+echo "--> Daemon Process ID: " . getmypid() . "\n";
+echo "--------------------------------------------------\n";
+echo "Daemon started. Listening for pending tasks...\n\n";
+
+$lastHeartbeat = 0;
+$heartbeatPath = APP_ROOT . '/storage/queue-worker-heartbeat.txt';
+
+while (true) {
+    try {
+        if (time() - $lastHeartbeat >= 10) {
+            touch($heartbeatPath);
+            $lastHeartbeat = time();
+        }
+
+        $processed = QueueManager::runNextPendingJob();
+
+        if (!$processed) {
+            usleep(100000);
+        }
+    } catch (\Throwable $e) {
+        echo "[" . date('Y-m-d H:i:s') . "] Critical runner error: " . $e->getMessage() . "\n";
+        sleep(2);
+    }
+}
+
+PHP;
+writeFile("{$target}/bin/queue-runner", str_replace('__VENDOR_DIR__', $vendorDir, $queueRunnerPhp));
+chmod("{$target}/bin/queue-runner", 0755);
+
+$schedulerPhp = <<<'PHP'
+#!/usr/bin/env php
+<?php
+// bin/scheduler - CLI daemon background task scheduler for Zero CMS, for this sub-project.
+
+use Zero\Core\App;
+use Zero\Core\Env;
+use Zero\Core\Storage\Storage;
+use Zero\Modules\Queue\Support\Scheduler;
+
+define('SUBPROJECT_ROOT', dirname(__DIR__));
+define('APPLICATION_ROOT', SUBPROJECT_ROOT . '/__VENDOR_DIR__');
+define('CORE_ROOT', APPLICATION_ROOT);
+define('APP_ROOT', SUBPROJECT_ROOT);
+
+require_once CORE_ROOT . '/src/Core/Autoloader.php';
+\Zero\Core\Autoloader::init();
+\Zero\Core\Autoloader::registerNamespace('App\\', APP_ROOT . '/src');
+Storage::setRoot(APP_ROOT);
+App::registerModulePath(APP_ROOT . '/src/Modules', 'App\\Modules\\');
+
+Env::load(APP_ROOT);
+App::bootstrap();
+
+echo "==================================================\n";
+echo "  ZERO CMS BACKEND TASK SCHEDULER DAEMON (sub-project) \n";
+echo "==================================================\n";
+echo "--> Active Database: " . Env::get('DB_NAME') . "\n";
+echo "--> Loop Interval: 60s (Atomic Minute Boundary)\n";
+echo "--> Daemon Process ID: " . getmypid() . "\n";
+echo "--------------------------------------------------\n";
+echo "Daemon started. Evaluating scheduled tasks...\n\n";
+
+$lastHeartbeat = 0;
+$heartbeatPath = APP_ROOT . '/storage/scheduler-heartbeat.txt';
+
+while (true) {
+    try {
+        if (time() - $lastHeartbeat >= 10) {
+            touch($heartbeatPath);
+            $lastHeartbeat = time();
+        }
+
+        Scheduler::run();
+
+        $secondsToNextMinute = 60 - intval(date('s'));
+        if ($secondsToNextMinute === 0) {
+            $secondsToNextMinute = 60;
+        }
+
+        sleep($secondsToNextMinute);
+    } catch (\Throwable $e) {
+        echo "[" . date('Y-m-d H:i:s') . "] Critical scheduler error: " . $e->getMessage() . "\n";
+        sleep(5);
+    }
+}
+
+PHP;
+writeFile("{$target}/bin/scheduler", str_replace('__VENDOR_DIR__', $vendorDir, $schedulerPhp));
+chmod("{$target}/bin/scheduler", 0755);
+
 // --- 7. Generate an example controller, model, and views ---
 $homeControllerPhp = <<<'PHP'
 <?php
@@ -852,6 +980,9 @@ storage, and uploads.
   `Database/Migrations/`), showing how to add real modules the same way Core's own
   bundled modules are structured -- add more alongside it the same way
 - `bin/seed`, `bin/test`, `tests/` -- your own setup script, test runner, and tests
+- `bin/queue-runner`, `bin/scheduler` -- your own job-queue worker and cron-style scheduler
+  daemons (started automatically by `docker compose up`); use these, not the ones vendored
+  inside `__VENDOR_DIR__/`, which can't see this sub-project's own modules/jobs
 - `storage/` -- private files and logs, kept outside `__VENDOR_DIR__/`
 
 ## Updating Core
