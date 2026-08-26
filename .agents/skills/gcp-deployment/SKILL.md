@@ -88,6 +88,15 @@ Before running the pipeline with `DOMAIN_MAPPINGS` set, tell the user:
   [Search Console](https://search.google.com/search-console/ownership) *before* the script runs, or
   `gcloud beta run domain-mappings create` fails outright. Verify the apex (`client-a.com`), not just
   the `www` subdomain — verification is per registrable domain.
+- Domain mappings only work in a subset of Cloud Run regions (`common.sh`'s
+  `DOMAIN_MAPPING_SUPPORTED_REGIONS` — currently `asia-east1`, `asia-northeast1`, `asia-southeast1`,
+  `europe-north1`, `europe-west1`, `europe-west4`, `us-central1`, `us-east1`, `us-east4`, `us-west1`).
+  **This skill's own documented default region, `australia-southeast1`, is not one of them.**
+  `common.sh` fails fast with a clear error at the very start of the pipeline if `GCP_REGION` is
+  unsupported and `DOMAIN_MAPPINGS` is set — before any billable provisioning happens — but since a
+  Cloud Run service's region can't be changed after creation, this needs deciding *before* the first
+  deploy, not discovered after. If the user wants domain mapping, set `GCP_REGION` to a supported
+  region from the start rather than defaulting to `australia-southeast1`.
 - Domain mapping only wires up infrastructure/TLS. Zero CMS still resolves tenants by an **exact
   match** on the `sites.domain` column against the request's Host header
   (`src/Core/Concerns/ResolvesTenantContext.php`) — there's no wildcard/alias support. Each mapped
