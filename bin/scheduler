@@ -4,30 +4,34 @@
 
 define('APPLICATION_ROOT', dirname(__DIR__));
 
-// Register global PSR-4 Autoloader for Zero namespace mapping
-spl_autoload_register(function ($class) {
-    $prefix = 'Zero\\';
-    $base_dir = APPLICATION_ROOT . '/src/';
-
-    $len = strlen($prefix);
-    if (strncmp($prefix, $class, $len) !== 0) {
-        return;
-    }
-
-    $relative_class = substr($class, $len);
-    $file = $base_dir . str_replace('\\', '/', $relative_class) . '.php';
-
-    if (file_exists($file)) {
-        require_once $file;
-    }
-});
+// Register the Zero\ namespace via Core's own Autoloader class rather than a hand-rolled
+// closure, since a sub-project checkout also needs App\ registered below.
+require_once APPLICATION_ROOT . '/src/Core/Autoloader.php';
+\Zero\Core\Autoloader::init();
 
 use Zero\Core\App;
 use Zero\Core\Env;
+use Zero\Core\Storage\Storage;
 use Zero\Modules\Queue\Support\Scheduler;
 
+// When this is the vendored copy inside a sub-project (vendor/markoliverbrawn/zero-cms-core),
+// also autoload the sub-project's own App\ namespace and register its module path -- mirrors
+// bin/seed. Without this, scheduled tasks registered by sub-project modules can never be
+// discovered by App::bootstrap().
+$envRoot = APPLICATION_ROOT;
+$vendorSuffix = '/vendor/markoliverbrawn/zero-cms-core';
+if (\substr(APPLICATION_ROOT, -\strlen($vendorSuffix)) === $vendorSuffix) {
+    $envRoot = \dirname(APPLICATION_ROOT, 3);
+    \Zero\Core\Autoloader::registerNamespace('App\\', $envRoot . '/src');
+    App::registerModulePath($envRoot . '/src/Modules', 'App\\Modules\\');
+}
+
 // Pre-hydrate environment configuration from correct root path
-Env::load(APPLICATION_ROOT);
+Env::load($envRoot);
+
+// Keep local storage (uploads, private files) inside the sub-project's own root rather than the
+// read-only vendor package -- matches public/index.php and bin/seed's Storage::setRoot() call.
+Storage::setRoot($envRoot);
 
 // Bootstrap Zero CMS kernel
 App::bootstrap();
@@ -43,7 +47,7 @@ echo "--------------------------------------------------\n";
 echo "Daemon started. Evaluating scheduled tasks...\n\n";
 
 $lastHeartbeat = 0;
-$heartbeatPath = APPLICATION_ROOT . '/storage/scheduler-heartbeat.txt';
+$heartbeatPath = $envRoot . '/storage/scheduler-heartbeat.txt';
 
 while (true) {
     try {
