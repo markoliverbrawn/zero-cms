@@ -126,7 +126,7 @@ class Module implements ModuleInterface
 
         App::registerAdminSidebarSection('queue', [
             'title' => 'Job Queue',
-            'icon' => 'clock',
+            'icon' => 'queue',
             'module_dependency' => 'queue',
             'is_system' => true,
             'precedence' => 420

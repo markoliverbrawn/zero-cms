@@ -45,7 +45,7 @@ if ($renderWidgetKey === 'queue_summary' && in_array('queue_summary', $enabledWi
   <div class="dashboard-card draggable-widget" draggable="true" data-widget="queue_summary">
     <h3>
       <span class="icon-svg">
-        <?php echo App::svg('clock'); ?>
+        <?php echo App::svg('queue'); ?>
       </span>
       <span>Job Queue Status</span>
       <div class="queue-status-indicator header-indicator">

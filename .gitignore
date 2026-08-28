@@ -10,3 +10,4 @@ _archive
 /*.json
 !/composer.json
 /deployments
+.aider*
