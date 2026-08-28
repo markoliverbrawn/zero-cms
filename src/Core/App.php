@@ -25,6 +25,7 @@ use Zero\Core\Concerns\ManagesAdminSidebar;
 use Zero\Core\Concerns\ManagesBlocksAndModels;
 use Zero\Core\Concerns\ManagesCurrentContext;
 use Zero\Core\Concerns\ManagesFormFields;
+use Zero\Core\Concerns\ManagesModelColumnRenderers;
 use Zero\Core\Concerns\ManagesModelListActions;
 use Zero\Core\Concerns\ManagesModelRowActions;
 use Zero\Core\Concerns\ManagesModules;
@@ -52,6 +53,7 @@ class App
     use ManagesAdminSidebar;
     use ManagesBlocksAndModels;
     use ManagesFormFields;
+    use ManagesModelColumnRenderers;
     use ManagesModelListActions;
     use ManagesModelRowActions;
     use ManagesModuleSettings;

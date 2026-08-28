@@ -13,15 +13,17 @@ declare(strict_types=1);
 
 namespace Zero\Support\Forms;
 
+use Zero\Core\App;
 use Zero\Core\Template;
 use Zero\Support\Str;
 
 /**
  * Class ReadonlyField
  *
- * Config accepts 'listView' (a partial path relative to src/Modules/Admin/Views/, e.g.
- * "fields/forum_board") and 'record' (the model instance being edited, passed through to the
- * partial unchanged).
+ * Config accepts 'listView' -- either a path relative to src/Modules/Admin/Views/ (e.g.
+ * "fields/forum_board", the form every core model uses) or an absolute path to a module's own
+ * template (see App::resolveListView()) -- and 'record' (the model instance being edited, passed
+ * through to the partial unchanged).
  */
 class ReadonlyField extends AbstractFormField
 {
@@ -50,8 +52,8 @@ class ReadonlyField extends AbstractFormField
         $displayHtml = Str::escape((string)($this->value ?? ''));
         $listView = $this->config['listView'] ?? null;
         if (!empty($listView)) {
-            $viewPath = APPLICATION_ROOT . '/src/Modules/Admin/Views/' . $listView . '.php';
-            if (\file_exists($viewPath)) {
+            $viewPath = App::resolveListView($listView);
+            if ($viewPath !== null) {
                 $displayHtml = Template::renderFile($viewPath, [
                     'value' => $this->value,
                     'record' => $this->config['record'] ?? null,

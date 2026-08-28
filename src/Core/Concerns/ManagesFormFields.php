@@ -109,4 +109,27 @@ trait ManagesFormFields
     {
         self::$registeredFormFieldTypes[$type] = $class;
     }
+
+    /**
+     * Resolve a 'listView' config value (used by admin list columns and by ReadonlyField's edit
+     * view) to an absolute template path, or null if it doesn't exist.
+     *
+     * A bare relative string (e.g. 'fields/status', the form every core model uses today) is
+     * resolved inside the Admin module's own Views folder, for backward compatibility. A module
+     * that doesn't want to reach into Admin's folder can instead pass an absolute path to its own
+     * template -- e.g. `dirname(__DIR__) . '/Views/admin/fields/my_field.php'` -- which is used
+     * as-is; this is the extension point that lets any module render its own admin list columns
+     * (or readonly edit-form fields) as HTML via a template, without owning code inside Admin/.
+     *
+     * @param string $listView
+     * @return string|null
+     */
+    public static function resolveListView(string $listView): ?string
+    {
+        $path = (\strpos($listView, '/') === 0)
+            ? $listView . '.php'
+            : APPLICATION_ROOT . '/src/Modules/Admin/Views/' . $listView . '.php';
+
+        return \file_exists($path) ? $path : null;
+    }
 }

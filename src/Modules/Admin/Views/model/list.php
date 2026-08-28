@@ -142,10 +142,15 @@ use Zero\Support\I18n;
                     <a href="/admin/edit/<?php echo Str::escape($modelName ?? ''); ?>/<?php echo Str::escape($record->id ?? ''); ?>" class="list-first-column-link">
                   <?php endif; ?>
 
-                  <?php if (!empty($fieldConfig['listView'])): ?>
-                    <?php 
-                      $viewPath = APPLICATION_ROOT . '/src/Modules/Admin/Views/' . $fieldConfig['listView'] . '.php';
-                      if (file_exists($viewPath)) {
+                  <?php $columnRenderer = App::getModelColumnRenderer($modelName ?? '', $field); ?>
+                  <?php if ($columnRenderer !== null): ?>
+                    <?php echo $columnRenderer($record->{$field} ?? null, $record); ?>
+                  <?php elseif (isset($fieldConfig['renderWith']) && \is_callable($fieldConfig['renderWith'])): ?>
+                    <?php echo ($fieldConfig['renderWith'])($record->{$field} ?? null, $record); ?>
+                  <?php elseif (!empty($fieldConfig['listView'])): ?>
+                    <?php
+                      $viewPath = App::resolveListView($fieldConfig['listView']);
+                      if ($viewPath !== null) {
                           echo Template::renderFile($viewPath, ['value' => $record->{$field}, 'record' => $record]);
                       } else {
                           echo Str::escape($record->{$field} ?? '');
