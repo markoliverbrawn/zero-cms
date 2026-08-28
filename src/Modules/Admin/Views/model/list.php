@@ -215,18 +215,19 @@ use Zero\Support\I18n;
                       </form>
                     <?php endif; ?>
                   <?php else: ?>
-                    <a href="/admin/edit/<?php echo Str::escape($modelName ?? ''); ?>/<?php echo Str::escape($record->id ?? ''); ?>" role="menuitem"><?php echo Str::escape($editLabel); ?></a>
+                    <a href="/admin/edit/<?php echo Str::escape($modelName ?? ''); ?>/<?php echo Str::escape($record->id ?? ''); ?>" role="menuitem"><span class="row-action-icon"><?php echo App::svg('edit-3'); ?></span><?php echo Str::escape($editLabel); ?></a>
                     <?php foreach ($rowActions as $rowAction): ?>
                       <?php if (App::isModelRowActionVisible($rowAction, $site)): ?>
                         <?php $rowActionUrl = \str_replace('{id}', \rawurlencode((string)($record->id ?? '')), $rowAction['url']); ?>
+                        <?php $rowActionIcon = !empty($rowAction['icon']) ? '<span class="row-action-icon">' . App::svg($rowAction['icon']) . '</span>' : ''; ?>
                         <?php if (($rowAction['method'] ?? 'get') === 'post'): ?>
                           <button type="button" role="menuitem" class="list-registered-row-action-btn"
                                   data-url="<?php echo Str::escape($rowActionUrl); ?>"
                                   data-csrf="<?php echo Str::escape($csrf ?? ''); ?>"
                                   data-label="<?php echo Str::escape($rowAction['label']); ?>"
-                                  data-confirm="<?php echo Str::escape($rowAction['confirm']); ?>"><?php echo Str::escape($rowAction['label']); ?></button>
+                                  data-confirm="<?php echo Str::escape($rowAction['confirm']); ?>"><?php echo $rowActionIcon; ?><?php echo Str::escape($rowAction['label']); ?></button>
                         <?php else: ?>
-                          <a href="<?php echo Str::escape($rowActionUrl); ?>" role="menuitem"><?php echo Str::escape($rowAction['label']); ?></a>
+                          <a href="<?php echo Str::escape($rowActionUrl); ?>" role="menuitem"><?php echo $rowActionIcon; ?><?php echo Str::escape($rowAction['label']); ?></a>
                         <?php endif; ?>
                       <?php endif; ?>
                     <?php endforeach; ?>
@@ -235,9 +236,9 @@ use Zero\Support\I18n;
                       <input type="hidden" name="csrf" value="<?php echo Str::escape($csrf ?? ''); ?>">
                       <input type="hidden" name="id" value="<?php echo Str::escape($record->id ?? ''); ?>">
                       <?php if ($isHomepageRow): ?>
-                        <button type="button" role="menuitem" class="btn-delete-link" disabled style="opacity: 0.4; cursor: not-allowed;" title="The designated site homepage cannot be deleted.">Delete</button>
+                        <button type="button" role="menuitem" class="btn-delete-link" disabled style="opacity: 0.4; cursor: not-allowed;" title="The designated site homepage cannot be deleted."><span class="row-action-icon"><?php echo App::svg('trash-2'); ?></span>Delete</button>
                       <?php else: ?>
-                        <button type="submit" role="menuitem" class="btn-delete-link">Delete</button>
+                        <button type="submit" role="menuitem" class="btn-delete-link"><span class="row-action-icon"><?php echo App::svg('trash-2'); ?></span>Delete</button>
                       <?php endif; ?>
                     </form>
                   <?php endif; ?>

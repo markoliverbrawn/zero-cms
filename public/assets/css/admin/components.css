@@ -3129,14 +3129,16 @@ button:disabled,
         }
 
         a, button {
+            align-items: center !important;
             background: none !important;
             border: none !important;
             border-radius: calc(var(--border-radius, 6px) - 2px) !important;
             color: var(--text-color, #0f172a) !important;
             cursor: pointer;
-            display: block !important;
+            display: flex !important;
             font-size: 0.85rem !important;
             font-weight: 500 !important;
+            gap: 8px;
             padding: 8px 10px !important;
             text-align: left !important;
             text-decoration: none !important;
@@ -3151,6 +3153,18 @@ button:disabled,
             &:disabled {
                 cursor: not-allowed !important;
                 opacity: 0.5;
+            }
+        }
+
+        .row-action-icon {
+            display: inline-flex;
+            flex-shrink: 0;
+            height: 15px;
+            width: 15px;
+
+            svg {
+                height: 100%;
+                width: 100%;
             }
         }
 

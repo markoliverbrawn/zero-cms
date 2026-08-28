@@ -73,6 +73,9 @@ trait ManagesModelRowActions
      *         with the row's record id before rendering.
      *     @var string $method 'get' renders a plain link; 'post' renders a confirm+fetch menu item.
      *     @var string $confirm Confirmation message shown before a 'post' action runs.
+     *     @var string|null $icon Name of an SVG under public/assets/svgs/ (passed to App::svg()),
+     *         rendered to the left of the label. Optional -- a menu item with no icon just renders
+     *         its label flush left, matching the built-in Edit/Delete items when they have none.
      *     @var string|null $module_dependency Module ID gating visibility, mirroring list actions.
      *     @var string|null $permission RBAC permission key required to see this action.
      *     @var int $precedence
@@ -86,6 +89,7 @@ trait ManagesModelRowActions
             'url' => '',
             'method' => 'get',
             'confirm' => '',
+            'icon' => null,
             'module_dependency' => null,
             'permission' => null,
             'precedence' => 100,
