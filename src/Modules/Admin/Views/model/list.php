@@ -187,37 +187,62 @@ use Zero\Support\I18n;
                 <?php $isFirstColumn = false; ?>
               <?php endif; ?>
             <?php endforeach; ?>
-            <td>
+            <td class="row-actions-cell">
               <?php
               $isHomepageRow = $record && method_exists($record, 'isHomepage') && $record->isHomepage();
+              // Registered row actions only surface on active rows -- a trashed/soft-deleted record
+              // isn't a sensible target for a module's own custom action (e.g. "send test email").
+              $rowActions = ($status !== 'trash') ? App::getModelRowActions($modelName ?? '') : [];
               ?>
-              <?php if ($status === 'trash'): ?>
-                <form method="post" action="/admin/restore/<?php echo Str::escape($modelName ?? ''); ?>" class="admin-restore-form">
-                  <input type="hidden" name="csrf" value="<?php echo Str::escape($csrf ?? ''); ?>">
-                  <input type="hidden" name="id" value="<?php echo Str::escape($record->id ?? ''); ?>">
-                  <button type="submit" class="btn-restore-link">Restore</button>
-                </form>
-                <?php if ($isHomepageRow): ?>
-                  <button type="button" class="btn-force-delete-link" disabled title="The designated site homepage cannot be deleted.">Delete Permanently</button>
-                <?php else: ?>
-                  <form method="post" action="/admin/force-delete/<?php echo Str::escape($modelName ?? ''); ?>" class="admin-force-delete-form" data-id="<?php echo Str::escape($record->id ?? ''); ?>" data-model="<?php echo Str::escape($modelName ?? ''); ?>">
-                    <input type="hidden" name="csrf" value="<?php echo Str::escape($csrf ?? ''); ?>">
-                    <input type="hidden" name="id" value="<?php echo Str::escape($record->id ?? ''); ?>">
-                    <button type="submit" class="btn-force-delete-link">Delete Permanently</button>
-                  </form>
-                <?php endif; ?>
-              <?php else: ?>
-                <a href="/admin/edit/<?php echo Str::escape($modelName ?? ''); ?>/<?php echo Str::escape($record->id ?? ''); ?>"><?php echo Str::escape($editLabel); ?></a>
-                <form method="post" action="/admin/delete/<?php echo Str::escape($modelName ?? ''); ?>" class="admin-delete-form" data-id="<?php echo Str::escape($record->id ?? ''); ?>" data-model="<?php echo Str::escape($modelName ?? ''); ?>">
-                  <input type="hidden" name="csrf" value="<?php echo Str::escape($csrf ?? ''); ?>">
-                  <input type="hidden" name="id" value="<?php echo Str::escape($record->id ?? ''); ?>">
-                  <?php if ($isHomepageRow): ?>
-                    <button type="button" class="btn-delete-link" disabled style="opacity: 0.4; cursor: not-allowed;" title="The designated site homepage cannot be deleted.">Delete</button>
+              <div class="row-actions-menu">
+                <button type="button" class="row-actions-trigger" aria-haspopup="true" aria-expanded="false" aria-label="Row actions">
+                  <?php echo App::svg('more-vertical'); ?>
+                </button>
+                <div class="row-actions-dropdown" role="menu">
+                  <?php if ($status === 'trash'): ?>
+                    <form method="post" action="/admin/restore/<?php echo Str::escape($modelName ?? ''); ?>" class="admin-restore-form">
+                      <input type="hidden" name="csrf" value="<?php echo Str::escape($csrf ?? ''); ?>">
+                      <input type="hidden" name="id" value="<?php echo Str::escape($record->id ?? ''); ?>">
+                      <button type="submit" role="menuitem" class="btn-restore-link">Restore</button>
+                    </form>
+                    <?php if ($isHomepageRow): ?>
+                      <button type="button" role="menuitem" class="btn-force-delete-link" disabled title="The designated site homepage cannot be deleted.">Delete Permanently</button>
+                    <?php else: ?>
+                      <form method="post" action="/admin/force-delete/<?php echo Str::escape($modelName ?? ''); ?>" class="admin-force-delete-form" data-id="<?php echo Str::escape($record->id ?? ''); ?>" data-model="<?php echo Str::escape($modelName ?? ''); ?>">
+                        <input type="hidden" name="csrf" value="<?php echo Str::escape($csrf ?? ''); ?>">
+                        <input type="hidden" name="id" value="<?php echo Str::escape($record->id ?? ''); ?>">
+                        <button type="submit" role="menuitem" class="btn-force-delete-link">Delete Permanently</button>
+                      </form>
+                    <?php endif; ?>
                   <?php else: ?>
-                    <button type="submit" class="btn-delete-link">Delete</button>
+                    <a href="/admin/edit/<?php echo Str::escape($modelName ?? ''); ?>/<?php echo Str::escape($record->id ?? ''); ?>" role="menuitem"><?php echo Str::escape($editLabel); ?></a>
+                    <?php foreach ($rowActions as $rowAction): ?>
+                      <?php if (App::isModelRowActionVisible($rowAction, $site)): ?>
+                        <?php $rowActionUrl = \str_replace('{id}', \rawurlencode((string)($record->id ?? '')), $rowAction['url']); ?>
+                        <?php if (($rowAction['method'] ?? 'get') === 'post'): ?>
+                          <button type="button" role="menuitem" class="list-registered-row-action-btn"
+                                  data-url="<?php echo Str::escape($rowActionUrl); ?>"
+                                  data-csrf="<?php echo Str::escape($csrf ?? ''); ?>"
+                                  data-label="<?php echo Str::escape($rowAction['label']); ?>"
+                                  data-confirm="<?php echo Str::escape($rowAction['confirm']); ?>"><?php echo Str::escape($rowAction['label']); ?></button>
+                        <?php else: ?>
+                          <a href="<?php echo Str::escape($rowActionUrl); ?>" role="menuitem"><?php echo Str::escape($rowAction['label']); ?></a>
+                        <?php endif; ?>
+                      <?php endif; ?>
+                    <?php endforeach; ?>
+                    <div class="row-actions-divider"></div>
+                    <form method="post" action="/admin/delete/<?php echo Str::escape($modelName ?? ''); ?>" class="admin-delete-form" data-id="<?php echo Str::escape($record->id ?? ''); ?>" data-model="<?php echo Str::escape($modelName ?? ''); ?>">
+                      <input type="hidden" name="csrf" value="<?php echo Str::escape($csrf ?? ''); ?>">
+                      <input type="hidden" name="id" value="<?php echo Str::escape($record->id ?? ''); ?>">
+                      <?php if ($isHomepageRow): ?>
+                        <button type="button" role="menuitem" class="btn-delete-link" disabled style="opacity: 0.4; cursor: not-allowed;" title="The designated site homepage cannot be deleted.">Delete</button>
+                      <?php else: ?>
+                        <button type="submit" role="menuitem" class="btn-delete-link">Delete</button>
+                      <?php endif; ?>
+                    </form>
                   <?php endif; ?>
-                </form>
-              <?php endif; ?>
+                </div>
+              </div>
             </td>
           </tr>
         <?php endforeach; ?>

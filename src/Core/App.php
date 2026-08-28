@@ -26,6 +26,7 @@ use Zero\Core\Concerns\ManagesBlocksAndModels;
 use Zero\Core\Concerns\ManagesCurrentContext;
 use Zero\Core\Concerns\ManagesFormFields;
 use Zero\Core\Concerns\ManagesModelListActions;
+use Zero\Core\Concerns\ManagesModelRowActions;
 use Zero\Core\Concerns\ManagesModules;
 use Zero\Core\Concerns\ManagesModuleSettings;
 use Zero\Core\Concerns\ManagesThemes;
@@ -52,6 +53,7 @@ class App
     use ManagesBlocksAndModels;
     use ManagesFormFields;
     use ManagesModelListActions;
+    use ManagesModelRowActions;
     use ManagesModuleSettings;
     use ManagesCurrentContext;
     use RendersViews;

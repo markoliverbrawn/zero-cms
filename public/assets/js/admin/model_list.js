@@ -79,9 +79,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Generic handler for module-registered list actions (App::registerModelListAction()) --
-    // any button rendered by list.php with class="list-registered-action-btn"
-    document.querySelectorAll('.list-registered-action-btn').forEach((btn) => {
+    // Shared handler for module-registered actions (App::registerModelListAction() /
+    // App::registerModelRowAction()) -- confirm, POST, then reload on success. Used by both the
+    // list-toolbar buttons and each row's actions-menu items.
+    function wireRegisteredActionButton(btn) {
         btn.addEventListener('click', () => {
             const url = btn.getAttribute('data-url');
             const csrf = btn.getAttribute('data-csrf') || '';
@@ -127,7 +128,58 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         });
+    }
+
+    // Generic handler for module-registered list actions -- any button rendered by list.php with
+    // class="list-registered-action-btn" (toolbar) or "list-registered-row-action-btn" (per-row menu)
+    document.querySelectorAll('.list-registered-action-btn, .list-registered-row-action-btn').forEach(wireRegisteredActionButton);
+
+    // Per-row "..." actions menu: one popover per row (Edit/Delete/Restore plus any
+    // App::registerModelRowAction() items), positioned under its trigger with position:fixed so it
+    // isn't clipped by the table's own `overflow: hidden` (used to keep its rounded corners clean).
+    let openRowActionsMenu = null;
+
+    function closeRowActionsMenu() {
+        if (!openRowActionsMenu) return;
+        openRowActionsMenu.dropdown.classList.remove('open');
+        openRowActionsMenu.trigger.classList.remove('active');
+        openRowActionsMenu.trigger.setAttribute('aria-expanded', 'false');
+        openRowActionsMenu = null;
+    }
+
+    document.querySelectorAll('.row-actions-trigger').forEach((trigger) => {
+        trigger.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const dropdown = trigger.nextElementSibling;
+            if (!dropdown || !dropdown.classList.contains('row-actions-dropdown')) return;
+
+            const alreadyOpen = openRowActionsMenu && openRowActionsMenu.dropdown === dropdown;
+            closeRowActionsMenu();
+            if (alreadyOpen) return;
+
+            const rect = trigger.getBoundingClientRect();
+            dropdown.style.top = (rect.bottom + 4) + 'px';
+            dropdown.style.left = 'auto';
+            dropdown.style.right = (window.innerWidth - rect.right) + 'px';
+            dropdown.classList.add('open');
+            trigger.classList.add('active');
+            trigger.setAttribute('aria-expanded', 'true');
+            openRowActionsMenu = { trigger, dropdown };
+        });
     });
+
+    document.addEventListener('click', (e) => {
+        if (openRowActionsMenu && !e.target.closest('.row-actions-dropdown')) {
+            closeRowActionsMenu();
+        }
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeRowActionsMenu();
+    });
+
+    window.addEventListener('scroll', () => closeRowActionsMenu(), true);
+    window.addEventListener('resize', () => closeRowActionsMenu());
 
     const tableBody = document.querySelector('.listrecords table tbody');
     if (!tableBody) return;

@@ -3073,6 +3073,103 @@ button:disabled,
     }
 }
 
+/* Per-row "..." actions menu -- Edit/Delete (or Restore/Delete Permanently in trash) plus any
+   App::registerModelRowAction() contributions, collapsed into one popover so the actions column
+   scales to many items instead of growing a new inline button per action. */
+.row-actions-menu {
+    display: inline-block;
+    position: relative;
+
+    .row-actions-trigger {
+        align-items: center !important;
+        background: none !important;
+        border: 1px solid transparent !important;
+        border-radius: var(--border-radius, 6px) !important;
+        color: var(--text-muted, #64748b) !important;
+        cursor: pointer;
+        display: inline-flex !important;
+        height: 28px !important;
+        justify-content: center !important;
+        padding: 0 !important;
+        width: 28px !important;
+
+        svg {
+            height: 16px;
+            width: 16px;
+        }
+
+        &:hover, &.active {
+            background: var(--hover-bg) !important;
+            border-color: var(--border-color) !important;
+            color: var(--text-color) !important;
+        }
+    }
+
+    .row-actions-dropdown {
+        background: var(--card-bg, #1e293b);
+        border: 1px solid var(--border-color, #334155);
+        border-radius: var(--border-radius, 6px);
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.35);
+        display: none;
+        flex-direction: column;
+        gap: 2px;
+        min-width: 170px;
+        padding: 6px;
+        position: fixed;
+        z-index: 1500;
+
+        &.open {
+            display: flex;
+        }
+
+        form {
+            display: block !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        a, button {
+            background: none !important;
+            border: none !important;
+            border-radius: calc(var(--border-radius, 6px) - 2px) !important;
+            color: var(--text-color, #0f172a) !important;
+            cursor: pointer;
+            display: block !important;
+            font-size: 0.85rem !important;
+            font-weight: 500 !important;
+            padding: 8px 10px !important;
+            text-align: left !important;
+            text-decoration: none !important;
+            white-space: nowrap;
+            width: 100% !important;
+
+            &:hover:not(:disabled) {
+                background: var(--hover-bg, rgba(148, 163, 184, 0.12)) !important;
+                text-decoration: none !important;
+            }
+
+            &:disabled {
+                cursor: not-allowed !important;
+                opacity: 0.5;
+            }
+        }
+
+        .btn-delete-link, .btn-force-delete-link {
+            color: #ef4444 !important;
+        }
+
+        .btn-restore-link {
+            color: #2ecc71 !important;
+        }
+    }
+
+    .row-actions-divider {
+        background: var(--border-color, #334155);
+        height: 1px;
+        margin: 4px 2px;
+    }
+}
+
 .audit-log-meta-pills {
     display: flex;
     flex-wrap: wrap;
