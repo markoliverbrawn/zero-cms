@@ -38,31 +38,20 @@ class FormApiController implements Controller
      */
     public function handle($param)
     {
-        // Enforce POST requests
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            \http_response_code(405);
-            \header('Content-Type: application/json');
-            echo \json_encode(['success' => false, 'error' => 'Method Not Allowed']);
-            exit;
+            $this->respond(405, ['success' => false, 'error' => 'Method Not Allowed']);
         }
 
         \header('Content-Type: application/json');
 
-        // Parse JSON raw payload input
         $json = \json_decode(\file_get_contents('php://input'), true);
         if (!\is_array($json)) {
-            \http_response_code(400);
-            echo \json_encode(['success' => false, 'error' => 'Invalid JSON Payload']);
-            exit;
+            $this->respond(400, ['success' => false, 'error' => 'Invalid JSON Payload']);
         }
 
         // SPAM HONEYPOT TRAP: If the hidden bait field is filled, silently discard
         if (!empty($json['website_url'])) {
-            echo \json_encode([
-                'success' => true,
-                'note' => 'Spam filtered successfully.'
-            ]);
-            exit;
+            $this->respond(200, ['success' => true, 'note' => 'Spam filtered successfully.']);
         }
 
         // DYNAMIC RATE LIMITER MIDDLEWARE: Prevent form submission flood abuse (site-configurable window)
@@ -71,34 +60,101 @@ class FormApiController implements Controller
 
         $siteId = App::getCurrentSiteId();
         $blockId = $json['block_id'] ?? '';
-        $matchedBlock = null;
-        $sourcePageTitle = 'Contact Page';
 
-        // 1. Resolve and load the block configuration dynamically from the database
-        if (!empty($blockId)) {
-            $pages = DB::query("SELECT title, content FROM pages WHERE site_id = ? AND deleted_at IS NULL", [$siteId])->fetchAll();
-            foreach ($pages as $p) {
-                $blocks = \json_decode($p['content'], true);
-                if (\is_array($blocks)) {
-                    foreach ($blocks as $b) {
-                        if (($b['type'] ?? '') === 'form_builder' && ($b['id'] ?? '') === $blockId) {
-                            $matchedBlock = $b;
-                            $sourcePageTitle = $p['title'];
-                            break 2;
-                        }
-                    }
+        $resolved = $this->resolveBlock($siteId, $blockId);
+        if ($resolved === null) {
+            $this->respond(404, ['success' => false, 'error' => 'Form configuration not found.']);
+        }
+        [$matchedBlock, $sourcePageTitle] = $resolved;
+        $configuredFields = $matchedBlock['items'] ?? [];
+
+        $validator = new Validator($json, $this->buildValidationRules($configuredFields));
+        if (!$validator->validate()) {
+            $this->respond(400, ['success' => false, 'errors' => $validator->getErrors()]);
+        }
+
+        $extracted = $this->extractSubmissionData($configuredFields, $json);
+        $formTitle = $matchedBlock['title'] ?? 'Contact Form';
+        $extracted['details']['_meta_form_title'] = $formTitle;
+        $extracted['details']['_meta_source_page'] = $sourcePageTitle;
+        $messagePayload = \json_encode($extracted['details'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+
+        $submissionId = Security::uuidv7();
+
+        try {
+            DB::query("
+                INSERT INTO form_submissions (id, site_id, name, email, phone, message, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())
+            ", [
+                $submissionId,
+                $siteId,
+                $extracted['senderName'],
+                $extracted['senderEmail'],
+                $extracted['senderPhone'],
+                $messagePayload
+            ]);
+        } catch (\Exception $e) {
+            \error_log("FormApiController: failed to save submission for block '{$blockId}' (site {$siteId}): " . $e->getMessage());
+            $this->respond(500, ['success' => false, 'error' => 'Could not save the submission. Please try again later.']);
+        }
+
+        $this->notifyRecipient($matchedBlock, $blockId, $siteId, $formTitle, $sourcePageTitle, $extracted['details']);
+
+        $this->respond(200, ['success' => true, 'id' => $submissionId]);
+    }
+
+    /**
+     * Write a JSON response with the given status code and terminate the request.
+     *
+     * @param int $status
+     * @param array $payload
+     * @return never
+     */
+    private function respond(int $status, array $payload)
+    {
+        \http_response_code($status);
+        \header('Content-Type: application/json');
+        echo \json_encode($payload);
+        exit;
+    }
+
+    /**
+     * Locate the form-builder block matching $blockId among the site's published pages.
+     *
+     * @param string $siteId
+     * @param string $blockId
+     * @return array{0: array, 1: string}|null [$block, $sourcePageTitle], or null if not found.
+     */
+    private function resolveBlock(string $siteId, string $blockId): ?array
+    {
+        if (empty($blockId)) {
+            return null;
+        }
+
+        $pages = DB::query("SELECT title, content FROM pages WHERE site_id = ? AND status = 'published' AND deleted_at IS NULL", [$siteId])->fetchAll();
+        foreach ($pages as $p) {
+            $blocks = \json_decode($p['content'], true);
+            if (!\is_array($blocks)) {
+                continue;
+            }
+            foreach ($blocks as $b) {
+                if (($b['type'] ?? '') === 'form_builder' && ($b['id'] ?? '') === $blockId) {
+                    return [$b, $p['title']];
                 }
             }
         }
 
-        if (!$matchedBlock) {
-            \http_response_code(404);
-            echo \json_encode(['success' => false, 'error' => 'Form configuration not found.']);
-            exit;
-        }
+        return null;
+    }
 
-        // 2. Build validation rules dynamically from the configured fields schema
-        $configuredFields = $matchedBlock['items'] ?? [];
+    /**
+     * Build Validator rule strings from the block's configured field schema.
+     *
+     * @param array $configuredFields
+     * @return array<string, string>
+     */
+    private function buildValidationRules(array $configuredFields): array
+    {
         $rules = [];
         foreach ($configuredFields as $fieldObj) {
             $fieldName = $fieldObj['name'] ?? '';
@@ -118,23 +174,24 @@ class FormApiController implements Controller
                 $rules[$fieldName] = \implode('|', $fieldRules);
             }
         }
+        return $rules;
+    }
 
-        // Validate custom inputs using our extensible Core Validator
-        $validator = new Validator($json, $rules);
+    /**
+     * Cast every configured field's submitted value and derive the submission's standard columns
+     * (sender name/email/phone) plus the human-readable details dictionary archived in 'message'.
+     *
+     * @param array $configuredFields
+     * @param array $json
+     * @return array{senderName: string, senderEmail: string, senderPhone: ?string, details: array}
+     */
+    private function extractSubmissionData(array $configuredFields, array $json): array
+    {
+        // Canonical field-name candidates (delimiters stripped) recognised as "the sender's name" --
+        // an exact allow-list rather than a substring match, so an admin-configured field like
+        // "company_name" or "username" isn't mistaken for the visitor's own name.
+        $nameFieldAliases = ['name', 'fullname', 'yourname', 'contactname', 'firstname'];
 
-        if (!$validator->validate()) {
-            \http_response_code(400);
-            echo \json_encode([
-                'success' => false,
-                'errors' => $validator->getErrors()
-            ]);
-            exit;
-        }
-
-        // Extract validated and filtered data payload
-        $validatedData = $validator->getValidatedData();
-
-        // 3. Extract metadata dynamically for database columns
         $senderName = 'Form Submission';
         $senderEmail = 'anonymous@guest.cms';
         $senderPhone = null;
@@ -174,7 +231,8 @@ class FormApiController implements Controller
             if ($type === 'tel' && !empty($val)) {
                 $senderPhone = $val;
             }
-            if ((\strpos($name, 'name') !== false || $type === 'text') && $senderName === 'Form Submission' && !empty($val)) {
+            $normalizedName = \strtolower(\preg_replace('/[^a-z0-9]/i', '', $name));
+            if (\in_array($normalizedName, $nameFieldAliases, true) && $senderName === 'Form Submission' && !empty($val)) {
                 $senderName = \is_array($val) ? \implode(', ', $val) : $val;
             }
 
@@ -183,60 +241,49 @@ class FormApiController implements Controller
             $submissionDetails[$label] = $displayVal ?? 'N/A';
         }
 
-        // Inject source page and form header metadata securely inside the serialized payload
-        $formTitle = $matchedBlock['title'] ?? 'Contact Form';
-        $submissionDetails['_meta_form_title'] = $formTitle;
-        $submissionDetails['_meta_source_page'] = $sourcePageTitle;
+        return [
+            'senderName' => $senderName,
+            'senderEmail' => $senderEmail,
+            'senderPhone' => $senderPhone,
+            'details' => $submissionDetails,
+        ];
+    }
 
-        // Serialize fields dictionary into the 'message' TEXT column
-        $messagePayload = \json_encode($submissionDetails, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+    /**
+     * Email the block's configured recipient about a new submission. If no recipient is
+     * configured, the submission is still archived (already done by the caller) -- there's simply
+     * no address to guess, so this logs the gap instead of notifying an invented placeholder.
+     *
+     * @param array $matchedBlock
+     * @param string $blockId
+     * @param string $siteId
+     * @param string $formTitle
+     * @param string $sourcePageTitle
+     * @param array $submissionDetails
+     * @return void
+     */
+    private function notifyRecipient(array $matchedBlock, string $blockId, string $siteId, string $formTitle, string $sourcePageTitle, array $submissionDetails): void
+    {
+        $recipientEmail = $matchedBlock['recipient_email'] ?? '';
+        if (empty($recipientEmail)) {
+            \error_log("FormApiController: block '{$blockId}' (site {$siteId}) has no recipient_email configured; submission saved but no notification sent.");
+            return;
+        }
 
-        // Resolve notification recipient email
-        $recipientEmail = $matchedBlock['recipient_email'] ?? 'admin@d6laptop.zero';
+        $subject = "New Submission: " . $formTitle;
+        $htmlBody = "
+            <h2>New Dynamic Form Submission</h2>
+            <p>A new form has been submitted on your site page: <strong>" . Str::escape($sourcePageTitle) . "</strong>.</p>
+            <hr style='border: none; border-top: 1px solid #ddd; margin: 15px 0;'>
+        ";
 
-        // Insert submission record into database
-        $submissionId = Security::uuidv7();
+        foreach ($submissionDetails as $label => $val) {
+            if (\strpos($label, '_meta_') === 0) continue; // skip metadata keys in email
+            $htmlBody .= "<p><strong>" . Str::escape($label) . ":</strong> " . \nl2br(Str::escape($val)) . "</p>";
+        }
 
-        try {
-            DB::query("
-                INSERT INTO form_submissions (id, site_id, name, email, phone, message, created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())
-            ", [
-                $submissionId,
-                $siteId,
-                $senderName,
-                $senderEmail,
-                $senderPhone,
-                $messagePayload
-            ]);
-
-            // Construct and dispatch HTML notification email
-            $subject = "New Submission: " . $formTitle;
-            $htmlBody = "
-                <h2>New Dynamic Form Submission</h2>
-                <p>A new form has been submitted on your site page: <strong>" . Str::escape($sourcePageTitle) . "</strong>.</p>
-                <hr style='border: none; border-top: 1px solid #ddd; margin: 15px 0;'>
-            ";
-
-            foreach ($submissionDetails as $label => $val) {
-                if (\strpos($label, '_meta_') === 0) continue; // skip metadata keys in email
-                $htmlBody .= "<p><strong>" . Str::escape($label) . ":</strong> " . \nl2br(Str::escape($val)) . "</p>";
-            }
-
-            Emailer::send($recipientEmail, $subject, $htmlBody);
-
-            echo \json_encode([
-                'success' => true,
-                'id' => $submissionId
-            ]);
-            exit;
-        } catch (\Exception $e) {
-            \http_response_code(500);
-            echo \json_encode([
-                'success' => false,
-                'error' => 'Could not save the submission: ' . $e->getMessage()
-            ]);
-            exit;
+        if (!Emailer::send($recipientEmail, $subject, $htmlBody)) {
+            \error_log("FormApiController: notification email failed to send for block '{$blockId}' (site {$siteId}) to '{$recipientEmail}'.");
         }
     }
 }

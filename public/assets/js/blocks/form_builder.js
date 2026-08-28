@@ -69,22 +69,27 @@
       body: JSON.stringify(payload)
     })
     .then(function(res) {
-      return res.json().then(function(data) {
-        if (!res.ok) {
-          throw { status: res.status, data: data };
-        }
-        return data;
-      });
+      return res.json()
+        .catch(function() {
+          // Response body wasn't valid JSON (e.g. an upstream error page) -- fall through to the
+          // generic error message below instead of letting a raw SyntaxError reach the catch.
+          return {};
+        })
+        .then(function(data) {
+          if (!res.ok || !data.success) {
+            var error = new Error(data.error || 'Form submission failed');
+            error.status = res.status;
+            error.data = data;
+            throw error;
+          }
+          return data;
+        });
     })
-    .then(function(data) {
-      if (data.success) {
-        form.style.display = 'none';
-        if (successMsg) {
-          successMsg.style.display = 'block';
-          successMsg.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-      } else {
-        throw { status: 400, data: data };
+    .then(function() {
+      form.style.display = 'none';
+      if (successMsg) {
+        successMsg.style.display = 'block';
+        successMsg.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
     })
     .catch(function(err) {
