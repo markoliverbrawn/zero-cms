@@ -169,9 +169,12 @@ trait RendersViews
             }
         }
 
+        // The '#pagination' fragment (matching the <nav id="pagination"> below) makes the browser
+        // scroll straight to the pagination control on load -- without it, following a page link
+        // lands the visitor back at the very top of a long list, which reads as jarring/broken.
         $buildUrl = function($pageNum) use ($baseUrl, $cleanedParams) {
             $params = \array_merge($cleanedParams, ['page' => $pageNum]);
-            return $baseUrl . '?' . \http_build_query($params);
+            return $baseUrl . '?' . \http_build_query($params) . '#pagination';
         };
 
         // Sliding window range calculation
@@ -200,7 +203,7 @@ trait RendersViews
         } else {
             // Inline fallback markup if the partial file is missing
             ?>
-            <nav class="unified-pagination-wrapper">
+            <nav id="pagination" class="unified-pagination-wrapper">
                 <?php if ($currentPage > 1): ?>
                     <a href="<?php echo Str::escape($buildUrl($currentPage - 1)); ?>" class="pagination-btn page-nav-prev">Prev</a>
                 <?php endif; ?>

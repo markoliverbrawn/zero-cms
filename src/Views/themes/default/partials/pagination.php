@@ -3,7 +3,7 @@ use Zero\Support\Str;
 // src/Views/themes/default/partials/pagination.php
 // Unified, highly-scalable sliding window pagination partial
 ?>
-<nav class="unified-pagination-wrapper">
+<nav id="pagination" class="unified-pagination-wrapper">
     <!-- Prev Link -->
     <?php if ($currentPage > 1): ?>
         <a href="<?php echo Str::escape($buildUrl($currentPage - 1)); ?>" class="pagination-btn page-nav-prev">Prev</a>
@@ -53,6 +53,8 @@ use Zero\Support\Str;
     flex-wrap: wrap;
     margin-top: 50px;
     padding-top: 20px;
+    /* Clears a sticky header when the browser jumps here for the #pagination URL fragment. */
+    scroll-margin-top: 80px;
     border-top: 1px solid var(--border-color, #e2e8f0);
 
     .pagination-btn {
