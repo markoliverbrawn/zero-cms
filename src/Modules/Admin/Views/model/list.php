@@ -223,7 +223,7 @@ use Zero\Support\I18n;
         <?php endforeach; ?>
       </tbody>
     </table>
-    <?php include APPLICATION_ROOT . '/src/Modules/Admin/Views/pagination.php'; ?>
+    <?php echo App::renderPagination(['currentPage' => $page ?? 1, 'totalPages' => $pages ?? 1], '/admin/list/' . ($modelName ?? ''), $_GET); ?>
   <?php endif; ?>
 </div>
 

@@ -86,7 +86,6 @@ class ListController implements Controller
             'modelName' => $modelName,
             'records' => $paginationData['data'],
             'page' => $paginationData['currentPage'],
-            'range' => \range(1, $paginationData['totalPages']),
             'pages' => $paginationData['totalPages'],
             'q' => $paginationData['query'] ?? '',
             'sort' => $sort,
