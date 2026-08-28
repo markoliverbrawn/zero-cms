@@ -17,6 +17,8 @@ return [
             'name' => 'Zero CMS Main Site (d6laptop.zero)',
             'domain' => 'd6laptop.zero',
             'theme' => 'default',
+            'timezone' => 'Pacific/Auckland',
+            'default_language' => 'en',
             'enabled_modules' => [
                 'formbuilder',
                 'security',

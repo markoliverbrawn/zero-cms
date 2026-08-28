@@ -346,34 +346,65 @@ class Seeder
         $siteIdMap = [];
         if (!empty($data['sites'])) {
             echo "Seeding multi-tenant Site definitions...\n";
+            $validSiteColumns = $this->getTableColumns('sites');
+
             foreach ($data['sites'] as $site) {
                 $name = $site['name'];
                 $domain = $site['domain'];
                 $theme = $site['theme'] ?? 'default';
                 $enabledModules = isset($site['enabled_modules']) ? \json_encode($site['enabled_modules']) : '[]';
-                
+
+                // Any other seed-provided field that's a genuine 'sites' column (timezone,
+                // default_language, settings, ...) rides along generically, the same way every
+                // other table's columns do below -- so a new column never has to be hand-added
+                // here again.
+                $extraColumns = [];
+                $extraValues = [];
+                foreach ($site as $key => $val) {
+                    if (\in_array($key, ['id', 'name', 'domain', 'theme', 'enabled_modules'], true)) {
+                        continue;
+                    }
+                    if (!empty($validSiteColumns) && !\in_array($key, $validSiteColumns, true)) {
+                        continue;
+                    }
+                    $extraColumns[] = $key;
+                    $extraValues[] = \is_array($val) ? \json_encode($val) : $val;
+                }
+
                 $existing = DB::query("SELECT id FROM sites WHERE domain = ? LIMIT 1", [$domain])->fetch();
                 if ($existing) {
                     $siteId = $existing['id'];
-                    DB::query("UPDATE sites SET name = ?, theme = ?, enabled_modules = ?, updated_at = NOW() WHERE id = ?", [$name, $theme, $enabledModules, $siteId]);
+                    $setSql = 'name = ?, theme = ?, enabled_modules = ?';
+                    $setParams = [$name, $theme, $enabledModules];
+                    foreach ($extraColumns as $i => $col) {
+                        $setSql .= ", {$col} = ?";
+                        $setParams[] = $extraValues[$i];
+                    }
+                    $setParams[] = $siteId;
+                    DB::query("UPDATE sites SET {$setSql}, updated_at = NOW() WHERE id = ?", $setParams);
                 } else {
                     $siteId = $site['id'] ?? Security::uuidv7();
+                    $columns = \array_merge(['id', 'name', 'domain', 'theme', 'enabled_modules'], $extraColumns);
+                    $values = \array_merge([$siteId, $name, $domain, $theme, $enabledModules], $extraValues);
+                    $placeholders = \array_merge(\array_fill(0, \count($values), '?'), ['NOW()', 'NOW()']);
+                    $columns[] = 'created_at';
+                    $columns[] = 'updated_at';
                     DB::query(
-                        "INSERT INTO sites (id, name, domain, theme, enabled_modules, created_at, updated_at) VALUES (?, ?, ?, ?, ?, NOW(), NOW())",
-                        [$siteId, $name, $domain, $theme, $enabledModules]
+                        "INSERT INTO sites (" . \implode(', ', $columns) . ") VALUES (" . \implode(', ', $placeholders) . ")",
+                        $values
                     );
                 }
                 $siteIdMap[$domain] = $siteId;
                 $this->seededSiteIds[$siteId] = $siteId;
 
                 // Dynamically switch the current site to the seeded site Model
-                $siteModel = new \Zero\Models\Site($existing ?: [
+                $siteModel = new \Zero\Models\Site($existing ?: \array_merge([
                     'id' => $siteId,
                     'name' => $name,
                     'domain' => $domain,
                     'theme' => $theme,
                     'enabled_modules' => $enabledModules
-                ]);
+                ], \array_combine($extraColumns, $extraValues)));
                 App::setCurrentSite($siteModel);
 
                 echo "Seeded Site: '{$name}' (ID: {$siteId}) [Domain: {$domain}, Theme: {$theme}]\n";
