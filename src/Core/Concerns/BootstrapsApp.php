@@ -79,8 +79,10 @@ trait BootstrapsApp
         // Pass the full Host header (including port, if any) through as-is -- a site's domain may
         // now optionally include a port (e.g. 'test.localhost:8370'), and
         // bootstrapFetchSiteAndUser() itself falls back to the bare hostname if nothing matches
-        // the exact host:port.
-        $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+        // the exact host:port. Prefer X-Forwarded-Host: proxies like Cloudflare rewrite Host to
+        // their own edge/origin hostname before the request reaches the app, so HTTP_HOST alone
+        // would resolve every request to the same wrong tenant.
+        $host = $_SERVER['HTTP_X_FORWARDED_HOST'] ?? $_SERVER['HTTP_HOST'] ?? 'localhost';
         $userId = $_SESSION['user_id'] ?? null;
 
         $userFound = self::bootstrapFetchSiteAndUser($host, $userId);
