@@ -88,8 +88,8 @@ class AwsS3StorageDriver implements StorageDriver
             return \substr($path, \strlen($publicUrlPrefix));
         }
 
-        if (\strpos($path, APPLICATION_ROOT) === 0) {
-            $path = \substr($path, \strlen(APPLICATION_ROOT));
+        if (\strpos($path, Storage::getRoot()) === 0) {
+            $path = \substr($path, \strlen(Storage::getRoot()));
         }
         $path = \ltrim($path, '/');
         if (\strpos($path, 'public/') === 0) {
