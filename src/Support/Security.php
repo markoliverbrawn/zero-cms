@@ -137,7 +137,7 @@ class Security {
         App::ensureSession();
         if (empty($token)) return false;
 
-        // Expiry check: 10 minutes (600 seconds)
+        // Expiry check: 10 minutes (600 seconds) of inactivity
         $tokenTime = $_SESSION['_csrf_token_time'] ?? 0;
         if ((\time() - $tokenTime) > 600) {
             // Token has expired! Destroy it to prevent replay
@@ -146,7 +146,14 @@ class Security {
             return false;
         }
 
-        return \hash_equals($_SESSION['_csrf_token'] ?? '', $token);
+        $valid = \hash_equals($_SESSION['_csrf_token'] ?? '', $token);
+        if ($valid) {
+            // Sliding expiry: a successful check resets the inactivity window, so the same
+            // token (never rotated) keeps working across an actively-used session instead of
+            // dying exactly 10 minutes after the page that rendered it was first loaded.
+            $_SESSION['_csrf_token_time'] = \time();
+        }
+        return $valid;
     }
 
     /**
