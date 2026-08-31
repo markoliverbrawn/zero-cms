@@ -34,28 +34,28 @@ trait ResolvesTenantContext
     {
         if ($userId) {
             $sql = "
-                SELECT 
+                SELECT
                     'site' AS record_type, id, name, domain, theme, enabled_modules,
-                    homepage_id, timezone, default_language,
-                    NULL AS email, NULL AS password_hash, NULL AS role, NULL AS site_id, NULL AS preferences, 
-                    created_at, updated_at 
+                    homepage_id, timezone, default_language, settings,
+                    NULL AS email, NULL AS password_hash, NULL AS role, NULL AS site_id, NULL AS preferences,
+                    created_at, updated_at
                 FROM sites WHERE domain = ?
                 UNION ALL
-                SELECT 
+                SELECT
                     'user' AS record_type, id, username AS name, NULL AS domain, NULL AS theme, NULL AS enabled_modules,
-                    NULL AS homepage_id, NULL AS timezone, NULL AS default_language,
-                    email, password_hash, role, site_id, preferences, 
-                    created_at, updated_at 
+                    NULL AS homepage_id, NULL AS timezone, NULL AS default_language, NULL AS settings,
+                    email, password_hash, role, site_id, preferences,
+                    created_at, updated_at
                 FROM users WHERE id = ?
             ";
             $params = [$host, $userId];
         } else {
             $sql = "
-                SELECT 
+                SELECT
                     'site' AS record_type, id, name, domain, theme, enabled_modules,
-                    homepage_id, timezone, default_language,
-                    NULL AS email, NULL AS password_hash, NULL AS role, NULL AS site_id, NULL AS preferences, 
-                    created_at, updated_at 
+                    homepage_id, timezone, default_language, settings,
+                    NULL AS email, NULL AS password_hash, NULL AS role, NULL AS site_id, NULL AS preferences,
+                    created_at, updated_at
                 FROM sites WHERE domain = ?
             ";
             $params = [$host];
@@ -79,6 +79,7 @@ trait ResolvesTenantContext
                         'homepage_id' => $row['homepage_id'] ?? null,
                         'timezone' => $row['timezone'] ?? 'UTC',
                         'default_language' => $row['default_language'] ?? 'en',
+                        'settings' => $row['settings'] ?? null,
                         'created_at' => $row['created_at'],
                         'updated_at' => $row['updated_at']
                     ];
