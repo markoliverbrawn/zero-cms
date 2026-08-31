@@ -192,7 +192,7 @@ class Seeder
                 Storage::write($physicalPath, $content);
                 
                 if (!isset($row['path'])) {
-                    $row['path'] = '/storage/uploads/' . $siteId . '/' . $filename;
+                    $row['path'] = Storage::getUrl($physicalPath);
                 }
                 if (!isset($row['folder'])) {
                     $row['folder'] = '';
@@ -200,9 +200,10 @@ class Seeder
                 unset($row['content_base64']);
             } elseif (isset($row['filename']) && ($row['mime'] ?? '') !== 'directory') {
                 $filename = $row['filename'];
+                $physicalPath = $seederInstance->getUploadsDir() . '/' . $siteId . '/' . $filename;
 
                 if (!isset($row['path']) || $row['path'] === '') {
-                    $row['path'] = '/storage/uploads/' . $siteId . '/' . $filename;
+                    $row['path'] = Storage::getUrl($physicalPath);
                 }
                 if (!isset($row['folder'])) {
                     $row['folder'] = '';
