@@ -66,10 +66,12 @@ class ForgotController implements Controller
                 Logger::log($user['id'], 'password_reset_request', 'user', $user['id'], ['username' => $username, 'ip_address' => $_SERVER['REMOTE_ADDR']]);
                 
                 // Construct recovery URL
-                $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+                // Prefer X-Forwarded-Host: proxies like Cloudflare rewrite Host to their own
+                // edge/origin hostname before the request reaches the app.
+                $host = $_SERVER['HTTP_X_FORWARDED_HOST'] ?? $_SERVER['HTTP_HOST'] ?? 'localhost';
                 $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
                 $link = $scheme . '://' . $host . '/admin/reset?token=' . $token;
-                
+
                 // Construct beautiful recovery email template
                 $subject = "Reset Your Password - Zero CMS";
                 $htmlBody = Template::renderFile(APPLICATION_ROOT . '/src/Views/emails/forgot-password.php', [
@@ -78,9 +80,13 @@ class ForgotController implements Controller
                     'link' => $link,
                     'expiryMinutes' => $expiryMinutes
                 ]);
-                
-                // Send Recovery Email via dynamic Mailpit SMTP helper!
-                Emailer::send($user['email'], $subject, $htmlBody);
+
+                // Send Recovery Email via dynamic Mailpit SMTP helper! The user-facing response
+                // stays identical either way (anti-enumeration), but a delivery failure should
+                // still be visible server-side rather than silently vanishing.
+                if (!Emailer::send($user['email'], $subject, $htmlBody)) {
+                    error_log("ForgotController: failed to send password reset email to user {$user['id']}");
+                }
             } else {
                 // Log failed attempt to trigger rate limiting and prevent brute-force requests
                 Logger::log(null, 'password_reset_request_failed', 'user', null, [

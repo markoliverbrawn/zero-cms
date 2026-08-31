@@ -90,7 +90,9 @@ class SendWelcomeController implements Controller
         $siteDomain = $site ? $site->domain : 'localhost';
 
         // Construct primary login url
-        $host = $_SERVER['HTTP_HOST'] ?? $siteDomain;
+        // Prefer X-Forwarded-Host: proxies like Cloudflare rewrite Host to their own edge/origin
+        // hostname before the request reaches the app.
+        $host = $_SERVER['HTTP_X_FORWARDED_HOST'] ?? $_SERVER['HTTP_HOST'] ?? $siteDomain;
         $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
         $link = $scheme . '://' . $host . '/admin/login';
 
@@ -107,11 +109,17 @@ class SendWelcomeController implements Controller
 
         // Send welcome email via local socket Emailer
         try {
-            Emailer::send($user->email, $subject, $htmlBody);
-            echo \json_encode([
-                'success' => true,
-                'message' => 'Welcome email dispatched successfully to ' . Str::escape($user->email) . '!'
-            ]);
+            if (Emailer::send($user->email, $subject, $htmlBody)) {
+                echo \json_encode([
+                    'success' => true,
+                    'message' => 'Welcome email dispatched successfully to ' . Str::escape($user->email) . '!'
+                ]);
+            } else {
+                echo \json_encode([
+                    'success' => false,
+                    'message' => 'Welcome email could not be delivered. Check SMTP configuration and try again.'
+                ]);
+            }
         } catch (\Exception $e) {
             \http_response_code(500);
             echo \json_encode([
