@@ -115,6 +115,9 @@ class Emailer
         $port = \intval(Env::get('SMTP_PORT', '1025'));
         $fromEmail = Env::get('SMTP_FROM_EMAIL', 'noreply@zero.shop');
         $fromName = Env::get('SMTP_FROM_NAME', 'Zero CMS');
+        $secure = Env::get('SMTP_SECURE', '');   // 'tls' enables STARTTLS
+        $user = Env::get('SMTP_USER', '');        // non-empty enables AUTH LOGIN
+        $pass = Env::get('SMTP_PASS', '');
 
         if (empty($textBody)) {
             $textBody = \strip_tags($htmlBody);
@@ -144,8 +147,31 @@ class Emailer
         try {
             $getResponse($socket); // Read server greeting
 
-            fputs($socket, "HELO localhost\r\n");
+            fputs($socket, "EHLO localhost\r\n");
             $getResponse($socket);
+
+            if ($secure === 'tls') {
+                fputs($socket, "STARTTLS\r\n");
+                $getResponse($socket);
+                if (!\stream_socket_enable_crypto($socket, true, STREAM_CRYPTO_METHOD_TLS_CLIENT)) {
+                    error_log("Emailer STARTTLS negotiation failed for {$host}:{$port}");
+                    \fclose($socket);
+                    return false;
+                }
+                // SMTP requires re-issuing EHLO after the TLS upgrade -- the prior plaintext
+                // EHLO's capability list is discarded per RFC 3207.
+                fputs($socket, "EHLO localhost\r\n");
+                $getResponse($socket);
+            }
+
+            if ($user !== '') {
+                fputs($socket, "AUTH LOGIN\r\n");
+                $getResponse($socket);
+                fputs($socket, \base64_encode($user) . "\r\n");
+                $getResponse($socket);
+                fputs($socket, \base64_encode($pass) . "\r\n");
+                $getResponse($socket);
+            }
 
             fputs($socket, "MAIL FROM: <{$fromEmail}>\r\n");
             $getResponse($socket);
