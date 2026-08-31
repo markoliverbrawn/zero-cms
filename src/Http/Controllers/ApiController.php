@@ -59,7 +59,7 @@ abstract class ApiController
         }
 
         // 3.5 Apply API Throttling via Centralized Middleware Engine to prevent brute-forcing and API abuse
-        $ip = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+        $ip = Security::getClientIp();
         $rateLimitKey = 'api_' . \md5($ip . '_' . $token);
         
         App::applyRateLimitMiddleware($rateLimitKey, 1); // Limit to max 1 request per second

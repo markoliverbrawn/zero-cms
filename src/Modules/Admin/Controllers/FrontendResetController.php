@@ -16,6 +16,7 @@ use Zero\Database\DB;
 use Zero\Interfaces\Controller;
 use Zero\Models\User;
 use Zero\Support\Logger;
+use Zero\Support\Security;
 
 /**
  * Class FrontendResetController
@@ -74,7 +75,7 @@ class FrontendResetController implements Controller
                     // Clear the used reset token from database
                     DB::query("DELETE FROM password_resets WHERE token = ?", [$token]);
                     
-                    Logger::log($userId, 'frontend_password_reset_success', 'user', $userId, ['ip_address' => $_SERVER['REMOTE_ADDR']]);
+                    Logger::log($userId, 'frontend_password_reset_success', 'user', $userId, ['ip_address' => Security::getClientIp()]);
                     
                     // Log the user in instantly!
                     App::loginUser($userId);

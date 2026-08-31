@@ -85,7 +85,7 @@ class RegisterController implements Controller
                     // Log the customer in instantly!
                     App::loginUser($userId);
                     
-                    Logger::log($userId, 'registration_success', 'user', $userId, ['username' => $username, 'ip_address' => $_SERVER['REMOTE_ADDR']]);
+                    Logger::log($userId, 'registration_success', 'user', $userId, ['username' => $username, 'ip_address' => Security::getClientIp()]);
                     
                     \header('Location: /shop/account');
                     exit;

@@ -81,8 +81,14 @@ trait BootstrapsApp
         // bootstrapFetchSiteAndUser() itself falls back to the bare hostname if nothing matches
         // the exact host:port. Prefer X-Forwarded-Host: proxies like Cloudflare rewrite Host to
         // their own edge/origin hostname before the request reaches the app, so HTTP_HOST alone
-        // would resolve every request to the same wrong tenant.
-        $host = $_SERVER['HTTP_X_FORWARDED_HOST'] ?? $_SERVER['HTTP_HOST'] ?? 'localhost';
+        // would resolve every request to the same wrong tenant. X-Forwarded-Host is otherwise
+        // trivially spoofable by anyone (it drives the tenant lookup below, so a forged value can
+        // redirect resolution to an arbitrary registered domain) -- once TRUSTED_PROXY_SECRET is
+        // configured, only honor it on a verified request from that trusted proxy.
+        $forwardedHostTrusted = Env::get('TRUSTED_PROXY_SECRET', '') === '' || Security::isTrustedProxyRequest();
+        $host = ($forwardedHostTrusted ? ($_SERVER['HTTP_X_FORWARDED_HOST'] ?? null) : null)
+            ?? $_SERVER['HTTP_HOST']
+            ?? 'localhost';
         $userId = $_SESSION['user_id'] ?? null;
 
         $userFound = self::bootstrapFetchSiteAndUser($host, $userId);

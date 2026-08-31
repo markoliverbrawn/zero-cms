@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Zero\Support;
 
 use Zero\Core\App;
+use Zero\Core\Env;
 use Zero\Database\DB;
 use Zero\Support\Str;
 
@@ -24,12 +25,42 @@ use Zero\Support\Str;
  */
 class Security {
     /**
+     * True only when TRUSTED_PROXY_SECRET is configured and the request's X-Proxy-Secret header
+     * matches it (constant-time). Deployments that sit behind a reverse proxy which originates its
+     * own request to origin (e.g. a Cloudflare Worker's fetch()) can set this env var and have the
+     * proxy inject the matching header, so the app can safely trust proxy-supplied headers that
+     * would otherwise be trivially spoofable by anyone hitting the origin directly.
+     */
+    public static function isTrustedProxyRequest(): bool
+    {
+        $secret = Env::get('TRUSTED_PROXY_SECRET', '');
+        if ($secret === '') {
+            return false;
+        }
+        return \hash_equals($secret, $_SERVER['HTTP_X_PROXY_SECRET'] ?? '');
+    }
+
+    /**
+     * Resolve the real client IP. Only trusts the CF-Connecting-IP header from a verified trusted
+     * proxy (see isTrustedProxyRequest()) -- without that verification, REMOTE_ADDR is the only
+     * value that can't be forged by the client, even though it reports the proxy's own address
+     * (not the visitor's) whenever one sits in front of the origin.
+     */
+    public static function getClientIp(): string
+    {
+        if (self::isTrustedProxyRequest() && !empty($_SERVER['HTTP_CF_CONNECTING_IP'])) {
+            return $_SERVER['HTTP_CF_CONNECTING_IP'];
+        }
+        return $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+    }
+
+    /**
      * Check if authentication attempts are exceeded for a combination of IP and identifier.
      * Action parameter can be 'login' or 'password_reset'.
      */
     public static function checkAuthRateLimit(string $action, string $identifier, int $maxAttempts = 5, int $decaySeconds = 900): bool
     {
-        $ip = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+        $ip = self::getClientIp();
         $timeWindow = \gmdate('Y-m-d H:i:s', \time() - $decaySeconds);
 
         // Map general actions to database actions

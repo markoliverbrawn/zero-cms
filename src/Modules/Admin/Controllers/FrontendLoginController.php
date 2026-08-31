@@ -54,7 +54,7 @@ class FrontendLoginController implements Controller
 
                 if ($userRole === 'super_admin' || $userSiteId === $currentSiteId) {
                     App::loginUser($row['id']);
-                    Logger::log($row['id'], 'frontend_login_success', 'user', $row['id'], ['username' => $user, 'ip_address' => $_SERVER['REMOTE_ADDR']]);
+                    Logger::log($row['id'], 'frontend_login_success', 'user', $row['id'], ['username' => $user, 'ip_address' => Security::getClientIp()]);
                     
                     // Forward to original requested page if present, otherwise fallback to home
                     $redirectTo = $_SESSION['redirect_to'] ?? '/';
@@ -65,7 +65,7 @@ class FrontendLoginController implements Controller
             }
 
             $error = 'Invalid credentials';
-            Logger::log(null, 'frontend_login_failed', 'user', null, ['username' => $user, 'ip_address' => $_SERVER['REMOTE_ADDR']]);
+            Logger::log(null, 'frontend_login_failed', 'user', null, ['username' => $user, 'ip_address' => Security::getClientIp()]);
             
             // SECURITY REMEDIATION: Throttle brute force dictionary attempts
             \sleep(1);

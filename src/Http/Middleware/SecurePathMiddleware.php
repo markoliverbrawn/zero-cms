@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Zero\Http\Middleware;
 
 use Zero\Support\Logger;
+use Zero\Support\Security;
 
 /**
  * Class SecurePathMiddleware
@@ -33,7 +34,7 @@ class SecurePathMiddleware
         // 1. Path Traversal Protection: Rejects unexpected '..' traversal sequences or backslashes
         if (\strpos($targetPath, '..') !== false || \strpos($targetPath, '\\') !== false) {
             Logger::log(null, 'suspicious_file_traversal', 'security', null, [
-                'ip_address' => $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1',
+                'ip_address' => Security::getClientIp(),
                 'requested_file_id' => $fileId,
                 'path' => $targetPath
             ]);
@@ -50,7 +51,7 @@ class SecurePathMiddleware
 
         if ($realPhysicalPath === false || !self::isPathWithinStorageRoot($realPhysicalPath, $storageRoot)) {
             Logger::log(null, 'unauthorized_path_escape', 'security', null, [
-                'ip_address' => $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1',
+                'ip_address' => Security::getClientIp(),
                 'requested_file_id' => $fileId,
                 'path' => $targetPath,
                 'resolved_path' => $realPhysicalPath
@@ -63,7 +64,7 @@ class SecurePathMiddleware
         // 3. Symlink Access Protection: Explicitly blocks access through symbolic links
         if (\is_link($physicalPath)) {
             Logger::log(null, 'symlink_access_attempt', 'security', null, [
-                'ip_address' => $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1',
+                'ip_address' => Security::getClientIp(),
                 'requested_file_id' => $fileId,
                 'path' => $targetPath
             ]);

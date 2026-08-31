@@ -38,7 +38,7 @@ class ResetController implements Controller
         $token = $_GET['token'] ?? ($_POST['token'] ?? '');
         if ($method === 'POST') {
             App::applyCsrfMiddleware();
-            $ip = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+            $ip = Security::getClientIp();
 
             // Enforce centralized rate limiting and progressive lockout protection via Middleware
             AuthThrottlingMiddleware::handle('password_reset', 'admin/reset', ['token' => $token], function() {});
@@ -70,7 +70,7 @@ class ResetController implements Controller
             // Security Hardening: Invalidate and rotate ALL pending password resets for this user upon success
             DB::query('DELETE FROM password_resets WHERE user_id = ?', [$row['user_id']]);
             
-            Logger::log($row['user_id'], 'password_reset_success', 'user', $row['user_id'], ['ip_address' => $_SERVER['REMOTE_ADDR']]);
+            Logger::log($row['user_id'], 'password_reset_success', 'user', $row['user_id'], ['ip_address' => Security::getClientIp()]);
             App::render('admin/reset', ['success' => true]);
             exit;
         }

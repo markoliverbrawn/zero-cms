@@ -63,7 +63,7 @@ class ForgotController implements Controller
                     $expires
                 ]);
                 
-                Logger::log($user['id'], 'password_reset_request', 'user', $user['id'], ['username' => $username, 'ip_address' => $_SERVER['REMOTE_ADDR']]);
+                Logger::log($user['id'], 'password_reset_request', 'user', $user['id'], ['username' => $username, 'ip_address' => Security::getClientIp()]);
                 
                 // Construct recovery URL
                 // Prefer X-Forwarded-Host: proxies like Cloudflare rewrite Host to their own
@@ -91,7 +91,7 @@ class ForgotController implements Controller
                 // Log failed attempt to trigger rate limiting and prevent brute-force requests
                 Logger::log(null, 'password_reset_request_failed', 'user', null, [
                     'username' => $username,
-                    'ip_address' => $_SERVER['REMOTE_ADDR']
+                    'ip_address' => Security::getClientIp()
                 ]);
                 // Introduce simulated timing delay to match successful path
                 \usleep(250000); // 250ms

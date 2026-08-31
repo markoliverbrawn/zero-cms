@@ -88,8 +88,8 @@ class LoginController implements Controller
             if ($failReason === 'none') {
                 App::loginUser($row['id']);
                 Logger::log($row['id'], 'login_success', 'user', $row['id'], [
-                    'username' => $user, 
-                    'ip_address' => $_SERVER['REMOTE_ADDR']
+                    'username' => $user,
+                    'ip_address' => Security::getClientIp()
                 ]);
                 
                 // Forward to original requested page if present, otherwise fallback to dashboard
@@ -105,8 +105,8 @@ class LoginController implements Controller
             }
 
             Logger::log(null, 'login_failed', 'user', null, [
-                'username' => $user, 
-                'ip_address' => $_SERVER['REMOTE_ADDR'],
+                'username' => $user,
+                'ip_address' => Security::getClientIp(),
                 'fail_reason' => $failReason,
                 'password_length' => \strlen($pass)
             ]);

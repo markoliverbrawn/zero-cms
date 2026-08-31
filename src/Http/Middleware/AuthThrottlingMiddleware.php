@@ -39,11 +39,11 @@ class AuthThrottlingMiddleware
             $username = \trim($_POST['username'] ?? '');
             if (empty($username)) {
                 // Fallback to IP address if no username is present (e.g., during reset completion)
-                $username = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+                $username = Security::getClientIp();
             }
 
             if (!Security::checkAuthRateLimit($action, $username)) {
-                $ip = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+                $ip = Security::getClientIp();
                 Logger::log(null, $action . '_lockout', 'user', null, [
                     'username' => $username,
                     'ip_address' => $ip

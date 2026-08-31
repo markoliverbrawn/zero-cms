@@ -156,7 +156,7 @@ class GoogleAuthController implements Controller
             Logger::log($userId, 'google_login_success', 'user', $userId, [
                 'username' => $row['username'],
                 'email' => $email,
-                'ip_address' => $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1'
+                'ip_address' => Security::getClientIp()
             ]);
 
             // Forward to target page or dashboard
