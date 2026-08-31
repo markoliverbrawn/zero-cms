@@ -579,8 +579,11 @@ document.addEventListener('DOMContentLoaded', function(){
   });
 
   // Global AJAX saving of admin edit forms
+  // Guard on the actual URL shape (/admin/edit/{model}/{id}), not just the .editrecord class --
+  // other pages (e.g. module_settings.php) reuse that class purely for shared layout/padding
+  // styling and would otherwise have their submit wrongly hijacked into this model-save flow.
   var editForm = document.querySelector('.editrecord form');
-  if (editForm) {
+  if (editForm && window.location.pathname.indexOf('/admin/edit/') === 0) {
     editForm.addEventListener('submit', function(e) {
       e.preventDefault();
 
@@ -697,7 +700,9 @@ document.addEventListener('DOMContentLoaded', function(){
   // Intercept Ctrl+S / Cmd+S on record edit forms for Save & Continue
   window.addEventListener('keydown', function(e) {
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
-      var editForm = document.querySelector('.editrecord form');
+      var editForm = window.location.pathname.indexOf('/admin/edit/') === 0
+        ? document.querySelector('.editrecord form')
+        : null;
       if (editForm) {
         e.preventDefault();
         
