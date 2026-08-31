@@ -10,13 +10,17 @@ mkdir -p storage/logs storage/private public/storage/uploads public/assets/css/c
 chmod -R 777 storage public/storage public/assets/css/cache 2>/dev/null || true
 
 # Works whether this project *is* Zero CMS Core (no vendor/ needed - it
-# self-autoloads via src/Core/Autoloader.php) or is a separate host project
-# that requires markoliverbrawn/zero-cms-core via Composer (bin/create-project
+# self-autoloads via its own src/Core/Autoloader.php, and Composer is only
+# used to version/publish the package) or is a separate host project that
+# requires markoliverbrawn/zero-cms-core via Composer (bin/create-project
 # scaffolds public/index.php to boot from vendor/.../src/Core/Autoloader.php
-# instead). In the latter case vendor/ is normally installed on the host
-# before the bind mount ever reaches this container, but install it here too
-# if it's missing (e.g. a fresh clone that gitignores vendor/).
-if [ -f composer.json ] && [ ! -d vendor ]; then
+# instead). Only the latter ever needs vendor/ -- if src/Core/Autoloader.php
+# already exists locally, this project IS Core, so skip composer install
+# entirely rather than generate a pointless vendor/ for a zero-dependency
+# package. In the host-project case, vendor/ is normally installed on the
+# host before the bind mount ever reaches this container, but install it
+# here too if it's missing (e.g. a fresh clone that gitignores vendor/).
+if [ -f composer.json ] && [ ! -f src/Core/Autoloader.php ] && [ ! -d vendor ]; then
     echo "vendor/ missing - running composer install..."
     composer install --no-interaction --no-progress --optimize-autoloader
 fi
