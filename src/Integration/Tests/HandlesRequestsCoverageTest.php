@@ -139,4 +139,27 @@ echo "Testing Direct 404 Fallback...\n";
 $res5 = exec_mock_request('GET', '/nonexistent-static-file-handles-test.xyz', 'handles-test.zero');
 assert_test(str_contains($res5['stdout'], 'Not found'), "Returns 'Not found' for completely unregistered static assets");
 
+// 6. Branch: Homepage "/" with only a draft-status page registered must not leak its content to guests
+echo "Testing Homepage '/' with a draft homepage is not exposed to anonymous visitors...\n";
+
+$dbSetup6 = '
+$siteId = Security::uuidv7();
+DB::query("
+    INSERT INTO sites (id, name, domain, theme, enabled_modules, created_at, updated_at)
+    VALUES (?, \'Handles Test Site\', \'handles-test.zero\', \'default\', \'[\"security\"]\', NOW(), NOW())
+", [$siteId]);
+
+$pageId = Security::uuidv7();
+DB::query("
+    INSERT INTO pages (id, site_id, title, slug, content, status, type, created_at, updated_at)
+    VALUES (?, ?, \'Secret Draft Homepage\', \'home-handles-test\', \'[]\', \'draft\', \'post\', NOW(), NOW())
+", [$pageId, $siteId]);
+
+DB::query("UPDATE sites SET homepage_id = ? WHERE id = ?", [$pageId, $siteId]);
+';
+
+$res6 = exec_mock_request('GET', '/', 'handles-test.zero', $dbSetup6);
+assert_test(!str_contains($res6['stdout'], 'Secret Draft Homepage'), "Guest never sees a draft homepage's content");
+assert_test(str_contains($res6['stdout'], 'Homepage not found'), "Falls back to 'Homepage not found' when the only candidate homepage is a draft");
+
 echo "HandlesRequests subprocess coverage tests completed successfully!\n";

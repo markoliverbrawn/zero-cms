@@ -103,32 +103,51 @@ trait BootstrapsApp
         if (self::$currentSite !== null) {
             $siteId = self::$currentSite->id ?? '';
             $homepageId = self::$currentSite->homepage_id ?? '';
-            
+
+            // Mirror HasSlug::findBySlug()'s guest restriction here: unlike that lookup, these
+            // homepage fallbacks go through Page::find()/where() (which apply no status filter
+            // at all), so a draft page picked by any of them would otherwise render unfiltered
+            // at "/" for anonymous visitors regardless of its published state.
+            $isAdmin = isset($_SESSION['user_id']);
+            $isVisibleHomepage = function ($page) use ($isAdmin) {
+                return $page !== null && ($isAdmin || ($page->status ?? null) === 'published');
+            };
+
             $homePage = null;
             if (!empty($homepageId)) {
-                $homePage = Page::find($homepageId);
+                $candidate = Page::find($homepageId);
+                if ($isVisibleHomepage($candidate)) {
+                    $homePage = $candidate;
+                }
             }
-            
+
             if ($homePage === null) {
                 // Fallback: Query pages table for an empty slug ("") homepage under active site
                 $pages = Page::where('slug', '');
-                if (!empty($pages)) {
-                    $homePage = $pages[0];
+                foreach ($pages as $candidate) {
+                    if ($isVisibleHomepage($candidate)) {
+                        $homePage = $candidate;
+                        break;
+                    }
                 }
             }
-            
+
             if ($homePage === null) {
                 // Fallback: Query pages table for "home" slug page under active site
                 $pages = Page::where('slug', 'home');
-                if (!empty($pages)) {
-                    $homePage = $pages[0];
+                foreach ($pages as $candidate) {
+                    if ($isVisibleHomepage($candidate)) {
+                        $homePage = $candidate;
+                        break;
+                    }
                 }
             }
-            
+
             if ($homePage === null) {
                 // Fallback 3: Query pages table for the first page under active site (by precedence, then created_at)
                 try {
-                    $sql = "SELECT id FROM pages WHERE site_id = ? AND deleted_at IS NULL ORDER BY precedence ASC, created_at ASC LIMIT 1";
+                    $statusFilter = $isAdmin ? '' : "AND status = 'published' ";
+                    $sql = "SELECT id FROM pages WHERE site_id = ? AND deleted_at IS NULL {$statusFilter}ORDER BY precedence ASC, created_at ASC LIMIT 1";
                     $stmt = DB::query($sql, [$siteId]);
                     $row = $stmt->fetch();
                     if ($row) {
