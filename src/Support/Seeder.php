@@ -263,6 +263,23 @@ class Seeder
                 }
             }
         });
+
+        // 8. Post-Run Hook: Admin Email Override from .env
+        self::registerPostRunHook(function () {
+            $adminEmail = Env::get('ADMIN_EMAIL');
+            if (!empty($adminEmail)) {
+                echo "Applying custom ADMIN_EMAIL override from .env...\n";
+                try {
+                    DB::query(
+                        "UPDATE users SET email = ? WHERE (role = 'super_admin' OR username = 'admin') AND deleted_at IS NULL",
+                        [$adminEmail]
+                    );
+                    echo "      [Seeder-Hook] Successfully updated administrator account email to ADMIN_EMAIL from .env!\n";
+                } catch (\Exception $e) {
+                    echo "      [Seeder-Hook-Warning] Failed to apply ADMIN_EMAIL override: " . $e->getMessage() . "\n";
+                }
+            }
+        });
     }
 
     /**
