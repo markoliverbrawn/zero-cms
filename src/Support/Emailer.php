@@ -143,16 +143,39 @@ class Emailer
             return trim($response);
         };
 
+        // Helper to reject a response whose status code isn't one of the codes the SMTP spec
+        // allows for that step, logging the server's own text (e.g. Bird/SparkPost's
+        // "535 5.7.8 Authentication credentials invalid") instead of silently pressing on -- an
+        // unchecked handshake previously reported send() as successful even when every subsequent
+        // command was rejected as a consequence of an earlier failure.
+        $requireCode = function (string $response, array $expectedCodes, string $step) use ($host, $port, $socket): bool {
+            if (\in_array(\substr($response, 0, 3), $expectedCodes, true)) {
+                return true;
+            }
+            error_log("Emailer SMTP {$step} rejected by {$host}:{$port} - {$response}");
+            \fclose($socket);
+            return false;
+        };
+
         // Standard SMTP commands handshake protocol
         try {
-            $getResponse($socket); // Read server greeting
+            $response = $getResponse($socket); // Read server greeting
+            if (!$requireCode($response, ['220'], 'greeting')) {
+                return false;
+            }
 
             fputs($socket, "EHLO localhost\r\n");
-            $getResponse($socket);
+            $response = $getResponse($socket);
+            if (!$requireCode($response, ['250'], 'EHLO')) {
+                return false;
+            }
 
             if ($secure === 'tls') {
                 fputs($socket, "STARTTLS\r\n");
-                $getResponse($socket);
+                $response = $getResponse($socket);
+                if (!$requireCode($response, ['220'], 'STARTTLS')) {
+                    return false;
+                }
                 if (!\stream_socket_enable_crypto($socket, true, STREAM_CRYPTO_METHOD_TLS_CLIENT)) {
                     error_log("Emailer STARTTLS negotiation failed for {$host}:{$port}");
                     \fclose($socket);
@@ -161,26 +184,47 @@ class Emailer
                 // SMTP requires re-issuing EHLO after the TLS upgrade -- the prior plaintext
                 // EHLO's capability list is discarded per RFC 3207.
                 fputs($socket, "EHLO localhost\r\n");
-                $getResponse($socket);
+                $response = $getResponse($socket);
+                if (!$requireCode($response, ['250'], 'post-STARTTLS EHLO')) {
+                    return false;
+                }
             }
 
             if ($user !== '') {
                 fputs($socket, "AUTH LOGIN\r\n");
-                $getResponse($socket);
+                $response = $getResponse($socket);
+                if (!$requireCode($response, ['334'], 'AUTH LOGIN')) {
+                    return false;
+                }
                 fputs($socket, \base64_encode($user) . "\r\n");
-                $getResponse($socket);
+                $response = $getResponse($socket);
+                if (!$requireCode($response, ['334'], 'AUTH username')) {
+                    return false;
+                }
                 fputs($socket, \base64_encode($pass) . "\r\n");
-                $getResponse($socket);
+                $response = $getResponse($socket);
+                if (!$requireCode($response, ['235'], 'AUTH password')) {
+                    return false;
+                }
             }
 
             fputs($socket, "MAIL FROM: <{$fromEmail}>\r\n");
-            $getResponse($socket);
+            $response = $getResponse($socket);
+            if (!$requireCode($response, ['250'], 'MAIL FROM')) {
+                return false;
+            }
 
             fputs($socket, "RCPT TO: <{$to}>\r\n");
-            $getResponse($socket);
+            $response = $getResponse($socket);
+            if (!$requireCode($response, ['250', '251'], 'RCPT TO')) {
+                return false;
+            }
 
             fputs($socket, "DATA\r\n");
-            $getResponse($socket);
+            $response = $getResponse($socket);
+            if (!$requireCode($response, ['354'], 'DATA')) {
+                return false;
+            }
 
             // Construct secure, standard-compliant MIME headers & payload
             $boundary = "bnd_" . \md5(\uniqid((string)\time()));
@@ -206,10 +250,13 @@ class Emailer
             $message .= $htmlBody . "\r\n\r\n";
             $message .= "--{$boundary}--\r\n";
 
-            \fputs($socket, $message . "\r\n.\r\n");
-            $getResponse($socket);
+            fputs($socket, $message . "\r\n.\r\n");
+            $response = $getResponse($socket);
+            if (!$requireCode($response, ['250'], 'message body')) {
+                return false;
+            }
 
-            \fputs($socket, "QUIT\r\n");
+            fputs($socket, "QUIT\r\n");
             $getResponse($socket);
 
             \fclose($socket);
