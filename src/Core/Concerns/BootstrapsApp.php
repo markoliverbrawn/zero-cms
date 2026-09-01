@@ -14,6 +14,7 @@ namespace Zero\Core\Concerns;
 use Zero\Core\Env;
 use Zero\Database\DB;
 use Zero\Models\Page;
+use Zero\Support\Emailer;
 use Zero\Support\Security;
 
 /**
@@ -95,6 +96,12 @@ trait BootstrapsApp
         }
 
         self::bootstrapResolveSiteOrFallback($host);
+
+        // Redirect every email this tenant sends to its configured override address (test mode /
+        // demo sites), if one is set. bootstrapFetchSiteAndUser() assigns $currentSite directly
+        // rather than through setCurrentSite(), so this has to be applied here too rather than
+        // relying solely on that setter's own copy of this same wiring.
+        Emailer::setForceRecipient(self::$currentSite->email_override ?? null);
 
         // Pre-load the active site's homepage page record dynamically during app bootstrapping
         if (self::$currentSite !== null) {

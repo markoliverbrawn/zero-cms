@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Zero\Core\Concerns;
 
 use Zero\Database\DB;
+use Zero\Support\Emailer;
 
 /**
  * Trait ManagesCurrentContext
@@ -120,6 +121,11 @@ trait ManagesCurrentContext
         self::$currentSite = $site;
         // Reset DB Column Cache and clear Identity Map to avoid cross-tenant caching pollution
         DB::clearColumnCache();
+        // Keep Emailer's forced-recipient redirect (test mode / demo sites) in sync with whichever
+        // tenant is now active -- Queue/Scheduler jobs swap the site context per-job via this
+        // setter (see QueueManager/Scheduler), so a job for a demo site must redirect its mail
+        // even though no HTTP bootstrap ran to apply this for it.
+        Emailer::setForceRecipient($site->email_override ?? null);
     }
 
     /**

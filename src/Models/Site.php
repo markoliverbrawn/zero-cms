@@ -40,7 +40,7 @@ class Site implements Model
 
     protected static $tableName = 'sites';
     protected static $modelType = null;
-    protected static $fillable = ['name', 'domain', 'theme', 'enabled_modules', 'timezone', 'default_language', 'homepage_id', 'expires_at', 'settings'];
+    protected static $fillable = ['name', 'domain', 'theme', 'enabled_modules', 'timezone', 'default_language', 'homepage_id', 'expires_at', 'settings', 'email_override'];
     protected static $systemModules = ['admin', 'queue', 'security'];
     protected static array $cascadeDeletes = [
         User::class => 'site_id',
@@ -60,6 +60,7 @@ class Site implements Model
     public $homepage_id;
     public $expires_at;
     public $settings;
+    public $email_override;
     public $created_at;
     public $updated_at;
     public $deleted_at;
@@ -255,6 +256,17 @@ class Site implements Model
                 'type' => 'select',
                 'label' => 'Site Homepage',
                 'options' => self::getHomepageOptions(),
+                'editable' => true,
+                'listDisplay' => false,
+                'required' => false
+            ],
+            // Editing a site record at all already requires the 'sites.manage' permission (see
+            // Zero\Support\Permissions), granted only to super_admin -- neither 'admin' nor
+            // 'editor' can reach this field via ModelController/ModelApiController, so no
+            // additional field-level check is needed to keep this super_admin-only.
+            'email_override' => [
+                'type' => 'email',
+                'label' => 'Redirect All Site Email To (Test Mode)',
                 'editable' => true,
                 'listDisplay' => false,
                 'required' => false

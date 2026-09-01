@@ -6,6 +6,7 @@ namespace Zero\Support {
     class MockSmtpState {
         public static $commandCount = 0;
         public static $isOffline = false;
+        public static $writtenData = '';
     }
 
     function fsockopen($host, $port, &$errno, &$errstr, $timeout) {
@@ -33,6 +34,7 @@ namespace Zero\Support {
 
     function fputs($handle, $string) {
         MockSmtpState::$commandCount++;
+        MockSmtpState::$writtenData .= $string;
         return strlen($string);
     }
 
@@ -98,9 +100,40 @@ namespace {
     MockSmtpState::$isOffline = true;
     $successFail = Emailer::send($to, $subject, $htmlBody);
     assert_test($successFail === false, "Emailer handles connection failure gracefully and returns false");
+    MockSmtpState::$isOffline = false;
+
+    // 5. Verify setForceRecipient() redirects the real SMTP envelope, for test-mode/demo-site use
+    echo "Testing forced-recipient redirect (test mode / demo sites)...\n";
+    MockSmtpState::$commandCount = 0;
+    MockSmtpState::$writtenData = '';
+    $overrideAddress = 'redirect-target@zero.cms';
+    Emailer::setForceRecipient($overrideAddress);
+    assert_test(Emailer::getForceRecipient() === $overrideAddress, "getForceRecipient() reflects the address just set");
+
+    $successOverride = Emailer::send($to, $subject, $htmlBody);
+    assert_test($successOverride === true, "Emailer::send() still succeeds while a forced recipient is set");
+    assert_test(str_contains(MockSmtpState::$writtenData, "RCPT TO: <{$overrideAddress}>"), "RCPT TO is sent to the forced recipient, not the original address");
+    assert_test(str_contains(MockSmtpState::$writtenData, "To: <{$overrideAddress}>"), "The To: header carries the forced recipient");
+    assert_test(str_contains(MockSmtpState::$writtenData, "X-Original-To: <{$to}>"), "X-Original-To preserves the original intended recipient for traceability");
+
+    // Tiebreak on id (a time-ordered UUIDv7, see Logger::log()) rather than created_at alone --
+    // this test's earlier sends can land within the same second-granularity NOW() timestamp.
+    $overrideLog = DB::query("SELECT * FROM audit_logs WHERE action = 'email_sent' ORDER BY created_at DESC, id DESC LIMIT 1")->fetch();
+    $overrideMeta = json_decode($overrideLog['meta'], true);
+    assert_test($overrideMeta['recipient'] === $expectedMaskedRecipient, "Audit log still attributes the send to the original recipient, not the override address");
+    assert_test($overrideMeta['redirected'] === true, "Audit log meta flags the send as redirected");
+
+    // setForceRecipient(null) must fully restore normal, unredirected delivery
+    Emailer::setForceRecipient(null);
+    assert_test(Emailer::getForceRecipient() === null, "getForceRecipient() returns null after clearing the override");
+    MockSmtpState::$commandCount = 0;
+    MockSmtpState::$writtenData = '';
+    Emailer::send($to, $subject, $htmlBody);
+    assert_test(str_contains(MockSmtpState::$writtenData, "RCPT TO: <{$to}>"), "Clearing the forced recipient restores normal delivery to the real address");
+    assert_test(!str_contains(MockSmtpState::$writtenData, "X-Original-To"), "No X-Original-To header is added when nothing is being redirected");
 
     // Clean up
-    DB::query("DELETE FROM audit_logs WHERE id = ?", [$log['id']]);
+    DB::query("DELETE FROM audit_logs WHERE id IN (?, ?)", [$log['id'], $overrideLog['id']]);
     DB::query("DELETE FROM sites WHERE id = ?", [$siteId]);
 
     echo "Emailer support tests completed successfully!\n";

@@ -36,14 +36,14 @@ trait ResolvesTenantContext
             $sql = "
                 SELECT
                     'site' AS record_type, id, name, domain, theme, enabled_modules,
-                    homepage_id, timezone, default_language, settings,
+                    homepage_id, timezone, default_language, settings, email_override,
                     NULL AS email, NULL AS password_hash, NULL AS role, NULL AS site_id, NULL AS preferences,
                     created_at, updated_at
                 FROM sites WHERE domain = ?
                 UNION ALL
                 SELECT
                     'user' AS record_type, id, username AS name, NULL AS domain, NULL AS theme, NULL AS enabled_modules,
-                    NULL AS homepage_id, NULL AS timezone, NULL AS default_language, NULL AS settings,
+                    NULL AS homepage_id, NULL AS timezone, NULL AS default_language, NULL AS settings, NULL AS email_override,
                     email, password_hash, role, site_id, preferences,
                     created_at, updated_at
                 FROM users WHERE id = ?
@@ -53,7 +53,7 @@ trait ResolvesTenantContext
             $sql = "
                 SELECT
                     'site' AS record_type, id, name, domain, theme, enabled_modules,
-                    homepage_id, timezone, default_language, settings,
+                    homepage_id, timezone, default_language, settings, email_override,
                     NULL AS email, NULL AS password_hash, NULL AS role, NULL AS site_id, NULL AS preferences,
                     created_at, updated_at
                 FROM sites WHERE domain = ?
@@ -80,6 +80,7 @@ trait ResolvesTenantContext
                         'timezone' => $row['timezone'] ?? 'UTC',
                         'default_language' => $row['default_language'] ?? 'en',
                         'settings' => $row['settings'] ?? null,
+                        'email_override' => $row['email_override'] ?? null,
                         'created_at' => $row['created_at'],
                         'updated_at' => $row['updated_at']
                     ];

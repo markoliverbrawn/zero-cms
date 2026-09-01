@@ -29,6 +29,31 @@ class Emailer
 {
     protected static $testMode = false;
     protected static $testModeSentEmails = [];
+    protected static $forceRecipient = null;
+
+    /**
+     * Redirect every real send() call to this address instead of its intended recipient, for the
+     * lifetime of the current tenant context. Set from the active site's `email_override` column
+     * (see BootstrapsApp::bootstrap() and ManagesCurrentContext::setCurrentSite()) so demo sites
+     * and any site deliberately put in a "test mode" can never actually email a real address,
+     * regardless of which controller or job dispatches the send. Has no effect on test-mode's own
+     * in-memory capture (send() checks that first), so automated test assertions still see the
+     * original address.
+     *
+     * @return void
+     */
+    public static function setForceRecipient(?string $email): void
+    {
+        self::$forceRecipient = ($email !== null && $email !== '') ? $email : null;
+    }
+
+    /**
+     * @return string|null
+     */
+    public static function getForceRecipient(): ?string
+    {
+        return self::$forceRecipient;
+    }
 
     /**
      * Enable test mode: send() short-circuits before opening any real SMTP connection, recording
@@ -108,6 +133,14 @@ class Emailer
                 'text_body' => $textBody
             ];
             return true;
+        }
+
+        // Redirect to the active tenant's forced recipient, if one is set -- the original address
+        // is preserved for the X-Original-To header below so an overridden message still shows who
+        // it would really have gone to.
+        $originalTo = $to;
+        if (self::$forceRecipient !== null) {
+            $to = self::$forceRecipient;
         }
 
         // Read active SMTP configurations from environment
@@ -237,6 +270,9 @@ class Emailer
                 "Date: " . \date('r'),
                 "X-Mailer: Zero-Dependency PHP Mailer"
             ];
+            if ($originalTo !== $to) {
+                $headers[] = "X-Original-To: <{$originalTo}>";
+            }
 
             $message = \implode("\r\n", $headers) . "\r\n\r\n";
             $message .= "--{$boundary}\r\n";
@@ -266,8 +302,11 @@ class Emailer
                 $recipientUserId = null;
                 $objectType = 'emailer';
                 try {
-                    // Try to resolve the recipient user's ID if registered in our database!
-                    $stmt = DB::query("SELECT id FROM users WHERE email = ? LIMIT 1", [$to]);
+                    // Try to resolve the recipient user's ID if registered in our database! Always
+                    // resolved against the original, intended recipient -- not the forced-override
+                    // delivery address -- so a redirected site's audit trail still traces back to
+                    // the real user/action instead of every entry collapsing onto one address.
+                    $stmt = DB::query("SELECT id FROM users WHERE email = ? LIMIT 1", [$originalTo]);
                     $recipientUser = $stmt->fetch();
                     if ($recipientUser) {
                         $recipientUserId = $recipientUser['id'] ?? null;
@@ -278,7 +317,7 @@ class Emailer
                 }
 
                 $userId = $_SESSION['user_id'] ?? null;
-                $maskedRecipient = self::maskEmail($to);
+                $maskedRecipient = self::maskEmail($originalTo);
                 Logger::log(
                     $userId,
                     'email_sent',
@@ -286,7 +325,8 @@ class Emailer
                     $recipientUserId,
                     [
                         'recipient' => $maskedRecipient,
-                        'subject' => $subject
+                        'subject' => $subject,
+                        'redirected' => $originalTo !== $to
                     ]
                 );
             } catch (\Exception $e) {
