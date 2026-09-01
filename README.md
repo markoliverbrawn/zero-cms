@@ -47,19 +47,19 @@ Zero CMS routes and resolves multi-tenant contexts in a single, highly optimized
 ```
 
 ### Single-Query UNION ALL Bootstrapping
-On bootstrap, Zero CMS resolves the active tenant Site details (via `HTTP_HOST`) and the logged-in User profile (via session `user_id`) in a **single-query database roundtrip** using a consolidated `UNION ALL` query, avoiding redundant TCP connection overhead. `App.php` is a thin shell composed of focused traits under `src/Core/Concerns/`; the query itself lives in `ResolvesTenantContext::bootstrapFetchSiteAndUser()` (inside `src/Core/Concerns/ResolvesTenantContext.php`):
+On bootstrap, Zero CMS resolves the active tenant Site details (via `Security::resolveTrustedHost()`, which prefers a verified `X-Forwarded-Host` over `HTTP_HOST` when a reverse proxy sits in front of the origin — see Section 5) and the logged-in User profile (via session `user_id`) in a **single-query database roundtrip** using a consolidated `UNION ALL` query, avoiding redundant TCP connection overhead. `App.php` is a thin shell composed of focused traits under `src/Core/Concerns/`; the query itself lives in `ResolvesTenantContext::bootstrapFetchSiteAndUser()` (inside `src/Core/Concerns/ResolvesTenantContext.php`):
 
 ```sql
 SELECT
     'site' AS record_type, id, name, domain, theme, enabled_modules,
-    homepage_id, timezone, default_language,
+    homepage_id, timezone, default_language, settings,
     NULL AS email, NULL AS password_hash, NULL AS role, NULL AS site_id, NULL AS preferences,
     created_at, updated_at
 FROM sites WHERE domain = ?
 UNION ALL
 SELECT
     'user' AS record_type, id, username AS name, NULL AS domain, NULL AS theme, NULL AS enabled_modules,
-    NULL AS homepage_id, NULL AS timezone, NULL AS default_language,
+    NULL AS homepage_id, NULL AS timezone, NULL AS default_language, NULL AS settings,
     email, password_hash, role, site_id, preferences,
     created_at, updated_at
 FROM users WHERE id = ?
@@ -75,11 +75,11 @@ Zero CMS is divided into fully decoupled, modular plug-ins under `src/Modules/`:
    Pages are stored in the database as serialized JSON arrays of content blocks (e.g. Accordions, Galleries, Testimonials, Sub-Pages). Adding a block admin view automatically registers editing schemas generically in the back-office, while custom blocks render on the frontend cascadingly.
 2. **Form Builder & archival Submissions (`FormBuilder`):**
    Enables designers to construct customized forms inside the page builder dynamically. Submissions are validated through `Validator` and archived securely as dynamic JSON structures, preserving exact submission history even if the source page or form is later deleted.
-4. **Platform Security Hardening & AI Auditing (`Security`):**
-   Integrates globally enforced Content Security Policy (CSP), defensive HTTP shielding, secure forced password updates, security audit logging, and automated telemetry threat-modeling with Google's generative AI.
-5. **Background Jobs & Task Scheduler (`Queue`):**
+3. **Platform Security Hardening & AI Auditing (`Security`):**
+   Integrates globally enforced Content Security Policy (CSP), defensive HTTP shielding, secure forced password updates, security audit logging, automated OSV-based CVE comparative auditing against Laravel/Symfony/WordPress (`CveFetcherService`), and AI-driven threat-modeling narrative generation with Google's generative AI (`AiService`).
+4. **Background Jobs & Task Scheduler (`Queue`):**
    Dispatches and processes queued jobs (e.g. `PurgeOldLogsJob`) via `QueueManager` and a cron-driven `Scheduler`, run out-of-band through the `bin/queue-runner` and `bin/scheduler` CLI entry points rather than inline on the request path.
-6. **Site Search (`Search`):**
+5. **Site Search (`Search`):**
    Decoupled search-driver architecture (`SearchDriverInterface`) with a `DatabaseSearchDriver` implementation, exposed via `SearchController`/`SearchService` and a `Searchable` model trait.
 
 ---
@@ -324,11 +324,11 @@ Zero CMS is engineered under a strict, zero-trust security blueprint. Below is t
 
 | Threat Category | Specific System Risk | Direct Source Code Mitigation & Remediation |
 | :--- | :--- | :--- |
-| **S**poofing | **CSRF & Session Hijacking:** Attackers executing forged cross-site POST/PUT/DELETE requests or hijacking admin authentication maps. | * Cryptographic CSRF token generation and validation verified natively via `Zero\Support\Security::csrfToken()` and `Zero\Support\Security::csrfVerify()` (inside `src/Support/Security.php`).<br>* Globally enforced on all state-changing requests by `Zero\Http\Middleware\CsrfMiddleware` (inside `src/Http/Middleware/CsrfMiddleware.php`).<br>* Existing sessions and cached tokens are cleanly wiped on GET error fallbacks inside `LoginController::handle()` (inside `src/Modules/Admin/Controllers/LoginController.php`) to prevent cross-site leaks. |
+| **S**poofing | **CSRF & Session Hijacking:** Attackers executing forged cross-site POST/PUT/DELETE requests or hijacking admin authentication maps. | * Cryptographic CSRF token generation and validation verified natively via `Zero\Support\Security::csrfToken()` and `Zero\Support\Security::csrfVerify()` (inside `src/Support/Security.php`), with a 10-minute sliding-expiry window — `csrfVerify()` refreshes the token's timestamp on every successful check, so an actively-used session's token never dies mid-session.<br>* Globally enforced on all state-changing requests by `Zero\Http\Middleware\CsrfMiddleware` (inside `src/Http/Middleware/CsrfMiddleware.php`).<br>* Existing sessions and cached tokens are cleanly wiped on GET error fallbacks inside `LoginController::handle()` (inside `src/Modules/Admin/Controllers/LoginController.php`) to prevent cross-site leaks.<br>* **Host-Header/IP Spoofing:** `X-Forwarded-Host` and `CF-Connecting-IP` are only trusted from a verified reverse proxy. `Zero\Support\Security::isTrustedProxyRequest()` gates both behind an opt-in `TRUSTED_PROXY_SECRET` env var + `X-Proxy-Secret` header (constant-time `hash_equals` check); `Security::resolveTrustedHost()` and `Security::getClientIp()` (inside `src/Support/Security.php`) are the only call sites permitted to honor those headers, used consistently across tenant resolution (`BootstrapsApp`), outbound email links (`ForgotController`, `FrontendForgotController`, `SendWelcomeController`), and rate-limit/audit-log IP attribution — otherwise an unverified forged header could redirect tenant resolution to an arbitrary domain or inject a phishing link into a legitimate transactional email. |
 | **T**ampering | **SQL Injection (SQLi), Cross-Site Scripting (XSS), & Parameter Tampering:** Injecting malformed query variables, persistent script blocks, or un-declared posted form fields. | * **SQLi Prevention:** Raw prepared statement parameter bindings enforced globally via the central database transceiver `Zero\Database\DB::query()` (inside `src/Database/DB.php`), guaranteeing 100% prepared statement execution. Identifiers that can't be parameter-bound (table/column names interpolated into cascade-delete SQL) are constrained to `^[a-zA-Z0-9_]+$` before use in `ModelApiController` (inside `src/Modules/Admin/Controllers/Api/ModelApiController.php`).<br>* **XSS Mitigation:** Public payloads cleaned recursively on boot via `Zero\Support\Security::sanitizeInput()` and advanced interactive block text rendering validated by the raw HTML sanitizer `Zero\Support\Security::sanitizeHtml()` (inside `src/Support/Security.php`), stripping malformed characters, dangerous script tags, and `javascript:` / `data:` protocols.<br>* **Parameter Tampering Prevention:** Form and model data verified against declarative schemas compiled by the core `Zero\Core\Validator` engine (inside `src/Core/Validator.php`), which strictly filters out non-declared fields using `$validator->getValidatedData()` before database writes. |
 | **R**epudiation | **Audit Trail Failures:** Privileged administrators or rogue users executing state-changing operations (e.g. deleting pages, modifying variant stock) without persistent, un-mutilated audit logs. | * Dynamic, non-repudiable audit logging handled globally by `Zero\Support\Logger::log()` (inside `src/Support/Logger.php`), which records the triggering user's UUID, the specific action category, the targeted table, the target record ID, and serializes metadata (including the caller's IP address) as structured JSON directly into the persistent `audit_logs` database table. |
 | **I**nformation Disclosure | **Multi-Tenant Data Leaks:** Rogue site tenants or external crawlers attempting to query, modify, or leak sensitive records (categories, pages, media, orders) belonging to other brands. | * Zero-trust multi-tenant isolation enforced natively by the ActiveRecord trait `Zero\Models\Traits\IsModel` (inside `src/Models/Traits/IsModel.php`).<br>* All read, save, and soft-delete statements (specifically `IsModel::all()` and `IsModel::save()`) automatically append active tenant scoping filters (`site_id = ?` based on `App::getCurrentSiteId()`), completely blocking cross-tenant boundaries on the database level. |
-| **D**enial of Service | **Botnet Portal Flooding & Login Brute-Forcing:** Automated scripts flooding contact gateways with spam, brute-forcing back-office logins, or exhausting DB connections. | * **Spam Mitigation:** Forms utilize zero-friction hidden input fields named `website_url` styled with invisible classes (e.g. `.website-field-wrapper` inside `assets/css/blocks/form_builder.css`). Automated spambots are completely fooled into populating this decoy field. If populated, `FormApiController` (inside `src/Modules/FormBuilder/Controllers/FormApiController.php`) silently drops the submission without DB writes.<br>* **Brute-Force Throttling:** Strict rate-limiting enforced globally via `Zero\Http\Middleware\RateLimitMiddleware` (inside `src/Http/Middleware/RateLimitMiddleware.php`) using custom sliding-window limits and a `429` + `Retry-After` response. Failed admin logins are further throttled with an exact 1-second `sleep(1)` delay inside `LoginController` (inside `src/Modules/Admin/Controllers/LoginController.php`); the password-reset flow in `ForgotController` (inside `src/Modules/Admin/Controllers/ForgotController.php`) uses a lighter 250ms `usleep(250000)` delay to reduce (not eliminate) timing analysis leakage. |
+| **D**enial of Service | **Botnet Portal Flooding & Login Brute-Forcing:** Automated scripts flooding contact gateways with spam, brute-forcing back-office logins, or exhausting DB connections. | * **Spam Mitigation:** Forms utilize zero-friction hidden input fields named `website_url` styled with invisible classes (e.g. `.website-field-wrapper` inside `assets/css/blocks/form_builder.css`). Automated spambots are completely fooled into populating this decoy field. If populated, `FormApiController` (inside `src/Modules/FormBuilder/Controllers/FormApiController.php`) silently drops the submission without DB writes.<br>* **Brute-Force Throttling:** Strict rate-limiting enforced globally via `Zero\Http\Middleware\RateLimitMiddleware` (inside `src/Http/Middleware/RateLimitMiddleware.php`) using custom sliding-window limits and a `429` + `Retry-After` response. Failed admin logins are further throttled with an exact 1-second `sleep(1)` delay inside `LoginController` (inside `src/Modules/Admin/Controllers/LoginController.php`); the password-reset flow in `ForgotController` (inside `src/Modules/Admin/Controllers/ForgotController.php`) uses a lighter 250ms `usleep(250000)` delay to reduce (not eliminate) timing analysis leakage. Per-IP throttling (`Security::checkAuthRateLimit()`) and its `audit_logs` trail both key on `Security::getClientIp()` rather than raw `REMOTE_ADDR`, so attribution stays meaningful behind a verified trusted proxy instead of collapsing every visitor onto the proxy's own address. |
 | **E**levation of Privilege | **Administrative Role Bypass:** Normal editors or guest visitor sessions attempting to execute restricted administrative commands or modify other user profiles. | * Absolute boundary protection enforced via a dynamic declarative role verification pipeline (`App::applyRoleMiddleware('super_admin')` / `App::applyAuthMiddleware()`), evaluated natively inside individual back-office controllers (such as `ModelApiController.php` inside `src/Modules/Admin/Controllers/Api/ModelApiController.php`, which extends the shared `AdminApiControllerBase`) to block non-super_admin sessions before data execution. |
 
 ---
@@ -380,12 +380,15 @@ export RUN_SEED=false                       # DESTRUCTIVE -- wipes all data and 
 ```
 
 `setup.sh` runs `cloud_run_setup.sh` → `cloud_storage_setup.sh` → `cloud_sql_setup.sh` →
-`deploy_app.sh` → `cloud_scheduler_setup.sh` in order; every step is idempotent, so re-running the
+`deploy_app.sh` → `cloud_scheduler_setup.sh` → `cloud_domain_mapping_setup.sh` in order (the last
+step is a no-op unless `DOMAIN_MAPPINGS` is set); every step is idempotent, so re-running the
 whole pipeline against an existing deployment updates it in place. To ship a code-only change
 without touching infrastructure, run `./deployments/gcp/deploy_app.sh` alone. Generated
 credentials/tokens (`DB_PASS`, `ADMIN_PASS`, `QUEUE_TRIGGER_TOKEN`, `SCHEDULER_TRIGGER_TOKEN`)
 persist across runs in `deployments/gcp/.env.gcp` (gitignored, mode `600`) so redeploys don't drift.
 See `deployments/gcp/common.sh` for every flag's default (region, resource names, image tag, etc.).
+If you want `TRUSTED_PROXY_SECRET` (see Section 5) honored on a GCP deployment, it must be set on
+the Cloud Run service — `deployments/gcp/entrypoint.sh`'s runtime env whitelist already includes it.
 
 ### Deploying a host project instead of Core itself
 
