@@ -180,15 +180,15 @@ class GoogleCloudStorageDriver implements StorageDriver
         if (empty($keyPath) || !\file_exists($keyPath)) {
             // Fallback: Fetch JWT-less OAuth2 Access Token from the Google Metadata Server natively on Cloud Run / GCP!
             $metadataUrl = 'http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token';
-            $ch = curl_init($metadataUrl);
-            curl_setopt_array($ch, [
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_HTTPHEADER => ['Metadata-Flavor: Google'],
-                CURLOPT_TIMEOUT => 2
-            ]);
-            $response = curl_exec($ch);
-            $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-            curl_close($ch);
+            [$response, $status] = $this->curlWithRetry(function () use ($metadataUrl) {
+                $ch = curl_init($metadataUrl);
+                curl_setopt_array($ch, [
+                    CURLOPT_RETURNTRANSFER => true,
+                    CURLOPT_HTTPHEADER => ['Metadata-Flavor: Google'],
+                    CURLOPT_TIMEOUT => 2
+                ]);
+                return $ch;
+            });
 
             if ($status === 200 && !empty($response)) {
                 $data = \json_decode($response, true);
@@ -464,14 +464,13 @@ class GoogleCloudStorageDriver implements StorageDriver
     }
 
     /**
-     * Write raw text content to GCS.
-     *
-     * @param string $path The destination path.
-     * @param string $content The text content.
-     * @return bool
-     */
-    /**
      * Write raw text or binary content to GCS with proper Content-Type.
+     *
+     * Retries transient failures (HTTP 429, 5xx, or a failed transfer) with exponential backoff --
+     * a single overloaded bucket or momentary network blip previously surfaced as a bare `false`,
+     * which callers treat as fatal (e.g. aborting an entire multi-tenant reseed on what was really
+     * a one-off hiccup). Non-transient failures (any other 4xx) fail immediately since a retry
+     * can't fix a bad request/auth/permission error.
      *
      * @param string $path The destination path.
      * @param string $content The text or binary content.
@@ -504,22 +503,85 @@ class GoogleCloudStorageDriver implements StorageDriver
         $mime = $mimeTypes[$ext] ?? 'text/plain';
 
         $url = "https://storage.googleapis.com/upload/storage/v1/b/{$this->bucketName}/o?uploadType=media{$aclParam}&name=" . \urlencode($cleanPath);
-        $ch = curl_init($url);
-        curl_setopt_array($ch, [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_CUSTOMREQUEST => 'POST',
-            CURLOPT_POSTFIELDS => $content,
-            CURLOPT_HTTPHEADER => [
-                "Authorization: Bearer {$token}",
-                "Content-Type: {$mime}",
-                "Content-Length: " . \strlen($content)
-            ]
-        ]);
+        [$response, $status, $curlError] = $this->curlWithRetry(function () use ($url, $token, $mime, $content) {
+            $ch = curl_init($url);
+            curl_setopt_array($ch, [
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_CUSTOMREQUEST => 'POST',
+                CURLOPT_POSTFIELDS => $content,
+                CURLOPT_HTTPHEADER => [
+                    "Authorization: Bearer {$token}",
+                    "Content-Type: {$mime}",
+                    "Content-Length: " . \strlen($content)
+                ]
+            ]);
+            return $ch;
+        });
 
-        curl_exec($ch);
-        $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
+        if ($status === 200) {
+            return true;
+        }
 
-        return $status === 200;
+        \error_log("GoogleCloudStorageDriver::write() failed for '{$cleanPath}': " . self::describeGcsFailure($status, $response, $curlError));
+        return false;
+    }
+
+    /**
+     * Execute a curl request with transient-failure retry: HTTP 429/5xx, or a failed transfer
+     * (curl_exec() returning false), are retried up to $maxAttempts total with exponential
+     * backoff; any other response (including any other 4xx) returns immediately on the first
+     * attempt, since retrying a malformed/unauthorized request can't change the outcome.
+     *
+     * @param callable $buildRequest () => resource|\CurlHandle  Builds and returns a fresh,
+     *                  fully-configured curl handle for one attempt -- a new handle each time,
+     *                  since a handle that already ran can't be safely re-executed.
+     * @param int $maxAttempts Total attempts including the first, before giving up.
+     * @param int $baseDelayMs Delay before the first retry; doubles on each subsequent retry.
+     * @return array{0: string|false, 1: int, 2: string} [$response, $httpStatus, $curlError] from
+     *                  the final attempt, whichever one that was.
+     */
+    private function curlWithRetry(callable $buildRequest, int $maxAttempts = 3, int $baseDelayMs = 250): array
+    {
+        $delayMs = $baseDelayMs;
+        for ($attempt = 1; $attempt <= $maxAttempts; $attempt++) {
+            $ch = $buildRequest();
+            $response = curl_exec($ch);
+            $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $curlError = curl_error($ch);
+            curl_close($ch);
+
+            $isTransient = ($response === false) || $status === 429 || $status >= 500;
+            if (!$isTransient || $attempt === $maxAttempts) {
+                return [$response, $status, $curlError];
+            }
+
+            \usleep($delayMs * 1000);
+            $delayMs *= 2;
+        }
+
+        // Unreachable (the loop above always returns by its last iteration), kept for static analysis.
+        return [false, 0, ''];
+    }
+
+    /**
+     * Render a failed GCS response into a diagnosable message: GCS error responses are JSON with
+     * a useful `error.message`, so surface that directly rather than a raw status code; fall back
+     * to the curl transport error when the transfer itself never completed (empty/false response).
+     */
+    private static function describeGcsFailure(int $status, $response, string $curlError): string
+    {
+        if ($response === false || $response === '') {
+            return $curlError !== ''
+                ? "curl transport error: {$curlError}"
+                : "empty response (HTTP status {$status})";
+        }
+
+        $decoded = \json_decode((string)$response, true);
+        $message = $decoded['error']['message'] ?? null;
+        if ($message !== null) {
+            return "HTTP {$status}: {$message}";
+        }
+
+        return "HTTP {$status}: " . \substr((string)$response, 0, 500);
     }
 }
