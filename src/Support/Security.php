@@ -55,6 +55,24 @@ class Security {
     }
 
     /**
+     * Resolve the request's Host, for use anywhere a host/domain gets embedded in output that
+     * matters (tenant resolution, links in outbound emails, etc). X-Forwarded-Host is otherwise
+     * trivially spoofable by anyone hitting the origin directly -- e.g. injecting an
+     * attacker-controlled domain into a legitimate transactional email's links -- so it's only
+     * honored once TRUSTED_PROXY_SECRET is configured and isTrustedProxyRequest() verifies it
+     * (falling back to today's unconditional trust when the secret is unset, so deployments that
+     * don't use this plumbing see no change).
+     */
+    public static function resolveTrustedHost(?string $fallback = null): string
+    {
+        $forwardedHostTrusted = Env::get('TRUSTED_PROXY_SECRET', '') === '' || self::isTrustedProxyRequest();
+        return ($forwardedHostTrusted ? ($_SERVER['HTTP_X_FORWARDED_HOST'] ?? null) : null)
+            ?? $_SERVER['HTTP_HOST']
+            ?? $fallback
+            ?? 'localhost';
+    }
+
+    /**
      * Check if authentication attempts are exceeded for a combination of IP and identifier.
      * Action parameter can be 'login' or 'password_reset'.
      */

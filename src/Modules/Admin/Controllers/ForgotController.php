@@ -65,10 +65,11 @@ class ForgotController implements Controller
                 
                 Logger::log($user['id'], 'password_reset_request', 'user', $user['id'], ['username' => $username, 'ip_address' => Security::getClientIp()]);
                 
-                // Construct recovery URL
-                // Prefer X-Forwarded-Host: proxies like Cloudflare rewrite Host to their own
-                // edge/origin hostname before the request reaches the app.
-                $host = $_SERVER['HTTP_X_FORWARDED_HOST'] ?? $_SERVER['HTTP_HOST'] ?? 'localhost';
+                // Construct recovery URL. Security::resolveTrustedHost() only honors
+                // X-Forwarded-Host once a configured TRUSTED_PROXY_SECRET verifies it -- otherwise
+                // an unverified forged header could inject an attacker-controlled domain into this
+                // legitimate password-reset email's link.
+                $host = Security::resolveTrustedHost();
                 $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
                 $link = $scheme . '://' . $host . '/admin/reset?token=' . $token;
 

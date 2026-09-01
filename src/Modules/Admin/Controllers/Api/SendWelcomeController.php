@@ -89,10 +89,11 @@ class SendWelcomeController implements Controller
         $siteName = $site ? $site->name : 'Zero CMS Platform';
         $siteDomain = $site ? $site->domain : 'localhost';
 
-        // Construct primary login url
-        // Prefer X-Forwarded-Host: proxies like Cloudflare rewrite Host to their own edge/origin
-        // hostname before the request reaches the app.
-        $host = $_SERVER['HTTP_X_FORWARDED_HOST'] ?? $_SERVER['HTTP_HOST'] ?? $siteDomain;
+        // Construct primary login url. Security::resolveTrustedHost() only honors
+        // X-Forwarded-Host once a configured TRUSTED_PROXY_SECRET verifies it -- otherwise an
+        // unverified forged header could inject an attacker-controlled domain into this
+        // legitimate welcome email's link.
+        $host = Security::resolveTrustedHost($siteDomain);
         $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
         $link = $scheme . '://' . $host . '/admin/login';
 
