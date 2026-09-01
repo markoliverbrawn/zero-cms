@@ -305,98 +305,129 @@ class AwsS3StorageDriver implements StorageDriver
 
     /**
      * Direct AWS SigV4 signed HTTP REST API transceiver.
+     *
+     * Retries transient failures (HTTP 429, 5xx, or a failed transfer) with exponential backoff
+     * via CurlRetrier, shared with GoogleCloudStorageDriver -- a single overloaded bucket or
+     * momentary network blip previously surfaced as a bare status/body pair with no retry, and
+     * since every S3 operation (read/write/delete/exists/rename/cleanDirectory) funnels through
+     * this one method, wiring it in here covers all of them. The entire signing pass is rebuilt
+     * fresh on every attempt, inside the retry closure -- a SigV4 signature covers its own request
+     * timestamp (x-amz-date), so a signature computed for attempt 1 would not necessarily still be
+     * valid by the time attempt 2 or 3 runs.
      */
     protected function sendRequest(string $method, string $path, string $payload = '', array $headers = [], string $queryString = ''): array
     {
-        $amzDate = \gmdate('Ymd\THis\Z');
-        $dateStamp = \gmdate('Ymd');
-        $service = 's3';
-        
-        $host = "{$this->bucketName}.s3.{$this->region}.amazonaws.com";
-        $endpoint = "https://{$host}/" . $path;
-        if ($queryString !== '') {
-            $endpoint .= '?' . $queryString;
-        }
+        $result = CurlRetrier::execute(function () use ($method, $path, $payload, $headers, $queryString) {
+            $amzDate = \gmdate('Ymd\THis\Z');
+            $dateStamp = \gmdate('Ymd');
+            $service = 's3';
 
-        $payloadHash = \hash('sha256', $payload);
+            $host = "{$this->bucketName}.s3.{$this->region}.amazonaws.com";
+            $endpoint = "https://{$host}/" . $path;
+            if ($queryString !== '') {
+                $endpoint .= '?' . $queryString;
+            }
 
-        // Core AWS S3 Mandatory Headers
-        $headers['Host'] = $host;
-        $headers['x-amz-content-sha256'] = $payloadHash;
-        $headers['x-amz-date'] = $amzDate;
+            $payloadHash = \hash('sha256', $payload);
 
-        // Sort header keys alphabetically for Signature matching
-        \uksort($headers, 'strcasecmp');
+            // Core AWS S3 Mandatory Headers
+            $headers['Host'] = $host;
+            $headers['x-amz-content-sha256'] = $payloadHash;
+            $headers['x-amz-date'] = $amzDate;
 
-        // 1. Build Canonical Request
-        $canonicalUri = '/' . \str_replace('%2F', '/', \rawurlencode($path));
-        
-        $canonicalHeaders = '';
-        $signedHeadersList = [];
-        foreach ($headers as $k => $v) {
-            $lowerKey = \strtolower($k);
-            $canonicalHeaders .= $lowerKey . ':' . \trim($v) . "\n";
-            $signedHeadersList[] = $lowerKey;
-        }
-        $signedHeaders = \implode(';', $signedHeadersList);
+            // Sort header keys alphabetically for Signature matching
+            \uksort($headers, 'strcasecmp');
 
-        $canonicalRequest = \implode("\n", [
-            $method,
-            $canonicalUri,
-            $queryString,
-            $canonicalHeaders,
-            $signedHeaders,
-            $payloadHash
-        ]);
+            // 1. Build Canonical Request
+            $canonicalUri = '/' . \str_replace('%2F', '/', \rawurlencode($path));
 
-        // 2. Build String to Sign
-        $credentialScope = "{$dateStamp}/{$this->region}/{$service}/aws4_request";
-        $stringToSign = \implode("\n", [
-            'AWS4-HMAC-SHA256',
-            $amzDate,
-            $credentialScope,
-            \hash('sha256', $canonicalRequest)
-        ]);
+            $canonicalHeaders = '';
+            $signedHeadersList = [];
+            foreach ($headers as $k => $v) {
+                $lowerKey = \strtolower($k);
+                $canonicalHeaders .= $lowerKey . ':' . \trim($v) . "\n";
+                $signedHeadersList[] = $lowerKey;
+            }
+            $signedHeaders = \implode(';', $signedHeadersList);
 
-        // 3. Generate Cryptographic AWS SigV4 Signing Key
-        $kDate = \hash_hmac('sha256', $dateStamp, 'AWS4' . $this->secretKey, true);
-        $kRegion = \hash_hmac('sha256', $this->region, $kDate, true);
-        $kService = \hash_hmac('sha256', $service, $kRegion, true);
-        $kSigning = \hash_hmac('sha256', 'aws4_request', $kService, true);
+            $canonicalRequest = \implode("\n", [
+                $method,
+                $canonicalUri,
+                $queryString,
+                $canonicalHeaders,
+                $signedHeaders,
+                $payloadHash
+            ]);
 
-        // 4. Calculate Signature
-        $signature = \hash_hmac('sha256', $stringToSign, $kSigning);
+            // 2. Build String to Sign
+            $credentialScope = "{$dateStamp}/{$this->region}/{$service}/aws4_request";
+            $stringToSign = \implode("\n", [
+                'AWS4-HMAC-SHA256',
+                $amzDate,
+                $credentialScope,
+                \hash('sha256', $canonicalRequest)
+            ]);
 
-        // 5. Compile Authorization Header
-        $headers['Authorization'] = "AWS4-HMAC-SHA256 Credential={$this->accessKey}/{$credentialScope}, SignedHeaders={$signedHeaders}, Signature={$signature}";
+            // 3. Generate Cryptographic AWS SigV4 Signing Key
+            $kDate = \hash_hmac('sha256', $dateStamp, 'AWS4' . $this->secretKey, true);
+            $kRegion = \hash_hmac('sha256', $this->region, $kDate, true);
+            $kService = \hash_hmac('sha256', $service, $kRegion, true);
+            $kSigning = \hash_hmac('sha256', 'aws4_request', $kService, true);
 
-        // Format curl headers array
-        $curlHeaders = [];
-        foreach ($headers as $k => $v) {
-            $curlHeaders[] = "{$k}: {$v}";
-        }
+            // 4. Calculate Signature
+            $signature = \hash_hmac('sha256', $stringToSign, $kSigning);
 
-        // 6. Execute direct curl payload transceiver
-        $ch = curl_init($endpoint);
-        curl_setopt_array($ch, [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_CUSTOMREQUEST => $method,
-            CURLOPT_HTTPHEADER => $curlHeaders,
-            CURLOPT_TIMEOUT => 10
-        ]);
+            // 5. Compile Authorization Header
+            $headers['Authorization'] = "AWS4-HMAC-SHA256 Credential={$this->accessKey}/{$credentialScope}, SignedHeaders={$signedHeaders}, Signature={$signature}";
 
-        if ($method === 'PUT' || $method === 'POST') {
-            curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
-        }
+            // Format curl headers array
+            $curlHeaders = [];
+            foreach ($headers as $k => $v) {
+                $curlHeaders[] = "{$k}: {$v}";
+            }
 
-        $body = curl_exec($ch);
-        $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
+            // 6. Build the direct curl payload transceiver for this attempt
+            $ch = curl_init($endpoint);
+            curl_setopt_array($ch, [
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_CUSTOMREQUEST => $method,
+                CURLOPT_HTTPHEADER => $curlHeaders,
+                CURLOPT_TIMEOUT => 10
+            ]);
+
+            if ($method === 'PUT' || $method === 'POST') {
+                curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+            }
+
+            return $ch;
+        });
 
         return [
-            'status' => $status,
-            'body' => $body
+            'status' => $result['status'],
+            'body' => $result['body'],
+            'error' => $result['error']
         ];
+    }
+
+    /**
+     * Render a failed S3 response into a diagnosable message: S3 error responses are XML with a
+     * useful <Message> element, so surface that directly (via the same zero-dependency regex
+     * parsing this file already uses for <Key> in cleanDirectory()) rather than a raw status code;
+     * fall back to the curl transport error when the transfer itself never completed.
+     */
+    private static function describeS3Failure(int $status, $body, string $curlError): string
+    {
+        if ($body === false || $body === '') {
+            return $curlError !== ''
+                ? "curl transport error: {$curlError}"
+                : "empty response (HTTP status {$status})";
+        }
+
+        if (\preg_match('/<Message>([^<]*)<\/Message>/i', (string)$body, $matches)) {
+            return "HTTP {$status}: {$matches[1]}";
+        }
+
+        return "HTTP {$status}: " . \substr((string)$body, 0, 500);
     }
 
     /**
@@ -415,6 +446,11 @@ class AwsS3StorageDriver implements StorageDriver
             'Content-Type' => $mime
         ]);
 
-        return $response['status'] === 200;
+        if ($response['status'] === 200) {
+            return true;
+        }
+
+        \error_log("AwsS3StorageDriver::write() failed for '{$cleanPath}': " . self::describeS3Failure($response['status'], $response['body'], $response['error'] ?? ''));
+        return false;
     }
 }

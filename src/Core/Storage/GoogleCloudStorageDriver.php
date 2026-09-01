@@ -180,7 +180,7 @@ class GoogleCloudStorageDriver implements StorageDriver
         if (empty($keyPath) || !\file_exists($keyPath)) {
             // Fallback: Fetch JWT-less OAuth2 Access Token from the Google Metadata Server natively on Cloud Run / GCP!
             $metadataUrl = 'http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token';
-            [$response, $status] = $this->curlWithRetry(function () use ($metadataUrl) {
+            $result = CurlRetrier::execute(function () use ($metadataUrl) {
                 $ch = curl_init($metadataUrl);
                 curl_setopt_array($ch, [
                     CURLOPT_RETURNTRANSFER => true,
@@ -189,6 +189,8 @@ class GoogleCloudStorageDriver implements StorageDriver
                 ]);
                 return $ch;
             });
+            $status = $result['status'];
+            $response = $result['body'];
 
             if ($status === 200 && !empty($response)) {
                 $data = \json_decode($response, true);
@@ -503,7 +505,7 @@ class GoogleCloudStorageDriver implements StorageDriver
         $mime = $mimeTypes[$ext] ?? 'text/plain';
 
         $url = "https://storage.googleapis.com/upload/storage/v1/b/{$this->bucketName}/o?uploadType=media{$aclParam}&name=" . \urlencode($cleanPath);
-        [$response, $status, $curlError] = $this->curlWithRetry(function () use ($url, $token, $mime, $content) {
+        $result = CurlRetrier::execute(function () use ($url, $token, $mime, $content) {
             $ch = curl_init($url);
             curl_setopt_array($ch, [
                 CURLOPT_RETURNTRANSFER => true,
@@ -518,49 +520,12 @@ class GoogleCloudStorageDriver implements StorageDriver
             return $ch;
         });
 
-        if ($status === 200) {
+        if ($result['status'] === 200) {
             return true;
         }
 
-        \error_log("GoogleCloudStorageDriver::write() failed for '{$cleanPath}': " . self::describeGcsFailure($status, $response, $curlError));
+        \error_log("GoogleCloudStorageDriver::write() failed for '{$cleanPath}': " . self::describeGcsFailure($result['status'], $result['body'], $result['error']));
         return false;
-    }
-
-    /**
-     * Execute a curl request with transient-failure retry: HTTP 429/5xx, or a failed transfer
-     * (curl_exec() returning false), are retried up to $maxAttempts total with exponential
-     * backoff; any other response (including any other 4xx) returns immediately on the first
-     * attempt, since retrying a malformed/unauthorized request can't change the outcome.
-     *
-     * @param callable $buildRequest () => resource|\CurlHandle  Builds and returns a fresh,
-     *                  fully-configured curl handle for one attempt -- a new handle each time,
-     *                  since a handle that already ran can't be safely re-executed.
-     * @param int $maxAttempts Total attempts including the first, before giving up.
-     * @param int $baseDelayMs Delay before the first retry; doubles on each subsequent retry.
-     * @return array{0: string|false, 1: int, 2: string} [$response, $httpStatus, $curlError] from
-     *                  the final attempt, whichever one that was.
-     */
-    private function curlWithRetry(callable $buildRequest, int $maxAttempts = 3, int $baseDelayMs = 250): array
-    {
-        $delayMs = $baseDelayMs;
-        for ($attempt = 1; $attempt <= $maxAttempts; $attempt++) {
-            $ch = $buildRequest();
-            $response = curl_exec($ch);
-            $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-            $curlError = curl_error($ch);
-            curl_close($ch);
-
-            $isTransient = ($response === false) || $status === 429 || $status >= 500;
-            if (!$isTransient || $attempt === $maxAttempts) {
-                return [$response, $status, $curlError];
-            }
-
-            \usleep($delayMs * 1000);
-            $delayMs *= 2;
-        }
-
-        // Unreachable (the loop above always returns by its last iteration), kept for static analysis.
-        return [false, 0, ''];
     }
 
     /**
