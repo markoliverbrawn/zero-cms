@@ -69,8 +69,10 @@ class QueueApiController implements Controller
         }
         \touch($lockFile);
 
-        // Execute non-blocking job run
-        $processed = QueueManager::runNextPendingJob();
+        // Drain the queue for this invocation's time budget rather than processing a single job --
+        // Cloud Scheduler only wakes this endpoint every 5 minutes, so a single-job-per-call cap
+        // would throttle total throughput to 1 job/5min regardless of backlog size.
+        $processed = QueueManager::runPendingJobs();
 
         echo \json_encode([
             'success' => true,

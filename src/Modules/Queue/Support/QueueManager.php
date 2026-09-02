@@ -82,24 +82,54 @@ class QueueManager
             // Start reservation transaction
             $pdo->beginTransaction();
 
-            // 1. Row-lock selection for double-locking race safety
+            // 1a. Fair-share candidate selection: rank each site's own claimable jobs oldest-first,
+            // then across sites prefer whichever site's turn hasn't come up yet (lowest per-site
+            // rank first, ties broken by age). This stops one tenant's burst of dispatches from
+            // monopolizing the worker ahead of a site with a single older-arriving, lower-volume
+            // job -- pure global "oldest job wins" would otherwise let a high-volume site's entire
+            // backlog run before a quiet site's job ever gets a turn. This is a plain read (no lock)
+            // just to pick a candidate; it's re-validated and locked in step 1b.
+            $candidateStmt = $pdo->prepare("
+                SELECT id FROM (
+                    SELECT id, created_at,
+                           ROW_NUMBER() OVER (PARTITION BY site_id ORDER BY created_at ASC) AS site_turn
+                    FROM queue_jobs
+                    WHERE (
+                        status = 'pending'
+                        OR (status = 'reserved' AND reserved_at < ?)
+                    )
+                    AND deleted_at IS NULL
+                ) candidates
+                ORDER BY site_turn ASC, created_at ASC
+                LIMIT 1
+            ");
+            $candidateStmt->execute([$expiredTime]);
+            $candidateId = $candidateStmt->fetchColumn();
+
+            if (!$candidateId) {
+                $pdo->rollBack();
+                return false; // No jobs available
+            }
+
+            // 1b. Row-lock the chosen candidate for double-locking race safety. If a concurrent
+            // worker already claimed it between 1a and here, treat this call as having found
+            // nothing rather than retrying -- the next invocation re-evaluates fairness fresh.
             $stmt = $pdo->prepare("
                 SELECT id, site_id, job_class, payload, attempts FROM queue_jobs
-                WHERE (
+                WHERE id = ?
+                AND (
                     status = 'pending'
                     OR (status = 'reserved' AND reserved_at < ?)
                 )
                 AND deleted_at IS NULL
-                ORDER BY created_at ASC
-                LIMIT 1
                 FOR UPDATE
             ");
-            $stmt->execute([$expiredTime]);
+            $stmt->execute([$candidateId, $expiredTime]);
             $row = $stmt->fetch();
 
             if (!$row) {
                 $pdo->rollBack();
-                return false; // No jobs available
+                return false; // Candidate claimed by a concurrent worker between selection and lock
             }
 
             $jobId = $row['id'];
@@ -108,7 +138,7 @@ class QueueManager
             $payloadData = \json_decode($row['payload'], true) ?? [];
             $attempts = \intval($row['attempts']) + 1;
 
-            // 1b. Dead-letter a job that has exhausted its retry ceiling rather than reclaiming it
+            // 1c. Dead-letter a job that has exhausted its retry ceiling rather than reclaiming it
             // again -- this only fires for rows that keep going stale without ever reaching the
             // caught-exception failure path below, since that path already stops retries in one shot.
             if ($attempts > $maxAttempts) {
@@ -254,5 +284,40 @@ class QueueManager
         }
 
         return true;
+    }
+
+    /**
+     * Drains the queue by repeatedly calling runNextPendingJob() within a single call, instead of
+     * processing just one job. A stateless HTTP trigger (Cloud Scheduler hitting the API endpoint
+     * every 5 minutes) that only ever ran a single job per invocation was capped at 1 job / 5 min
+     * of throughput regardless of how many jobs were actually waiting or how much of the request's
+     * time budget went unused -- this lets one invocation work through the backlog until either the
+     * queue is empty or the time/job budget runs out.
+     *
+     * @param int $maxDurationSeconds Wall-clock budget for this call (default: 800s, leaving margin
+     *                                under Cloud Run's 900s request timeout for the in-flight job to
+     *                                finish cleanly rather than being killed mid-execute()).
+     * @param int|null $maxJobs Optional cap on jobs processed in one call, regardless of time left.
+     * @return int Number of jobs handled (run or dead-lettered) during this call.
+     */
+    public static function runPendingJobs(int $maxDurationSeconds = 800, ?int $maxJobs = null): int
+    {
+        $startTime = \microtime(true);
+        $processedCount = 0;
+
+        while (true) {
+            if (\microtime(true) - $startTime >= $maxDurationSeconds) {
+                break;
+            }
+            if ($maxJobs !== null && $processedCount >= $maxJobs) {
+                break;
+            }
+            if (!self::runNextPendingJob()) {
+                break; // Queue is empty
+            }
+            $processedCount++;
+        }
+
+        return $processedCount;
     }
 }
