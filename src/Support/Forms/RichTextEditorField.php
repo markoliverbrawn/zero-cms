@@ -51,6 +51,7 @@ class RichTextEditorField extends AbstractFormField
         return $labelHtml . Template::renderFile($this->getTemplatePath(), [
             'record' => $this->config['record'] ?? null,
             'field' => $this->name,
+            'toolbar' => $this->config['toolbar'] ?? 'full',
         ]);
     }
 }
