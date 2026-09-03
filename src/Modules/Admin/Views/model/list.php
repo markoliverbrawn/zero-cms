@@ -2,6 +2,7 @@
 use Zero\Core\App;
 use Zero\Core\Template;
 use Zero\Support\AssetVersion;
+use Zero\Support\Assets;
 use Zero\Support\Str;
 use Zero\Support\I18n;
 ?>
@@ -158,7 +159,7 @@ use Zero\Support\I18n;
                     ?>
                   <?php elseif (($field === 'main_image' || $field === 'featured_image') && !empty($record->{$field})): ?>
                     <div class="list-thumbnail-box">
-                      <img src="<?php echo Str::escape($record->{$field}); ?>" class="list-thumbnail-img" alt="Thumbnail" />
+                      <img src="<?php echo Str::escape(Assets::url($record->{$field}, width: 120)); ?>" class="list-thumbnail-img" alt="Thumbnail" />
                     </div>
                   <?php elseif ($field === 'comment_count'): ?>
                     <?php if ($record->comment_count > 0): ?>
