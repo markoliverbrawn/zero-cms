@@ -78,7 +78,7 @@ Zero CMS is divided into fully decoupled, modular plug-ins under `src/Modules/`:
 3. **Platform Security Hardening & AI Auditing (`Security`):**
    Integrates globally enforced Content Security Policy (CSP), defensive HTTP shielding, secure forced password updates, security audit logging, automated OSV-based CVE comparative auditing against Laravel/Symfony/WordPress (`CveFetcherService`), and AI-driven threat-modeling narrative generation with Google's generative AI (`AiService`).
 4. **Background Jobs & Task Scheduler (`Queue`):**
-   Dispatches and processes queued jobs (e.g. `PurgeOldLogsJob`) via `QueueManager` and a cron-driven `Scheduler`, run out-of-band through the `bin/queue-runner` and `bin/scheduler` CLI entry points rather than inline on the request path.
+   Dispatches and processes queued jobs (e.g. `PurgeOldLogsJob`) via `QueueManager` and a cron-driven `Scheduler`, run out-of-band through the `bin/queue-runner` and `bin/scheduler` CLI entry points rather than inline on the request path. Job claiming uses a per-site fair-share selection (each tenant's own oldest job is ranked ahead of a second job from a busier site) rather than pure global FIFO, so one tenant's dispatch burst can't monopolize the worker ahead of a quieter site's waiting job.
 5. **Site Search (`Search`):**
    Decoupled search-driver architecture (`SearchDriverInterface`) with a `DatabaseSearchDriver` implementation, exposed via `SearchController`/`SearchService` and a `Searchable` model trait.
 
@@ -362,7 +362,9 @@ running, scale-to-zero site on Google Cloud: a Cloud Run web service, a `db-f1-m
 MySQL instance (connected over a Unix socket, never a public IP), a public Cloud Storage bucket for
 media (`STORAGE_DRIVER=gcs`), one-shot Cloud Run Jobs for migrations/seeding, and two Cloud
 Scheduler HTTP jobs that wake the same web service every 5 minutes to drive the job queue and
-recurring-task scheduler — no separate always-on worker process.
+recurring-task scheduler — no separate always-on worker process. Each queue wake-up drains its
+full time budget (not just a single job) before returning, so total throughput isn't capped at one
+job per 5-minute tick.
 
 ### Running it
 
