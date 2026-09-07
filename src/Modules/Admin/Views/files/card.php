@@ -2,6 +2,7 @@
 // src/Modules/Admin/Views/files/card.php
 
 use Zero\Core\App;
+use Zero\Core\Storage\Storage;
 use Zero\Models\Media;
 use Zero\Support\Str;
 
@@ -84,13 +85,13 @@ if ($mime === 'directory'): ?>
             <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
           </svg>
         </a>
-        <a href="<?php echo Str::escape($path); ?>" target="_blank" title="View File" class="action-btn">
+        <a href="<?php echo Str::escape(Storage::getUrl($path)); ?>" target="_blank" title="View File" class="action-btn">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M1 12s4-8 11-8 8 8 8 8-4 8-11 8-11-8-11-8z"></path>
             <circle cx="12" cy="12" r="3"></circle>
           </svg>
         </a>
-        <button type="button" class="action-copy-url action-btn" data-url="<?php echo Str::escape($path); ?>" title="Copy Path" style="background: none; border: none; padding: 0; cursor: pointer;">
+        <button type="button" class="action-copy-url action-btn" data-url="<?php echo Str::escape(Storage::getUrl($path)); ?>" title="Copy Path" style="background: none; border: none; padding: 0; cursor: pointer;">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
             <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>

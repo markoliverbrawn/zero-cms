@@ -3,6 +3,7 @@
 // Highly polished, modern, and style-separated media item edit template.
 
 use Zero\Core\App;
+use Zero\Support\Assets;
 use Zero\Support\Str;
 
 $titleValue = $file['title'] ?? '';
@@ -166,7 +167,7 @@ $createdAt = $file['created_at'] ?? '';
           <?php if (str_starts_with($mimeValue, 'image/')): ?>
             <div class="checkered-background">
               <div class="focal-container" id="focal-container">
-                <img src="<?php echo Str::escape($pathValue); ?>" alt="<?php echo Str::escape($titleValue ?: $filenameValue); ?>" class="preview-media-image" id="preview-image">
+                <img src="<?php echo Str::escape(Assets::url($idValue, 1000)); ?>" alt="<?php echo Str::escape($titleValue ?: $filenameValue); ?>" class="preview-media-image" id="preview-image">
                 <div class="focal-overlay" id="focal-overlay">
                   <div class="focal-square" id="focal-square">
                     <div class="focal-crosshair"></div>

@@ -5,6 +5,7 @@
 
 require_once dirname(dirname(__DIR__)) . '/Support/TestBootstrap.php';
 
+use Zero\Core\Storage\Storage;
 use Zero\Models\Media;
 use Zero\Support\Assets;
 use Zero\Support\ImageProcessor;
@@ -22,8 +23,23 @@ if (!Assets::isSupported()) {
     exit(0);
 }
 
-// 1. Create a mock portrait image in storage
+// Bootstrap the App environment and set a mock site tenant context -- getUrl()/getSquareCropUrl()
+// now route non-resizable/public media through Storage::getUrl() (see Media::getUrl()), which
+// needs an active site to resolve a tenant-scoped path, just like every real request already has
+// by the time these methods are ever called.
+\Zero\Core\App::bootstrap();
 $siteId = 'default';
+$refApp = new \ReflectionClass('Zero\Core\App');
+$propSite = $refApp->getProperty('currentSite');
+$propSite->setAccessible(true);
+$propSite->setValue(null, new \Zero\Models\Site([
+    'id' => $siteId,
+    'name' => 'Active Test Site',
+    'domain' => 'active-test.zero',
+    'theme' => 'default'
+]));
+
+// 1. Create a mock portrait image in storage
 $testFilename = 'mock-test-portrait.jpg';
 $testPath = '/storage/uploads/' . $siteId . '/' . $testFilename;
 $uploadsDir = APPLICATION_ROOT . '/public/storage/uploads/' . $siteId;
@@ -168,6 +184,26 @@ assert_test(
 );
 assert_test($private->getUrl() === '/admin/secure-download/test-private-id-123', "Private media keeps its access-gated download URL");
 
+// 10. Public media's getUrl() must resolve through the active storage driver rather than
+// returning the raw stored path verbatim. That stored value (e.g. "/storage/uploads/{site}/x.jpg")
+// is only directly fetchable under STORAGE_DRIVER=local (where public/storage is symlinked to
+// local disk) -- under a remote driver (gcs/s3) nothing serves that raw path, so getUrl() must
+// delegate to Storage::getUrl(), which is what actually knows how to turn a stored path into a
+// real fetchable URL per driver.
+$publicImage = new Media();
+$publicImage->id = 'test-public-id-999';
+$publicImage->filename = 'public-photo.jpg';
+$publicImage->path = '/storage/uploads/' . $siteId . '/public-photo.jpg';
+$publicImage->mime = 'image/jpeg';
+$publicImage->site_id = $siteId;
+$publicImage->visibility = 'public';
+$publicImage->created_at = '2026-01-01 00:00:00';
+
+assert_test(
+    $publicImage->getUrl() === Storage::getUrl($publicImage->path),
+    "Public media's getUrl() delegates to the active storage driver instead of returning the raw stored path"
+);
+
 // Clean up
 VariantCache::clear($siteId);
 if (file_exists($physicalPath)) {
@@ -177,5 +213,6 @@ if (is_dir($uploadsDir) && count(glob($uploadsDir . '/*')) === 0) {
     rmdir($uploadsDir);
 }
 Assets::clearRegistry();
+$propSite->setValue(null, null);
 
 echo "Media focal-point variant URL tests completed successfully.\n\n";

@@ -130,7 +130,13 @@ class Media implements Model
         if ($this->visibility === 'private') {
             return "/admin/secure-download/{$this->id}";
         }
-        return $this->path;
+        // Route through the active storage driver rather than returning $this->path verbatim:
+        // that stored value (e.g. "/storage/uploads/{site}/logo.png") is only ever directly
+        // fetchable under STORAGE_DRIVER=local, where public/storage is symlinked to local disk.
+        // Under gcs/s3 nothing serves that raw path -- Storage::getUrl() is what actually knows
+        // how to turn it into a real fetchable URL per driver (a GCS/S3 bucket URL, or the same
+        // local path unchanged for the local driver).
+        return Storage::getUrl($this->path);
     }
 
     /**
