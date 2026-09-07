@@ -253,6 +253,19 @@ class Storage
         $dstImage = $srcImage;
         $resized = false;
 
+        // Re-arm alpha saving on the source resource itself, not just the resize branch's fresh
+        // canvas below: imagecreatefrompng()/imagecreatefromwebp() decode a transparent image's
+        // alpha channel into the resource, but GD does not carry it through to imagepng()/
+        // imagewebp() unless imagesavealpha() is explicitly set on the exact resource being
+        // encoded. Any image already within maxDimension skips the resize branch and encodes
+        // $srcImage directly -- previously that meant its alpha was silently dropped, flattening
+        // every transparent pixel to whatever garbage RGB value happened to sit underneath
+        // (typically black, turning cut-out logos into solid black boxes).
+        if ($mime === 'image/png' || $mime === 'image/webp') {
+            \imagealphablending($srcImage, false);
+            \imagesavealpha($srcImage, true);
+        }
+
         if ($width > $maxDimension || $height > $maxDimension) {
             if ($width > $height) {
                 $newWidth = $maxDimension;

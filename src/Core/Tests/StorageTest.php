@@ -202,6 +202,54 @@ if (extension_loaded('gd')) {
     echo "    Skipping image optimization test (GD extension not loaded).\n";
 }
 
+// 7b. Regression test: a transparent PNG already within maxDimension (so it skips the resize
+// branch entirely) must still have its alpha channel preserved by optimizeImageFile(). Previously
+// imagesavealpha() was only re-armed inside the "needs resizing" branch, so any image that didn't
+// need resizing was encoded straight from the decoded source with alpha saving left off -- GD
+// silently wrote it out as opaque, flattening every transparent pixel to whatever colour happened
+// to sit underneath it (typically black, turning a cut-out logo into a solid black box).
+echo "  Testing alpha channel preservation for small transparent PNGs (no resize path)...\n";
+if (extension_loaded('gd')) {
+    $smallWidth = 200;
+    $smallHeight = 100;
+    $img = imagecreatetruecolor($smallWidth, $smallHeight);
+    imagealphablending($img, false);
+    imagesavealpha($img, true);
+    $transparent = imagecolorallocatealpha($img, 0, 0, 0, 127);
+    imagefill($img, 0, 0, $transparent);
+    // Paint a small fully-opaque square in one corner so the file isn't uniformly transparent.
+    $opaque = imagecolorallocatealpha($img, 10, 20, 30, 0);
+    imagefilledrectangle($img, 0, 0, 19, 19, $opaque);
+
+    $tmpAlphaPath = tempnam(sys_get_temp_dir(), 'test_alpha_img_');
+    imagepng($img, $tmpAlphaPath);
+    imagedestroy($img);
+
+    $targetAlphaPath = 'alpha-test-image-' . bin2hex(random_bytes(4)) . '.png';
+    $putAlphaResult = Storage::putFile($targetAlphaPath, $tmpAlphaPath);
+    assert_test($putAlphaResult, "Small transparent PNG uploaded successfully");
+
+    $physicalAlphaSavedPath = APPLICATION_ROOT . '/public/storage/uploads/' . $testSiteId . '/' . $targetAlphaPath;
+    $savedAlphaInfo = @getimagesize($physicalAlphaSavedPath);
+    assert_test($savedAlphaInfo !== false, "Saved alpha-test file is a valid image");
+    assert_test((int)$savedAlphaInfo[0] === $smallWidth && (int)$savedAlphaInfo[1] === $smallHeight, "Small image was not resized (already within maxDimension)");
+
+    $savedAlphaImg = @imagecreatefrompng($physicalAlphaSavedPath);
+    assert_test($savedAlphaImg !== false, "Saved alpha-test file decodes as a valid PNG");
+    if ($savedAlphaImg !== false) {
+        $cornerPixel = imagecolorat($savedAlphaImg, $smallWidth - 1, $smallHeight - 1);
+        $cornerAlpha = ($cornerPixel >> 24) & 0x7F;
+        assert_test($cornerAlpha === 127, "Fully transparent corner pixel survived optimization without being flattened to opaque (alpha={$cornerAlpha})");
+        imagedestroy($savedAlphaImg);
+    }
+
+    // Cleanup
+    @unlink(confine_test_path($tmpAlphaPath, sys_get_temp_dir()));
+    Storage::delete($targetAlphaPath);
+} else {
+    echo "    Skipping alpha preservation test (GD extension not loaded).\n";
+}
+
 // 8. Robust edge-case path and URL resolution checks for LocalStorageDriver
 echo "  Testing LocalStorageDriver edge cases...\n";
 if ($driverName === 'local') {
