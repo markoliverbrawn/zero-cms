@@ -80,6 +80,12 @@ class ImageProcessor
             });
         }
 
+        // Both sides of the imagecopyresampled() call in render() must agree on alpha handling:
+        // without this, GD composites the source's transparent pixels against an opaque
+        // background during resampling even though the destination is configured correctly.
+        \imagealphablending($image, false);
+        \imagesavealpha($image, true);
+
         return $image;
     }
 
