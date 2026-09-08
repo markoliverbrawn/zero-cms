@@ -39,20 +39,32 @@ class FileManagerService
 
     /**
      * Fetch a page of files/folders inside a given folder for a site, plus pagination metadata.
+     * When $search is non-empty, it matches by filename across every folder in the site instead
+     * of being scoped to $folder, mirroring how the media picker's search has always behaved.
      *
      * @return array{files: array, total: int, hasMore: bool, page: int}
      */
-    public static function listFiles(string $siteId, string $folder, int $page = 1, int $limit = 20): array
+    public static function listFiles(string $siteId, string $folder, int $page = 1, int $limit = 20, string $search = ''): array
     {
         if ($page < 1) {
             $page = 1;
         }
         $offset = ($page - 1) * $limit;
+        $search = \trim($search);
 
-        $stmt = DB::query("SELECT * FROM media WHERE folder = ? AND site_id = ? AND deleted_at IS NULL ORDER BY (mime = 'directory') DESC, created_at DESC LIMIT $limit OFFSET $offset", [$folder, $siteId]);
-        $files = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        if ($search !== '') {
+            $likeTerm = '%' . $search . '%';
+            $stmt = DB::query("SELECT * FROM media WHERE site_id = ? AND deleted_at IS NULL AND filename LIKE ? ORDER BY (mime = 'directory') DESC, created_at DESC LIMIT $limit OFFSET $offset", [$siteId, $likeTerm]);
+            $files = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
-        $totalStmt = DB::query("SELECT COUNT(*) as total FROM media WHERE folder = ? AND site_id = ? AND deleted_at IS NULL", [$folder, $siteId]);
+            $totalStmt = DB::query("SELECT COUNT(*) as total FROM media WHERE site_id = ? AND deleted_at IS NULL AND filename LIKE ?", [$siteId, $likeTerm]);
+        } else {
+            $stmt = DB::query("SELECT * FROM media WHERE folder = ? AND site_id = ? AND deleted_at IS NULL ORDER BY (mime = 'directory') DESC, created_at DESC LIMIT $limit OFFSET $offset", [$folder, $siteId]);
+            $files = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+            $totalStmt = DB::query("SELECT COUNT(*) as total FROM media WHERE folder = ? AND site_id = ? AND deleted_at IS NULL", [$folder, $siteId]);
+        }
+
         $totalResult = $totalStmt->fetch(\PDO::FETCH_ASSOC);
         $total = (int)($totalResult['total'] ?? 0);
         $hasMore = ($offset + \count($files)) < $total;

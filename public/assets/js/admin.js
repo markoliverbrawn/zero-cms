@@ -148,6 +148,9 @@ window.openImagePicker = function(onSelect) {
         </div>
         <div class="picker-grid-container">
           <div class="picker-grid" id="picker-file-grid">Loading media files...</div>
+          <div id="picker-load-more-container" style="display: none; text-align: center; padding: 12px 0;">
+            <button type="button" class="btn" id="picker-load-more-btn">Load More</button>
+          </div>
         </div>
         <div class="picker-footer">
           <button type="button" class="btn" id="picker-close-btn">Close</button>
@@ -193,151 +196,180 @@ function setupPickerLogic(fileModal) {
   var progress = fileModal.querySelector('#picker-upload-progress');
   var breadcrumbsContainer = fileModal.querySelector('#picker-breadcrumbs');
   var activeFolderLabel = fileModal.querySelector('#picker-active-folder-label');
+  var loadMoreContainer = fileModal.querySelector('#picker-load-more-container');
+  var loadMoreBtn = fileModal.querySelector('#picker-load-more-btn');
 
-  var allFiles = [];
+  // Files loaded so far for the current folder/search, one server page at a time -- never the
+  // whole library. currentQuery mirrors what's actually loaded (not just what's typed) so a
+  // debounced keystroke can't race a stale in-flight request into rendering the wrong results.
+  var loadedFiles = [];
+  var currentQuery = '';
+  var currentPage = 1;
+  var hasMorePages = false;
+  var isLoadingPage = false;
+  var searchDebounceTimer = null;
 
-  window.loadAndRenderPickerFiles = function(searchQuery) {
-    grid.innerHTML = '<div style="grid-column: span 3; text-align: center; padding: 20px;">Loading media files...</div>';
-    
-    var fetchPromise;
-    if (allFiles.length > 0 && searchQuery !== undefined) {
-      // Filter locally for super fast search response!
-      fetchPromise = Promise.resolve(allFiles);
+  function fetchPickerPage(page, query) {
+    var url = '/api/v1/admin/files?format=json&page=' + page;
+    if (query) {
+      url += '&q=' + encodeURIComponent(query);
     } else {
-      fetchPromise = fetch('/api/v1/admin/files', {credentials: 'same-origin'})
-        .then(function(r) { return r.json(); })
-        .then(function(files) {
-          allFiles = files;
-          return files;
-        });
+      url += '&folder=' + encodeURIComponent(window.pickerActiveFolder || '');
+    }
+    return fetch(url, {credentials: 'same-origin'}).then(function(r) { return r.json(); });
+  }
+
+  function goUpTileHtml() {
+    return `
+      <div class="picker-item picker-go-up" style="cursor:pointer; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="color: #777; margin-bottom: 5px;">
+          <path d="M19 12H5M12 19l-7-7 7-7"></path>
+        </svg>
+        <span style="font-size: 0.75rem; font-weight: bold; color: #777;">Go Up</span>
+      </div>
+    `;
+  }
+
+  function fileTileHtml(f) {
+    var isImage = f.mime && f.mime.startsWith('image/');
+    var isDir = f.mime === 'directory';
+    var thumbnailHtml = '';
+
+    if (isDir) {
+      thumbnailHtml = `
+        <div class="picker-item-mime-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-color);">
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+          </svg>
+        </div>
+      `;
+    } else if (isImage) {
+      thumbnailHtml = '<img src="' + f.path + '" alt="' + escapeHtml(f.filename) + '">';
+    } else {
+      var ext = f.filename.split('.').pop() || 'file';
+      thumbnailHtml = `
+        <div class="picker-item-mime-icon" style="position: relative;">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-color);">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+          </svg>
+          <span class="picker-item-mime-name" style="position: absolute; bottom: 12px; font-size: 0.6rem; font-weight: bold; text-transform: uppercase; background-color: var(--bg-color-inverse); color: var(--text-color-inverse); padding: 1px 4px; border-radius: 2px;">${ext}</span>
+        </div>
+      `;
     }
 
-    fetchPromise.then(function(files) {
-      var query = (searchQuery || '').toLowerCase().trim();
-      
-      // Filter by query name OR filter by active folder if query is empty
-      var filtered = [];
-      if (query !== '') {
-        // Global search across all folders!
-        filtered = files.filter(function(f) {
-          return f.filename.toLowerCase().indexOf(query) !== -1;
-        });
-      } else {
-        // Browse specific folder!
-        filtered = files.filter(function(f) {
-          var fileFolder = f.folder || '';
-          return fileFolder === window.pickerActiveFolder;
-        });
-      }
+    return `
+      <div class="picker-item ${isDir ? 'picker-dir-item' : 'picker-file-item'}" data-path="${f.path}" data-filename="${escapeHtml(f.filename)}" data-fid="${f.id}" data-mime="${f.mime}">
+        ${thumbnailHtml}
+        <div class="picker-item-name" title="${escapeHtml(f.filename)}">${escapeHtml(f.filename)}</div>
+      </div>
+    `;
+  }
 
-      // Update breadcrumbs UI
-      renderBreadcrumbs();
+  function updateLoadMoreVisibility() {
+    loadMoreContainer.style.display = hasMorePages ? 'block' : 'none';
+    loadMoreBtn.textContent = isLoadingPage ? 'Loading...' : 'Load More';
+  }
 
-      if (!filtered.length && query === '') {
-        var emptyHtml = '';
-        if (window.pickerActiveFolder !== '') {
-          emptyHtml += `
-            <div class="picker-item picker-go-up" style="cursor:pointer; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="color: #777; margin-bottom: 5px;">
-                <path d="M19 12H5M12 19l-7-7 7-7"></path>
-              </svg>
-              <span style="font-size: 0.7rem; font-weight: bold;">Go Up</span>
-            </div>
-          `;
-        }
-        emptyHtml += '<div style="grid-column: span 3; text-align: center; padding: 20px; font-weight: bold;">This folder is empty.</div>';
-        grid.innerHTML = emptyHtml;
-        setupGoUpHandler();
-        return;
-      } else if (!filtered.length) {
-        grid.innerHTML = '<div style="grid-column: span 3; text-align: center; padding: 20px;">No files found matching search query.</div>';
-        return;
-      }
+  function renderGrid() {
+    var query = currentQuery;
 
-      var html = '';
-      
-      // Add visual "Go Up" tile if we are inside a subfolder and not searching globally
+    // Update breadcrumbs UI
+    renderBreadcrumbs();
+
+    if (!loadedFiles.length) {
+      var emptyHtml = '';
       if (window.pickerActiveFolder !== '' && query === '') {
-        html += `
-          <div class="picker-item picker-go-up" style="cursor:pointer; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="color: #777; margin-bottom: 5px;">
-              <path d="M19 12H5M12 19l-7-7 7-7"></path>
-            </svg>
-            <span style="font-size: 0.75rem; font-weight: bold; color: #777;">Go Up</span>
-          </div>
-        `;
+        emptyHtml += goUpTileHtml();
       }
-
-      filtered.forEach(function(f) {
-        var isImage = f.mime && f.mime.startsWith('image/');
-        var isDir = f.mime === 'directory';
-        var thumbnailHtml = '';
-
-        if (isDir) {
-          thumbnailHtml = `
-            <div class="picker-item-mime-icon">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-color);">
-                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
-              </svg>
-            </div>
-          `;
-        } else if (isImage) {
-          thumbnailHtml = '<img src="' + f.path + '" alt="' + escapeHtml(f.filename) + '">';
-        } else {
-          var ext = f.filename.split('.').pop() || 'file';
-          thumbnailHtml = `
-            <div class="picker-item-mime-icon" style="position: relative;">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-color);">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                <polyline points="14 2 14 8 20 8"></polyline>
-              </svg>
-              <span class="picker-item-mime-name" style="position: absolute; bottom: 12px; font-size: 0.6rem; font-weight: bold; text-transform: uppercase; background-color: var(--bg-color-inverse); color: var(--text-color-inverse); padding: 1px 4px; border-radius: 2px;">${ext}</span>
-            </div>
-          `;
-        }
-
-        html += `
-          <div class="picker-item ${isDir ? 'picker-dir-item' : 'picker-file-item'}" data-path="${f.path}" data-filename="${escapeHtml(f.filename)}" data-fid="${f.id}" data-mime="${f.mime}">
-            ${thumbnailHtml}
-            <div class="picker-item-name" title="${escapeHtml(f.filename)}">${escapeHtml(f.filename)}</div>
-          </div>
-        `;
-      });
-      grid.innerHTML = html;
-
-      // Handle folder clicks and file clicks
-      grid.querySelectorAll('.picker-item').forEach(function(item) {
-        item.onclick = function(e) {
-          e.preventDefault();
-          var path = item.getAttribute('data-path');
-          var filename = item.getAttribute('data-filename');
-          var id = item.getAttribute('data-fid');
-          var mime = item.getAttribute('data-mime');
-
-          if (mime === 'directory') {
-            // Navigate inside the folder!
-            window.pickerActiveFolder = window.pickerActiveFolder ? window.pickerActiveFolder + '/' + filename : filename;
-            searchInput.value = ''; // Reset search on navigate
-            window.loadAndRenderPickerFiles('');
-          } else if (item.classList.contains('picker-go-up')) {
-            // Handled below
-          } else {
-            // Select the file!
-            if (fileModal._onSelectCallback) {
-              fileModal._onSelectCallback({
-                path: path,
-                filename: filename,
-                id: id
-              });
-            }
-            fileModal.style.display = 'none';
-          }
-        };
-      });
-
+      emptyHtml += '<div style="grid-column: span 3; text-align: center; padding: 20px; font-weight: bold;">' +
+        (query === '' ? 'This folder is empty.' : 'No files found matching search query.') + '</div>';
+      grid.innerHTML = emptyHtml;
       setupGoUpHandler();
+      return;
+    }
+
+    var html = '';
+
+    // Add visual "Go Up" tile if we are inside a subfolder and not searching globally
+    if (window.pickerActiveFolder !== '' && query === '') {
+      html += goUpTileHtml();
+    }
+
+    loadedFiles.forEach(function(f) {
+      html += fileTileHtml(f);
+    });
+    grid.innerHTML = html;
+
+    // Handle folder clicks and file clicks
+    grid.querySelectorAll('.picker-item').forEach(function(item) {
+      item.onclick = function(e) {
+        e.preventDefault();
+        var path = item.getAttribute('data-path');
+        var filename = item.getAttribute('data-filename');
+        var id = item.getAttribute('data-fid');
+        var mime = item.getAttribute('data-mime');
+
+        if (mime === 'directory') {
+          // Navigate inside the folder!
+          window.pickerActiveFolder = window.pickerActiveFolder ? window.pickerActiveFolder + '/' + filename : filename;
+          searchInput.value = ''; // Reset search on navigate
+          window.loadAndRenderPickerFiles('');
+        } else if (item.classList.contains('picker-go-up')) {
+          // Handled below
+        } else {
+          // Select the file!
+          if (fileModal._onSelectCallback) {
+            fileModal._onSelectCallback({
+              path: path,
+              filename: filename,
+              id: id
+            });
+          }
+          fileModal.style.display = 'none';
+        }
+      };
+    });
+
+    setupGoUpHandler();
+  }
+
+  window.loadAndRenderPickerFiles = function(searchQuery) {
+    var query = (searchQuery || '').toLowerCase().trim();
+    currentQuery = query;
+    currentPage = 1;
+    grid.innerHTML = '<div style="grid-column: span 3; text-align: center; padding: 20px;">Loading media files...</div>';
+    loadMoreContainer.style.display = 'none';
+
+    fetchPickerPage(1, query).then(function(res) {
+      if (query !== currentQuery) return; // a newer request already superseded this one
+      loadedFiles = res.files || [];
+      hasMorePages = !!res.has_more;
+      renderGrid();
+      updateLoadMoreVisibility();
     }).catch(function(err) {
       grid.innerHTML = '<div style="grid-column: span 3; text-align: center; padding: 20px; color: red;">Failed to load files: ' + err.message + '</div>';
+    });
+  };
+
+  loadMoreBtn.onclick = function() {
+    if (isLoadingPage || !hasMorePages) return;
+    isLoadingPage = true;
+    updateLoadMoreVisibility();
+
+    var query = currentQuery;
+    var nextPage = currentPage + 1;
+    fetchPickerPage(nextPage, query).then(function(res) {
+      isLoadingPage = false;
+      if (query !== currentQuery) return; // folder/search changed while this page was in flight
+      currentPage = nextPage;
+      hasMorePages = !!res.has_more;
+      loadedFiles = loadedFiles.concat(res.files || []);
+      renderGrid();
+      updateLoadMoreVisibility();
+    }).catch(function() {
+      isLoadingPage = false;
+      updateLoadMoreVisibility();
     });
   };
 
@@ -381,9 +413,16 @@ function setupPickerLogic(fileModal) {
     activeFolderLabel.innerHTML = 'Uploading to: <strong>' + (window.pickerActiveFolder || 'Root') + '</strong>';
   }
 
-  // Real-time search/filter
+  // Search now hits the server (see fetchPickerPage), so debounce keystrokes instead of firing
+  // a request per character.
   searchInput.oninput = function() {
-    window.loadAndRenderPickerFiles(searchInput.value);
+    var query = searchInput.value;
+    if (searchDebounceTimer) {
+      clearTimeout(searchDebounceTimer);
+    }
+    searchDebounceTimer = setTimeout(function() {
+      window.loadAndRenderPickerFiles(query);
+    }, 300);
   };
 
   // Trigger file selection on click
@@ -457,7 +496,6 @@ function setupPickerLogic(fileModal) {
           var res = JSON.parse(xhr.responseText);
           if (res.success) {
             // Success! Refresh the list by re-fetching and clear search
-            allFiles = []; // Clear cache to force reload
             searchInput.value = ''; // Clear search
             window.loadAndRenderPickerFiles('');
           } else {

@@ -55,22 +55,36 @@ class FilesApiController extends AdminApiControllerBase
     protected function handleGetFiles($siteId)
     {
         $folder = FileManagerService::sanitizeFolderPath($_GET['folder'] ?? '');
+        $search = \trim((string)($_GET['q'] ?? ''));
 
-        // Check if pagination/infinite scroll is requested via query param page
-        if (isset($_GET['page'])) {
-            $listing = FileManagerService::listFiles($siteId, $folder, (int)$_GET['page']);
+        // Every caller (the media library grid's infinite scroll, and the block editor's media
+        // picker modal) must scope its request to a folder/page, so a growing library never comes
+        // back as one unbounded row set.
+        if (!isset($_GET['page'])) {
+            $this->respond(['success' => false, 'error' => 'Missing required "page" parameter.'], 400);
+        }
+
+        $listing = FileManagerService::listFiles($siteId, $folder, (int)$_GET['page'], 20, $search);
+
+        // The media picker modal wants raw file records to build its own selectable grid;
+        // the main media library grid wants pre-rendered card HTML for its infinite scroll.
+        if (($_GET['format'] ?? '') === 'json') {
             $this->respond([
                 'success' => true,
-                'html' => FileManagerService::renderFileCardsHtml($listing['files'], $folder),
+                'files' => $listing['files'],
                 'has_more' => $listing['hasMore'],
                 'current_page' => $listing['page'],
                 'total' => $listing['total']
             ]);
         }
 
-        // Return full JSON list (replaces old /admin/files/json)
-        $stmt = \Zero\Database\DB::query("SELECT * FROM media WHERE site_id = ? AND deleted_at IS NULL ORDER BY (mime = 'directory') DESC, created_at DESC", [$siteId]);
-        $this->respond($stmt->fetchAll(\PDO::FETCH_ASSOC));
+        $this->respond([
+            'success' => true,
+            'html' => FileManagerService::renderFileCardsHtml($listing['files'], $folder),
+            'has_more' => $listing['hasMore'],
+            'current_page' => $listing['page'],
+            'total' => $listing['total']
+        ]);
     }
 
     /**

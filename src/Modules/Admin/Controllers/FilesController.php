@@ -36,9 +36,7 @@ class FilesController implements Controller
     {
         // Route multi-action files manager requests based on URI
         $uri = \parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH);
-        if ($uri === '/admin/files/json') {
-            $this->handleJson();
-        } elseif ($uri === '/admin/files/upload') {
+        if ($uri === '/admin/files/upload') {
             $this->handleUpload();
         } elseif ($uri === '/admin/files/move') {
             $this->handleMove();
@@ -72,25 +70,6 @@ class FilesController implements Controller
 
         \http_response_code(400);
         echo "Invalid file ID or permission denied";
-        exit;
-    }
-
-    /**
-     * Handle json processing implementation helper.
-     *
-     * @return mixed Response output.
-     */
-    public function handleJson()
-    {
-        App::applyAuthMiddleware();
-        \header('Content-Type: application/json');
-        $siteId = App::getCurrentSiteId();
-
-        // Return files and directories strictly filtered by active site_id and NOT deleted!
-        $stmt = DB::query("SELECT * FROM media WHERE site_id = ? AND deleted_at IS NULL ORDER BY (mime = 'directory') DESC, created_at DESC", [$siteId]);
-        $files = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-
-        echo \json_encode($files);
         exit;
     }
 
