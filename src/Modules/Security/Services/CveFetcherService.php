@@ -87,4 +87,73 @@ class CveFetcherService
 
         return \array_slice($data['vulns'] ?? [], 0, $limit);
     }
+
+    /**
+     * Fetches advisories for several packages concurrently over a single curl_multi batch,
+     * instead of issuing sequential blocking requests that each pay the full round-trip cost.
+     * A package whose request fails or times out simply comes back with an empty result rather
+     * than aborting the whole batch.
+     *
+     * @param string[] $packages Packagist library/package coordinates.
+     * @param int $limit Max number of vulnerabilities to return per package.
+     * @return array<string, array> Map of package name to its retrieved vulnerability details.
+     */
+    public static function fetchAdvisoriesForPackages(array $packages, int $limit = 3): array
+    {
+        if (\defined('TEST_SUITE_RUNNING') && TEST_SUITE_RUNNING) {
+            $results = [];
+            foreach ($packages as $package) {
+                $results[$package] = self::fetchRecentAdvisories($package, $limit);
+            }
+
+            return $results;
+        }
+
+        $multiHandle = \curl_multi_init();
+        $handles = [];
+
+        foreach ($packages as $package) {
+            $ch = \curl_init(self::API_ENDPOINT);
+            \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            \curl_setopt($ch, CURLOPT_POST, true);
+            \curl_setopt($ch, CURLOPT_POSTFIELDS, \json_encode([
+                'package' => ['name' => $package, 'ecosystem' => 'Packagist']
+            ]));
+            \curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                'Content-Type: application/json',
+                'Accept: application/json'
+            ]);
+            \curl_setopt($ch, CURLOPT_TIMEOUT, 4);
+
+            \curl_multi_add_handle($multiHandle, $ch);
+            $handles[$package] = $ch;
+        }
+
+        $running = null;
+        do {
+            \curl_multi_exec($multiHandle, $running);
+            if ($running > 0) {
+                \curl_multi_select($multiHandle);
+            }
+        } while ($running > 0);
+
+        $results = [];
+        foreach ($handles as $package => $ch) {
+            $results[$package] = [];
+
+            if (\curl_errno($ch) === 0) {
+                $response = \curl_multi_getcontent($ch);
+                $data = $response !== false ? \json_decode($response, true) : null;
+                if (\json_last_error() === JSON_ERROR_NONE && \is_array($data)) {
+                    $results[$package] = \array_slice($data['vulns'] ?? [], 0, $limit);
+                }
+            }
+
+            \curl_multi_remove_handle($multiHandle, $ch);
+            \curl_close($ch);
+        }
+        \curl_multi_close($multiHandle);
+
+        return $results;
+    }
 }

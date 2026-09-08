@@ -75,11 +75,58 @@ class SecurityAuditController implements Controller
     }
 
     /**
+     * Reads the framework CVE list and static analysis findings from the most recently archived
+     * audit for this tenant, so a plain page view can render them without repeating the 3
+     * sequential OSV lookups and the full codebase scan on every request. Those scheduled/
+     * on-demand audit runs (see SecurityAuditJob and the "Run Audit" action) are what actually
+     * keep this archive fresh.
+     *
+     * @param string $siteId Active tenant id.
+     * @return array{framework_cves: array, static_analysis_findings: array, cached_at: ?string}
+     */
+    private function getCachedExpensiveTelemetry(string $siteId): array
+    {
+        $empty = ['framework_cves' => [], 'static_analysis_findings' => [], 'cached_at' => null];
+
+        try {
+            $row = DB::query(
+                "SELECT telemetry, created_at FROM security_audits
+                 WHERE site_id = ? AND deleted_at IS NULL
+                 ORDER BY created_at DESC LIMIT 1",
+                [$siteId]
+            )->fetch();
+        } catch (\Exception $e) {
+            return $empty;
+        }
+
+        if (!$row) {
+            return $empty;
+        }
+
+        $decoded = \json_decode($row['telemetry'], true);
+        if (!\is_array($decoded)) {
+            return $empty;
+        }
+
+        return [
+            'framework_cves' => $decoded['framework_cves'] ?? [],
+            'static_analysis_findings' => $decoded['static_analysis_findings'] ?? [],
+            'cached_at' => $row['created_at'] ?? null
+        ];
+    }
+
+    /**
      * Collect telemetry processing implementation helper.
      *
+     * @param bool $includeExpensive Whether to live-fetch the OSV CVE feeds and run the full
+     *                                codebase static scan, instead of reusing the last archived
+     *                                audit's results. Only the explicit "Run Audit" action (and
+     *                                the scheduled SecurityAuditJob) should pass true, since those
+     *                                three sequential external calls plus the full tokenizer scan
+     *                                are too heavy to repeat on every plain page view.
      * @return mixed Response output.
      */
-    private function collectTelemetry(): array
+    private function collectTelemetry(bool $includeExpensive = true): array
     {
         $telemetry = [];
 
@@ -176,22 +223,32 @@ class SecurityAuditController implements Controller
         // 8. Capture active runtime environment (defaults strictly to 'production' if not defined)
         $telemetry['environment'] = \strtolower(Env::get('ENVIRONMENT', 'production'));
 
-        // 9. Fetch recent CVEs from OSV for major framework packages
-        try {
-            $telemetry['framework_cves'] = [
-                'laravel/framework' => CveFetcherService::fetchRecentAdvisories('laravel/framework', 3),
-                'symfony/security-core' => CveFetcherService::fetchRecentAdvisories('symfony/security-core', 3),
-                'wordpress/core' => CveFetcherService::fetchRecentAdvisories('wordpress/core', 3),
-            ];
-        } catch (\Exception $e) {
-            $telemetry['framework_cves'] = [];
-        }
+        // 9 & 10. Fetch recent CVEs from OSV for major framework packages, and run the static
+        // analysis scan of the local zero-dependency codebase. Both are heavy (sequential/parallel
+        // external HTTPS calls, a full recursive tokenizing scan of every .php file) so they're
+        // only performed live for an explicit audit run; a plain page view reuses the last
+        // archived audit's results instead.
+        if ($includeExpensive) {
+            try {
+                $telemetry['framework_cves'] = CveFetcherService::fetchAdvisoriesForPackages([
+                    'laravel/framework',
+                    'symfony/security-core',
+                    'wordpress/core',
+                ], 3);
+            } catch (\Exception $e) {
+                $telemetry['framework_cves'] = [];
+            }
 
-        // 10. Perform static analysis on the local zero-dependency codebase
-        try {
-            $telemetry['static_analysis_findings'] = ExploitScanner::scanCodebase();
-        } catch (\Exception $e) {
-            $telemetry['static_analysis_findings'] = [];
+            try {
+                $telemetry['static_analysis_findings'] = ExploitScanner::scanCodebase();
+            } catch (\Exception $e) {
+                $telemetry['static_analysis_findings'] = [];
+            }
+        } else {
+            $cached = $this->getCachedExpensiveTelemetry(App::getCurrentSiteId());
+            $telemetry['framework_cves'] = $cached['framework_cves'];
+            $telemetry['static_analysis_findings'] = $cached['static_analysis_findings'];
+            $telemetry['expensive_telemetry_cached_at'] = $cached['cached_at'];
         }
 
         // 11. Inject calculated score to ensure 100% scorecard-to-report synchronization
@@ -244,8 +301,12 @@ class SecurityAuditController implements Controller
             exit();
         }
 
-        $telemetry = $this->collectTelemetry();
         $isAjax = isset($_GET['ajax']) && $_GET['ajax'] == '1';
+        // Only an explicit "Run Audit" click pays for the live OSV lookups and full codebase
+        // scan; a plain page view reuses the last archived audit's results (see
+        // getCachedExpensiveTelemetry) so opening this screen is fast regardless of external
+        // API latency.
+        $telemetry = $this->collectTelemetry($isAjax);
 
         if ($isAjax) {
             $report = $this->runAudit($telemetry);
