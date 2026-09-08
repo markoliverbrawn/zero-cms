@@ -30,7 +30,7 @@ class Router
     /**
      * Identify which active module a specific controller class belongs to based on registered namespaces or custom route mappings.
      */
-    public static function getModuleForController(string $controllerClass, string $pattern = null): ?string
+    public static function getModuleForController(string $controllerClass, ?string $pattern = null): ?string
     {
         if ($pattern !== null && isset(self::$routeModules[$pattern])) {
             return self::$routeModules[$pattern];
@@ -119,7 +119,7 @@ class Router
      * @param string|null $controllerClass The Controller class name string (only if $routes is a string pattern).
      * @param string|null $moduleName The optional Module identifier this route belongs to (e.g. 'security', 'formbuilder', 'site-search').
      */
-    public static function register($routes, string $controllerClass = null, string $moduleName = null)
+    public static function register($routes, ?string $controllerClass = null, ?string $moduleName = null)
     {
         if (\is_array($routes)) {
             self::$routes = $routes + self::$routes;
