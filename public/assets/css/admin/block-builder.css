@@ -385,11 +385,11 @@
         padding-bottom: 15px;
     }
 
-    .block-builder-title {
-        display: block;
-        margin: 0;
-        font-weight: 800;
+    label.block-builder-title {
         color: var(--text-color, #0f172a);
+        display: block;
+        font-weight: 800;
+        margin-bottom: -8px;
     }
 
     .block-builder-desc {
