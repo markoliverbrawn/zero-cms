@@ -406,9 +406,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     });
                     doc.write('<style>');
                     doc.write('body { padding: 30px; background-color: var(--bg-color, #ffffff); color: var(--text-color, #000000); font-family: sans-serif; margin: 0; box-sizing: border-box; }');
+                    doc.write('.portfolio-wrapper { padding: 0; margin: 0; }');
+                    doc.write('.portfolio-wrapper main { padding: 0; border: none; box-shadow: none; }');
                     doc.write('</style>');
                     doc.write('</head><body class="theme-' + data.theme + '">');
-                    doc.write('<div class="portfolio-wrapper" style="padding: 0; margin: 0;"><main style="padding: 0; border: none; box-shadow: none;">');
+                    doc.write('<div class="portfolio-wrapper"><main>');
                     doc.write(data.html);
                     doc.write('</main></div>');
                     
@@ -652,7 +654,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             <label class="block-child-label-desc">Item Image</label>
                             <div class="block-child-image-select-row">
                                 <input type="hidden" class="masonry-item-media_id-input" value="">
-                                <input type="text" class="masonry-item-media-display-input" value="" placeholder="No image selected" readonly style="flex: 1;">
+                                <input type="text" class="masonry-item-media-display-input flex-1" value="" placeholder="No image selected" readonly>
                                 <button type="button" class="btn-select-masonry-image">Select</button>
                             </div>
                         </div>
@@ -715,7 +717,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                     
                     <!-- Collapsible Fields Container -->
-                    <div class="block-child-fields-col grid-item-fields-container" style="width: 100%;">
+                    <div class="block-child-fields-col grid-item-fields-container">
                         <div class="field-group block-child-field-group-8">
                             <label class="block-child-label-desc">Card Title</label>
                             <input type="text" class="grid-item-title-input" value="" placeholder="Enter card title...">
@@ -724,7 +726,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             <label class="block-child-label-desc">Card Image (Optional)</label>
                             <div class="block-child-image-select-row">
                                 <input type="hidden" class="grid-item-media_id-input" value="">
-                                <input type="text" class="grid-item-media-display-input" value="" placeholder="No image selected" readonly style="flex: 1;">
+                                <input type="text" class="grid-item-media-display-input flex-1" value="" placeholder="No image selected" readonly>
                                 <button type="button" class="btn-select-grid-image">Select</button>
                             </div>
                         </div>
@@ -732,12 +734,12 @@ document.addEventListener('DOMContentLoaded', function() {
                             <label class="block-child-label-desc">Card Description</label>
                             <textarea class="grid-item-desc-input" placeholder="Enter card description..." rows="2"></textarea>
                         </div>
-                        <div class="field-group block-child-field-group-0" style="margin-top: 8px;">
+                        <div class="field-group block-child-field-group-0 mt-8">
                             <label class="block-child-label-desc">Card Click URL Link (e.g. /intro)</label>
                             <input type="text" class="grid-item-link_url-input" value="" placeholder="Enter card target URL...">
                         </div>
-                        <div class="block-flex-row" style="margin-top: 8px; display: flex; gap: 10px;">
-                            <div class="field-group block-flex-col-1" style="flex: 1;">
+                        <div class="block-flex-row mt-8">
+                            <div class="field-group block-flex-col-1">
                                 <label class="block-child-label-desc">Desktop Column Span</label>
                                 <select class="grid-item-col_span_desktop-select">
                                     <option value="1" selected>1 Column</option>
@@ -746,7 +748,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                     <option value="4">4 Columns</option>
                                 </select>
                             </div>
-                            <div class="field-group block-flex-col-1" style="flex: 1;">
+                            <div class="field-group block-flex-col-1">
                                 <label class="block-child-label-desc">Tablet Column Span</label>
                                 <select class="grid-item-col_span_tablet-select">
                                     <option value="1" selected>1 Column</option>
@@ -820,7 +822,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                     <button type="button" data-cmd="createLink">A</button>
                                     <button type="button" data-cmd="removeFormat">Clear</button>
                                 </div>
-                                <div class="editor-area block-editor-area testimonial-item-content-input" contenteditable="true" style="min-height: 100px;"></div>
+                                <div class="editor-area block-editor-area block-editor-area-100 testimonial-item-content-input" contenteditable="true"></div>
                             </div>
                         </div>
                         <div class="field-group block-child-field-group-0">
@@ -871,7 +873,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                     <button type="button" data-cmd="createLink">A</button>
                                     <button type="button" data-cmd="removeFormat">Clear</button>
                                 </div>
-                                <div class="editor-area block-editor-area accordion-item-content-input" contenteditable="true" style="min-height: 100px;"></div>
+                                <div class="editor-area block-editor-area block-editor-area-100 accordion-item-content-input" contenteditable="true"></div>
                             </div>
                         </div>
                     </div>
@@ -926,7 +928,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 row.innerHTML = `
                     <button type="button" class="btn-delete-form-field">Remove</button>
                     <div class="block-child-fields-col">
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; width: 100%;">
+                        <div class="form-field-item-grid">
                             <div class="field-group block-child-field-group-8">
                                 <label class="block-child-label-desc">Field Database Key *</label>
                                 <input type="text" class="form_field-item-name-input" value="" placeholder="e.g. first_name" required>
