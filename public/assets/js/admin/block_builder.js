@@ -150,7 +150,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                 </div>
                 <div class="block-fields-col">
-                    <button type="button" class="btn-toggle-preview-inline btn-show-preview-trigger" style="display: none; margin-bottom: 15px;">Show Live Preview</button>
+                    <button type="button" class="btn-toggle-preview-inline btn-show-preview-trigger">Show Live Preview</button>
                     <input type="hidden" class="block-id-input" value="${randomId}">
                     ${fieldsHtml}
                 </div>

@@ -55,7 +55,7 @@ foreach (App::getRegisteredBlocks() as $type => $config) {
 <div class="block-builder-container">
     <div class="block-builder-header">
         <div>
-            <label style="display: block; font-weight: bold; margin: 0; font-size: 1rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-color, #0f172a);"><?php echo Str::escape($fieldConfig['label'] ?? 'Content'); ?></label>
+            <label class="block-builder-title"><?php echo Str::escape($fieldConfig['label'] ?? 'Content'); ?></label>
         </div>
         <button type="button" class="btn-toggle-preview-inline" id="btn-toggle-inserter">
             <span class="icon-svg icon-svg-14">
@@ -176,7 +176,7 @@ foreach (App::getRegisteredBlocks() as $type => $config) {
                         </div>
                     </div>
                     <div class="block-fields-col">
-                        <button type="button" class="btn-toggle-preview-inline btn-show-preview-trigger" style="display: none; margin-bottom: 15px;">Show Live Preview</button>
+                        <button type="button" class="btn-toggle-preview-inline btn-show-preview-trigger">Show Live Preview</button>
                         <input type="hidden" class="block-id-input" value="<?php echo Str::escape($randomId); ?>">
                         
                         <?php

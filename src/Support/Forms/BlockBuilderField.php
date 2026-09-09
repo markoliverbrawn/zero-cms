@@ -15,7 +15,6 @@ declare(strict_types=1);
 namespace Zero\Support\Forms;
 
 use Zero\Core\Template;
-use Zero\Support\Str;
 
 /**
  * Class BlockBuilderField
@@ -48,12 +47,12 @@ class BlockBuilderField extends AbstractFormField
      */
     public function render(): string
     {
-        $labelHtml = $this->showLabel ? '<label>' . Str::escape($this->label) . '</label>' : '';
-        return $labelHtml . Template::renderFile($this->getTemplatePath(), [
+        return Template::renderFile($this->getTemplatePath(), [
             'record' => $this->config['record'] ?? null,
             'modelName' => $this->config['modelName'] ?? null,
             'blockBuilderField' => $this->name,
             'csrf' => $this->config['csrf'] ?? '',
+            'fieldConfig' => ['label' => $this->label],
         ]);
     }
 }

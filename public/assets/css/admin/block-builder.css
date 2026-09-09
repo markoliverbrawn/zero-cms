@@ -362,6 +362,11 @@
     }
 }
 
+.btn-show-preview-trigger {
+    display: none;
+    margin-bottom: 15px;
+}
+
 /* Block Builder Admin Custom Containers and Layouts */
 .block-builder-container {
     background-color: transparent;
@@ -381,12 +386,10 @@
     }
 
     .block-builder-title {
+        display: block;
         margin: 0;
-        font-size: 1.25rem;
         font-weight: 800;
         color: var(--text-color, #0f172a);
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
     }
 
     .block-builder-desc {
