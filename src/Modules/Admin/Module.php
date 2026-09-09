@@ -122,6 +122,7 @@ class Module implements ModuleInterface
             // src/Modules/Admin/Controllers/Api/ and FileManagerService for the shared
             // file-manager logic also used by the traditional /admin/files/* routes above)
             '#^/api/v1/admin/files/?$#' => Controllers\Api\FilesApiController::class,
+            '#^/api/v1/admin/media/variant-cache/?$#' => Controllers\Api\VariantCacheApiController::class,
             '#^/api/v1/admin/models/([a-zA-Z0-9_-]+)/?$#' => Controllers\Api\ModelApiController::class,
             '#^/api/v1/admin/models/([a-zA-Z0-9_-]+)/reorder/?$#' => Controllers\Api\ModelApiController::class,
             '#^/api/v1/admin/models/([a-zA-Z0-9_-]+)/([a-zA-Z0-9\-]+)/cascade-check$#' => Controllers\Api\ModelApiController::class,
@@ -144,6 +145,11 @@ class Module implements ModuleInterface
      */
     public function init()
     {
+        // Owns the "clear image variant cache" action surfaced on the Media Library toolbar --
+        // granted to 'admin' since it only ever touches the active tenant's own derived cache,
+        // never another site's.
+        App::registerPermission('media.maintenance', ['admin']);
+
         App::registerModuleSettings('admin', [
             'password_reset_expiry_minutes' => [
                 'type' => 'number',

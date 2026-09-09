@@ -89,6 +89,62 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // Manage Cache: report current variant cache usage, then confirm before clearing it
+    var manageCacheBtn = document.getElementById('manage-cache-btn');
+    if (manageCacheBtn) {
+        manageCacheBtn.addEventListener('click', function() {
+            var csrfInput = document.querySelector('input[name="csrf"]');
+            var csrfToken = csrfInput ? csrfInput.value : '';
+
+            function showNotice(title, message) {
+                window.adminConfirm({
+                    title: title,
+                    message: message,
+                    confirmText: 'OK',
+                    confirmClass: 'btn-confirm-primary'
+                });
+            }
+
+            fetch('/api/v1/admin/media/variant-cache', {
+                headers: { 'X-CSRF-Token': csrfToken },
+                credentials: 'same-origin'
+            })
+                .then(function(res) { return res.json(); })
+                .then(function(stats) {
+                    if (!stats.success) {
+                        throw new Error(stats.error || 'Failed to load image cache usage.');
+                    }
+
+                    return window.adminConfirm({
+                        title: 'Manage Image Cache',
+                        message: 'This site has ' + stats.count + ' cached image variant(s) using ' + stats.bytesFormatted + ' of storage.',
+                        details: 'Clearing is safe: each image is simply re-rendered from the original the next time it is viewed.',
+                        confirmText: 'Clear Cache',
+                        confirmClass: 'btn-danger'
+                    });
+                })
+                .then(function(confirmed) {
+                    if (!confirmed) return;
+
+                    return fetch('/api/v1/admin/media/variant-cache', {
+                        method: 'DELETE',
+                        headers: { 'X-CSRF-Token': csrfToken },
+                        credentials: 'same-origin'
+                    })
+                        .then(function(res) { return res.json(); })
+                        .then(function(result) {
+                            if (!result.success) {
+                                throw new Error('Failed to clear the image cache.');
+                            }
+                            showNotice('Image Cache Cleared', 'Cleared ' + result.deleted + ' cached file(s).');
+                        });
+                })
+                .catch(function(err) {
+                    showNotice('Error', err.message);
+                });
+        });
+    }
+
     // Modern file upload area interactions
     var zone = document.getElementById('media-drag-drop-zone');
     var fileInput = document.getElementById('media-file-input');

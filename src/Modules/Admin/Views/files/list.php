@@ -15,6 +15,9 @@ $currentFolder = $folder ?? '';
     <div style="display: flex; gap: 10px; flex: 1; max-width: 500px; min-width: 250px;">
       <input type="text" id="files-search-input" placeholder="Search files by name..." style="padding: 8px 12px; width: 100%; border: 1px solid color-mix(in srgb, var(--bg-color-inverse) 20%, var(--bg-color) 80%);">
       <button type="button" id="create-folder-btn" style="white-space: nowrap; font-weight: bold; width: auto; padding: 8px 16px;">+ Create Folder</button>
+      <?php if (App::authorize('media.maintenance')): ?>
+        <button type="button" id="manage-cache-btn" style="white-space: nowrap; font-weight: bold; width: auto; padding: 8px 16px;">Manage Cache</button>
+      <?php endif; ?>
     </div>
   </div>
 
