@@ -23,6 +23,7 @@ use Zero\Core\Concerns\HandlesRequests;
 use Zero\Core\Concerns\HasUtilityHelpers;
 use Zero\Core\Concerns\ManagesAdminSidebar;
 use Zero\Core\Concerns\ManagesBlocksAndModels;
+use Zero\Core\Concerns\ManagesContentSecurityPolicy;
 use Zero\Core\Concerns\ManagesCurrentContext;
 use Zero\Core\Concerns\ManagesFormFields;
 use Zero\Core\Concerns\ManagesModelColumnRenderers;
@@ -52,6 +53,7 @@ class App
     use ManagesThemes;
     use ManagesAdminSidebar;
     use ManagesBlocksAndModels;
+    use ManagesContentSecurityPolicy;
     use ManagesFormFields;
     use ManagesModelColumnRenderers;
     use ManagesModelListActions;
