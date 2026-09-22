@@ -260,7 +260,7 @@ a {
     }
 }
 
-input, select {
+input, select, textarea {
     display: inline-block;
     width: 100%;
 }
