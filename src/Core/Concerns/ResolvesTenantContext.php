@@ -125,9 +125,6 @@ trait ResolvesTenantContext
      */
     protected static function bootstrapInitialize(): void
     {
-        // Enforce Content Security Policy and standard security response headers platform-wide
-        self::applyContentSecurityPolicyMiddleware();
-
         // Register core models dynamically in the core on bootstrap!
         self::registerModel('audit_logs', AuditLog::class);
         self::registerModel('files', Media::class);
@@ -143,8 +140,13 @@ trait ResolvesTenantContext
         // Populate standard core dashboard, content, and security sidebar items
         self::initializeDefaultSidebar();
 
-        // Auto-discover and register all modular capabilities on bootstrap!
+        // Auto-discover and register all modular capabilities on bootstrap! Must run before
+        // applyContentSecurityPolicyMiddleware() below, since a module's init() may call
+        // App::registerCspSource() and the CSP header is built and sent immediately.
         self::discoverAndRegisterModules();
+
+        // Enforce Content Security Policy and standard security response headers platform-wide
+        self::applyContentSecurityPolicyMiddleware();
 
         self::ensureSession();
     }
