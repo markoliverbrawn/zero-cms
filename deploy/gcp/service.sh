@@ -55,14 +55,18 @@ APP_ENV_VARS+="${EXTRA_ENV_VARS:+,$EXTRA_ENV_VARS}"
 # BUILD-CONTEXT FILES (copied into the project root for the build, removed on exit)
 # ------------------------------------------------------------------------------
 # The image files are provider-neutral; .gcloudignore only matters to remote Cloud Build. A project
-# can add its own .dockerignore rules in .deploy/dockerignore; they're appended to the shared ones.
+# can add its own rules in .deploy/dockerignore (what the image leaves out) and .deploy/gcloudignore
+# (what a remote build doesn't upload); each is appended to the shared file of the same name.
 BUILD_FILES=(
     "$DEPLOY_TOOLKIT_DIR/image/Dockerfile:Dockerfile"
     "$DEPLOY_TOOLKIT_DIR/image/.dockerignore:.dockerignore"
     "$DEPLOY_TOOLKIT_DIR/image/entrypoint.sh:entrypoint.sh"
     "$GCP_TOOLKIT_DIR/.gcloudignore:.gcloudignore"
 )
-PROJECT_DOCKERIGNORE="$PROJECT_ROOT/.deploy/dockerignore"
+PROJECT_IGNORE_FILES=(
+    "$PROJECT_ROOT/.deploy/dockerignore:.dockerignore"
+    "$PROJECT_ROOT/.deploy/gcloudignore:.gcloudignore"
+)
 COPIED_BUILD_FILES=()
 
 cleanup_build_files() {
@@ -92,10 +96,14 @@ for entry in "${BUILD_FILES[@]}"; do
     cp "$src" "$dest"
     COPIED_BUILD_FILES+=("$dest")
 done
-if [ -f "$PROJECT_DOCKERIGNORE" ]; then
-    log_info "Appending project-specific ignore rules from $PROJECT_DOCKERIGNORE..."
-    { echo; echo "# --- from $PROJECT_DOCKERIGNORE"; cat "$PROJECT_DOCKERIGNORE"; } >> .dockerignore
-fi
+for entry in "${PROJECT_IGNORE_FILES[@]}"; do
+    src="${entry%%:*}"
+    dest="${entry##*:}"
+    if [ -f "$src" ]; then
+        log_info "Appending project-specific ignore rules from $src to $dest..."
+        { echo; echo "# --- from $src"; cat "$src"; } >> "$dest"
+    fi
+done
 
 if [ "$USE_LOCAL_DOCKER" = true ]; then
     log_info "----------------------------------------------------------------"

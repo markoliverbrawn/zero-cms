@@ -155,7 +155,8 @@ A host project (for example zero-mobsites) MUST NOT edit shared toolkit files. I
   `KEY=value` lines, committed. Environment variables override it;
 - extra environment variables for its own code, passed through the `EXTRA_ENV_VARS` hook
   (comma-separated `KEY=value` pairs);
-- extra image-build exclusions in `.deploy/dockerignore`, appended to the shared rules;
+- extra exclusions in `.deploy/dockerignore` (left out of the image) and, for toolkits that upload
+  a build context, `.deploy/gcloudignore` (not uploaded), each appended to the shared rules;
 - extra scripts alongside the toolkit, never patched into it.
 
 It MUST also provide what the image and jobs expect from Core: `public/index.php` at the project

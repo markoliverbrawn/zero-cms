@@ -412,9 +412,9 @@ composer install                                          # the image is built w
 ```
 
 Project-specific values go in the host project's own `.deploy/` folder: `gcp.env` for settings
-(names, region, domains; committed), `dockerignore` for extra image-build exclusions, and the
-generated `gcp.secrets.env` (gitignore it). Env vars its own code reads at runtime go in
-`EXTRA_ENV_VARS`. The host project must also provide `bin/migrate` and `bin/seed` at its root (not
+(names, region, domains; committed), `dockerignore` and `gcloudignore` for extra files to leave out
+of the image and of remote-build uploads, and the generated `gcp.secrets.env` (gitignore it). Env
+vars its own code reads at runtime go in `EXTRA_ENV_VARS`. The host project must also provide `bin/migrate` and `bin/seed` at its root (not
 scaffolded by `bin/create-project` — mirror Core's `bin/seed` `APPLICATION_ROOT`/`APP_ROOT` split);
 `service.sh` checks for both before deploying. See `deploy/CONTRACT.md`, section 6.
 
