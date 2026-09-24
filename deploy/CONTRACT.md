@@ -132,7 +132,7 @@ These run the same image with a different command and the same environment as th
 | Job     | Command        | When                                                                |
 |---------|----------------|---------------------------------------------------------------------|
 | Migrate | `php bin/migrate` | Every deploy, before traffic moves to the new version. Only applies migrations that haven't run yet |
-| Seed    | `php bin/seed` | Only on request. `SEED_SITES` limits which sites it touches (`SeederRunner`). The admin account's password comes from `ADMIN_PASS` (legacy name `ADMIN_PASSWORD` is also accepted) and its email from `ADMIN_EMAIL`, re-applied on every seed run (`src/Support/Seeder.php`) |
+| Seed    | `php bin/seed` | Only on request. `SEED_SITES` limits which sites it touches (`SeederRunner`). The seeded `admin` account is renamed to `ADMIN_USER` if set, its password comes from `ADMIN_PASS` (legacy name `ADMIN_PASSWORD` is also accepted) and its email from `ADMIN_EMAIL`, re-applied on every seed run (`src/Support/Seeder.php`) |
 
 ## 6. Project extensions
 
@@ -144,7 +144,5 @@ A host project (for example zero-mobsites) MUST NOT edit shared toolkit files. I
 
 ## Known gaps in the current GCP toolkit
 
-- **`ADMIN_USER` does nothing.** The toolkit passes it to the jobs, but nothing in `src/` or
-  `bin/` reads it. The admin username is always `admin`, from the seed data.
 - **No proxy headers on triggers.** Core's `cloud_scheduler_setup.sh` doesn't send the §4.1
   headers or set the §4 scheduler deadline. zero-mobsites' copy does both.

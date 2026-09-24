@@ -123,8 +123,9 @@ assert_test($siteCount === 1, "The targeted default site was successfully seeded
 echo "  Testing ADMIN_PASSWORD custom override post-run seeder hook...\n";
 
 // Run the seeder with a custom admin password env variable. ADMIN_PASS is blanked explicitly so a
-// local .env that sets it (it takes precedence, see test 7) can't mask the legacy name.
-$output = run_seeder_test_proc('--sites=default', ['ADMIN_PASS' => '', 'ADMIN_PASSWORD' => 'CustomTestAdminPassword555']);
+// local .env that sets it (it takes precedence, see test 7) can't mask the legacy name, and
+// ADMIN_USER so a local .env can't rename the account these assertions look up (see test 8).
+$output = run_seeder_test_proc('--sites=default', ['ADMIN_USER' => '', 'ADMIN_PASS' => '', 'ADMIN_PASSWORD' => 'CustomTestAdminPassword555']);
 
 assert_test(strpos($output, "Applying custom ADMIN_PASSWORD override from .env") !== false, "Seeder log correctly reported ADMIN_PASSWORD override being applied");
 assert_test(strpos($output, "[Seeder-Hook] Successfully updated administrator account passwords to ADMIN_PASSWORD from .env") !== false, "Seeder-Hook success message was outputted");
@@ -139,7 +140,7 @@ assert_test(password_verify('CustomTestAdminPassword555', $adminHash) === true, 
 // is applied by the same hook, and wins over the legacy ADMIN_PASSWORD when both are set.
 echo "  Testing ADMIN_PASS override and its precedence over ADMIN_PASSWORD...\n";
 
-$output = run_seeder_test_proc('--sites=default', ['ADMIN_PASS' => 'CustomTestAdminPass777']);
+$output = run_seeder_test_proc('--sites=default', ['ADMIN_USER' => '', 'ADMIN_PASS' => 'CustomTestAdminPass777']);
 
 assert_test(strpos($output, "Applying custom ADMIN_PASSWORD override from .env") !== false, "Seeder log reported the override being applied from ADMIN_PASS");
 
@@ -147,12 +148,39 @@ $adminHash = DB::query("SELECT password_hash FROM users WHERE username = 'admin'
 assert_test(password_verify('CustomTestAdminPass777', $adminHash) === true, "Admin user password hash matches ADMIN_PASS");
 
 $output = run_seeder_test_proc('--sites=default', [
+    'ADMIN_USER' => '',
     'ADMIN_PASS' => 'CustomTestAdminPass888',
     'ADMIN_PASSWORD' => 'CustomTestAdminPassword999',
 ]);
 
 $adminHash = DB::query("SELECT password_hash FROM users WHERE username = 'admin'")->fetchColumn();
 assert_test(password_verify('CustomTestAdminPass888', $adminHash) === true, "ADMIN_PASS takes precedence over ADMIN_PASSWORD when both are set");
+
+
+// 8. Test ADMIN_USER renames the seeded admin account, and the password/email overrides still land
+// on the renamed account.
+echo "  Testing ADMIN_USER admin account rename...\n";
+
+$output = run_seeder_test_proc('--sites=default', [
+    'ADMIN_USER' => 'opsadmin',
+    'ADMIN_PASS' => 'CustomTestAdminPass999',
+    'ADMIN_EMAIL' => 'ops@example.com',
+]);
+
+assert_test(strpos($output, "Successfully renamed administrator account to ADMIN_USER") !== false, "Seeder log reported the ADMIN_USER rename");
+$renamed = DB::query("SELECT password_hash, email, role FROM users WHERE username = 'opsadmin'")->fetch(\PDO::FETCH_ASSOC);
+assert_test(!empty($renamed), "Admin account is named ADMIN_USER after seeding");
+assert_test($renamed['role'] === 'super_admin', "Renamed account keeps the super_admin role");
+assert_test(password_verify('CustomTestAdminPass999', $renamed['password_hash']) === true, "ADMIN_PASS applies to the renamed account");
+assert_test($renamed['email'] === 'ops@example.com', "ADMIN_EMAIL applies to the renamed account");
+$defaultCount = (int) DB::query("SELECT COUNT(*) FROM users WHERE username = 'admin'")->fetchColumn();
+assert_test($defaultCount === 0, "No account is left named admin");
+
+// A name containing whitespace is rejected and the account keeps its seeded name.
+$output = run_seeder_test_proc('--sites=default', ['ADMIN_USER' => 'ops admin', 'ADMIN_PASS' => '']);
+assert_test(strpos($output, "Ignoring ADMIN_USER override") !== false, "Seeder log reported the invalid ADMIN_USER being ignored");
+$defaultCount = (int) DB::query("SELECT COUNT(*) FROM users WHERE username = 'admin'")->fetchColumn();
+assert_test($defaultCount === 1, "Seeded admin account keeps its name when ADMIN_USER is invalid");
 
 
 // Remove the throwaway storage root the seeded runs wrote into.

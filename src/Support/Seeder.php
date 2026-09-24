@@ -282,6 +282,40 @@ class Seeder
                 }
             }
         });
+
+        // 9. Post-Run Hook: Admin Username Override from .env. Renames the seeded default account
+        // ('admin'), so it runs after the password/email hooks above, which find that account by
+        // role as well as by name. Usernames are globally unique, so an existing user with the
+        // target name is left alone rather than overwritten.
+        self::registerPostRunHook(function () {
+            $adminUser = \trim((string)Env::get('ADMIN_USER', ''));
+            if ($adminUser === '' || $adminUser === 'admin') {
+                return;
+            }
+            if (\strlen($adminUser) > 255 || \preg_match('/\s/', $adminUser)) {
+                echo "      [Seeder-Hook-Warning] Ignoring ADMIN_USER override: it must be at most 255 characters with no whitespace.\n";
+                return;
+            }
+            echo "Applying custom ADMIN_USER override from .env...\n";
+            try {
+                $defaultExists = (bool)DB::query("SELECT 1 FROM users WHERE username = 'admin' AND deleted_at IS NULL")->fetchColumn();
+                $targetExists = (bool)DB::query("SELECT 1 FROM users WHERE username = ?", [$adminUser])->fetchColumn();
+                if ($targetExists) {
+                    echo $defaultExists
+                        ? "      [Seeder-Hook-Warning] Not renaming 'admin': another user is already named '{$adminUser}'.\n"
+                        : "      [Seeder-Hook] Administrator account is already named '{$adminUser}'.\n";
+                    return;
+                }
+                if (!$defaultExists) {
+                    echo "      [Seeder-Hook-Warning] No 'admin' account found to rename to ADMIN_USER.\n";
+                    return;
+                }
+                DB::query("UPDATE users SET username = ? WHERE username = 'admin' AND deleted_at IS NULL", [$adminUser]);
+                echo "      [Seeder-Hook] Successfully renamed administrator account to ADMIN_USER from .env!\n";
+            } catch (\Exception $e) {
+                echo "      [Seeder-Hook-Warning] Failed to apply ADMIN_USER override: " . $e->getMessage() . "\n";
+            }
+        });
     }
 
     /**
