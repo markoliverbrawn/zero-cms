@@ -68,4 +68,33 @@ assert_test($cached === $mockRecord, "getIdentity correctly retrieves the cached
 DB::setIdentity('pages', 'non-existent-id', false);
 assert_test(DB::getIdentity('pages', 'non-existent-id') === false, "getIdentity correctly supports negative caching (storing false for missing entries)");
 
+// 5. Test DB_SSL_CA TLS options (managed hosts such as Aiven)
+echo "Testing DB_SSL_CA TLS connection options...\n";
+$sslMethod = new ReflectionMethod(DB::class, 'getSslOptions');
+$originalCa = getenv('DB_SSL_CA');
+
+putenv('DB_SSL_CA=');
+assert_test($sslMethod->invoke(null) === [], "getSslOptions returns no TLS options when DB_SSL_CA is unset");
+
+$caFile = tempnam(sys_get_temp_dir(), 'zero_ca_');
+file_put_contents($caFile, "-----BEGIN CERTIFICATE-----\n-----END CERTIFICATE-----\n");
+putenv("DB_SSL_CA={$caFile}");
+$sslOptions = $sslMethod->invoke(null);
+$caAttr = class_exists('Pdo\Mysql') ? constant('Pdo\Mysql::ATTR_SSL_CA') : PDO::MYSQL_ATTR_SSL_CA;
+$verifyAttr = class_exists('Pdo\Mysql') ? constant('Pdo\Mysql::ATTR_SSL_VERIFY_SERVER_CERT') : PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT;
+assert_test(($sslOptions[$caAttr] ?? null) === $caFile, "getSslOptions passes the DB_SSL_CA path as the PDO SSL CA option");
+assert_test(($sslOptions[$verifyAttr] ?? null) === true, "getSslOptions enforces server certificate verification");
+unlink($caFile);
+
+putenv('DB_SSL_CA=/nonexistent/zero-ca.pem');
+$threw = false;
+try {
+    $sslMethod->invoke(null);
+} catch (PDOException $e) {
+    $threw = strpos($e->getMessage(), 'DB_SSL_CA') !== false;
+}
+assert_test($threw, "getSslOptions throws a clear PDOException when the DB_SSL_CA file is unreadable");
+
+putenv($originalCa === false ? 'DB_SSL_CA' : "DB_SSL_CA={$originalCa}");
+
 echo "DB component tests completed.\n\n";

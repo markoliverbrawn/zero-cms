@@ -105,7 +105,7 @@ class DB
             $pdo = new PDO($dsn, $user, $pass, [
                 PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-            ]);
+            ] + self::getSslOptions());
             self::$pdo = $pdo;
             return $pdo;
         } catch (PDOException $e) {
@@ -140,6 +140,33 @@ class DB
     public static function getQueryLog(): array
     {
         return self::$queryLog;
+    }
+
+    /**
+     * Build the PDO TLS options for managed MySQL hosts that require verified SSL (e.g. Aiven).
+     * Enabled by pointing DB_SSL_CA at the provider's CA certificate file; empty when unset.
+     *
+     * @return array PDO driver options enabling CA-verified TLS, or an empty array.
+     * @throws PDOException If DB_SSL_CA is set but the certificate file cannot be read.
+     */
+    protected static function getSslOptions(): array
+    {
+        $ca = Env::get('DB_SSL_CA', '');
+        if (!$ca) {
+            return [];
+        }
+
+        if (!\is_readable($ca)) {
+            throw new PDOException("DB_SSL_CA certificate file is not readable: {$ca}");
+        }
+
+        // PHP 8.4+ moved the MySQL driver constants to Pdo\Mysql and 8.5 deprecates the PDO:: aliases
+        $hasDriverClass = \class_exists('Pdo\Mysql');
+
+        return [
+            $hasDriverClass ? \constant('Pdo\Mysql::ATTR_SSL_CA') : PDO::MYSQL_ATTR_SSL_CA => $ca,
+            $hasDriverClass ? \constant('Pdo\Mysql::ATTR_SSL_VERIFY_SERVER_CERT') : PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => true,
+        ];
     }
 
     /**
@@ -202,7 +229,7 @@ class DB
         try {
             $rawPdo = new PDO($rawDsn, $user, $pass, [
                 PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
-            ]);
+            ] + self::getSslOptions());
             $rawPdo->exec("CREATE DATABASE IF NOT EXISTS `" . \str_replace("`", "``", $testDb) . "`");
         } catch (PDOException $e) {
             echo "Fatal Error ensuring test database exists: " . $e->getMessage() . "\n";
@@ -218,7 +245,7 @@ class DB
             $pdo = new PDO($dsn, $user, $pass, [
                 PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-            ]);
+            ] + self::getSslOptions());
 
             // Rapid truncate to guarantee 100% clean test isolation on every run
             $pdo->exec("SET FOREIGN_KEY_CHECKS = 0;");
