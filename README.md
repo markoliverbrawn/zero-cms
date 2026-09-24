@@ -10,9 +10,11 @@
   "Zero Dependencies. Zero Bloat. Absolute Structural Integrity."
 ```
 
+**Official website: [zerocms.org](https://zerocms.org)**
+
 ## Introduction & Purist Manifesto
 
-**Zero CMS** is a zero-dependency, ultra-high-performance, multi-tenant content management system and transactional e-commerce platform. In an era dominated by bloated, nested package-manager architectures and vulnerable dependency spiders, Zero CMS takes a radical return to fundamental software engineering principles:
+**[Zero CMS](https://zerocms.org)** is a zero-dependency, ultra-high-performance, multi-tenant content management system and transactional e-commerce platform. In an era dominated by bloated, nested package-manager architectures and vulnerable dependency spiders, Zero CMS takes a radical return to fundamental software engineering principles:
 
 * **Zero Third-Party Runtime Dependencies:** No NodeJS, no npm, no Tailwind, no third-party framework wrappers, no `vendor/autoload.php` in the request path — everything runs on bare-metal native PHP and raw SQL. Composer is used solely as a versioned install/update mechanism for embedding Core into a host project (see `bin/create-project`), never as a runtime dependency manager.
 * **Instantaneous execution (Sub-1ms):** Bypasses all middleware boot latency and array-scanning dispatchers.
@@ -403,3 +405,9 @@ runtime fallback, and an `entrypoint.sh` whitelist extended with any of the host
 env vars that are read at request time (anything read via `Env::get()` outside a CLI job needs to
 be in that whitelist, or it silently never reaches the app despite being set on the Cloud Run
 resource).
+
+---
+
+## 8. Further Resources
+
+* **Official website:** [zerocms.org](https://zerocms.org)
