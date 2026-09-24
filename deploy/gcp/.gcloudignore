@@ -1,36 +1,40 @@
 # ==============================================================================
-# ZERO CMS - GCLOUD IGNORE RULESET (OPTIMIZED)
+# ZERO CMS - GCLOUD IGNORE RULESET
+# ==============================================================================
+# Only used for remote builds (USE_LOCAL_DOCKER=false): controls what
+# `gcloud builds submit` uploads as the build source. service.sh copies this
+# file, the Dockerfile and the .dockerignore into the project root first.
+#
+# Dockerfile and .dockerignore must NOT be listed here: `gcloud builds submit
+# --tag` finds the Dockerfile in the uploaded source (no --config is passed),
+# and the remote `docker build` needs .dockerignore in that same upload to
+# filter its COPY context the way a local build does. Excluding them breaks
+# remote builds. (Found by zero-mobsites' first CI deploy.)
 # ==============================================================================
 
 # Git files
 .git/
 .gitignore
 
-# Gcloud and Docker configs
+# This file itself, and the deployment toolkits and local dev stack
 .gcloudignore
-.dockerignore
-Dockerfile
-setup.sh
+deploy/
+deployments/
+docker/
 docker-compose.yml
 
-# Local configurations and backups (.deploy/ holds the persisted deployment secrets)
+# Local configurations, credentials and backups (.deploy/ holds the persisted deployment secrets)
 .env
-.deploy/
 .env.bak
+.env.backup
 *.bak
-lofty-chemist-*.json
-
-# Aggressive exclusions of huge development seed media files (47+ MB)
-seeders/data/generated-images/
-seeders/data/videos/
-
-# Ignore development seed images but preserve the lightweight corporate screenshot-main.svg
-seeders/data/images/*
-!seeders/data/images/screenshot-main.svg
+.deploy/
+*.pem
+*-key.json
+service-account*.json
 
 # Exclude zip archives and distribution packages
 **/*.zip
-public/storage/uploads/
 
 # Keep system stateless and lightweight
 storage/
@@ -40,4 +44,6 @@ public/storage/
 _archive/
 .vscode/
 .github/
+.agents/
+.claude/
 tests/

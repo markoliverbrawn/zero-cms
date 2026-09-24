@@ -13,11 +13,20 @@ docker-compose.yml
 
 # Secrets that must never be baked into an image layer. Runtime credentials are injected by
 # the platform at runtime (e.g. --set-env-vars in deploy/gcp/service.sh), not from these files.
-zerocms-local-key.json
-.deploy
+# .env is the developer's local one; the container writes its own at boot (entrypoint.sh).
+.env
 .env.backup
 .env.bak
 *.bak
+.deploy
+zerocms-local-key.json
+*.pem
+*-key.json
+service-account*.json
+
+# Deployment toolkits -- not read by the running app.
+deploy
+deployments
 
 # Dev-only runtime artifacts under storage/ -- regenerated at runtime, gitignored, and large
 # (logs alone routinely exceeds 50MB on a local checkout).

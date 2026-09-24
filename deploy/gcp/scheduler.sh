@@ -31,10 +31,32 @@ log_success "Resolved Cloud Run Service endpoint: $SERVICE_URL"
 # config.sh above -- service.sh already pushed both into the Cloud Run service's env vars as
 # part of the initial deploy, so this script only needs to build URLs from the same values.
 
+# 2b. Tenant resolution for trigger calls (deploy/CONTRACT.md, section 4.1). The app resolves the
+# tenant by exact match of the request host against `sites.domain` before any route runs. Calls to
+# the *.run.app URL match only while the seeded default site's domain is still that host (the seed
+# job sets it from BASE_URL). Once it moves to a real domain, set SCHEDULER_TARGET_DOMAIN to any real
+# `sites.domain`: the triggers then send it as X-Forwarded-Host with the matching X-Proxy-Secret,
+# which Security::resolveTrustedHost() trusts. The queue is global -- QueueManager processes every
+# tenant's pending jobs whichever site resolved -- so one domain unblocks all tenants.
+SCHEDULER_HEADER_ARGS_CREATE=()
+SCHEDULER_HEADER_ARGS_UPDATE=()
+if [ -n "$SCHEDULER_TARGET_DOMAIN" ]; then
+    SCHEDULER_HEADERS="X-Forwarded-Host=${SCHEDULER_TARGET_DOMAIN},X-Proxy-Secret=${TRUSTED_PROXY_SECRET}"
+    SCHEDULER_HEADER_ARGS_CREATE=(--headers="$SCHEDULER_HEADERS")
+    SCHEDULER_HEADER_ARGS_UPDATE=(--update-headers="$SCHEDULER_HEADERS")
+    log_info "Triggers will present X-Forwarded-Host: $SCHEDULER_TARGET_DOMAIN"
+fi
+
 # 3. Provision Cloud Scheduler Job
 SCHEDULER_JOB_NAME="$DEPLOYMENT_NAME-queue-scheduler"
 SCHEDULER_SCHEDULE="*/5 * * * *" # Every 5 minutes
 SCHEDULER_URI="${SERVICE_URL}/api/v1/queue/process?token=${QUEUE_TRIGGER_TOKEN}"
+# The queue endpoint drains pending jobs for up to 800s per call (QueueManager::runPendingJobs()).
+# Cloud Scheduler's default --attempt-deadline is 180s, and it cancels the request server-side when
+# the deadline passes -- cutting off the job in progress. Set it above the 800s budget (headroom for
+# the last job and the JSON response) but below the service's --timeout=900 (service.sh), so Cloud
+# Run doesn't kill the request first.
+SCHEDULER_ATTEMPT_DEADLINE="820s"
 
 log_info "Checking if Cloud Scheduler Job ($SCHEDULER_JOB_NAME) already exists..."
 if gcloud scheduler jobs describe "$SCHEDULER_JOB_NAME" --location="$GCP_REGION" &>/dev/null; then
@@ -43,6 +65,8 @@ if gcloud scheduler jobs describe "$SCHEDULER_JOB_NAME" --location="$GCP_REGION"
         --location="$GCP_REGION" \
         --schedule="$SCHEDULER_SCHEDULE" \
         --uri="$SCHEDULER_URI" \
+        "${SCHEDULER_HEADER_ARGS_UPDATE[@]}" \
+        --attempt-deadline="$SCHEDULER_ATTEMPT_DEADLINE" \
         --http-method="POST" \
         --time-zone="UTC" \
         --quiet
@@ -53,6 +77,8 @@ else
         --location="$GCP_REGION" \
         --schedule="$SCHEDULER_SCHEDULE" \
         --uri="$SCHEDULER_URI" \
+        "${SCHEDULER_HEADER_ARGS_CREATE[@]}" \
+        --attempt-deadline="$SCHEDULER_ATTEMPT_DEADLINE" \
         --http-method="POST" \
         --time-zone="UTC" \
         --quiet
@@ -75,6 +101,7 @@ if gcloud scheduler jobs describe "$SCHEDULER2_JOB_NAME" --location="$GCP_REGION
         --location="$GCP_REGION" \
         --schedule="$SCHEDULER2_SCHEDULE" \
         --uri="$SCHEDULER2_URI" \
+        "${SCHEDULER_HEADER_ARGS_UPDATE[@]}" \
         --http-method="POST" \
         --time-zone="UTC" \
         --quiet
@@ -85,6 +112,7 @@ else
         --location="$GCP_REGION" \
         --schedule="$SCHEDULER2_SCHEDULE" \
         --uri="$SCHEDULER2_URI" \
+        "${SCHEDULER_HEADER_ARGS_CREATE[@]}" \
         --http-method="POST" \
         --time-zone="UTC" \
         --quiet

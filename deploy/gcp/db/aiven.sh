@@ -56,9 +56,10 @@ if [[ ! "$AIVEN_DB_PASS" =~ ^[a-zA-Z0-9_.-]+$ ]]; then
     exit 1
 fi
 
-# DB_SOCKET is set explicitly empty, not just omitted: a socket path left over in any .env the
-# container carries would otherwise win, since Env::get() only falls back to .env when the real
-# environment variable is absent -- an empty one wins and switches DB.php onto the host/port path.
+# DB_SOCKET is set explicitly empty, not just omitted: a socket path in any .env the container
+# carries (e.g. an image built before .env was excluded from the build context) would otherwise
+# win, since Env::get() only falls back to .env when the real environment variable is absent --
+# an empty one wins and switches DB.php onto the host/port path.
 export DB_ENV_VARS="DB_SOCKET=,DB_HOST=$AIVEN_DB_HOST,DB_PORT=$AIVEN_DB_PORT,DB_USER=$AIVEN_DB_USER,DB_PASS=$AIVEN_DB_PASS,DB_NAME=$AIVEN_DB_NAME,DB_SSL_CA=$AIVEN_CA_MOUNT_PATH"
 DB_UPDATE_FLAGS=(--clear-cloudsql-instances --set-secrets="$AIVEN_CA_MOUNT_PATH=$AIVEN_CA_SECRET:latest")
 DB_CREATE_FLAGS=(--set-secrets="$AIVEN_CA_MOUNT_PATH=$AIVEN_CA_SECRET:latest")

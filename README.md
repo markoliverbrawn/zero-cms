@@ -12,6 +12,10 @@
 
 **Official website: [zerocms.org](https://zerocms.org)**
 
+<a href="https://buymeacoffee.com/markoliverbrawn"><img src="https://img.buymeacoffee.com/button-api/?text=Buy%20me%20a%20beer&emoji=%F0%9F%8D%BA&slug=markoliverbrawn&button_colour=FFDD00&font_colour=000000&font_family=Cookie&outline_colour=000000&coffee_colour=ffffff" alt="Buy Me A Beer" height="50"></a>
+
+**Enjoying Zero CMS? It's built and maintained independently. If it saves you time, please consider [buying me a beer](https://buymeacoffee.com/markoliverbrawn) 🍺 to support ongoing development.**
+
 ## Introduction & Purist Manifesto
 
 **[Zero CMS](https://zerocms.org)** is a zero-dependency, ultra-high-performance, multi-tenant content management system and transactional e-commerce platform. In an era dominated by bloated, nested package-manager architectures and vulnerable dependency spiders, Zero CMS takes a radical return to fundamental software engineering principles:
@@ -390,27 +394,30 @@ ship a code-only change without touching infrastructure, run `./deploy/gcp/servi
 `DB_PROVIDER` picks the database option under `deploy/gcp/db/` (`cloudsql`, the default, or
 `aiven`). Settings can also live in a `.deploy/gcp.env` file of `KEY=value` lines (env vars win).
 Generated credentials/tokens (`DB_PASS`, `ADMIN_PASS`, `QUEUE_TRIGGER_TOKEN`,
-`SCHEDULER_TRIGGER_TOKEN`) persist across runs in `.deploy/gcp.secrets.env` (gitignored, mode `600`)
-so redeploys don't drift. See `deploy/gcp/config.sh` for every flag's default (region, resource
-names, image tag, etc.), and `deploy/CONTRACT.md` for what any provider toolkit must deliver to the
-app. If you want `TRUSTED_PROXY_SECRET` (see Section 5) honored on a GCP deployment, it must be set
-on the Cloud Run service — `deploy/image/entrypoint.sh`'s runtime env whitelist already includes it.
+`SCHEDULER_TRIGGER_TOKEN`, `TRUSTED_PROXY_SECRET` — see Section 5 — and `APP_KEY`) persist across
+runs in `.deploy/gcp.secrets.env` (gitignored, mode `600`) so redeploys don't drift. Mail is off
+until `SMTP_*` is set. See `deploy/gcp/config.sh` for every flag's default (region, resource names,
+image tag, etc.), and `deploy/CONTRACT.md` for what any provider toolkit must deliver to the app.
 
 ### Deploying a host project instead of Core itself
 
-These scripts assume they're run from a repo whose own `public/index.php` sits at its root, matching
-this repo's standalone layout. A host project created via `bin/create-project` (Core installed at
-`vendor/markoliverbrawn/zero-cms-core/` instead) needs its own adapted copy: a `bin/migrate` wrapper
-(not scaffolded by `bin/create-project` — mirror `bin/seed`'s `APPLICATION_ROOT`/`APP_ROOT` split),
-a `Dockerfile` that runs `composer install` at build time rather than deferring to local dev's
-runtime fallback, and an `entrypoint.sh` whitelist extended with any of the host project's own
-env vars that are read at request time. Under the image's mod_php, `Env::get()` already sees
-anything set on the Cloud Run resource via `getenv()`, so the whitelist is a fallback rather than
-a hard requirement — but keeping it complete means those variables keep working if the image ever
-moves to a SAPI that scrubs the environment (e.g. php-fpm with `clear_env=yes`).
+A host project created via `bin/create-project` (Core installed at
+`vendor/markoliverbrawn/zero-cms-core/`) runs the same toolkit straight from `vendor/`, from its own
+root — no copy to adapt:
 
----
+```bash
+composer install                                          # the image is built with vendor/ as-is
+./vendor/markoliverbrawn/zero-cms-core/deploy/gcp/setup.sh
+```
+
+Project-specific values go in the host project's own `.deploy/` folder: `gcp.env` for settings
+(names, region, domains; committed), `dockerignore` for extra image-build exclusions, and the
+generated `gcp.secrets.env` (gitignore it). Env vars its own code reads at runtime go in
+`EXTRA_ENV_VARS`. The host project must also provide `bin/migrate` and `bin/seed` at its root (not
+scaffolded by `bin/create-project` — mirror Core's `bin/seed` `APPLICATION_ROOT`/`APP_ROOT` split);
+`service.sh` checks for both before deploying. See `deploy/CONTRACT.md`, section 6.
 
 ## 8. Further Resources
 
 * **Official website:** [zerocms.org](https://zerocms.org)
+* **Support the project:** [Buy me a beer](https://buymeacoffee.com/markoliverbrawn)

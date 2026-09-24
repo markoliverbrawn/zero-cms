@@ -48,7 +48,8 @@ the image. The image provides:
 The platform MUST deliver runtime configuration as process environment variables. `Env::get()`
 (`src/Core/Env.php`) reads `getenv()` first, and Apache under mod_php passes the container
 environment through. The entrypoint's `.env` copy is only a fallback, for SAPIs that clear the
-environment.
+environment. The image MUST NOT contain a `.env` or any credentials file: the build context
+excludes them (`deploy/image/.dockerignore`), and configuration is only ever injected at runtime.
 
 ## 3. Runtime environment
 
@@ -129,7 +130,12 @@ domain resolves it for every tenant. So each trigger MUST either:
 
 - call a real site domain directly, or
 - call the platform URL with `X-Forwarded-Host: <a real sites.domain>` and
-  `X-Proxy-Secret: <TRUSTED_PROXY_SECRET>` (checked by `Security::isTrustedProxyRequest()`).
+  `X-Proxy-Secret: <TRUSTED_PROXY_SECRET>` (checked by `Security::isTrustedProxyRequest()`), or
+- rely on the seeded default site's domain being the platform host itself. The seed job sets it
+  from `BASE_URL`, so this holds only until that site is given a real domain.
+
+The GCP toolkit relies on the third option by default and switches to the second when
+`SCHEDULER_TARGET_DOMAIN` is set.
 
 ## 5. One-off jobs
 
@@ -148,9 +154,9 @@ A host project (for example zero-mobsites) MUST NOT edit shared toolkit files. I
   `KEY=value` lines, committed. Environment variables override it;
 - extra environment variables for its own code, passed through the `EXTRA_ENV_VARS` hook
   (comma-separated `KEY=value` pairs);
+- extra image-build exclusions in `.deploy/dockerignore`, appended to the shared rules;
 - extra scripts alongside the toolkit, never patched into it.
 
-## Known gaps in the current GCP toolkit
-
-- **No proxy headers on triggers.** Core's `cloud_scheduler_setup.sh` doesn't send the §4.1
-  headers or set the §4 scheduler deadline. zero-mobsites' copy does both.
+It MUST also provide what the image and jobs expect from Core: `public/index.php` at the project
+root, `bin/migrate` and `bin/seed` there (Core's own are the model), and a populated `vendor/`
+before the build.

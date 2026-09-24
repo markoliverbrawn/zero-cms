@@ -140,8 +140,8 @@ needs to re-run — e.g. `./deploy/gcp/service.sh` alone to ship a new image wit
 infrastructure, or `./deploy/gcp/scheduler.sh` alone to fix up the cron jobs after
 the service URL changes.
 
-`config.sh` resolves/generates `DB_PASS`, `ADMIN_PASS`, `QUEUE_TRIGGER_TOKEN`, and
-`SCHEDULER_TRIGGER_TOKEN` once and persists them to `.deploy/gcp.secrets.env` in the project root
+`config.sh` resolves/generates `DB_PASS`, `ADMIN_PASS`, `QUEUE_TRIGGER_TOKEN`,
+`SCHEDULER_TRIGGER_TOKEN`, `TRUSTED_PROXY_SECRET` and `APP_KEY` once and persists them to `.deploy/gcp.secrets.env` in the project root
 (gitignored, mode `600`) so re-deploys don't drift credentials. A legacy
 `deployments/gcp/.env.gcp` is picked up and migrated automatically on the first run. Never print
 these values into chat; point the user at that file if they need them.
@@ -184,6 +184,8 @@ default, overridable with `DEPLOY_SETTINGS_FILE`). An env var always wins over t
 | `USE_LOCAL_DOCKER` | `true` | Build locally + push, vs. remote Cloud Build |
 | `DOMAIN_MAPPINGS` | *(empty)* | Comma-separated custom domains to map onto the Cloud Run service. Empty = skip entirely. |
 | `AIVEN_CONNECTION_STRING` / `AIVEN_CA_SECRET` | *(empty)* / `aiven-ca` | Aiven Service URI and CA secret name; only for `DB_PROVIDER=aiven` |
+| `ADMIN_EMAIL` / `SMTP_HOST` / `SMTP_PORT` / `SMTP_SECURE` / `SMTP_USER` / `SMTP_PASS` / `SMTP_FROM_EMAIL` / `SMTP_FROM_NAME` | *(empty)* | Mail. Without `SMTP_HOST` the app sends no mail. Keep `SMTP_PASS` in the environment, not the settings file. |
+| `SCHEDULER_TARGET_DOMAIN` | *(empty)* | A real `sites.domain` the scheduler triggers send as `X-Forwarded-Host`. Needed once the seeded default site no longer uses the `*.run.app` host. |
 | `EXTRA_ENV_VARS` | *(empty)* | Extra comma-separated `KEY=value` pairs for the service and jobs (host-project hook) |
 
 ## Known constraints worth knowing before you touch these scripts
@@ -199,6 +201,9 @@ default, overridable with `DEPLOY_SETTINGS_FILE`). An env var always wins over t
   `getenv()` before `.env`, so a Cloud Run env var reaches the app even if it's missing from the
   whitelist — verified live on zero-mobsites. Still add new runtime env vars to the whitelist as a
   safety net for a future move to a scrubbing SAPI (php-fpm with `clear_env=yes`).
+- Host projects run the toolkit from `vendor/markoliverbrawn/zero-cms-core/deploy/gcp/` in their own
+  root, after `composer install`; their settings, extra ignore rules and secrets live in their own
+  `.deploy/` folder (see README section 7).
 - The queue/scheduler Cloud Scheduler jobs both call back into the *web service*, not a separate
   worker — there is no long-running daemon in this deployment (`bin/queue-runner` /
   `bin/scheduler`'s daemon loop are for non-serverless hosts only, e.g. `docker-compose.yml`-style

@@ -40,6 +40,24 @@ export USE_LOCAL_DOCKER="${USE_LOCAL_DOCKER:-true}"         # Build locally with
 # instance this toolkit provisions) or "aiven" (an external Aiven MySQL service).
 export DB_PROVIDER="${DB_PROVIDER:-cloudsql}"
 
+# Mail and admin contact (all optional). Without SMTP_*, the app sends no mail (password resets,
+# security audit reports); ADMIN_EMAIL receives audit reports and is set on the admin account at
+# seed time. Keep SMTP_PASS out of the committed settings file -- set it in CI or the environment.
+export ADMIN_EMAIL="${ADMIN_EMAIL:-}"
+export SMTP_HOST="${SMTP_HOST:-}"
+export SMTP_PORT="${SMTP_PORT:-}"
+export SMTP_SECURE="${SMTP_SECURE:-}"        # 'tls' enables STARTTLS (src/Support/Emailer.php)
+export SMTP_USER="${SMTP_USER:-}"
+export SMTP_PASS="${SMTP_PASS:-}"
+export SMTP_FROM_EMAIL="${SMTP_FROM_EMAIL:-}"
+export SMTP_FROM_NAME="${SMTP_FROM_NAME:-}"
+
+# A real `sites.domain` the Cloud Scheduler triggers present as X-Forwarded-Host (with
+# X-Proxy-Secret) when calling the *.run.app URL -- see scheduler.sh. Leave empty while the seeded
+# default site's domain is still the *.run.app host (the seed job sets it from BASE_URL); set it
+# once that site moves to a real domain, or the triggers hit the site-not-found page.
+export SCHEDULER_TARGET_DOMAIN="${SCHEDULER_TARGET_DOMAIN:-}"
+
 # Comma-separated custom domains to map onto the Cloud Run service (e.g. "www.client-a.com,client-b.com").
 # Empty by default -- domains.sh is a no-op until this is set.
 export DOMAIN_MAPPINGS="${DOMAIN_MAPPINGS:-}"
@@ -86,6 +104,12 @@ ensure_secret ADMIN_PASS password
 # the same value on a given run and it lands in every --set-env-vars call up front.
 ensure_secret QUEUE_TRIGGER_TOKEN token
 ensure_secret SCHEDULER_TRIGGER_TOKEN token
+# TRUSTED_PROXY_SECRET gates whether the app trusts X-Forwarded-Host (Security::resolveTrustedHost());
+# unset, anyone can spoof the host the app resolves. APP_KEY signs image-variant URLs; unset, the
+# app derives a key from DB credentials and BASE_URL, which changes whenever they do and breaks
+# variant URLs in pages already open. Both must stay the same across deploys, so they're persisted.
+ensure_secret TRUSTED_PROXY_SECRET token
+ensure_secret APP_KEY token
 
 # ------------------------------------------------------------------------------
 # AUTOMATIC PROJECT ID RESOLUTION
@@ -139,6 +163,24 @@ validate_safe_string "$ADMIN_USER" "ADMIN_USER"
 validate_safe_string "$ADMIN_PASS" "ADMIN_PASS"
 validate_safe_string "$DEPLOYMENT_NAME" "DEPLOYMENT_NAME"
 validate_safe_string "$DB_PROVIDER" "DB_PROVIDER"
+validate_safe_string "$TRUSTED_PROXY_SECRET" "TRUSTED_PROXY_SECRET"
+validate_safe_string "$APP_KEY" "APP_KEY"
+EMAIL_PATTERN='^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9.-]+$'
+HOSTNAME_PATTERN='^[a-zA-Z0-9.-]+$'
+[ -n "$ADMIN_EMAIL" ] && validate_safe_string "$ADMIN_EMAIL" "ADMIN_EMAIL" "$EMAIL_PATTERN"
+[ -n "$SMTP_FROM_EMAIL" ] && validate_safe_string "$SMTP_FROM_EMAIL" "SMTP_FROM_EMAIL" "$EMAIL_PATTERN"
+[ -n "$SMTP_HOST" ] && validate_safe_string "$SMTP_HOST" "SMTP_HOST" "$HOSTNAME_PATTERN"
+[ -n "$SMTP_PORT" ] && validate_safe_string "$SMTP_PORT" "SMTP_PORT" '^[0-9]+$'
+[ -n "$SMTP_SECURE" ] && validate_safe_string "$SMTP_SECURE" "SMTP_SECURE" '^[a-z]+$'
+[ -n "$SCHEDULER_TARGET_DOMAIN" ] && validate_safe_string "$SCHEDULER_TARGET_DOMAIN" "SCHEDULER_TARGET_DOMAIN" "$HOSTNAME_PATTERN"
+validate_env_value "$SMTP_USER" "SMTP_USER"
+validate_env_value "$SMTP_PASS" "SMTP_PASS"
+validate_env_value "$SMTP_FROM_NAME" "SMTP_FROM_NAME"
+# Warned once per pipeline run, not once per step (every step re-sources this file).
+if [ -z "$SMTP_HOST" ] && [ -z "$ZERO_DEPLOY_SMTP_WARNED" ]; then
+    log_warn "SMTP_HOST is not set -- the deployed app won't send mail (password resets, security audit reports)."
+    export ZERO_DEPLOY_SMTP_WARNED=1
+fi
 if [ -n "$DOMAIN_MAPPINGS" ]; then
     validate_safe_string "$DOMAIN_MAPPINGS" "DOMAIN_MAPPINGS" '^[a-zA-Z0-9,.-]+$' # Comma-separated list of hostnames
     # Fails the whole pipeline here, at the very first script sourcing config.sh, rather than only

@@ -1,14 +1,20 @@
-# Use official PHP 8.3 Apache base image
+# Zero CMS production image (PHP 8.3 + Apache), shared by every provider toolkit under deploy/.
+#
+# Built from the root of the project being deployed. For Core itself that's this repo; for a host
+# project that requires Core via Composer, vendor/ must already be populated (`composer install`)
+# before the build -- deploy/gcp/service.sh checks this. mbstring, curl and openssl come with the
+# base image; zip is added for the seeder's optional distribution ZIP (ZipArchive).
 FROM php:8.3-apache
 
-# Install system dependencies for GD and PDO MySQL
+# Install system dependencies for GD, PDO MySQL and zip
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libpng-dev \
     libjpeg-dev \
     libfreetype6-dev \
     libwebp-dev \
+    libzip-dev \
     && docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
-    && docker-php-ext-install -j$(nproc) pdo_mysql gd exif bcmath \
+    && docker-php-ext-install -j$(nproc) pdo_mysql gd exif bcmath zip \
     && rm -rf /var/lib/apt/lists/*
 
 # Use the production php.ini configuration
@@ -18,7 +24,7 @@ RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
 RUN a2enmod rewrite
 
 # Configure Apache DocumentRoot to point to /var/www/html/public -- Zero CMS is a front-controller
-# app served directly out of this repo's own public/, with no host-project wrapper directory.
+# app served directly out of the project's own public/ (Core's, or a host project's).
 RUN sed -i 's|DocumentRoot /var/www/html|DocumentRoot /var/www/html/public|g' /etc/apache2/sites-available/000-default.conf
 
 # Allow Override for .htaccess support

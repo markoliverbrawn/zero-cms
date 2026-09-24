@@ -61,6 +61,28 @@ validate_safe_string() {
     fi
 }
 
+# For values passed through a provider CLI's KEY=value,KEY=value env-var list, where only commas
+# and line breaks are unsafe (the list is always a single quoted argument, never shell-evaluated).
+# Never echoes the value, so it's safe for passwords.
+# Usage: validate_env_value VALUE NAME
+validate_env_value() {
+    local val="$1" var_name="$2"
+    if [[ "$val" == *","* || "$val" == *$'\n'* || "$val" == *$'\r'* ]]; then
+        log_error "$var_name contains a comma or line break, which can't be passed through the deployment's env-var list."
+        exit 1
+    fi
+}
+
+# Prints ",NAME=value" for each named variable that is non-empty, for appending to an env-var list.
+# Usage: LIST="base$(env_pairs SMTP_HOST SMTP_PORT)"
+env_pairs() {
+    local name
+    for name in "$@"; do
+        [ -n "${!name}" ] && printf ',%s=%s' "$name" "${!name}"
+    done
+    return 0
+}
+
 # Loads a project's non-secret settings file (plain KEY=value lines, # comments allowed). A variable
 # already set in the environment wins over the file, so CI variables and one-off overrides
 # (`RUN_SEED=true ./deploy/gcp/setup.sh`) still take effect. Values are assigned literally, never

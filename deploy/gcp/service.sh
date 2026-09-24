@@ -8,20 +8,34 @@ set -e
 # service to Cloud Run, then runs the migrate job and (only if RUN_SEED=true)
 # the destructive seed job. Database wiring comes entirely from the selected
 # database option's DB_ENV_VARS / DB_UPDATE_FLAGS / DB_CREATE_FLAGS.
+#
+# All runtime configuration reaches the containers as Cloud Run env vars; no
+# .env file is written into the image (deploy/image/.dockerignore excludes the
+# project's own local one).
 # ==============================================================================
 
 source "$(dirname "$0")/config.sh"
 
-# Build-context files copied into the project root for the duration of the build, then removed.
-# The image files are provider-neutral; .gcloudignore only matters to remote Cloud Build.
-BUILD_FILES=(
-    "$DEPLOY_TOOLKIT_DIR/image/Dockerfile:Dockerfile"
-    "$DEPLOY_TOOLKIT_DIR/image/.dockerignore:.dockerignore"
-    "$DEPLOY_TOOLKIT_DIR/image/entrypoint.sh:entrypoint.sh"
-    "$GCP_TOOLKIT_DIR/.gcloudignore:.gcloudignore"
-)
-COPIED_BUILD_FILES=()
-BACKED_UP=false
+# ------------------------------------------------------------------------------
+# 1. PRE-FLIGHT CHECKS
+# ------------------------------------------------------------------------------
+# A host project installs Core with Composer (vendor/ is gitignored), and the image is built from
+# the project root as-is, so vendor/ must already be populated -- fail here rather than obscurely
+# inside the image build or at first request.
+if [ -f composer.json ] && grep -q '"markoliverbrawn/zero-cms-core"' composer.json && [ ! -d vendor/markoliverbrawn/zero-cms-core ]; then
+    log_error "vendor/markoliverbrawn/zero-cms-core not found. Run 'composer install' in $PROJECT_ROOT first (in CI, as a step before this one)."
+    exit 1
+fi
+# The one-off jobs run these from the project root inside the image.
+REQUIRED_SCRIPTS=()
+[ "$RUN_MIGRATIONS" = true ] && REQUIRED_SCRIPTS+=(bin/migrate)
+[ "$RUN_SEED" = true ] && REQUIRED_SCRIPTS+=(bin/seed)
+for script in "${REQUIRED_SCRIPTS[@]}"; do
+    if [ ! -f "$script" ]; then
+        log_error "$PROJECT_ROOT/$script not found -- the migrate/seed jobs run it from the project root. A host project needs its own wrapper (see bin/seed in Core)."
+        exit 1
+    fi
+done
 
 # Optional project hook (deploy/CONTRACT.md, section 6): extra KEY=value pairs, comma-separated,
 # appended to the web service's and every job's environment.
@@ -30,61 +44,35 @@ if [ -n "$EXTRA_ENV_VARS" ] && [[ ! "$EXTRA_ENV_VARS" =~ ^[A-Z][A-Z0-9_]*=[^,]*(
     log_error "EXTRA_ENV_VARS must be comma-separated KEY=value pairs (values cannot contain commas)."
     exit 1
 fi
-EXTRA_ENV_SUFFIX="${EXTRA_ENV_VARS:+,$EXTRA_ENV_VARS}"
+
+# Runtime environment shared by the web service and every job (deploy/CONTRACT.md, section 3).
+# Optional values are only included when set.
+APP_ENV_VARS="$DB_ENV_VARS,STORAGE_DRIVER=gcs,GCS_BUCKET=$GCS_BUCKET_NAME,GCS_BUCKET_NAME=$GCS_BUCKET_NAME,ENVIRONMENT=production,BENCHMARKING=false,QUEUE_TRIGGER_TOKEN=$QUEUE_TRIGGER_TOKEN,SCHEDULER_TRIGGER_TOKEN=$SCHEDULER_TRIGGER_TOKEN,TRUSTED_PROXY_SECRET=$TRUSTED_PROXY_SECRET,APP_KEY=$APP_KEY"
+APP_ENV_VARS+="$(env_pairs ADMIN_EMAIL SMTP_HOST SMTP_PORT SMTP_SECURE SMTP_USER SMTP_PASS SMTP_FROM_EMAIL SMTP_FROM_NAME)"
+APP_ENV_VARS+="${EXTRA_ENV_VARS:+,$EXTRA_ENV_VARS}"
 
 # ------------------------------------------------------------------------------
-# LOCAL ENVIRONMENT PRESERVATION (TRAP HOOKS)
+# BUILD-CONTEXT FILES (copied into the project root for the build, removed on exit)
 # ------------------------------------------------------------------------------
-restore_env() {
+# The image files are provider-neutral; .gcloudignore only matters to remote Cloud Build. A project
+# can add its own .dockerignore rules in .deploy/dockerignore; they're appended to the shared ones.
+BUILD_FILES=(
+    "$DEPLOY_TOOLKIT_DIR/image/Dockerfile:Dockerfile"
+    "$DEPLOY_TOOLKIT_DIR/image/.dockerignore:.dockerignore"
+    "$DEPLOY_TOOLKIT_DIR/image/entrypoint.sh:entrypoint.sh"
+    "$GCP_TOOLKIT_DIR/.gcloudignore:.gcloudignore"
+)
+PROJECT_DOCKERIGNORE="$PROJECT_ROOT/.deploy/dockerignore"
+COPIED_BUILD_FILES=()
+
+cleanup_build_files() {
     local file
-    if [ "$BACKED_UP" = true ]; then
-        log_info "Restoring original local .env file..."
-        if [ -f .env.bak ]; then
-            mv .env.bak .env
-            log_success "Original .env file successfully restored."
-        else
-            log_warn "Backup file .env.bak not found, could not restore."
-        fi
-    fi
-    # Clean up temporary deployment files copied to root
     for file in "${COPIED_BUILD_FILES[@]}"; do
         log_info "Cleaning up temporary $file from root..."
         rm -f "$file"
     done
-    # Clean up temporary production .env file if it was created
-    if [ -f ".env" ] && [ "$BACKED_UP" = false ]; then
-        log_info "Cleaning up temporary production .env file from root..."
-        rm -f .env
-    fi
 }
-
-# Trap exit/interruption signals to ensure local .env is ALWAYS restored and root is kept clean
-trap restore_env EXIT INT TERM
-
-# Backup the local .env if it exists
-if [ -f ".env" ]; then
-    log_info "Backing up existing local .env file..."
-    cp .env .env.bak
-    BACKED_UP=true
-fi
-
-# ------------------------------------------------------------------------------
-# 1. CREATE TEMPORARY DEPLOYMENT .ENV
-# ------------------------------------------------------------------------------
-log_info "Creating temporary production .env file for the deployment context..."
-cat <<EOF > .env
-ENVIRONMENT=production
-$(tr ',' '\n' <<< "$DB_ENV_VARS")
-STORAGE_DRIVER=gcs
-GCS_BUCKET=$GCS_BUCKET_NAME
-GCS_BUCKET_NAME=$GCS_BUCKET_NAME
-ADMIN_USER=$ADMIN_USER
-ADMIN_PASS=$ADMIN_PASS
-BENCHMARKING=false
-QUEUE_TRIGGER_TOKEN=$QUEUE_TRIGGER_TOKEN
-SCHEDULER_TRIGGER_TOKEN=$SCHEDULER_TRIGGER_TOKEN
-EOF
-log_success "Temporary .env file created."
+trap cleanup_build_files EXIT INT TERM
 
 # ------------------------------------------------------------------------------
 # 2. BUILD & UPLOAD CONTAINER IMAGE
@@ -104,6 +92,10 @@ for entry in "${BUILD_FILES[@]}"; do
     cp "$src" "$dest"
     COPIED_BUILD_FILES+=("$dest")
 done
+if [ -f "$PROJECT_DOCKERIGNORE" ]; then
+    log_info "Appending project-specific ignore rules from $PROJECT_DOCKERIGNORE..."
+    { echo; echo "# --- from $PROJECT_DOCKERIGNORE"; cat "$PROJECT_DOCKERIGNORE"; } >> .dockerignore
+fi
 
 if [ "$USE_LOCAL_DOCKER" = true ]; then
     log_info "----------------------------------------------------------------"
@@ -167,7 +159,7 @@ gcloud run deploy "$SERVICE_NAME" \
   --concurrency=80 \
   --timeout=900 \
   "${DB_UPDATE_FLAGS[@]}" \
-  --set-env-vars="$DB_ENV_VARS,STORAGE_DRIVER=gcs,GCS_BUCKET=$GCS_BUCKET_NAME,GCS_BUCKET_NAME=$GCS_BUCKET_NAME,ENVIRONMENT=production,BENCHMARKING=false,QUEUE_TRIGGER_TOKEN=$QUEUE_TRIGGER_TOKEN,SCHEDULER_TRIGGER_TOKEN=$SCHEDULER_TRIGGER_TOKEN$EXTRA_ENV_SUFFIX" \
+  --set-env-vars="$APP_ENV_VARS" \
   --region="$GCP_REGION" \
   --allow-unauthenticated
 
@@ -186,7 +178,9 @@ log_success "Web service environment configuration updated with BASE_URL."
 # ------------------------------------------------------------------------------
 # ONE-OFF JOBS (same image and environment as the web service, different command)
 # ------------------------------------------------------------------------------
-JOB_ENV_VARS="$DB_ENV_VARS,ADMIN_USER=$ADMIN_USER,ADMIN_PASS=$ADMIN_PASS,STORAGE_DRIVER=gcs,GCS_BUCKET=$GCS_BUCKET_NAME,GCS_BUCKET_NAME=$GCS_BUCKET_NAME,ENVIRONMENT=production,BENCHMARKING=false,BASE_URL=$SERVICE_URL,QUEUE_TRIGGER_TOKEN=$QUEUE_TRIGGER_TOKEN,SCHEDULER_TRIGGER_TOKEN=$SCHEDULER_TRIGGER_TOKEN$EXTRA_ENV_SUFFIX"
+# The jobs also get the admin credentials (applied by bin/seed) and BASE_URL (the seeders set the
+# default site's domain from it).
+JOB_ENV_VARS="$APP_ENV_VARS,ADMIN_USER=$ADMIN_USER,ADMIN_PASS=$ADMIN_PASS,BASE_URL=$SERVICE_URL"
 
 # Creates or updates Cloud Run job NAME to run `php SCRIPT`, then executes it and waits.
 # Usage: run_job NAME SCRIPT
