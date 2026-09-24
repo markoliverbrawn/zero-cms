@@ -335,11 +335,14 @@ class TestRunner
                     while (($out = \fread($job['pipes'][1], 8192)) !== false && $out !== '') { $job['output'] .= $out; }
                     while (($err = \fread($job['pipes'][2], 8192)) !== false && $err !== '') { $job['error'] .= $err; }
 
-                    // Clean close
+                    // Clean close. The exit code comes from the proc_get_status() call that first saw
+                    // the process stop, not from proc_close(): before PHP 8.3 that call already reaps
+                    // the child, so proc_close() finds nothing left to wait for and returns -1.
                     \fclose($job['pipes'][0]);
                     \fclose($job['pipes'][1]);
                     \fclose($job['pipes'][2]);
-                    $exitCode = \proc_close($job['process']);
+                    $exitCode = $status['exitcode'];
+                    \proc_close($job['process']);
 
                     // Log and print result
                     $completedJobs[] = [
