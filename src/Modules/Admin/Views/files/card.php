@@ -44,23 +44,7 @@ if ($mime === 'directory'): ?>
   <li id="file-<?php echo Str::escape($id); ?>" class="file-card file-item-card" data-filename="<?php echo Str::escape(strtolower($filename)); ?>" draggable="true">
     <div class="file-preview-container">
       <?php if ($isImage): ?>
-        <?php
-          $mediaModel = new Media();
-          $mediaModel->id = $id;
-          $mediaModel->filename = $filename;
-          $mediaModel->path = $path;
-          $mediaModel->mime = $mime;
-          $mediaModel->title = $f['title'] ?? '';
-          $mediaModel->site_id = $f['site_id'] ?? '';
-          $mediaModel->focus_x = $f['focus_x'] ?? 50;
-          $mediaModel->focus_y = $f['focus_y'] ?? 50;
-          $mediaModel->width = (int)($f['width'] ?? 0);
-          $mediaModel->height = (int)($f['height'] ?? 0);
-          $mediaModel->visibility = $f['visibility'] ?? 'public';
-          $mediaModel->created_at = $f['created_at'] ?? null;
-          $mediaModel->updated_at = $f['updated_at'] ?? null;
-          $thumbnailPath = $mediaModel->getSquareCropUrl(300);
-        ?>
+        <?php $thumbnailPath = (new Media($f))->getSquareCropUrl(300); ?>
         <img src="<?php echo Str::escape($thumbnailPath); ?>" width="300" height="300" loading="lazy" decoding="async" alt="<?php echo Str::escape(!empty($f['title']) ? $f['title'] : $filename); ?>" style="width: 100%; height: 100%; object-fit: cover; display: block;" />
       <?php else: ?>
         <div class="file-mime-placeholder" style="width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative;">
