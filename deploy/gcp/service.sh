@@ -137,6 +137,22 @@ else
         log_success "Regional staging bucket created successfully."
     fi
 
+    # Every remote build uploads the full project source here and nothing ever removes it, so the
+    # bucket grows by one archive per deploy. Cloud Build only needs an upload while its build
+    # runs; the retention window just keeps recent ones around for debugging a build. Applied to a
+    # new bucket, or an existing one with no lifecycle policy -- never over rules someone set.
+    if [ -z "$(gcloud storage buckets describe "gs://$BUILD_STAGING_BUCKET" --format="value(lifecycle_config)")" ]; then
+        log_info "Adding a lifecycle rule to delete build sources after $BUILD_SOURCE_RETENTION_DAYS days..."
+        LIFECYCLE_FILE="$(mktemp)"
+        printf '{"rule":[{"action":{"type":"Delete"},"condition":{"age":%s,"matchesPrefix":["source/"]}}]}\n' \
+          "$BUILD_SOURCE_RETENTION_DAYS" > "$LIFECYCLE_FILE"
+        gcloud storage buckets update "gs://$BUILD_STAGING_BUCKET" --lifecycle-file="$LIFECYCLE_FILE"
+        rm -f "$LIFECYCLE_FILE"
+        log_success "Build sources in gs://$BUILD_STAGING_BUCKET/source/ now expire after $BUILD_SOURCE_RETENTION_DAYS days."
+    else
+        log_info "Staging bucket already has a lifecycle policy; leaving it unchanged."
+    fi
+
     log_info "Submitting build request to Google Cloud Build. Target image: $IMAGE_NAME"
     # Pass the regional staging bucket to avoid violating regional constraint policies.
     # Add --verbosity=debug to trace REST calls when debugging a hang. Not on by default: it logs

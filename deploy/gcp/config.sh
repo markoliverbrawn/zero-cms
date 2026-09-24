@@ -35,6 +35,9 @@ export ADMIN_PASS="${ADMIN_PASS:-}"           # Generate randomly or read from p
 export DEPLOYMENT_NAME="${DEPLOYMENT_NAME:-zerocms}"              # Base prefix name for services/jobs
 export IMAGE_TAG="${IMAGE_TAG:-v1}"                         # Deployment revision tag
 export USE_LOCAL_DOCKER="${USE_LOCAL_DOCKER:-true}"         # Build locally with Docker (recommended)
+# Remote builds (USE_LOCAL_DOCKER=false) upload the whole project source to a staging bucket on
+# every run. Uploads older than this many days are deleted (a lifecycle rule service.sh sets).
+export BUILD_SOURCE_RETENTION_DAYS="${BUILD_SOURCE_RETENTION_DAYS:-7}"
 
 # Which database option under deploy/gcp/db/ provides the database: "cloudsql" (a Cloud SQL
 # instance this toolkit provisions) or "aiven" (an external Aiven MySQL service).
@@ -163,6 +166,7 @@ validate_safe_string "$ADMIN_USER" "ADMIN_USER"
 validate_safe_string "$ADMIN_PASS" "ADMIN_PASS"
 validate_safe_string "$DEPLOYMENT_NAME" "DEPLOYMENT_NAME"
 validate_safe_string "$DB_PROVIDER" "DB_PROVIDER"
+validate_safe_string "$BUILD_SOURCE_RETENTION_DAYS" "BUILD_SOURCE_RETENTION_DAYS" '^[1-9][0-9]*$'
 validate_safe_string "$TRUSTED_PROXY_SECRET" "TRUSTED_PROXY_SECRET"
 validate_safe_string "$APP_KEY" "APP_KEY"
 EMAIL_PATTERN='^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9.-]+$'
