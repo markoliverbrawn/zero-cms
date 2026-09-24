@@ -122,8 +122,9 @@ assert_test($siteCount === 1, "The targeted default site was successfully seeded
 // 6. Test ADMIN_PASSWORD post-run seeder hook override from .env
 echo "  Testing ADMIN_PASSWORD custom override post-run seeder hook...\n";
 
-// Run the seeder with a custom admin password env variable
-$output = run_seeder_test_proc('--sites=default', ['ADMIN_PASSWORD' => 'CustomTestAdminPassword555']);
+// Run the seeder with a custom admin password env variable. ADMIN_PASS is blanked explicitly so a
+// local .env that sets it (it takes precedence, see test 7) can't mask the legacy name.
+$output = run_seeder_test_proc('--sites=default', ['ADMIN_PASS' => '', 'ADMIN_PASSWORD' => 'CustomTestAdminPassword555']);
 
 assert_test(strpos($output, "Applying custom ADMIN_PASSWORD override from .env") !== false, "Seeder log correctly reported ADMIN_PASSWORD override being applied");
 assert_test(strpos($output, "[Seeder-Hook] Successfully updated administrator account passwords to ADMIN_PASSWORD from .env") !== false, "Seeder-Hook success message was outputted");
@@ -132,6 +133,26 @@ assert_test(strpos($output, "[Seeder-Hook] Successfully updated administrator ac
 $adminHash = DB::query("SELECT password_hash FROM users WHERE username = 'admin'")->fetchColumn();
 assert_test(!empty($adminHash), "Admin user is present in the database after seeding");
 assert_test(password_verify('CustomTestAdminPassword555', $adminHash) === true, "Admin user password hash matches CustomTestAdminPassword555");
+
+
+// 7. Test ADMIN_PASS (the name .env.example, docker-compose.yml and the deployment scripts set)
+// is applied by the same hook, and wins over the legacy ADMIN_PASSWORD when both are set.
+echo "  Testing ADMIN_PASS override and its precedence over ADMIN_PASSWORD...\n";
+
+$output = run_seeder_test_proc('--sites=default', ['ADMIN_PASS' => 'CustomTestAdminPass777']);
+
+assert_test(strpos($output, "Applying custom ADMIN_PASSWORD override from .env") !== false, "Seeder log reported the override being applied from ADMIN_PASS");
+
+$adminHash = DB::query("SELECT password_hash FROM users WHERE username = 'admin'")->fetchColumn();
+assert_test(password_verify('CustomTestAdminPass777', $adminHash) === true, "Admin user password hash matches ADMIN_PASS");
+
+$output = run_seeder_test_proc('--sites=default', [
+    'ADMIN_PASS' => 'CustomTestAdminPass888',
+    'ADMIN_PASSWORD' => 'CustomTestAdminPassword999',
+]);
+
+$adminHash = DB::query("SELECT password_hash FROM users WHERE username = 'admin'")->fetchColumn();
+assert_test(password_verify('CustomTestAdminPass888', $adminHash) === true, "ADMIN_PASS takes precedence over ADMIN_PASSWORD when both are set");
 
 
 // Remove the throwaway storage root the seeded runs wrote into.

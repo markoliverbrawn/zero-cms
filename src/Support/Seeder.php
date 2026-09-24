@@ -246,9 +246,11 @@ class Seeder
             }
         });
 
-        // 7. Post-Run Hook: Admin Password Override from .env
+        // 7. Post-Run Hook: Admin Password Override from .env. ADMIN_PASS is the name .env.example,
+        // docker-compose.yml and the deployment scripts all set; ADMIN_PASSWORD is the original name
+        // this hook read, still honored as a fallback so existing .env files keep working.
         self::registerPostRunHook(function () {
-            $adminPassword = Env::get('ADMIN_PASSWORD');
+            $adminPassword = Env::get('ADMIN_PASS') ?: Env::get('ADMIN_PASSWORD');
             if (!empty($adminPassword)) {
                 echo "Applying custom ADMIN_PASSWORD override from .env...\n";
                 try {
