@@ -1,11 +1,11 @@
 ---
 name: gcp-deployment
-description: Deploys Zero CMS to Google Cloud (Cloud Run + Cloud SQL + Cloud Storage + Cloud Scheduler) using the deployments/gcp/ toolkit. Interactively asks whether to provision a new Cloud SQL instance and Storage bucket (vs. reusing existing ones) and whether to run migrations, then builds/pushes the image, deploys the web service, the migration/seed jobs, and the scheduler cron triggers. Use when the user asks to deploy to GCP, ship a release to Cloud Run, or stand up Google Cloud infrastructure for a Zero CMS site.
+description: Deploys Zero CMS to Google Cloud (Cloud Run + Cloud SQL + Cloud Storage + Cloud Scheduler) using the deploy/gcp/ toolkit. Interactively asks whether to provision a new Cloud SQL instance and Storage bucket (vs. reusing existing ones) and whether to run migrations, then builds/pushes the image, deploys the web service, the migration/seed jobs, and the scheduler cron triggers. Use when the user asks to deploy to GCP, ship a release to Cloud Run, or stand up Google Cloud infrastructure for a Zero CMS site.
 ---
 
 # Deploying Zero CMS to Google Cloud
 
-This drives the scripts under `deployments/gcp/` to take a Zero CMS checkout from zero to a fully
+This drives the scripts under `deploy/gcp/` to take a Zero CMS checkout from zero to a fully
 running, scale-to-zero site on Google Cloud. Read this whole skill before running anything — several
 steps are billable and one (`RUN_SEED`) is destructive.
 
@@ -28,11 +28,12 @@ steps are billable and one (`RUN_SEED`) is destructive.
   binding one or more external domains to the Cloud Run service, so a client's own domain (CNAMEd or
   A/AAAA-recorded at Google) serves the same deployment as the default `*.run.app` URL.
 
-All of this is orchestrated by `deployments/gcp/setup.sh`, which sources `common.sh` (shared config,
-password/token generation, validation) then runs `cloud_run_setup.sh` → `cloud_storage_setup.sh` →
-`cloud_sql_setup.sh` → `deploy_app.sh` → `cloud_scheduler_setup.sh` → `cloud_domain_mapping_setup.sh`
-in order. Every step is idempotent — re-running the whole pipeline on an existing deployment updates
-it in place rather than duplicating resources.
+All of this is orchestrated by `deploy/gcp/setup.sh`, which sources `config.sh` (settings, secret
+generation, validation, and the database option chosen by `DB_PROVIDER`) then runs `project.sh` →
+`storage.sh` → `database.sh` → `service.sh` → `scheduler.sh` → `domains.sh` in order. Every step is
+idempotent — re-running the whole pipeline on an existing deployment updates it in place rather than
+duplicating resources. The layout and the rules that keep it provider-neutral are in
+`deploy/CONTRACT.md`; the image files shared by every provider are in `deploy/image/`.
 
 ## Prerequisites (verify before starting)
 
@@ -55,14 +56,18 @@ hard-to-reverse, or destructive):
 
 1. **Cloud SQL** — "Create a new Cloud SQL instance for this deployment, or connect to an existing
    one?"
-   - *Create new* (recommended for a first deploy) → `CREATE_CLOUDSQL=true`. `cloud_sql_setup.sh`
-     provisions a `db-f1-micro` instance, database, and user if they don't already exist.
+   - *Create new* (recommended for a first deploy) → `CREATE_CLOUDSQL=true`. `database.sh`
+     (via `db/cloudsql.sh`) provisions a `db-f1-micro` instance, database, and user if they don't already exist.
    - *Use existing* → `CREATE_CLOUDSQL=false`, and ask for the existing `CLOUDSQL_INSTANCE` name
-     (plus `DB_NAME`/`DB_USER`/`DB_PASS` if they differ from the persisted `.env.gcp` values). The
-     setup step then skips provisioning entirely and trusts that instance/db/user already exist.
+     (plus `DB_NAME`/`DB_USER`/`DB_PASS` if they differ from the persisted `.deploy/gcp.secrets.env`
+     values). The setup step then skips provisioning entirely and trusts that instance/db/user
+     already exist.
+   - *External Aiven MySQL* (only if the user brings one up) → `DB_PROVIDER=aiven` plus
+     `AIVEN_CONNECTION_STRING`, and the one-off CA secret described in `deploy/gcp/db/aiven.sh`'s
+     header. Nothing is provisioned on GCP for the database in this mode.
 
 2. **Cloud Storage bucket** — "Create a new public GCS bucket for media, or use an existing bucket?"
-   - *Create new* → `CREATE_STORAGE_BUCKET=true` (default). `cloud_storage_setup.sh` creates a
+   - *Create new* → `CREATE_STORAGE_BUCKET=true` (default). `storage.sh` creates a
      uniform-access bucket and grants `roles/storage.objectViewer` to `allUsers`.
    - *Use existing* → `CREATE_STORAGE_BUCKET=false`, ask for the existing `GCS_BUCKET_NAME`. Note
      that the skip path does *not* touch the existing bucket's IAM policy — mention this so the user
@@ -88,11 +93,11 @@ Before running the pipeline with `DOMAIN_MAPPINGS` set, tell the user:
   [Search Console](https://search.google.com/search-console/ownership) *before* the script runs, or
   `gcloud beta run domain-mappings create` fails outright. Verify the apex (`client-a.com`), not just
   the `www` subdomain — verification is per registrable domain.
-- Domain mappings only work in a subset of Cloud Run regions (`common.sh`'s
+- Domain mappings only work in a subset of Cloud Run regions (`config.sh`'s
   `DOMAIN_MAPPING_SUPPORTED_REGIONS` — currently `asia-east1`, `asia-northeast1`, `asia-southeast1`,
   `europe-north1`, `europe-west1`, `europe-west4`, `us-central1`, `us-east1`, `us-east4`, `us-west1`).
   **This skill's own documented default region, `australia-southeast1`, is not one of them.**
-  `common.sh` fails fast with a clear error at the very start of the pipeline if `GCP_REGION` is
+  `config.sh` fails fast with a clear error at the very start of the pipeline if `GCP_REGION` is
   unsupported and `DOMAIN_MAPPINGS` is set — before any billable provisioning happens — but since a
   Cloud Run service's region can't be changed after creation, this needs deciding *before* the first
   deploy, not discovered after. If the user wants domain mapping, set `GCP_REGION` to a supported
@@ -119,7 +124,7 @@ Export the resolved flags and run the master script from the repo root:
 
 ```bash
 export GCP_PROJECT_ID="..."          # only if not already the active gcloud project
-export GCP_REGION="australia-southeast1"   # or whatever the user wants; see common.sh for default
+export GCP_REGION="australia-southeast1"   # or whatever the user wants; see config.sh for default
 export CREATE_CLOUDSQL=true|false
 export CREATE_STORAGE_BUCKET=true|false
 export RUN_MIGRATIONS=true|false
@@ -127,18 +132,19 @@ export RUN_SEED=false                # only true on explicit, confirmed request
 export DOMAIN_MAPPINGS="www.client-a.com,client-b.com"  # optional, comma-separated, omit to skip
 # If reusing existing infra, also export CLOUDSQL_INSTANCE / GCS_BUCKET_NAME / DB_NAME / DB_USER / DB_PASS
 
-./deployments/gcp/setup.sh
+./deploy/gcp/setup.sh
 ```
 
 Or run the sub-scripts individually (same order the master script uses) if only part of the pipeline
-needs to re-run — e.g. `./deployments/gcp/deploy_app.sh` alone to ship a new image without touching
-infrastructure, or `./deployments/gcp/cloud_scheduler_setup.sh` alone to fix up the cron jobs after
+needs to re-run — e.g. `./deploy/gcp/service.sh` alone to ship a new image without touching
+infrastructure, or `./deploy/gcp/scheduler.sh` alone to fix up the cron jobs after
 the service URL changes.
 
-`common.sh` resolves/generates `DB_PASS`, `ADMIN_PASS`, `QUEUE_TRIGGER_TOKEN`, and
-`SCHEDULER_TRIGGER_TOKEN` once and persists them to `deployments/gcp/.env.gcp` (gitignored, mode
-`600`) so re-deploys don't drift credentials. Never print these values into chat; point the user at
-that file if they need them.
+`config.sh` resolves/generates `DB_PASS`, `ADMIN_PASS`, `QUEUE_TRIGGER_TOKEN`, and
+`SCHEDULER_TRIGGER_TOKEN` once and persists them to `.deploy/gcp.secrets.env` in the project root
+(gitignored, mode `600`) so re-deploys don't drift credentials. A legacy
+`deployments/gcp/.env.gcp` is picked up and migrated automatically on the first run. Never print
+these values into chat; point the user at that file if they need them.
 
 ## Step 5 — Verify
 
@@ -156,13 +162,17 @@ After the pipeline finishes:
   also added in Admin → Sites (`/admin/edit/sites/{id}`) — otherwise the domain resolves and serves
   TLS fine but the app 404s it as an unrecognized tenant.
 
-## Flags reference (all set via env var before invoking the scripts, see `common.sh`)
+## Flags reference (see `config.sh` and `db/*.sh`)
+
+Set via env var, or as `KEY=value` lines in the project's settings file (`.deploy/gcp.env` by
+default, overridable with `DEPLOY_SETTINGS_FILE`). An env var always wins over the file.
 
 | Variable | Default | Meaning |
 |---|---|---|
 | `GCP_PROJECT_ID` | active `gcloud` project | Target project |
 | `GCP_REGION` | `australia-southeast1` | Region for all resources |
 | `DEPLOYMENT_NAME` | `zerocms` | Prefix for all service/job/scheduler names |
+| `DB_PROVIDER` | `cloudsql` | Database option under `deploy/gcp/db/`: `cloudsql` or `aiven` |
 | `CLOUDSQL_INSTANCE` | `zerocms-db` | Cloud SQL instance name |
 | `GCS_BUCKET_NAME` | `zerocms-media-uploads` | Bucket name (globally unique) |
 | `DB_NAME` / `DB_USER` | `zerocms_db` / `zerocms_db_user` | Database + user |
@@ -173,14 +183,16 @@ After the pipeline finishes:
 | `IMAGE_TAG` | `v1` | Container image tag |
 | `USE_LOCAL_DOCKER` | `true` | Build locally + push, vs. remote Cloud Build |
 | `DOMAIN_MAPPINGS` | *(empty)* | Comma-separated custom domains to map onto the Cloud Run service. Empty = skip entirely. |
+| `AIVEN_CONNECTION_STRING` / `AIVEN_CA_SECRET` | *(empty)* / `aiven-ca` | Aiven Service URI and CA secret name; only for `DB_PROVIDER=aiven` |
+| `EXTRA_ENV_VARS` | *(empty)* | Extra comma-separated `KEY=value` pairs for the service and jobs (host-project hook) |
 
 ## Known constraints worth knowing before you touch these scripts
 
 - This repo *is* Zero CMS Core and runs standalone (`public/index.php` at the repo root, per
-  `docker-compose.yml`) — the GCP Dockerfile mirrors that layout (`/var/www/html/public`, not a
+  `docker-compose.yml`) — the shared Dockerfile (`deploy/image/Dockerfile`) mirrors that layout (`/var/www/html/public`, not a
   nested `zero/` subfolder). If you ever see `zero/` path prefixes reappear in these scripts,
   that's the bug this skill's setup fixed once already — don't reintroduce it.
-- `entrypoint.sh` writes the container's runtime `.env` from a whitelist of env-var prefixes
+- `deploy/image/entrypoint.sh` writes the container's runtime `.env` from a whitelist of env-var prefixes
   (`DB_`, `GCS_`, `STORAGE_`, `ENVIRONMENT`, `BASE_`, `ADMIN_`, plus `APP_KEY`,
   `QUEUE_TRIGGER_TOKEN`, `SCHEDULER_TRIGGER_TOKEN`, `TRUSTED_PROXY_SECRET`, `GOOGLE_`, `AWS_`,
   `SMTP_`). Apache (mod_php) does *not* scrub the container environment, and `Env::get()` checks

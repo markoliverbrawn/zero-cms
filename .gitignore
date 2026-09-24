@@ -11,3 +11,4 @@ _archive
 !/composer.json
 /deployments
 .aider*
+/.deploy/*.secrets.env

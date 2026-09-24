@@ -1,0 +1,43 @@
+# ==============================================================================
+# ZERO CMS - GCLOUD IGNORE RULESET (OPTIMIZED)
+# ==============================================================================
+
+# Git files
+.git/
+.gitignore
+
+# Gcloud and Docker configs
+.gcloudignore
+.dockerignore
+Dockerfile
+setup.sh
+docker-compose.yml
+
+# Local configurations and backups (.deploy/ holds the persisted deployment secrets)
+.env
+.deploy/
+.env.bak
+*.bak
+lofty-chemist-*.json
+
+# Aggressive exclusions of huge development seed media files (47+ MB)
+seeders/data/generated-images/
+seeders/data/videos/
+
+# Ignore development seed images but preserve the lightweight corporate screenshot-main.svg
+seeders/data/images/*
+!seeders/data/images/screenshot-main.svg
+
+# Exclude zip archives and distribution packages
+**/*.zip
+public/storage/uploads/
+
+# Keep system stateless and lightweight
+storage/
+public/storage/
+
+# Ignore local development/archive folders
+_archive/
+.vscode/
+.github/
+tests/

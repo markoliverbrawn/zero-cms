@@ -359,7 +359,7 @@ Every merge to `main` is automatically versioned and published — **no Node/npm
 
 ## 7. Deployment (Google Cloud Run)
 
-`deployments/gcp/` is a self-contained shell toolkit that takes this repo from zero to a fully
+`deploy/gcp/` is a self-contained shell toolkit that takes this repo from zero to a fully
 running, scale-to-zero site on Google Cloud: a Cloud Run web service, a `db-f1-micro` Cloud SQL
 MySQL instance (connected over a Unix socket, never a public IP), a public Cloud Storage bucket for
 media (`STORAGE_DRIVER=gcs`), one-shot Cloud Run Jobs for migrations/seeding, and two Cloud
@@ -380,19 +380,21 @@ export CREATE_STORAGE_BUCKET=true           # false to reuse an existing bucket
 export RUN_MIGRATIONS=true                  # safe, up-only schema migrations
 export RUN_SEED=false                       # DESTRUCTIVE -- wipes all data and reseeds. Confirm before setting true.
 
-./deployments/gcp/setup.sh
+./deploy/gcp/setup.sh
 ```
 
-`setup.sh` runs `cloud_run_setup.sh` → `cloud_storage_setup.sh` → `cloud_sql_setup.sh` →
-`deploy_app.sh` → `cloud_scheduler_setup.sh` → `cloud_domain_mapping_setup.sh` in order (the last
-step is a no-op unless `DOMAIN_MAPPINGS` is set); every step is idempotent, so re-running the
-whole pipeline against an existing deployment updates it in place. To ship a code-only change
-without touching infrastructure, run `./deployments/gcp/deploy_app.sh` alone. Generated
-credentials/tokens (`DB_PASS`, `ADMIN_PASS`, `QUEUE_TRIGGER_TOKEN`, `SCHEDULER_TRIGGER_TOKEN`)
-persist across runs in `deployments/gcp/.env.gcp` (gitignored, mode `600`) so redeploys don't drift.
-See `deployments/gcp/common.sh` for every flag's default (region, resource names, image tag, etc.).
-If you want `TRUSTED_PROXY_SECRET` (see Section 5) honored on a GCP deployment, it must be set on
-the Cloud Run service — `deployments/gcp/entrypoint.sh`'s runtime env whitelist already includes it.
+`setup.sh` runs `project.sh` → `storage.sh` → `database.sh` → `service.sh` → `scheduler.sh` →
+`domains.sh` in order (the last step is a no-op unless `DOMAIN_MAPPINGS` is set); every step is
+idempotent, so re-running the whole pipeline against an existing deployment updates it in place. To
+ship a code-only change without touching infrastructure, run `./deploy/gcp/service.sh` alone.
+`DB_PROVIDER` picks the database option under `deploy/gcp/db/` (`cloudsql`, the default, or
+`aiven`). Settings can also live in a `.deploy/gcp.env` file of `KEY=value` lines (env vars win).
+Generated credentials/tokens (`DB_PASS`, `ADMIN_PASS`, `QUEUE_TRIGGER_TOKEN`,
+`SCHEDULER_TRIGGER_TOKEN`) persist across runs in `.deploy/gcp.secrets.env` (gitignored, mode `600`)
+so redeploys don't drift. See `deploy/gcp/config.sh` for every flag's default (region, resource
+names, image tag, etc.), and `deploy/CONTRACT.md` for what any provider toolkit must deliver to the
+app. If you want `TRUSTED_PROXY_SECRET` (see Section 5) honored on a GCP deployment, it must be set
+on the Cloud Run service — `deploy/image/entrypoint.sh`'s runtime env whitelist already includes it.
 
 ### Deploying a host project instead of Core itself
 

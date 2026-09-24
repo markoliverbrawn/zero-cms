@@ -1,0 +1,29 @@
+# Version control -- irrelevant to the running app, but 100+MB of git history and .github
+# workflow config would otherwise ride along in every local `docker build .` from the repo root.
+.git
+.github
+
+# Local dev tooling and editor state -- never read by the container at runtime.
+.vscode
+.agents
+.claude
+.aider*
+docker
+docker-compose.yml
+
+# Secrets that must never be baked into an image layer. Runtime credentials are injected by
+# the platform at runtime (e.g. --set-env-vars in deploy/gcp/service.sh), not from these files.
+zerocms-local-key.json
+.deploy
+.env.backup
+.env.bak
+*.bak
+
+# Dev-only runtime artifacts under storage/ -- regenerated at runtime, gitignored, and large
+# (logs alone routinely exceeds 50MB on a local checkout).
+storage/logs
+storage/coverage
+storage/seeder-test-root-*
+
+# Misc dev-only cruft not needed inside the image.
+_archive

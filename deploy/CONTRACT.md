@@ -10,20 +10,25 @@ document disagree, the code wins. Fix this document in the same change.
 
 ## 1. Steps
 
-Each provider implements the same steps, one script per step, in this order:
+Each provider implements the same steps, one script per step. `setup.sh` runs them in this order:
 
 | Step        | Delivers                                                                 |
 |-------------|--------------------------------------------------------------------------|
-| `database`  | A reachable MySQL 8 database; exports the `DB_*` values in §3.1          |
+| `project`   | An authenticated session and the provider's required APIs/services enabled |
 | `storage`   | An object store for uploads; exports the `STORAGE_*` values in §3.2      |
+| `database`  | A reachable MySQL 8 database; exports the `DB_*` values in §3.1          |
 | `service`   | The web workload running the shared image (§2), plus the one-off jobs (§5) |
 | `scheduler` | The two recurring HTTP triggers (§4)                                     |
 | `domains`   | Optional. Custom-domain routing to the web workload                      |
 
+Settings, secret generation and validation live in the provider's `config.sh`, which every step
+sources; utilities that know nothing about any cloud live in `deploy/lib/common.sh`.
+
 A step's only output is the environment variables it exports for the steps after it. A later step
 MUST NOT check which option an earlier step used (for example, `service` never asks whether the
 database is Cloud SQL or Aiven). Options within a step live under `deploy/<provider>/<step>/`, for
-example `deploy/gcp/db/cloudsql.sh` and `deploy/gcp/db/aiven.sh`.
+example `deploy/gcp/db/cloudsql.sh` and `deploy/gcp/db/aiven.sh`. `deploy/gcp/config.sh`
+lists the interface every database option exports.
 
 Every step MUST be idempotent: re-running it against an existing deployment updates it in place.
 
@@ -88,8 +93,9 @@ instance's own disk and loses uploads when an instance is replaced.
 | `SECURITY_AUDIT_SCHEDULE` | MAY      | Default `daily`                                              |
 
 Secrets a toolkit generates (`DB_PASS`, the trigger tokens, `TRUSTED_PROXY_SECRET`, `APP_KEY`)
-MUST be saved between runs so a redeploy doesn't rotate them. The current GCP toolkit saves them
-in a gitignored, mode-`600` settings file.
+MUST be saved between runs so a redeploy doesn't rotate them. The GCP toolkit saves them in
+`.deploy/gcp.secrets.env` (gitignored, mode `600`), which MUST be excluded from the image build
+context.
 
 ## 4. Recurring triggers
 
@@ -138,8 +144,10 @@ These run the same image with a different command and the same environment as th
 
 A host project (for example zero-mobsites) MUST NOT edit shared toolkit files. It provides:
 
-- a settings file with its own values (names, region, domains);
-- extra environment variables for its own code, passed through an `EXTRA_ENV_VARS` hook;
+- a settings file with its own values (names, region, domains): `.deploy/<provider>.env`, plain
+  `KEY=value` lines, committed. Environment variables override it;
+- extra environment variables for its own code, passed through the `EXTRA_ENV_VARS` hook
+  (comma-separated `KEY=value` pairs);
 - extra scripts alongside the toolkit, never patched into it.
 
 ## Known gaps in the current GCP toolkit

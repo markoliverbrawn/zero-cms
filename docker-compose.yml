@@ -10,7 +10,7 @@
 # queue-worker/scheduler run bin/queue-runner and bin/scheduler (see README.md
 # "Background Jobs & Scheduled Tasks") as always-on daemons so queued jobs and
 # cron-style scheduled tasks actually run locally -- unlike the GCP deployment
-# (deployments/gcp/), which instead has Cloud Scheduler HTTP-trigger the app
+# (deploy/gcp/), which instead has Cloud Scheduler HTTP-trigger the app
 # every 5 minutes since Cloud Run scales to zero and can't host a daemon.
 x-app-build: &app-build
   context: .
