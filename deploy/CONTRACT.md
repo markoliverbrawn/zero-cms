@@ -96,7 +96,8 @@ instance's own disk and loses uploads when an instance is replaced.
 Secrets a toolkit generates (`DB_PASS`, the trigger tokens, `TRUSTED_PROXY_SECRET`, `APP_KEY`)
 MUST be saved between runs so a redeploy doesn't rotate them. The GCP toolkit saves them in
 `.deploy/gcp.secrets.env` (gitignored, mode `600`), which MUST be excluded from the image build
-context.
+context. In CI, where that file doesn't survive between runs, every one of these MUST be set as a
+secured CI variable instead; otherwise each pipeline run generates new values.
 
 ## 4. Recurring triggers
 

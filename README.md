@@ -395,7 +395,8 @@ ship a code-only change without touching infrastructure, run `./deploy/gcp/servi
 `aiven`). Settings can also live in a `.deploy/gcp.env` file of `KEY=value` lines (env vars win).
 Generated credentials/tokens (`DB_PASS`, `ADMIN_PASS`, `QUEUE_TRIGGER_TOKEN`,
 `SCHEDULER_TRIGGER_TOKEN`, `TRUSTED_PROXY_SECRET` — see Section 5 — and `APP_KEY`) persist across
-runs in `.deploy/gcp.secrets.env` (gitignored, mode `600`) so redeploys don't drift. Mail is off
+runs in `.deploy/gcp.secrets.env` (gitignored, mode `600`) so redeploys don't drift; in CI, where
+that file doesn't persist, set each of them as a secured CI variable instead. Mail is off
 until `SMTP_*` is set. See `deploy/gcp/config.sh` for every flag's default (region, resource names,
 image tag, etc.), and `deploy/CONTRACT.md` for what any provider toolkit must deliver to the app.
 
