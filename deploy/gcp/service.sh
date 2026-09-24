@@ -139,8 +139,9 @@ else
 
     log_info "Submitting build request to Google Cloud Build. Target image: $IMAGE_NAME"
     # Pass the regional staging bucket to avoid violating regional constraint policies.
-    # Use --verbosity=debug to output absolute REST traces and network progress to debug hangs.
-    gcloud builds submit --tag "$IMAGE_NAME" --gcs-source-staging-dir="gs://$BUILD_STAGING_BUCKET/source" --verbosity=debug
+    # Add --verbosity=debug to trace REST calls when debugging a hang. Not on by default: it logs
+    # every poll of the streamed build log (about one line a second), burying the build output.
+    gcloud builds submit --tag "$IMAGE_NAME" --gcs-source-staging-dir="gs://$BUILD_STAGING_BUCKET/source"
     log_success "Docker image successfully compiled and uploaded."
 fi
 
