@@ -184,6 +184,30 @@ assert_test(
 );
 assert_test($private->getUrl() === '/admin/secure-download/test-private-id-123', "Private media keeps its access-gated download URL");
 
+// An SVG hydrated straight from a media row, as the dashboard and file edit views do. Assets::url()
+// hands a non-resizable source back unchanged, so minting from the id yields a bare id the browser
+// cannot load; getVariantUrl() must fall back to the file's real URL instead.
+$svgRow = [
+    'id' => 'test-svg-id-456',
+    'site_id' => $siteId,
+    'filename' => 'logo.svg',
+    'path' => '/storage/uploads/' . $siteId . '/logo.svg',
+    'mime' => 'image/svg+xml',
+    'visibility' => 'public',
+    'created_at' => '2026-01-01 00:00:00',
+];
+$svg = new Media($svgRow);
+
+assert_test(Assets::url($svgRow['id'], 150, 150) === $svgRow['id'], "Assets::url() passes a non-resizable id through unchanged");
+assert_test(
+    $svg->getVariantUrl(150, 150) === Storage::getUrl($svgRow['path']),
+    "An SVG thumbnail resolves to the file's storage URL rather than its bare id"
+);
+assert_test(
+    $svg->getVariantUrl(1000) === Storage::getUrl($svgRow['path']),
+    "An SVG preview resolves to the file's storage URL rather than its bare id"
+);
+
 // 10. Public media's getUrl() must resolve through the active storage driver rather than
 // returning the raw stored path verbatim. That stored value (e.g. "/storage/uploads/{site}/x.jpg")
 // is only directly fetchable under STORAGE_DRIVER=local (where public/storage is symlinked to

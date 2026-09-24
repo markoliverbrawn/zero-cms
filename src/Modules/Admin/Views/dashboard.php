@@ -1,6 +1,7 @@
 <?php
 use Zero\Core\App;
 use Zero\Database\DB;
+use Zero\Models\Media;
 use Zero\Models\User;
 use Zero\Support\AssetVersion;
 use Zero\Support\Assets;
@@ -47,7 +48,7 @@ if ($currentUser && App::authorize('sites.manage')) {
 // Fetch recent items for core system widgets strictly filtered by active site/domain!
 $recentPages = DB::query("SELECT * FROM pages WHERE site_id = ? AND deleted_at IS NULL ORDER BY created_at DESC LIMIT 5", [$activeSiteId])->fetchAll();
 $recentMedia = DB::query("SELECT * FROM media WHERE site_id = ? AND deleted_at IS NULL ORDER BY created_at DESC LIMIT 5", [$activeSiteId])->fetchAll();
-// Batch-prime the variant registry from these rows so Assets::url() below resolves each thumbnail
+// Batch-prime the variant registry from these rows so getVariantUrl() below resolves each thumbnail
 // without a separate per-row DB lookup (see Assets::resolve()'s registry-miss fallback).
 Assets::prime($recentMedia);
 ?>
@@ -146,7 +147,7 @@ Assets::prime($recentMedia);
               ?>
                 <div class="dashboard-recent-media-item" title="<?php echo Str::escape($media['filename']); ?>">
                   <?php if ($isImg): ?>
-                    <img src="<?php echo Str::escape(Assets::url($media['id'], 150, 150)); ?>" />
+                    <img src="<?php echo Str::escape((new Media($media))->getVariantUrl(150, 150)); ?>" />
                   <?php else: ?>
                     <div class="file-placeholder">
                       <span class="icon-svg">
