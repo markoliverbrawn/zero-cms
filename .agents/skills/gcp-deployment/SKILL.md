@@ -182,9 +182,11 @@ After the pipeline finishes:
   that's the bug this skill's setup fixed once already — don't reintroduce it.
 - `entrypoint.sh` writes the container's runtime `.env` from a whitelist of env-var prefixes
   (`DB_`, `GCS_`, `STORAGE_`, `ENVIRONMENT`, `BASE_`, `ADMIN_`, plus `APP_KEY`,
-  `QUEUE_TRIGGER_TOKEN`, `SCHEDULER_TRIGGER_TOKEN`, `GOOGLE_`, `AWS_`, `SMTP_`). Any new env var a
-  future change relies on at runtime must be added to that whitelist or it silently never reaches
-  the app despite being set on the Cloud Run resource.
+  `QUEUE_TRIGGER_TOKEN`, `SCHEDULER_TRIGGER_TOKEN`, `TRUSTED_PROXY_SECRET`, `GOOGLE_`, `AWS_`,
+  `SMTP_`). Apache (mod_php) does *not* scrub the container environment, and `Env::get()` checks
+  `getenv()` before `.env`, so a Cloud Run env var reaches the app even if it's missing from the
+  whitelist — verified live on zero-mobsites. Still add new runtime env vars to the whitelist as a
+  safety net for a future move to a scrubbing SAPI (php-fpm with `clear_env=yes`).
 - The queue/scheduler Cloud Scheduler jobs both call back into the *web service*, not a separate
   worker — there is no long-running daemon in this deployment (`bin/queue-runner` /
   `bin/scheduler`'s daemon loop are for non-serverless hosts only, e.g. `docker-compose.yml`-style

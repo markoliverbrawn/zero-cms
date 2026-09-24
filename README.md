@@ -402,9 +402,10 @@ this repo's standalone layout. A host project created via `bin/create-project` (
 (not scaffolded by `bin/create-project` — mirror `bin/seed`'s `APPLICATION_ROOT`/`APP_ROOT` split),
 a `Dockerfile` that runs `composer install` at build time rather than deferring to local dev's
 runtime fallback, and an `entrypoint.sh` whitelist extended with any of the host project's own
-env vars that are read at request time (anything read via `Env::get()` outside a CLI job needs to
-be in that whitelist, or it silently never reaches the app despite being set on the Cloud Run
-resource).
+env vars that are read at request time. Under the image's mod_php, `Env::get()` already sees
+anything set on the Cloud Run resource via `getenv()`, so the whitelist is a fallback rather than
+a hard requirement — but keeping it complete means those variables keep working if the image ever
+moves to a SAPI that scrubs the environment (e.g. php-fpm with `clear_env=yes`).
 
 ---
 
