@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.1.0 (2026-09-25)
+
+### Features
+- **deploy:** provision a private bucket for storage/private/ files (b6f8230)
+
+### Bug Fixes
+- **deploy:** don't abort the pipeline when the runtime account can't be looked up (856d420)
+- **storage:** store private GCS files in a separate bucket and sign URLs without a key file (6e25bd8)
+
+
 ## v1.0.0 (2026-09-24)
 
 ### ⚠ BREAKING CHANGES
