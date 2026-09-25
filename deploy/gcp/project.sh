@@ -34,6 +34,31 @@ gcloud services enable \
   cloudbuild.googleapis.com \
   artifactregistry.googleapis.com \
   cloudscheduler.googleapis.com \
+  iamcredentials.googleapis.com \
   "${DB_REQUIRED_APIS[@]}"
 
 log_success "Service APIs enabled successfully."
+
+# ------------------------------------------------------------------------------
+# 3. LET THE RUNTIME SERVICE ACCOUNT SIGN URLS
+# ------------------------------------------------------------------------------
+# Private files are served through signed URLs. Without a key file, the app signs them as its own
+# runtime service account via the IAM Credentials signBlob API, which needs
+# roles/iam.serviceAccountTokenCreator on that account itself. Cloud Run runs as the project's
+# Compute Engine default service account unless --service-account is passed (service.sh passes
+# none). Granting it needs permission to change that account's IAM policy, which a CI deployer
+# often lacks -- so a failure here warns with the command to run once by hand, not aborts.
+PROJECT_NUMBER=$(gcloud projects describe "$GCP_PROJECT_ID" --format="value(projectNumber)")
+RUNTIME_SERVICE_ACCOUNT="${PROJECT_NUMBER}-compute@developer.gserviceaccount.com"
+log_info "Granting $RUNTIME_SERVICE_ACCOUNT permission to sign URLs as itself..."
+if gcloud iam service-accounts add-iam-policy-binding "$RUNTIME_SERVICE_ACCOUNT" \
+     --member="serviceAccount:$RUNTIME_SERVICE_ACCOUNT" \
+     --role="roles/iam.serviceAccountTokenCreator" \
+     --condition=None --quiet >/dev/null; then
+    log_success "Runtime service account can sign URLs."
+else
+    log_warn "Could not grant roles/iam.serviceAccountTokenCreator (this deployer likely can't change service-account IAM)."
+    log_warn "Private file downloads will fail until someone with that right runs, once:"
+    log_warn "  gcloud iam service-accounts add-iam-policy-binding $RUNTIME_SERVICE_ACCOUNT \\"
+    log_warn "    --member=serviceAccount:$RUNTIME_SERVICE_ACCOUNT --role=roles/iam.serviceAccountTokenCreator"
+fi

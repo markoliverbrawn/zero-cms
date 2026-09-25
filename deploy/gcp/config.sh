@@ -29,6 +29,9 @@ load_settings "$DEPLOY_SETTINGS_FILE"
 export GCP_PROJECT_ID="${GCP_PROJECT_ID:-}"  # Active GCP Project ID (resolved dynamically if empty)
 export GCP_REGION="${GCP_REGION:-australia-southeast1}"      # GCP region for compute and storage
 export GCS_BUCKET_NAME="${GCS_BUCKET_NAME:-zerocms-media-uploads}" # Globally unique GCS bucket name
+# Private files (storage/private/: backups, restore uploads) live in a separate bucket that is never
+# publicly readable -- the media bucket is granted to allUsers as a whole. See storage.sh.
+export GCS_PRIVATE_BUCKET_NAME="${GCS_PRIVATE_BUCKET_NAME:-$GCS_BUCKET_NAME-private}"
 export ADMIN_USER="${ADMIN_USER:-admin}"                     # Admin username for initial seeding
 export ADMIN_PASS="${ADMIN_PASS:-}"           # Generate randomly or read from persistent file
 
@@ -162,6 +165,11 @@ log_info "Validating configuration parameters for security and shell integrity..
 validate_safe_string "$GCP_PROJECT_ID" "GCP_PROJECT_ID" '^[a-zA-Z0-9_.:-]+$' # Project ID can have domain, dots, or colons
 validate_safe_string "$GCP_REGION" "GCP_REGION" '^[a-zA-Z0-9-]+$' # Regions typically only have letters/numbers/dashes
 validate_safe_string "$GCS_BUCKET_NAME" "GCS_BUCKET_NAME"
+validate_safe_string "$GCS_PRIVATE_BUCKET_NAME" "GCS_PRIVATE_BUCKET_NAME"
+if [ "$GCS_PRIVATE_BUCKET_NAME" = "$GCS_BUCKET_NAME" ]; then
+    log_error "GCS_PRIVATE_BUCKET_NAME must differ from GCS_BUCKET_NAME: the media bucket is publicly readable as a whole, so private files in it would be public."
+    exit 1
+fi
 validate_safe_string "$ADMIN_USER" "ADMIN_USER"
 validate_safe_string "$ADMIN_PASS" "ADMIN_PASS"
 validate_safe_string "$DEPLOYMENT_NAME" "DEPLOYMENT_NAME"

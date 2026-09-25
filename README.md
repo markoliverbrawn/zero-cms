@@ -366,7 +366,8 @@ Every merge to `main` is automatically versioned and published — **no Node/npm
 `deploy/gcp/` is a self-contained shell toolkit that takes this repo from zero to a fully
 running, scale-to-zero site on Google Cloud: a Cloud Run web service, a `db-f1-micro` Cloud SQL
 MySQL instance (connected over a Unix socket, never a public IP), a public Cloud Storage bucket for
-media (`STORAGE_DRIVER=gcs`), one-shot Cloud Run Jobs for migrations/seeding, and two Cloud
+media (`STORAGE_DRIVER=gcs`) plus a separate never-public bucket for private files such as
+backups, one-shot Cloud Run Jobs for migrations/seeding, and two Cloud
 Scheduler HTTP jobs that wake the same web service every 5 minutes to drive the job queue and
 recurring-task scheduler — no separate always-on worker process. Each queue wake-up drains its
 full time budget (not just a single job) before returning, so total throughput isn't capped at one

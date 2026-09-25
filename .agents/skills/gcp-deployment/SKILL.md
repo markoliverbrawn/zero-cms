@@ -15,7 +15,11 @@ steps are billable and one (`RUN_SEED`) is destructive.
   `--allow-unauthenticated`, connected to Cloud SQL over a Unix socket.
 - **Cloud SQL** (`db-f1-micro` MySQL 8.0) — the database. Connected via `--set-cloudsql-instances`,
   never a public IP.
-- **Cloud Storage bucket** — public, uniform-access, used for media uploads when `STORAGE_DRIVER=gcs`.
+- **Cloud Storage buckets** — a public, uniform-access one for media uploads when `STORAGE_DRIVER=gcs`,
+  and a private one (public access prevention enforced) for `storage/private/` files, served only
+  through signed URLs. `project.sh` grants the runtime service account
+  `roles/iam.serviceAccountTokenCreator` on itself so it can sign them; if the deployer can't, it
+  prints the command to run once by hand.
 - **Two Cloud Run Jobs** — `<DEPLOYMENT_NAME>-migrate-job` (safe, up-only schema migrations via
   `bin/migrate`) and `<DEPLOYMENT_NAME>-seed-job` (destructive multi-tenant reseed via `bin/seed`,
   only created/run when explicitly requested).
@@ -175,6 +179,7 @@ default, overridable with `DEPLOY_SETTINGS_FILE`). An env var always wins over t
 | `DB_PROVIDER` | `cloudsql` | Database option under `deploy/gcp/db/`: `cloudsql` or `aiven` |
 | `CLOUDSQL_INSTANCE` | `zerocms-db` | Cloud SQL instance name |
 | `GCS_BUCKET_NAME` | `zerocms-media-uploads` | Bucket name (globally unique) |
+| `GCS_PRIVATE_BUCKET_NAME` | `<GCS_BUCKET_NAME>-private` | Bucket for `storage/private/` files (backups, restore uploads). Always created if missing, with public access prevention enforced; must differ from `GCS_BUCKET_NAME`. |
 | `DB_NAME` / `DB_USER` | `zerocms_db` / `zerocms_db_user` | Database + user |
 | `CREATE_CLOUDSQL` | `true` | Provision Cloud SQL, or reuse an existing instance |
 | `CREATE_STORAGE_BUCKET` | `true` | Provision the bucket, or reuse an existing one |

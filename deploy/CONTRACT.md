@@ -72,8 +72,18 @@ instance's own disk and loses uploads when an instance is replaced.
 
 | Driver | Variables                                                                                   |
 |--------|---------------------------------------------------------------------------------------------|
-| `gcs`  | `GCS_BUCKET_NAME` (falls back to `GCS_BUCKET`); `GCS_KEY_FILE` MAY be set, otherwise the platform's workload identity is used; `GCS_PREDEFINED_ACL` MAY be set |
+| `gcs`  | `GCS_BUCKET_NAME` (falls back to `GCS_BUCKET`); `GCS_PRIVATE_BUCKET_NAME` for files under `storage/private/`; `GCS_KEY_FILE` MAY be set, otherwise the platform's workload identity is used; `GCS_PREDEFINED_ACL` MAY be set |
 | `s3`   | `AWS_S3_BUCKET`, `AWS_DEFAULT_REGION` (default `us-east-1`), `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` (`src/Core/Storage/AwsS3StorageDriver.php`) |
+
+Files under `storage/private/` (backups, restore uploads) MUST NOT be stored where anyone can
+read them by URL. Public media is served from a bucket readable by everyone, and a grant to
+everyone can't be scoped to a prefix. So with `gcs`, `GCS_PRIVATE_BUCKET_NAME` MUST name a separate
+bucket with no public access; the driver routes private paths there and never sets object ACLs on
+them. Unset, private files go in the media bucket with a per-object ACL, which a bucket with
+uniform bucket-level access rejects, so every private write fails. Private files are served
+through signed URLs. Without `GCS_KEY_FILE`, the driver signs them as the runtime service account
+through the IAM Credentials API, so that account MUST hold `roles/iam.serviceAccountTokenCreator`
+on itself.
 
 ### 3.3 Application
 
