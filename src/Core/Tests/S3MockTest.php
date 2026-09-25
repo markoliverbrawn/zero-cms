@@ -207,4 +207,9 @@ $resignResult = $driver->write('mock-folder/resign-test.txt', 'mock payload');
 assert_test($resignResult === true, "write() succeeds after a retried 500");
 assert_test(!empty($lastAuthorizationHeader) && strpos($lastAuthorizationHeader, 'Signature=') !== false, "The final (successful) attempt still carries a complete, freshly-signed Authorization header");
 
+echo "  Testing getSignedUrl() builds a presigned URL...\n";
+$signedUrl = $driver->getSignedUrl('storage/private/backups/site-1/b.json.gz', 300);
+assert_test(str_contains($signedUrl, 'X-Amz-Expires=300'), "Presigned URL carries the requested expiry");
+assert_test(str_contains($signedUrl, 'X-Amz-Signature='), "Presigned URL carries a signature");
+
 echo "Mocked AWS S3 driver component tests completed.\n\n";

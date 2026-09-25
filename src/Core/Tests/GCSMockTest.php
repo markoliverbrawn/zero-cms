@@ -8,6 +8,10 @@ namespace Zero\Core\Storage;
 $mockCurlResponses = [];
 $mockCurlHttpCodes = [];
 
+// Every request curl_exec() receives, in order, as ['url' => ..., 'body' => ...] -- lets a test
+// assert which bucket/endpoint a driver call actually targeted, and what it sent.
+$mockCurlRequests = [];
+
 // Per-URL queue of [status, response, error] steps, consumed one per curl_exec() call against
 // that URL -- lets a test simulate "fails N times, then succeeds" to exercise curlWithRetry()'s
 // backoff/retry logic, without disturbing the simpler static single-value mocks above that every
@@ -31,8 +35,9 @@ function curl_setopt_array($ch, $options) {
 }
 
 function curl_exec($ch) {
-    global $mockCurlResponses, $mockCurlSequences;
+    global $mockCurlResponses, $mockCurlSequences, $mockCurlRequests;
     $url = $ch->url ?? '';
+    $mockCurlRequests[] = ['url' => $url, 'body' => $ch->postfields ?? null];
 
     if (!empty($mockCurlSequences[$url])) {
         $ch->_sequenceStep = array_shift($mockCurlSequences[$url]);
@@ -247,6 +252,114 @@ assert_test($transportFailResult === false, "write() returns false when every at
 $transportLoggedDiagnostic = @file_get_contents($transportErrorLogFile) ?: '';
 assert_test(str_contains($transportLoggedDiagnostic, 'Could not resolve host'), "curl_error() detail is written to the diagnostic log when the response body is empty");
 @unlink($transportErrorLogFile);
+
+// Sets (or, with null, clears) an env value for the driver, in both getenv() and Env's loaded
+// .env data, since Env::get() consults the latter whenever getenv() has nothing.
+function set_gcs_env(string $key, ?string $value): void {
+    putenv($value === null ? $key : "{$key}={$value}");
+    $reflector = new \ReflectionClass(\Zero\Core\Env::class);
+    $property = $reflector->getProperty('data');
+    $property->setAccessible(true);
+    $data = $property->getValue() ?: [];
+    if ($value === null) {
+        unset($data[$key]);
+    } else {
+        $data[$key] = $value;
+    }
+    $property->setValue(null, $data);
+}
+
+// URL of the most recent mocked request matching a substring.
+function last_request_matching(string $needle): ?array {
+    global $mockCurlRequests;
+    foreach (array_reverse($mockCurlRequests) as $request) {
+        if (str_contains($request['url'], $needle)) {
+            return $request;
+        }
+    }
+    return null;
+}
+
+echo "  Testing the legacy single-bucket layout still marks private objects with an ACL...\n";
+$mockCurlRequests = [];
+$driver->write('storage/private/backups/site-1/legacy.json.gz', 'backup');
+$legacyWrite = last_request_matching('name=storage%2Fprivate%2Fbackups');
+assert_test($legacyWrite !== null && str_contains($legacyWrite['url'], "/b/{$bucketName}/o?"), "Without GCS_PRIVATE_BUCKET_NAME, private writes still go to the main bucket");
+assert_test($legacyWrite !== null && str_contains($legacyWrite['url'], 'predefinedAcl=private'), "Without GCS_PRIVATE_BUCKET_NAME, private writes still send predefinedAcl=private");
+
+echo "  Testing private objects route to GCS_PRIVATE_BUCKET_NAME without an ACL...\n";
+set_gcs_env('GCS_PRIVATE_BUCKET_NAME', 'mock-private-bucket');
+$privateDriver = new GoogleCloudStorageDriver();
+$mockCurlRequests = [];
+
+$privateDriver->write('/storage/private/backups/site-1/b.json.gz', 'backup');
+$privateWrite = last_request_matching('name=storage%2Fprivate%2Fbackups%2Fsite-1%2Fb.json.gz');
+assert_test($privateWrite !== null && str_contains($privateWrite['url'], '/b/mock-private-bucket/o?'), "write() of a private path targets the private bucket");
+assert_test($privateWrite !== null && !str_contains($privateWrite['url'], 'predefinedAcl'), "write() of a private path sends no predefinedAcl (a uniform-access bucket rejects one)");
+
+$tmpUpload = confine_test_path(sys_get_temp_dir() . '/gcs-private-upload.json.gz', sys_get_temp_dir());
+file_put_contents($tmpUpload, 'staged restore upload');
+$privateDriver->putFile('/storage/private/restore-uploads/r.json.gz', $tmpUpload);
+@unlink($tmpUpload);
+$privatePut = last_request_matching('name=storage%2Fprivate%2Frestore-uploads');
+assert_test($privatePut !== null && str_contains($privatePut['url'], '/b/mock-private-bucket/o?') && !str_contains($privatePut['url'], 'predefinedAcl'), "putFile() of a private path targets the private bucket with no predefinedAcl");
+
+$privateDriver->write('/storage/uploads/site-1/photo.jpg', 'jpeg');
+$publicWrite = last_request_matching('name=storage%2Fuploads%2Fsite-1%2Fphoto.jpg');
+assert_test($publicWrite !== null && str_contains($publicWrite['url'], "/b/{$bucketName}/o?"), "write() of a public path still targets the main bucket");
+
+$privateDriver->read('/storage/private/backups/site-1/b.json.gz');
+$privateDriver->exists('/storage/private/backups/site-1/b.json.gz');
+$privateDriver->delete('/storage/private/backups/site-1/b.json.gz');
+$privateObjectCalls = array_filter($mockCurlRequests, fn ($r) => str_contains($r['url'], '/o/storage%2Fprivate%2Fbackups%2Fsite-1%2Fb.json.gz'));
+assert_test(count($privateObjectCalls) === 3, "read(), exists() and delete() of a private path each made one request");
+assert_test(count(array_filter($privateObjectCalls, fn ($r) => str_contains($r['url'], '/b/mock-private-bucket/o/'))) === 3, "read(), exists() and delete() of a private path all target the private bucket");
+
+$privateUrl = $privateDriver->getUrl('/storage/private/backups/site-1/b.json.gz');
+assert_test($privateUrl === 'https://storage.googleapis.com/mock-private-bucket/storage/private/backups/site-1/b.json.gz', "getUrl() of a private path points at the private bucket");
+$privateDriver->exists($privateUrl);
+assert_test(str_contains(end($mockCurlRequests)['url'], '/b/mock-private-bucket/o/storage%2Fprivate%2Fbackups'), "A stored private-bucket URL is unwrapped back to its object key");
+
+$privateDriver->rename('/storage/uploads/site-1/a.txt', '/storage/private/moved/a.txt');
+$copy = last_request_matching('/copyTo/');
+assert_test($copy !== null && str_contains($copy['url'], "/b/{$bucketName}/o/storage%2Fuploads%2Fsite-1%2Fa.txt/copyTo/b/mock-private-bucket/o/storage%2Fprivate%2Fmoved%2Fa.txt"), "rename() from a public to a private path copies across the buckets");
+assert_test($copy !== null && !str_contains($copy['url'], 'PredefinedAcl'), "rename() into the private bucket sends no destination ACL");
+
+echo "  Testing getSignedUrl() with a key file signs locally for the right bucket...\n";
+$mockCurlRequests = [];
+$keySigned = $privateDriver->getSignedUrl('/storage/private/backups/site-1/b.json.gz', 300);
+assert_test(str_starts_with($keySigned, 'https://storage.googleapis.com/mock-private-bucket/storage/private/backups/site-1/b.json.gz?'), "Signed URL for a private path points at the private bucket");
+assert_test(str_contains($keySigned, 'X-Goog-Credential=mock-client-email%40example.com'), "Key-file signing uses the key file's client_email");
+assert_test(str_contains($keySigned, 'X-Goog-Signature=' . bin2hex('mock-openssl-jwt-signature-hash-12345')), "Key-file signing uses the local OpenSSL signature");
+assert_test(last_request_matching('signBlob') === null, "Key-file signing makes no IAM Credentials call");
+
+echo "  Testing getSignedUrl() without a key file signs through the IAM Credentials API...\n";
+set_gcs_env('GCS_KEY_FILE', null);
+$workloadDriver = new GoogleCloudStorageDriver();
+$emailUrl = 'http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/email';
+$signBlobUrl = 'https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/runtime-sa%40mock-project.iam.gserviceaccount.com:signBlob';
+$mockCurlResponses[$emailUrl] = 'runtime-sa@mock-project.iam.gserviceaccount.com';
+$mockCurlResponses[$signBlobUrl] = json_encode(['keyId' => 'k1', 'signedBlob' => base64_encode('iam-signed-bytes')]);
+$mockCurlRequests = [];
+$iamSigned = $workloadDriver->getSignedUrl('/storage/private/backups/site-1/b.json.gz', 300);
+assert_test(str_contains($iamSigned, 'X-Goog-Credential=runtime-sa%40mock-project.iam.gserviceaccount.com'), "Workload-identity signing uses the metadata server's service account email");
+assert_test(str_contains($iamSigned, 'X-Goog-Signature=' . bin2hex('iam-signed-bytes')), "Workload-identity signing uses the signature signBlob returned");
+$signCall = last_request_matching('signBlob');
+$signedPayload = $signCall !== null ? base64_decode(json_decode($signCall['body'], true)['payload'] ?? '') : '';
+assert_test(str_starts_with($signedPayload, "GOOG4-RSA-SHA256\n"), "signBlob was asked to sign the V4 string-to-sign");
+
+$mockCurlHttpCodes[$signBlobUrl] = 403;
+$mockCurlResponses[$signBlobUrl] = '{"error":{"message":"Permission iam.serviceAccounts.signBlob denied"}}';
+$signError = '';
+try {
+    $workloadDriver->getSignedUrl('/storage/private/backups/site-1/b.json.gz', 300);
+} catch (\Exception $e) {
+    $signError = $e->getMessage();
+}
+assert_test(str_contains($signError, 'signBlob denied') && str_contains($signError, 'roles/iam.serviceAccountTokenCreator'), "A signBlob permission failure throws with the API error and the role to grant");
+
+set_gcs_env('GCS_KEY_FILE', $mockKeyFile);
+set_gcs_env('GCS_PRIVATE_BUCKET_NAME', null);
 
 echo "Mocked GCS driver component tests completed.\n\n";
 

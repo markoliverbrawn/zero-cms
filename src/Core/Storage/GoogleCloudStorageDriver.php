@@ -19,11 +19,17 @@ use Zero\Core\Env;
  *
  * StorageDriver for Google Cloud Storage. Exchanges an RS256-signed service-account JWT for an
  * OAuth2 access token over raw cURL rather than using a vendor SDK, and issues signed URLs for
- * private objects.
+ * private objects. Without a key file it falls back to the platform's workload identity: the
+ * metadata server for access tokens, and the IAM Credentials signBlob API for signed URLs.
+ *
+ * Objects under storage/private/ go to a separate bucket when GCS_PRIVATE_BUCKET_NAME is set. A
+ * bucket with uniform bucket-level access has no per-object ACLs, so a private object can only be
+ * kept out of a publicly readable media bucket by storing it in a bucket with no public grant.
  */
 class GoogleCloudStorageDriver implements StorageDriver
 {
     protected string $bucketName;
+    protected string $privateBucketName;
     protected ?string $accessToken = null;
     protected ?int $tokenExpiresAt = null;
 
@@ -35,6 +41,22 @@ class GoogleCloudStorageDriver implements StorageDriver
     public function __construct()
     {
         $this->bucketName = Env::get('GCS_BUCKET_NAME', Env::get('GCS_BUCKET', ''));
+        $this->privateBucketName = (string)Env::get('GCS_PRIVATE_BUCKET_NAME', '');
+    }
+
+    /**
+     * Resolve which bucket holds an object. Paths under storage/private/ live in the private bucket
+     * when one is configured; otherwise (the legacy layout) every object shares the main bucket and
+     * private ones rely on a per-object ACL, which only a fine-grained bucket supports.
+     *
+     * @param string $cleanPath The object key, already passed through cleanPath().
+     * @return string The bucket name.
+     */
+    protected function bucketFor(string $cleanPath): string
+    {
+        return ($this->privateBucketName !== '' && $this->isPrivatePath($cleanPath))
+            ? $this->privateBucketName
+            : $this->bucketName;
     }
 
     /**
@@ -47,10 +69,11 @@ class GoogleCloudStorageDriver implements StorageDriver
     {
         $cleanPath = $this->cleanPath($path);
         $prefix = \rtrim($cleanPath, '/') . '/';
+        $bucket = $this->bucketFor($prefix);
         $token = $this->getAccessToken();
 
         // 1. List all objects matching the prefix
-        $url = "https://storage.googleapis.com/storage/v1/b/{$this->bucketName}/o?prefix=" . \urlencode($prefix);
+        $url = "https://storage.googleapis.com/storage/v1/b/{$bucket}/o?prefix=" . \urlencode($prefix);
         $ch = curl_init($url);
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
@@ -72,7 +95,7 @@ class GoogleCloudStorageDriver implements StorageDriver
         // 2. Sequentially delete each object
         foreach ($items as $item) {
             $name = $item['name'];
-            $deleteUrl = "https://storage.googleapis.com/storage/v1/b/{$this->bucketName}/o/" . \urlencode($name);
+            $deleteUrl = "https://storage.googleapis.com/storage/v1/b/{$bucket}/o/" . \urlencode($name);
             $delCh = curl_init($deleteUrl);
             curl_setopt_array($delCh, [
                 CURLOPT_RETURNTRANSFER => true,
@@ -100,9 +123,11 @@ class GoogleCloudStorageDriver implements StorageDriver
      */
     protected function cleanPath(string $path): string
     {
-        $publicUrlPrefix = "https://storage.googleapis.com/{$this->bucketName}/";
-        if (\strpos($path, $publicUrlPrefix) === 0) {
-            return \substr($path, \strlen($publicUrlPrefix));
+        foreach (\array_filter([$this->bucketName, $this->privateBucketName]) as $bucket) {
+            $bucketUrlPrefix = "https://storage.googleapis.com/{$bucket}/";
+            if (\strpos($path, $bucketUrlPrefix) === 0) {
+                return \substr($path, \strlen($bucketUrlPrefix));
+            }
         }
 
         if (\strpos($path, Storage::getRoot()) === 0) {
@@ -126,7 +151,7 @@ class GoogleCloudStorageDriver implements StorageDriver
         $cleanPath = $this->cleanPath($path);
         $token = $this->getAccessToken();
 
-        $url = "https://storage.googleapis.com/storage/v1/b/{$this->bucketName}/o/" . \urlencode($cleanPath);
+        $url = "https://storage.googleapis.com/storage/v1/b/{$this->bucketFor($cleanPath)}/o/" . \urlencode($cleanPath);
         $ch = curl_init($url);
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
@@ -152,7 +177,7 @@ class GoogleCloudStorageDriver implements StorageDriver
         $cleanPath = $this->cleanPath($path);
         $token = $this->getAccessToken();
 
-        $url = "https://storage.googleapis.com/storage/v1/b/{$this->bucketName}/o/" . \urlencode($cleanPath);
+        $url = "https://storage.googleapis.com/storage/v1/b/{$this->bucketFor($cleanPath)}/o/" . \urlencode($cleanPath);
         $ch = curl_init($url);
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
@@ -260,14 +285,31 @@ class GoogleCloudStorageDriver implements StorageDriver
     }
 
     /**
-     * Get the public URL for a GCS file path.
+     * Resolve the runtime service account's email from the metadata server, for signing URLs when
+     * no key file is configured.
      *
-     * @param string $path The file path.
-     * @return string
+     * @return string The service account email.
+     * @throws Exception If the metadata server is unreachable or returns no email.
      */
-    public function getUrl(string $path): string
+    protected function getServiceAccountEmail(): string
     {
-        return "https://storage.googleapis.com/{$this->bucketName}/" . $this->cleanPath($path);
+        $metadataUrl = 'http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/email';
+        $result = CurlRetrier::execute(function () use ($metadataUrl) {
+            $ch = curl_init($metadataUrl);
+            curl_setopt_array($ch, [
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_HTTPHEADER => ['Metadata-Flavor: Google'],
+                CURLOPT_TIMEOUT => 2
+            ]);
+            return $ch;
+        });
+
+        $email = \trim((string)$result['body']);
+        if ($result['status'] !== 200 || $email === '') {
+            throw new Exception("Signed URLs need a GCS_KEY_FILE or a runtime service account, and the metadata server returned no service account email (" . self::describeGcsFailure($result['status'], $result['body'], $result['error']) . ").");
+        }
+
+        return $email;
     }
 
     /**
@@ -280,17 +322,15 @@ class GoogleCloudStorageDriver implements StorageDriver
     public function getSignedUrl(string $path, int $expires = 3600): string
     {
         $cleanPath = $this->cleanPath($path);
-        
-        $keyPath = Env::get('GCS_KEY_FILE');
-        if (empty($keyPath) || !\file_exists($keyPath)) {
-            throw new Exception("GCS Private Key file is required to generate Signed URLs.");
-        }
+        $bucket = $this->bucketFor($cleanPath);
 
-        $keyData = \json_decode(\file_get_contents($keyPath), true);
+        // With a key file, sign locally; without one, sign as the runtime service account through
+        // the IAM Credentials API (workload identity exposes no private key to sign with).
+        $keyData = $this->readKeyFile();
         $privateKey = $keyData['private_key'] ?? null;
-        $clientEmail = $keyData['client_email'] ?? null;
+        $clientEmail = $keyData !== null ? ($keyData['client_email'] ?? null) : $this->getServiceAccountEmail();
 
-        if (!$privateKey || !$clientEmail) {
+        if ($keyData !== null && (!$privateKey || !$clientEmail)) {
             throw new Exception("Malformed Google Service Account Key JSON.");
         }
 
@@ -303,7 +343,7 @@ class GoogleCloudStorageDriver implements StorageDriver
             'X-Goog-Algorithm' => 'GOOG4-RSA-SHA256',
             'X-Goog-Credential' => "{$clientEmail}/{$scope}",
             'X-Goog-Date' => $datetime,
-            'X-Goog-Expires' => $expires,
+            'X-Goog-Expires' => (string)$expires,
             'X-Goog-SignedHeaders' => 'host',
         ];
 
@@ -320,7 +360,7 @@ class GoogleCloudStorageDriver implements StorageDriver
         }
         $escapedPath = \ltrim($escapedPath, '/');
         
-        $canonicalUri = "/{$this->bucketName}/{$escapedPath}";
+        $canonicalUri = "/{$bucket}/{$escapedPath}";
         $canonicalHeaders = "host:storage.googleapis.com\n";
         $signedHeaders = "host";
         $payloadHash = "UNSIGNED-PAYLOAD";
@@ -338,12 +378,39 @@ class GoogleCloudStorageDriver implements StorageDriver
             \hash('sha256', $canonicalRequest);
 
         $signature = '';
-        if (!openssl_sign($stringToSign, $signature, $privateKey, 'SHA256')) {
-            throw new Exception("Signing failed.");
+        if ($privateKey !== null) {
+            if (!openssl_sign($stringToSign, $signature, $privateKey, 'SHA256')) {
+                throw new Exception("Signing failed.");
+            }
+        } else {
+            $signature = $this->signBlob($clientEmail, $stringToSign);
         }
 
         $hexSignature = \bin2hex($signature);
-        return "https://storage.googleapis.com/{$this->bucketName}/{$escapedPath}?{$canonicalQueryString}&X-Goog-Signature={$hexSignature}";
+        return "https://storage.googleapis.com/{$bucket}/{$escapedPath}?{$canonicalQueryString}&X-Goog-Signature={$hexSignature}";
+    }
+
+    /**
+     * Get the public URL for a GCS file path.
+     *
+     * @param string $path The file path.
+     * @return string
+     */
+    public function getUrl(string $path): string
+    {
+        $cleanPath = $this->cleanPath($path);
+        return "https://storage.googleapis.com/{$this->bucketFor($cleanPath)}/" . $cleanPath;
+    }
+
+    /**
+     * Whether an object key belongs to the private storage area.
+     *
+     * @param string $cleanPath The object key, already passed through cleanPath().
+     * @return bool
+     */
+    protected function isPrivatePath(string $cleanPath): bool
+    {
+        return \strpos($cleanPath, 'storage/private/') === 0;
     }
 
     /**
@@ -355,6 +422,37 @@ class GoogleCloudStorageDriver implements StorageDriver
     public function makeDirectory(string $path): bool
     {
         return true;
+    }
+
+    /**
+     * The predefinedAcl to send for an object, or '' to send none. A private object in the private
+     * bucket needs no ACL, and a uniform-access bucket rejects one outright ("Cannot insert legacy
+     * ACL"). Only the legacy single-bucket layout still marks private objects with an ACL.
+     *
+     * @param string $cleanPath The object key, already passed through cleanPath().
+     * @return string
+     */
+    protected function predefinedAclFor(string $cleanPath): string
+    {
+        if ($this->isPrivatePath($cleanPath)) {
+            return $this->privateBucketName !== '' ? '' : 'private';
+        }
+        return (string)Env::get('GCS_PREDEFINED_ACL', '');
+    }
+
+    /**
+     * A hint appended to write failure logs for private objects stored the legacy way (in the main
+     * bucket, marked with an ACL), which is what fails on a uniform bucket-level access bucket.
+     *
+     * @param string $cleanPath The object key, already passed through cleanPath().
+     * @return string The hint, or '' when it doesn't apply.
+     */
+    protected function privateLayoutHint(string $cleanPath): string
+    {
+        if (!$this->isPrivatePath($cleanPath) || $this->privateBucketName !== '') {
+            return '';
+        }
+        return ' (private objects are being stored in the main bucket with a per-object ACL, which a uniform bucket-level access bucket rejects; set GCS_PRIVATE_BUCKET_NAME to a bucket with no public access)';
     }
 
     /**
@@ -370,11 +468,10 @@ class GoogleCloudStorageDriver implements StorageDriver
         $token = $this->getAccessToken();
         $mime = \mime_content_type($tmpFilePath) ?: 'application/octet-stream';
 
-        $isPrivate = (\strpos($cleanPath, 'storage/private/') === 0);
-        $acl = $isPrivate ? 'private' : Env::get('GCS_PREDEFINED_ACL', '');
-        $aclParam = !empty($acl) ? '&predefinedAcl=' . \urlencode($acl) : '';
+        $acl = $this->predefinedAclFor($cleanPath);
+        $aclParam = $acl !== '' ? '&predefinedAcl=' . \urlencode($acl) : '';
 
-        $url = "https://storage.googleapis.com/upload/storage/v1/b/{$this->bucketName}/o?uploadType=media{$aclParam}&name=" . \urlencode($cleanPath);
+        $url = "https://storage.googleapis.com/upload/storage/v1/b/{$this->bucketFor($cleanPath)}/o?uploadType=media{$aclParam}&name=" . \urlencode($cleanPath);
         $ch = curl_init($url);
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
@@ -387,11 +484,15 @@ class GoogleCloudStorageDriver implements StorageDriver
             ]
         ]);
 
-        curl_exec($ch);
+        $response = curl_exec($ch);
         $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
 
-        return $status === 200;
+        if ($status !== 200) {
+            \error_log("GoogleCloudStorageDriver::putFile() failed for '{$cleanPath}': " . self::describeGcsFailure($status, $response, '') . $this->privateLayoutHint($cleanPath));
+            return false;
+        }
+        return true;
     }
 
     /**
@@ -406,7 +507,7 @@ class GoogleCloudStorageDriver implements StorageDriver
         $cleanPath = $this->cleanPath($path);
         $token = $this->getAccessToken();
 
-        $url = "https://storage.googleapis.com/storage/v1/b/{$this->bucketName}/o/" . \urlencode($cleanPath) . "?alt=media";
+        $url = "https://storage.googleapis.com/storage/v1/b/{$this->bucketFor($cleanPath)}/o/" . \urlencode($cleanPath) . "?alt=media";
         $ch = curl_init($url);
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
@@ -430,6 +531,21 @@ class GoogleCloudStorageDriver implements StorageDriver
     }
 
     /**
+     * Load the service account key file named by GCS_KEY_FILE, if one is configured and present.
+     *
+     * @return array|null The decoded key, or null when there's no key file (workload identity).
+     */
+    protected function readKeyFile(): ?array
+    {
+        $keyPath = Env::get('GCS_KEY_FILE');
+        if (empty($keyPath) || !\file_exists($keyPath)) {
+            return null;
+        }
+        $keyData = \json_decode((string)\file_get_contents($keyPath), true);
+        return \is_array($keyData) ? $keyData : [];
+    }
+
+    /**
      * Rename/move a file on GCS.
      *
      * @param string $oldPath The original path.
@@ -442,11 +558,12 @@ class GoogleCloudStorageDriver implements StorageDriver
         $cleanNew = $this->cleanPath($newPath);
         $token = $this->getAccessToken();
 
-        $acl = Env::get('GCS_PREDEFINED_ACL', '');
-        $aclParam = !empty($acl) ? '?destinationPredefinedAcl=' . \urlencode($acl) : '';
+        $acl = $this->predefinedAclFor($cleanNew);
+        $aclParam = $acl !== '' ? '?destinationPredefinedAcl=' . \urlencode($acl) : '';
 
-        // GCS has no native rename. Copy to new path, then delete original.
-        $copyUrl = "https://storage.googleapis.com/storage/v1/b/{$this->bucketName}/o/" . \urlencode($cleanOld) . "/copyTo/b/{$this->bucketName}/o/" . \urlencode($cleanNew) . $aclParam;
+        // GCS has no native rename. Copy to new path (possibly across the public/private buckets),
+        // then delete original.
+        $copyUrl = "https://storage.googleapis.com/storage/v1/b/{$this->bucketFor($cleanOld)}/o/" . \urlencode($cleanOld) . "/copyTo/b/{$this->bucketFor($cleanNew)}/o/" . \urlencode($cleanNew) . $aclParam;
         $ch = curl_init($copyUrl);
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
@@ -463,6 +580,49 @@ class GoogleCloudStorageDriver implements StorageDriver
         }
 
         return false;
+    }
+
+    /**
+     * Sign bytes as a service account through the IAM Credentials signBlob API, for signed URLs
+     * when no key file is available. Requires iamcredentials.googleapis.com to be enabled and the
+     * account to hold roles/iam.serviceAccountTokenCreator on itself.
+     *
+     * @param string $serviceAccountEmail The account to sign as.
+     * @param string $data The bytes to sign.
+     * @return string The raw RSA-SHA256 signature.
+     * @throws Exception If the API call fails or returns no signature.
+     */
+    protected function signBlob(string $serviceAccountEmail, string $data): string
+    {
+        $token = $this->getAccessToken();
+        $url = 'https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/' . \rawurlencode($serviceAccountEmail) . ':signBlob';
+        $payload = (string)\json_encode(['payload' => \base64_encode($data)]);
+
+        $result = CurlRetrier::execute(function () use ($url, $token, $payload) {
+            $ch = curl_init($url);
+            curl_setopt_array($ch, [
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_CUSTOMREQUEST => 'POST',
+                CURLOPT_POSTFIELDS => $payload,
+                CURLOPT_HTTPHEADER => [
+                    "Authorization: Bearer {$token}",
+                    'Content-Type: application/json'
+                ]
+            ]);
+            return $ch;
+        });
+
+        if ($result['status'] !== 200) {
+            throw new Exception("Signing a URL as {$serviceAccountEmail} through the IAM Credentials API failed: " . self::describeGcsFailure($result['status'], $result['body'], $result['error']) . ". The account needs roles/iam.serviceAccountTokenCreator on itself, and iamcredentials.googleapis.com must be enabled.");
+        }
+
+        $decoded = \json_decode((string)$result['body'], true);
+        $signature = \base64_decode((string)($decoded['signedBlob'] ?? ''), true);
+        if ($signature === false || $signature === '') {
+            throw new Exception("The IAM Credentials API returned no signature when signing a URL as {$serviceAccountEmail}.");
+        }
+
+        return $signature;
     }
 
     /**
@@ -483,9 +643,8 @@ class GoogleCloudStorageDriver implements StorageDriver
         $cleanPath = $this->cleanPath($path);
         $token = $this->getAccessToken();
 
-        $isPrivate = (\strpos($cleanPath, 'storage/private/') === 0);
-        $acl = $isPrivate ? 'private' : Env::get('GCS_PREDEFINED_ACL', '');
-        $aclParam = !empty($acl) ? '&predefinedAcl=' . \urlencode($acl) : '';
+        $acl = $this->predefinedAclFor($cleanPath);
+        $aclParam = $acl !== '' ? '&predefinedAcl=' . \urlencode($acl) : '';
 
         $ext = \strtolower(\pathinfo($cleanPath, PATHINFO_EXTENSION));
         $mimeTypes = [
@@ -504,7 +663,7 @@ class GoogleCloudStorageDriver implements StorageDriver
         ];
         $mime = $mimeTypes[$ext] ?? 'text/plain';
 
-        $url = "https://storage.googleapis.com/upload/storage/v1/b/{$this->bucketName}/o?uploadType=media{$aclParam}&name=" . \urlencode($cleanPath);
+        $url = "https://storage.googleapis.com/upload/storage/v1/b/{$this->bucketFor($cleanPath)}/o?uploadType=media{$aclParam}&name=" . \urlencode($cleanPath);
         $result = CurlRetrier::execute(function () use ($url, $token, $mime, $content) {
             $ch = curl_init($url);
             curl_setopt_array($ch, [
@@ -524,7 +683,7 @@ class GoogleCloudStorageDriver implements StorageDriver
             return true;
         }
 
-        \error_log("GoogleCloudStorageDriver::write() failed for '{$cleanPath}': " . self::describeGcsFailure($result['status'], $result['body'], $result['error']));
+        \error_log("GoogleCloudStorageDriver::write() failed for '{$cleanPath}': " . self::describeGcsFailure($result['status'], $result['body'], $result['error']) . $this->privateLayoutHint($cleanPath));
         return false;
     }
 
