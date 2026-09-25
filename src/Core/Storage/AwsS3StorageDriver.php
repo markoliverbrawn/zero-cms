@@ -182,7 +182,7 @@ class AwsS3StorageDriver implements StorageDriver
             'X-Amz-Algorithm' => 'AWS4-HMAC-SHA256',
             'X-Amz-Credential' => "{$this->accessKey}/{$scope}",
             'X-Amz-Date' => $amzDate,
-            'X-Amz-Expires' => $expires,
+            'X-Amz-Expires' => (string)$expires,
             'X-Amz-SignedHeaders' => 'host',
         ];
         

@@ -15,7 +15,11 @@ steps are billable and one (`RUN_SEED`) is destructive.
   `--allow-unauthenticated`, connected to Cloud SQL over a Unix socket.
 - **Cloud SQL** (`db-f1-micro` MySQL 8.0) — the database. Connected via `--set-cloudsql-instances`,
   never a public IP.
-- **Cloud Storage bucket** — public, uniform-access, used for media uploads when `STORAGE_DRIVER=gcs`.
+- **Cloud Storage buckets** — a public, uniform-access one for media uploads when `STORAGE_DRIVER=gcs`,
+  and a private one (public access prevention enforced) for `storage/private/` files, served only
+  through signed URLs. `project.sh` grants the runtime service account
+  `roles/iam.serviceAccountTokenCreator` on itself so it can sign them; if the deployer can't, it
+  prints the command to run once by hand.
 - **Two Cloud Run Jobs** — `<DEPLOYMENT_NAME>-migrate-job` (safe, up-only schema migrations via
   `bin/migrate`) and `<DEPLOYMENT_NAME>-seed-job` (destructive multi-tenant reseed via `bin/seed`,
   only created/run when explicitly requested).
@@ -175,6 +179,7 @@ default, overridable with `DEPLOY_SETTINGS_FILE`). An env var always wins over t
 | `DB_PROVIDER` | `cloudsql` | Database option under `deploy/gcp/db/`: `cloudsql` or `aiven` |
 | `CLOUDSQL_INSTANCE` | `zerocms-db` | Cloud SQL instance name |
 | `GCS_BUCKET_NAME` | `zerocms-media-uploads` | Bucket name (globally unique) |
+| `GCS_PRIVATE_BUCKET_NAME` | `<GCS_BUCKET_NAME>-private` | Bucket for `storage/private/` files (backups, restore uploads). Always created if missing, with public access prevention enforced; must differ from `GCS_BUCKET_NAME`. |
 | `DB_NAME` / `DB_USER` | `zerocms_db` / `zerocms_db_user` | Database + user |
 | `CREATE_CLOUDSQL` | `true` | Provision Cloud SQL, or reuse an existing instance |
 | `CREATE_STORAGE_BUCKET` | `true` | Provision the bucket, or reuse an existing one |
@@ -182,6 +187,7 @@ default, overridable with `DEPLOY_SETTINGS_FILE`). An env var always wins over t
 | `RUN_SEED` | `false` | **Destructive** — wipes and reseeds all data. Confirm explicitly. |
 | `IMAGE_TAG` | `v1` | Container image tag |
 | `USE_LOCAL_DOCKER` | `true` | Build locally + push, vs. remote Cloud Build |
+| `RUNTIME_SERVICE_ACCOUNT` | *(derived)* | The account Cloud Run runs as, which gets `roles/iam.serviceAccountTokenCreator` on itself for signed URLs. Empty derives the Compute Engine default from the project number (needs the Cloud Resource Manager API). |
 | `BUILD_SOURCE_RETENTION_DAYS` | `7` | Remote builds only: days to keep uploaded build sources in the staging bucket before a lifecycle rule deletes them. Only set on a bucket with no lifecycle policy. |
 | `DOMAIN_MAPPINGS` | *(empty)* | Comma-separated custom domains to map onto the Cloud Run service. Empty = skip entirely. |
 | `AIVEN_CONNECTION_STRING` / `AIVEN_CA_SECRET` | *(empty)* / `aiven-ca` | Aiven Service URI and CA secret name; only for `DB_PROVIDER=aiven` |
