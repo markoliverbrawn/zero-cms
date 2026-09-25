@@ -38,6 +38,9 @@ export ADMIN_PASS="${ADMIN_PASS:-}"           # Generate randomly or read from p
 export DEPLOYMENT_NAME="${DEPLOYMENT_NAME:-zerocms}"              # Base prefix name for services/jobs
 export IMAGE_TAG="${IMAGE_TAG:-v1}"                         # Deployment revision tag
 export USE_LOCAL_DOCKER="${USE_LOCAL_DOCKER:-true}"         # Build locally with Docker (recommended)
+# The service account Cloud Run runs as. Empty: project.sh derives the Compute Engine default
+# (<project-number>-compute@developer.gserviceaccount.com), which needs the project number.
+export RUNTIME_SERVICE_ACCOUNT="${RUNTIME_SERVICE_ACCOUNT:-}"
 # Remote builds (USE_LOCAL_DOCKER=false) upload the whole project source to a staging bucket on
 # every run. Uploads older than this many days are deleted (a lifecycle rule service.sh sets).
 export BUILD_SOURCE_RETENTION_DAYS="${BUILD_SOURCE_RETENTION_DAYS:-7}"
@@ -184,6 +187,7 @@ HOSTNAME_PATTERN='^[a-zA-Z0-9.-]+$'
 [ -n "$SMTP_HOST" ] && validate_safe_string "$SMTP_HOST" "SMTP_HOST" "$HOSTNAME_PATTERN"
 [ -n "$SMTP_PORT" ] && validate_safe_string "$SMTP_PORT" "SMTP_PORT" '^[0-9]+$'
 [ -n "$SMTP_SECURE" ] && validate_safe_string "$SMTP_SECURE" "SMTP_SECURE" '^[a-z]+$'
+[ -n "$RUNTIME_SERVICE_ACCOUNT" ] && validate_safe_string "$RUNTIME_SERVICE_ACCOUNT" "RUNTIME_SERVICE_ACCOUNT" "$EMAIL_PATTERN"
 [ -n "$SCHEDULER_TARGET_DOMAIN" ] && validate_safe_string "$SCHEDULER_TARGET_DOMAIN" "SCHEDULER_TARGET_DOMAIN" "$HOSTNAME_PATTERN"
 validate_env_value "$SMTP_USER" "SMTP_USER"
 validate_env_value "$SMTP_PASS" "SMTP_PASS"
