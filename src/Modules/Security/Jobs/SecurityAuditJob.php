@@ -66,7 +66,7 @@ class SecurityAuditJob implements Job
             ]);
             $audit->save();
         } catch (\Exception $e) {
-            // Silently fail if database is not fully initialized
+            \error_log('SecurityAuditJob: failed to archive audit report: ' . $e->getMessage());
         }
 
         // 3. Dispatch automated security email if ADMIN_EMAIL is configured in .env
