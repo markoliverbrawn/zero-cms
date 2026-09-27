@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.1.1 (2026-09-27)
+
+### Bug Fixes
+- **security:** widen telemetry column so audit archiving no longer fails silently (48fbd2e)
+
+
 ## v1.1.0 (2026-09-25)
 
 ### Features
