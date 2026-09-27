@@ -323,7 +323,7 @@ class SecurityAuditController implements Controller
                 ]);
                 $audit->save();
             } catch (\Exception $e) {
-                // Silently bypass if schema is being initialized
+                \error_log('SecurityAuditController: failed to archive audit report: ' . $e->getMessage());
             }
 
             \header('Content-Type: application/json');
