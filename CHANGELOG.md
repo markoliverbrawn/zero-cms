@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.1.2 (2026-09-28)
+
+### Bug Fixes
+- **sessions:** lock DatabaseSessionHandler reads/writes to stop CSRF/session races (851d1b5)
+
+
 ## v1.1.1 (2026-09-27)
 
 ### Bug Fixes
