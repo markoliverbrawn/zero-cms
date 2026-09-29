@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.1.3 (2026-09-29)
+
+### Bug Fixes
+- **routing:** tolerate trailing slashes in the request URI (94bbc28)
+
+
 ## v1.1.2 (2026-09-28)
 
 ### Bug Fixes
