@@ -15,7 +15,7 @@ namespace Zero\Modules\Security\Middleware;
 
 use Exception;
 use Zero\Core\App;
-use Zero\Core\Env;
+use Zero\Support\Security;
 
 /**
  * Class ContentSecurityPolicyMiddleware
@@ -88,9 +88,7 @@ class ContentSecurityPolicyMiddleware
         App::setNonce($nonce);
 
         // Detect if active connection is secure/HTTPS
-        $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
-                || ($_SERVER['SERVER_PORT'] ?? '') == 443
-                || (Env::get('STORAGE_DRIVER') === 's3');
+        $isHttps = Security::resolveScheme() === 'https' || ($_SERVER['SERVER_PORT'] ?? '') == 443;
 
         $csp = $this->buildCsp($nonce, $isHttps);
 

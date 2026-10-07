@@ -94,7 +94,7 @@ class SendWelcomeController implements Controller
         // unverified forged header could inject an attacker-controlled domain into this
         // legitimate welcome email's link.
         $host = Security::resolveTrustedHost($siteDomain);
-        $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+        $scheme = Security::resolveScheme();
         $link = $scheme . '://' . $host . '/admin/login';
 
         // Render beautiful welcome email template using template view file

@@ -18,6 +18,7 @@ use Zero\Models\Site;
 use Zero\Models\User;
 use Zero\Modules\Security\Models\AuditLog;
 use Zero\Modules\Security\Models\SecurityAudit;
+use Zero\Support\Security;
 use Zero\Support\Session\DatabaseSessionHandler;
 
 /**
@@ -171,7 +172,7 @@ trait ResolvesTenantContext
             // SECURITY REMEDIATION: Enforce strict secure session cookie configurations
             \session_start([
                 'cookie_httponly' => true,
-                'cookie_secure' => isset($_SERVER['HTTPS']) || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https'),
+                'cookie_secure' => Security::resolveScheme() === 'https',
                 'cookie_samesite' => 'Lax'
             ]);
         }
