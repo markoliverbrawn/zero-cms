@@ -79,7 +79,7 @@ class FrontendForgotController implements Controller
                 // otherwise an unverified forged header could inject an attacker-controlled domain
                 // into this legitimate password-reset email's link.
                 $host = Security::resolveTrustedHost();
-                $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+                $scheme = Security::resolveScheme();
                 $link = $scheme . '://' . $host . '/reset?token=' . $token;
 
                 // Construct beautiful recovery email template

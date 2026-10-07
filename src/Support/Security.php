@@ -73,6 +73,33 @@ class Security {
     }
 
     /**
+     * Resolve the scheme ('https' or 'http') the visitor actually used for the current request.
+     * Behind a reverse proxy (Cloudflare, Cloud Run) TLS terminates upstream, so PHP sees a plain
+     * HTTP request and $_SERVER['HTTPS'] is unset -- the original scheme only arrives via
+     * X-Forwarded-Proto (first value when more than one proxy appended to the header). That header
+     * is otherwise trivially spoofable by anyone hitting the origin directly, so it's only honored
+     * once TRUSTED_PROXY_SECRET is configured and isTrustedProxyRequest() verifies it (falling back
+     * to today's unconditional trust when the secret is unset, so deployments that don't use this
+     * plumbing see no change) -- the same gating resolveTrustedHost() applies to X-Forwarded-Host.
+     */
+    public static function resolveScheme(): string
+    {
+        if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
+            return 'https';
+        }
+
+        $forwardedProtoTrusted = Env::get('TRUSTED_PROXY_SECRET', '') === '' || self::isTrustedProxyRequest();
+        if ($forwardedProtoTrusted) {
+            $forwardedProto = \strtolower(\trim(\explode(',', (string)($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? ''))[0]));
+            if ($forwardedProto === 'https') {
+                return 'https';
+            }
+        }
+
+        return 'http';
+    }
+
+    /**
      * Check if authentication attempts are exceeded for a combination of IP and identifier.
      * Action parameter can be 'login' or 'password_reset'.
      */
