@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.1.4 (2026-10-07)
+
+### Bug Fixes
+- **security:** centralize request scheme detection behind a proxy-secret gate (b8e772e)
+
+
 ## v1.1.3 (2026-09-29)
 
 ### Bug Fixes
