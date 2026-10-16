@@ -421,6 +421,9 @@ class Seeder
                     if (!empty($validSiteColumns) && !\in_array($key, $validSiteColumns, true)) {
                         continue;
                     }
+                    if (!Security::isSafeSqlIdentifier($key)) {
+                        continue;
+                    }
                     $extraColumns[] = $key;
                     $extraValues[] = \is_array($val) ? \json_encode($val) : $val;
                 }
