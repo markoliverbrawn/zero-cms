@@ -171,17 +171,15 @@ class SecurityAuditController implements Controller
             $telemetry['default_password_usernames'] = [];
         }
 
-        // 4. Check folder execution protection
+        // 4. Check folder execution protection (only meaningful for locally served uploads -
+        // under STORAGE_DRIVER=gcs/s3, uploads never touch the web server's filesystem at all)
         $uploadsDir = Storage::getUploadsRoot();
-        $telemetry['storage_directory_open_access'] = true;
-        if (\file_exists($uploadsDir)) {
-            $telemetry['storage_directory_writable'] = \is_writable($uploadsDir);
-            if (\file_exists(Storage::getRoot() . '/public/storage/.htaccess')) {
-                $telemetry['storage_directory_open_access'] = false;
-            }
-        } else {
-            $telemetry['storage_directory_writable'] = false;
-        }
+        $isLocalDriver = Env::get('STORAGE_DRIVER', 'local') === 'local';
+        $telemetry['storage_directory_writable'] = $isLocalDriver && \file_exists($uploadsDir) && \is_writable($uploadsDir);
+        $telemetry['storage_directory_open_access'] = $isLocalDriver
+            && \file_exists($uploadsDir)
+            && !\file_exists(Storage::getRoot() . '/public/storage/.htaccess')
+            && !\file_exists(Storage::getRoot() . '/storage/.htaccess');
 
         // 5. Total Admin accounts count (scoped strictly to the active tenant + global super admins)
         try {

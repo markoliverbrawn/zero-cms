@@ -60,12 +60,12 @@ if ($telemetry['storage_directory_open_access'] ?? false) {
     $warningsCount++;
     $vulnerabilitiesSection .= "### 🟡 [MEDIUM] Severity: Storage Folder Permissions Hardening Recommended
 * **Exploit Vector:** The `/storage/uploads/` directory is writable and must be strictly protected to prevent execution of arbitrary uploaded scripts (e.g. `.php` file uploads executed by the web server).
-* **Remediation:** Ensure a protective `.htaccess` or server block resides in the `/storage/` folder, blocking execution of `.php` files inside the uploads directories:
+* **Remediation:** Ensure a protective `.htaccess` or server block resides in the `/storage/` folder, blocking execution of scripts inside the uploads directories (see `storage/.htaccess` in this repo for the rule already enforced elsewhere):
   ```apache
-  <Files *.php>
+  <FilesMatch \"\\.(php|phtml|php3|php4|php5|php7|php8|pl|py|jsp|asp|sh|cgi)$\">
       Order Deny,Allow
       Deny from all
-  </Files>
+  </FilesMatch>
   ```\n\n";
 }
 
