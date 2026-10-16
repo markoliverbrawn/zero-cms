@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.1.5 (2026-10-16)
+
+### Bug Fixes
+- **security:** remove false positives from the security audit (a874c14)
+
+
 ## v1.1.4 (2026-10-07)
 
 ### Bug Fixes
