@@ -853,6 +853,13 @@
         }
     }
 
+    .block-settings-row {
+        align-items: flex-end;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
     .row-settings-wrapper.has-siblings {
         margin-top: 20px;
         padding-top: 15px;

@@ -15,8 +15,45 @@ $mediaIds = $block['media_ids'] ?? [];
 $thumbnailWidth = 600;
 $thumbnailHeight = 450;
 $lightboxWidth = 1800;
+
+// Layout settings (see blocks/admin/settings/gallery.php). Every value is checked against an
+// allowlist and published as a CSS custom property for gallery.css to consume. Unset columns and
+// gap emit nothing, so existing galleries keep the stylesheet's auto-fit grid. Once any column
+// count is set the grid switches to fixed columns, filling unset sizes with 2 / 3 / 4.
+$allowed = static fn($value, array $ok, string $default): string => in_array((string)$value, $ok, true) ? (string)$value : $default;
+$layout = $allowed($block['layout'] ?? 'grid', ['grid', 'masonry'], 'grid');
+$colsMobile = $allowed($block['cols_mobile'] ?? '', ['1', '2'], '');
+$colsTablet = $allowed($block['cols_tablet'] ?? '', ['2', '3', '4'], '');
+$colsDesktop = $allowed($block['cols_desktop'] ?? '', ['3', '4', '5', '6'], '');
+$colsWide = $allowed($block['cols_wide'] ?? '', ['5', '6', '7', '8'], '');
+$gap = $allowed($block['gap'] ?? '', ['0', '16px', '24px', '32px'], '');
+
+$hasFixedCols = $colsMobile . $colsTablet . $colsDesktop . $colsWide !== '';
+$styleVars = [];
+if ($hasFixedCols) {
+    $colsDesktop = $colsDesktop ?: '4';
+    $styleVars['--gallery-cols-mobile'] = $colsMobile ?: '2';
+    $styleVars['--gallery-cols-tablet'] = $colsTablet ?: '3';
+    $styleVars['--gallery-cols-desktop'] = $colsDesktop;
+    $styleVars['--gallery-cols-wide'] = $colsWide ?: $colsDesktop;
+}
+if ($gap !== '') {
+    $styleVars['--gallery-gap'] = $gap;
+}
+
+$wrapperClass = 'block block-gallery gallery-layout-' . $layout . ($hasFixedCols ? ' gallery-fixed-cols' : '');
+$styleAttr = '';
+foreach ($styleVars as $name => $value) {
+    $styleAttr .= $name . ': ' . $value . '; ';
+}
+
+// Masonry keeps each photo's natural shape, so it asks for a width-only rendition instead of
+// the 4:3 crop the grid uses.
+$isMasonry = $layout === 'masonry';
+$thumbnailCropHeight = $isMasonry ? null : $thumbnailHeight;
+$thumbnailAspect = $isMasonry ? null : 4 / 3;
 ?>
-<div class="block block-gallery">
+<div class="<?php echo $wrapperClass; ?>"<?php if ($styleAttr !== ''): ?> style="<?php echo trim($styleAttr); ?>"<?php endif; ?>>
   <div class="gallery-grid">
     <?php if (!empty($mediaIds)): ?>
       <?php foreach ($mediaIds as $img):
@@ -25,11 +62,11 @@ $lightboxWidth = 1800;
             continue;
         }
         $titleText = Assets::title($img);
-        $thumbnailSize = Assets::size($mediaUrl, $thumbnailWidth, $thumbnailHeight);
+        $thumbnailSize = Assets::size($mediaUrl, $thumbnailWidth, $thumbnailCropHeight);
         ?>
         <div class="gallery-item">
-          <img src="<?php echo Assets::url($mediaUrl, width: $thumbnailWidth, height: $thumbnailHeight); ?>"
-               srcset="<?php echo Str::escape(Assets::srcset($mediaUrl, [400, 600, 900], 4 / 3)); ?>"
+          <img src="<?php echo Assets::url($mediaUrl, width: $thumbnailWidth, height: $thumbnailCropHeight); ?>"
+               srcset="<?php echo Str::escape(Assets::srcset($mediaUrl, [400, 600, 900], $thumbnailAspect)); ?>"
                sizes="(max-width: 600px) 100vw, 300px"
                <?php if ($thumbnailSize !== null): ?>width="<?php echo $thumbnailSize['width']; ?>" height="<?php echo $thumbnailSize['height']; ?>"<?php endif; ?>
                class="gallery-img gallery-lightbox-trigger"
