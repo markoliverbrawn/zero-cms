@@ -53,7 +53,7 @@ $isMasonry = $layout === 'masonry';
 $thumbnailCropHeight = $isMasonry ? null : $thumbnailHeight;
 $thumbnailAspect = $isMasonry ? null : 4 / 3;
 ?>
-<div class="<?php echo $wrapperClass; ?>"<?php if ($styleAttr !== ''): ?> style="<?php echo trim($styleAttr); ?>"<?php endif; ?>>
+<div class="<?php echo $wrapperClass; ?>" data-gallery<?php if ($styleAttr !== ''): ?> style="<?php echo trim($styleAttr); ?>"<?php endif; ?>>
   <div class="gallery-grid">
     <?php if (!empty($mediaIds)): ?>
       <?php foreach ($mediaIds as $img):
@@ -79,16 +79,4 @@ $thumbnailAspect = $isMasonry ? null : 4 / 3;
       <?php endforeach; ?>
     <?php endif; ?>
   </div>
-</div>
-
-<!-- Beautiful, Zero-Dependency Fullscreen Lightbox Modal Overlay -->
-<div id="gallery-lightbox" class="gallery-lightbox">
-    <!-- Large Close Button -->
-    <button id="gallery-lightbox-close" class="gallery-lightbox-close">&times;</button>
-
-    <!-- Lightbox Image Container -->
-    <div id="gallery-lightbox-content" class="gallery-lightbox-content">
-        <img id="gallery-lightbox-img" src="" alt="">
-        <h4 id="gallery-lightbox-title"></h4>
-    </div>
 </div>
