@@ -79,4 +79,11 @@ assert_test(strpos($htmlAdmin, '<option value="6" selected>6</option>') !== fals
 assert_test(strpos($htmlAdmin, '<option value="4" selected>4</option>') !== false, "Saved tablet columns are selected");
 assert_test(strpos($htmlAdmin, '<option value="24px" selected>') !== false, "Saved spacing is selected");
 
+// 5. Several galleries on one page each mark their own album and share one JS-built lightbox.
+echo "  Testing two galleries on one page...\n";
+$htmlPage = $renderGallery(['media_ids' => ['a.jpg', 'b.jpg']]) . $renderGallery(['media_ids' => ['c.jpg', 'd.jpg', 'e.jpg']]);
+assert_test(substr_count($htmlPage, 'data-gallery') === 2, "Each gallery wrapper carries data-gallery");
+assert_test(strpos($htmlPage, 'id="gallery-lightbox') === false, "No gallery prints its own lightbox markup");
+assert_test(substr_count($htmlPage, 'gallery-lightbox-trigger') === 5, "Every photo stays a lightbox trigger");
+
 echo "Gallery layout settings tests completed successfully!\n\n";
