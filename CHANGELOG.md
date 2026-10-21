@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.2.0 (2026-10-21)
+
+### Features
+- **gallery:** configurable layout (grid/masonry), column counts and spacing (f5d7aef)
+
+
 ## v1.1.5 (2026-10-16)
 
 ### Bug Fixes
