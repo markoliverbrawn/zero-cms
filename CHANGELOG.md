@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.3.0 (2026-10-21)
+
+### Features
+- **gallery:** shared lightbox with next/previous within each album (f991211)
+
+
 ## v1.2.0 (2026-10-21)
 
 ### Features
