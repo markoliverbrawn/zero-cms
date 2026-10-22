@@ -48,7 +48,7 @@ fi
 # Runtime environment shared by the web service and every job (deploy/CONTRACT.md, section 3).
 # Optional values are only included when set.
 APP_ENV_VARS="$DB_ENV_VARS,STORAGE_DRIVER=gcs,GCS_BUCKET=$GCS_BUCKET_NAME,GCS_BUCKET_NAME=$GCS_BUCKET_NAME,GCS_PRIVATE_BUCKET_NAME=$GCS_PRIVATE_BUCKET_NAME,ENVIRONMENT=production,BENCHMARKING=false,QUEUE_TRIGGER_TOKEN=$QUEUE_TRIGGER_TOKEN,SCHEDULER_TRIGGER_TOKEN=$SCHEDULER_TRIGGER_TOKEN,TRUSTED_PROXY_SECRET=$TRUSTED_PROXY_SECRET,APP_KEY=$APP_KEY"
-APP_ENV_VARS+="$(env_pairs ADMIN_EMAIL SMTP_HOST SMTP_PORT SMTP_SECURE SMTP_USER SMTP_PASS SMTP_FROM_EMAIL SMTP_FROM_NAME)"
+APP_ENV_VARS+="$(env_pairs ADMIN_EMAIL SMTP_HOST SMTP_PORT SMTP_SECURE SMTP_USER SMTP_PASS SMTP_FROM_EMAIL SMTP_FROM_NAME IMAGE_RENDER_SLOTS)"
 APP_ENV_VARS+="${EXTRA_ENV_VARS:+,$EXTRA_ENV_VARS}"
 
 # ------------------------------------------------------------------------------
@@ -178,10 +178,10 @@ log_info "----------------------------------------------------------------"
 gcloud run deploy "$SERVICE_NAME" \
   --image "$IMAGE_NAME" \
   --min-instances=0 \
-  --max-instances=10 \
-  --memory=512Mi \
-  --cpu=1 \
-  --concurrency=80 \
+  --max-instances="$CLOUD_RUN_MAX_INSTANCES" \
+  --memory="$CLOUD_RUN_MEMORY" \
+  --cpu="$CLOUD_RUN_CPU" \
+  --concurrency="$CLOUD_RUN_CONCURRENCY" \
   --timeout=900 \
   "${DB_UPDATE_FLAGS[@]}" \
   --set-env-vars="$APP_ENV_VARS" \

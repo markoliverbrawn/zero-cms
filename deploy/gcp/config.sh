@@ -45,6 +45,16 @@ export RUNTIME_SERVICE_ACCOUNT="${RUNTIME_SERVICE_ACCOUNT:-}"
 # every run. Uploads older than this many days are deleted (a lifecycle rule service.sh sets).
 export BUILD_SOURCE_RETENTION_DAYS="${BUILD_SOURCE_RETENTION_DAYS:-7}"
 
+# Cloud Run sizing for the web service (service.sh). The defaults suit a small site; image-heavy
+# sites may want more memory and lower concurrency so a burst of first-time image resizes cannot
+# exhaust one instance. IMAGE_RENDER_SLOTS (optional) caps simultaneous resizes per instance
+# (src/Support/RenderSlots.php, default 3) and is passed to the app only when set.
+export CLOUD_RUN_MAX_INSTANCES="${CLOUD_RUN_MAX_INSTANCES:-10}"
+export CLOUD_RUN_MEMORY="${CLOUD_RUN_MEMORY:-512Mi}"      # e.g. 512Mi, 1Gi, 2Gi
+export CLOUD_RUN_CPU="${CLOUD_RUN_CPU:-1}"                # e.g. 1, 2, 4
+export CLOUD_RUN_CONCURRENCY="${CLOUD_RUN_CONCURRENCY:-80}" # Max simultaneous requests per instance
+export IMAGE_RENDER_SLOTS="${IMAGE_RENDER_SLOTS:-}"
+
 # Which database option under deploy/gcp/db/ provides the database: "cloudsql" (a Cloud SQL
 # instance this toolkit provisions) or "aiven" (an external Aiven MySQL service).
 export DB_PROVIDER="${DB_PROVIDER:-cloudsql}"
@@ -178,6 +188,11 @@ validate_safe_string "$ADMIN_PASS" "ADMIN_PASS"
 validate_safe_string "$DEPLOYMENT_NAME" "DEPLOYMENT_NAME"
 validate_safe_string "$DB_PROVIDER" "DB_PROVIDER"
 validate_safe_string "$BUILD_SOURCE_RETENTION_DAYS" "BUILD_SOURCE_RETENTION_DAYS" '^[1-9][0-9]*$'
+validate_safe_string "$CLOUD_RUN_MAX_INSTANCES" "CLOUD_RUN_MAX_INSTANCES" '^[1-9][0-9]*$'
+validate_safe_string "$CLOUD_RUN_MEMORY" "CLOUD_RUN_MEMORY" '^[1-9][0-9]*(Mi|Gi)$'
+validate_safe_string "$CLOUD_RUN_CPU" "CLOUD_RUN_CPU" '^[1-9][0-9]*$'
+validate_safe_string "$CLOUD_RUN_CONCURRENCY" "CLOUD_RUN_CONCURRENCY" '^[1-9][0-9]*$'
+[ -z "$IMAGE_RENDER_SLOTS" ] || validate_safe_string "$IMAGE_RENDER_SLOTS" "IMAGE_RENDER_SLOTS" '^[1-9][0-9]*$'
 validate_safe_string "$TRUSTED_PROXY_SECRET" "TRUSTED_PROXY_SECRET"
 validate_safe_string "$APP_KEY" "APP_KEY"
 EMAIL_PATTERN='^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9.-]+$'

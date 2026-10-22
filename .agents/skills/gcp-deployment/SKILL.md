@@ -189,6 +189,8 @@ default, overridable with `DEPLOY_SETTINGS_FILE`). An env var always wins over t
 | `USE_LOCAL_DOCKER` | `true` | Build locally + push, vs. remote Cloud Build |
 | `RUNTIME_SERVICE_ACCOUNT` | *(derived)* | The account Cloud Run runs as, which gets `roles/iam.serviceAccountTokenCreator` on itself for signed URLs. Empty derives the Compute Engine default from the project number (needs the Cloud Resource Manager API). |
 | `BUILD_SOURCE_RETENTION_DAYS` | `7` | Remote builds only: days to keep uploaded build sources in the staging bucket before a lifecycle rule deletes them. Only set on a bucket with no lifecycle policy. |
+| `CLOUD_RUN_MAX_INSTANCES` / `CLOUD_RUN_MEMORY` / `CLOUD_RUN_CPU` / `CLOUD_RUN_CONCURRENCY` | `10` / `512Mi` / `1` / `80` | Web service sizing. Image-heavy sites may want more memory (e.g. `1Gi`) and lower concurrency (e.g. `20`). |
+| `IMAGE_RENDER_SLOTS` | *(empty → app default 3)* | Max simultaneous image resizes per instance (`src/Support/RenderSlots.php`). Passed to the app only when set. |
 | `DOMAIN_MAPPINGS` | *(empty)* | Comma-separated custom domains to map onto the Cloud Run service. Empty = skip entirely. |
 | `AIVEN_CONNECTION_STRING` / `AIVEN_CA_SECRET` | *(empty)* / `aiven-ca` | Aiven Service URI and CA secret name; only for `DB_PROVIDER=aiven` |
 | `ADMIN_EMAIL` / `SMTP_HOST` / `SMTP_PORT` / `SMTP_SECURE` / `SMTP_USER` / `SMTP_PASS` / `SMTP_FROM_EMAIL` / `SMTP_FROM_NAME` | *(empty)* | Mail. Without `SMTP_HOST` the app sends no mail. Keep `SMTP_PASS` in the environment, not the settings file. |
