@@ -17,6 +17,7 @@ use Zero\Database\DB;
 use Zero\Interfaces\Controller;
 use Zero\Support\Assets;
 use Zero\Support\ImageProcessor;
+use Zero\Support\RenderSlots;
 use Zero\Support\VariantCache;
 
 /**
@@ -114,13 +115,25 @@ class MediaVariantController implements Controller
                 }
             }
 
-            $source = Storage::read($sourcePath);
-            if ($source === null || $source === '') {
-                VariantCache::release($lock, $relativePath);
-                $this->notFound();
-            }
+            // Hold a render slot only while the source is in memory and being rendered, capping
+            // how many different images this instance decodes at once (see RenderSlots). Every
+            // exit inside the slot releases it first: notFound() and respond() call exit, which
+            // skips finally blocks.
+            $slot = RenderSlots::acquire();
+            try {
+                $source = Storage::read($sourcePath);
+                if ($source === null || $source === '') {
+                    RenderSlots::release($slot);
+                    VariantCache::release($lock, $relativePath);
+                    $this->notFound();
+                }
 
-            $variant = ImageProcessor::render($source, $width, $height, $fit, $focusX, $focusY, $quality);
+                $variant = ImageProcessor::render($source, $width, $height, $fit, $focusX, $focusY, $quality);
+            } finally {
+                RenderSlots::release($slot);
+            }
+            unset($source); // the original's bytes are no longer needed once rendered
+
             VariantCache::store($relativePath, $variant['bytes']);
             VariantCache::release($lock, $relativePath);
 
