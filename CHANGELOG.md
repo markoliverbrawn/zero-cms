@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.4.0 (2026-10-22)
+
+### Features
+- **media:** configurable Cloud Run sizing and per-instance image render slots (2ff00ea)
+
+
 ## v1.3.0 (2026-10-21)
 
 ### Features
