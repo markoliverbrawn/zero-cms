@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.5.1 (2026-10-27)
+
+### Bug Fixes
+- **ai:** configurable Gemini models; move image generation off retired Imagen API (e0278fe)
+
+
 ## v1.5.0 (2026-10-27)
 
 ### Features
