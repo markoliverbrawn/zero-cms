@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.5.0 (2026-10-27)
+
+### Features
+- **security:** per-site audit schedule and report recipient in admin settings (b06d794)
+
+
 ## v1.4.0 (2026-10-22)
 
 ### Features
