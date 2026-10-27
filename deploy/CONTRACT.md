@@ -99,7 +99,7 @@ on itself.
 | `ADMIN_EMAIL`             | SHOULD   | Recipient for security audit reports; also applied to the admin account at seed time |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM_EMAIL`, `SMTP_FROM_NAME` | SHOULD | Without these, no mail is sent (password resets, audit reports) |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI` | MAY | Google SSO |
-| `AI_PROVIDER`, `GEMINI_API_KEY` | MAY | AI features. `AI_PROVIDER` defaults to `gemini` |
+| `AI_PROVIDER`, `GEMINI_API_KEY`, `GEMINI_MODEL`, `GEMINI_IMAGE_MODEL` | MAY | AI features. `AI_PROVIDER` defaults to `gemini`; models default to `gemini-3.8-flash` / `gemini-3.1-flash-image` |
 | `SEARCH_DRIVER`           | MAY      | Default `database`                                           |
 | `SECURITY_AUDIT_SCHEDULE` | MAY      | Default `daily`; per-site value in Admin → Security Settings |
 

@@ -38,7 +38,8 @@ class GeminiProvider implements AiProvider
             throw new Exception("Gemini API key is not configured. Please set GEMINI_API_KEY in your .env file.");
         }
 
-        $model = $options['model'] ?? 'gemini-2.5-flash';
+        // Google retires model versions regularly, so the default is overridable without a code change.
+        $model = $options['model'] ?? Env::get('GEMINI_MODEL', 'gemini-3.8-flash');
         $timeout = $options['timeout'] ?? 60;
 
         $url = "https://generativelanguage.googleapis.com/v1beta/models/" . \urlencode($model) . ":generateContent?key=" . \urlencode($apiKey);
@@ -91,7 +92,8 @@ class GeminiProvider implements AiProvider
     }
 
     /**
-     * Generate an image from a prompt using Google Imagen 4.0 API.
+     * Generate an image from a prompt using a Gemini image model (generateContent with IMAGE output).
+     * Google retired the Imagen :predict models, so this uses the same endpoint as text generation.
      * Returns the raw generated image bytes encoded as a Base64 string.
      *
      * @param string $prompt The image generation prompt description.
@@ -106,17 +108,16 @@ class GeminiProvider implements AiProvider
             throw new Exception("Gemini API key is not configured. Please set GEMINI_API_KEY in your .env file.");
         }
 
-        $model = $options['model'] ?? 'imagen-3.0-generate-002';
+        $model = $options['model'] ?? Env::get('GEMINI_IMAGE_MODEL', 'gemini-3.1-flash-image');
         $aspectRatio = $options['aspect_ratio'] ?? '1:1';
         $timeout = $options['timeout'] ?? 90;
 
-        $url = "https://generativelanguage.googleapis.com/v1beta/models/" . \urlencode($model) . ":predict?key=" . \urlencode($apiKey);
+        $url = "https://generativelanguage.googleapis.com/v1beta/models/" . \urlencode($model) . ":generateContent?key=" . \urlencode($apiKey);
         $payload = [
-            'instances' => [['prompt' => $prompt]],
-            'parameters' => [
-                'sampleCount' => 1,
-                'aspectRatio' => $aspectRatio,
-                'outputMimeType' => 'image/jpeg'
+            'contents' => [['parts' => [['text' => $prompt]]]],
+            'generationConfig' => [
+                'responseModalities' => ['IMAGE'],
+                'imageConfig' => ['aspectRatio' => $aspectRatio]
             ]
         ];
 
@@ -141,18 +142,25 @@ class GeminiProvider implements AiProvider
         if ($httpCode !== 200) {
             $resData = \json_decode($response, true);
             $errorMsg = $resData['error']['message'] ?? 'Unknown Google API Error';
-            throw new Exception("Google Imagen API Error (HTTP {$httpCode}): " . $errorMsg);
+            throw new Exception("Google Gemini Image API Error (HTTP {$httpCode}): " . $errorMsg);
         }
 
         if (empty($response)) {
-            throw new Exception("Empty response returned from Google Imagen API.");
+            throw new Exception("Empty response returned from Google Gemini Image API.");
         }
 
         $resData = \json_decode($response, true);
-        $base64Data = $resData['predictions'][0]['bytesBase64Encoded'] ?? '';
+        $base64Data = '';
+        foreach ($resData['candidates'][0]['content']['parts'] ?? [] as $part) {
+            if (!empty($part['inlineData']['data'])) {
+                $base64Data = $part['inlineData']['data'];
+                break;
+            }
+        }
 
         if (empty($base64Data)) {
-            throw new Exception("Malformed JSON or missing image predictions in response.");
+            $reason = $resData['candidates'][0]['finishReason'] ?? $resData['promptFeedback']['blockReason'] ?? 'no image part';
+            throw new Exception("Malformed JSON or missing image data in response ({$reason}).");
         }
 
         return $base64Data;
