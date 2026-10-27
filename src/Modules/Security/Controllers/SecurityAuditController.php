@@ -33,6 +33,11 @@ use Zero\Support\Str;
 class SecurityAuditController implements Controller
 {
     /**
+     * Seconds to wait for the AI-written audit report before falling back to the local one.
+     */
+    protected const AI_TIMEOUT_SECONDS = 180;
+
+    /**
      * Calculate score processing implementation helper.
      *
      * @param array $telemetry Argument descriptor.
@@ -392,16 +397,23 @@ Include the following sections using beautiful Markdown:
 
 Write the report in a direct, highly analytical, and authoritative tone. Use high-contrast Markdown formatting (bullet points, bold highlights, clean dividers, code snippets where appropriate). Avoid conversational filler or introductory phrases. Start directly with the Executive Summary.";
 
+        // A full five-section report over the whole telemetry JSON routinely takes longer than the
+        // provider's 60s default, and nothing streams back until it is finished. The audit runs as a
+        // background job (or a deliberate admin click), so waiting longer costs nobody anything.
         try {
-            $generatedText = AiService::generate($prompt);
+            $generatedText = AiService::generate($prompt, ['timeout' => self::AI_TIMEOUT_SECONDS]);
             if (!empty($generatedText)) {
                 return "## GEMINI AI SECURE AUDIT REPORT\n\n" . $generatedText;
             }
+            $diagnostics = 'Empty or malformed response returned from the AI Provider.';
         } catch (\Exception $e) {
             $diagnostics = $e->getMessage();
-            return "## GEMINI API HANDSHAKE TIMEOUT / CONFIGURATION ERROR\n\n*Failed to connect to Google Gemini API. Falling back to the local secure compiler report below:*\n\n**Connection Diagnostics:** `{$diagnostics}`\n\n" . $this->getFallbackReport($telemetry);
         }
 
-        return "## GEMINI API HANDSHAKE TIMEOUT / CONFIGURATION ERROR\n\n*Failed to connect to Google Gemini API. Falling back to the local secure compiler report below:*\n\n**Connection Diagnostics:** `Empty or malformed response returned from the AI Provider.`\n\n" . $this->getFallbackReport($telemetry);
+        $heading = \stripos($diagnostics, 'timed out') !== false
+            ? '## AI REPORT TIMED OUT'
+            : '## AI REPORT UNAVAILABLE';
+
+        return "{$heading}\n\n*The AI-written report could not be generated, so the local report below was used instead.*\n\n**Diagnostics:** `{$diagnostics}`\n\n" . $this->getFallbackReport($telemetry);
     }
 }
