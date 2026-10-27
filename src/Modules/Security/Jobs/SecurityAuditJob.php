@@ -69,8 +69,8 @@ class SecurityAuditJob implements Job
             \error_log('SecurityAuditJob: failed to archive audit report: ' . $e->getMessage());
         }
 
-        // 3. Dispatch automated security email if ADMIN_EMAIL is configured in .env
-        $adminEmail = Env::get('ADMIN_EMAIL');
+        // 3. Email the report to this site's configured recipient, else ADMIN_EMAIL
+        $adminEmail = self::recipient($site);
         if (!empty($adminEmail)) {
             try {
                 $htmlBody = Template::renderFile(
@@ -89,5 +89,25 @@ class SecurityAuditJob implements Job
                 // Fail gracefully during background execution
             }
         }
+    }
+
+    /**
+     * Resolve who receives this site's audit report: its 'report_email' security setting when that
+     * is a valid address, otherwise the installation-wide ADMIN_EMAIL.
+     *
+     * @param \Zero\Models\Site $site
+     * @return string The recipient, or '' if neither is configured.
+     */
+    public static function recipient($site): string
+    {
+        $configured = \trim((string)$site->getModuleSetting('security', 'report_email', ''));
+        if ($configured !== '') {
+            if (\filter_var($configured, FILTER_VALIDATE_EMAIL) !== false) {
+                return $configured;
+            }
+            \error_log("SecurityAuditJob: ignoring invalid report_email for site {$site->id}; using ADMIN_EMAIL.");
+        }
+
+        return \trim((string)Env::get('ADMIN_EMAIL', ''));
     }
 }

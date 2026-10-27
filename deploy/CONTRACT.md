@@ -101,7 +101,7 @@ on itself.
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI` | MAY | Google SSO |
 | `AI_PROVIDER`, `GEMINI_API_KEY` | MAY | AI features. `AI_PROVIDER` defaults to `gemini` |
 | `SEARCH_DRIVER`           | MAY      | Default `database`                                           |
-| `SECURITY_AUDIT_SCHEDULE` | MAY      | Default `daily`                                              |
+| `SECURITY_AUDIT_SCHEDULE` | MAY      | Default `daily`; per-site value in Admin → Security Settings |
 
 Secrets a toolkit generates (`DB_PASS`, the trigger tokens, `TRUSTED_PROXY_SECRET`, `APP_KEY`)
 MUST be saved between runs so a redeploy doesn't rotate them. The GCP toolkit saves them in
