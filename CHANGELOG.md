@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.5.2 (2026-10-27)
+
+### Bug Fixes
+- **security:** longer AI timeout for audit reports, clearer fallback heading, drop hourly schedule (f03f4ef)
+
+
 ## v1.5.1 (2026-10-27)
 
 ### Bug Fixes
