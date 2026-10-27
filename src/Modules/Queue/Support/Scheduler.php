@@ -26,6 +26,16 @@ use Zero\Support\Security;
  */
 class Scheduler
 {
+    /**
+     * Expression meaning "never run" -- lets a per-site schedule switch a task off for that site.
+     */
+    public const OFF = 'off';
+
+    /**
+     * Every expression isDue() understands, plus OFF.
+     */
+    public const EXPRESSIONS = [self::OFF, 'every_minute', 'hourly', 'daily', 'weekly'];
+
     protected static array $tasks = [];
 
     /**
@@ -37,6 +47,10 @@ class Scheduler
      */
     protected static function isDue(string $expression, ?string $lastRunAt): bool
     {
+        if ($expression === self::OFF) {
+            return false;
+        }
+
         if ($lastRunAt === null) {
             return true; // Never run before, so it's definitely due!
         }
@@ -63,10 +77,12 @@ class Scheduler
      *
      * @param string $jobClass FQN of the job class
      * @param array $payload Arguments payload
-     * @param string $expression Interval expression (every_minute, hourly, daily, weekly)
+     * @param string|callable $expression Interval expression (see EXPRESSIONS), or a callable
+     *                                    receiving the Site being evaluated and returning one, for
+     *                                    schedules that come from per-site settings
      * @return void
      */
-    public static function register(string $jobClass, array $payload, string $expression): void
+    public static function register(string $jobClass, array $payload, $expression): void
     {
         self::$tasks[] = [
             'job_class' => $jobClass,
@@ -99,7 +115,10 @@ class Scheduler
             foreach (self::$tasks as $task) {
                 $jobClass = $task['job_class'];
                 $payload = $task['payload'];
-                $expression = $task['expression'];
+                $expression = self::resolveExpression($task['expression'], $site, $jobClass);
+                if ($expression === self::OFF) {
+                    continue;
+                }
 
                 try {
                     $pdo->beginTransaction();
@@ -171,5 +190,29 @@ class Scheduler
         if ($originalSite) {
             App::setCurrentSite($originalSite);
         }
+    }
+
+    /**
+     * Resolve a task's expression for one site, treating anything unrecognized as OFF.
+     *
+     * An unknown expression would otherwise run once (no last_run_at yet) and then never again,
+     * silently; logging it and switching the task off makes the misconfiguration visible.
+     *
+     * @param string|callable $expression The registered expression or resolver.
+     * @param \Zero\Models\Site $site The site being evaluated.
+     * @param string $jobClass The task's job class, for the log message.
+     * @return string A member of EXPRESSIONS.
+     */
+    protected static function resolveExpression($expression, $site, string $jobClass): string
+    {
+        $resolved = \is_string($expression) ? $expression : $expression($site);
+        $resolved = \is_string($resolved) ? \trim($resolved) : '';
+
+        if (!\in_array($resolved, self::EXPRESSIONS, true)) {
+            \error_log("Scheduler: unknown schedule '{$resolved}' for {$jobClass} on site {$site->id}; not running it.");
+            return self::OFF;
+        }
+
+        return $resolved;
     }
 }

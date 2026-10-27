@@ -149,10 +149,38 @@ class Module implements ModuleInterface
             '#^/admin/security/audit$#' => SecurityAuditController::class,
         ], null, 'admin');
 
+        // Per-site audit schedule and report recipient. The audit inspects the shared codebase and
+        // server rather than anything tenant-specific, so a multi-site install will usually leave
+        // it on for one site and switch the rest off. SECURITY_AUDIT_SCHEDULE / ADMIN_EMAIL remain
+        // the defaults for sites that have never saved these settings.
+        App::registerModuleSettings('security', [
+            'audit_schedule' => [
+                'type' => 'select',
+                'label' => 'Automated Audit Schedule',
+                'options' => [
+                    Scheduler::OFF => 'Off',
+                    'hourly' => 'Hourly',
+                    'daily' => 'Daily',
+                    'weekly' => 'Weekly',
+                ],
+                'default' => Env::get('SECURITY_AUDIT_SCHEDULE', 'daily'),
+                'helper_text' => 'How often the security audit runs for this site and emails its report. The audit checks the whole installation, so on a multi-site install it only needs to run on one site.'
+            ],
+            'report_email' => [
+                'type' => 'email',
+                'label' => 'Audit Report Recipient',
+                'default' => '',
+                'helper_text' => 'Where audit reports are emailed. Leave blank to use the installation\'s ADMIN_EMAIL.'
+            ]
+        ]);
+
         // Register dynamic automated security audit job if backend Scheduler is present
         if (\class_exists(Scheduler::class)) {
-            $schedule = Env::get('SECURITY_AUDIT_SCHEDULE', 'daily');
-            Scheduler::register(SecurityAuditJob::class, [], $schedule);
+            Scheduler::register(
+                SecurityAuditJob::class,
+                [],
+                static fn(Site $site): string => (string)$site->getModuleSetting('security', 'audit_schedule', Env::get('SECURITY_AUDIT_SCHEDULE', 'daily'))
+            );
         }
     }
 }
