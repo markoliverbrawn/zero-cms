@@ -80,6 +80,7 @@ echo "  Testing the security audit settings...\n";
 $schema = App::getModuleSettingsSchema('security');
 assert_test(isset($schema['audit_schedule'], $schema['report_email']), "Security registers audit_schedule and report_email settings");
 assert_test(array_key_exists(Scheduler::OFF, $schema['audit_schedule']['options']), "The schedule setting offers 'Off'");
+assert_test(!array_key_exists('hourly', $schema['audit_schedule']['options']), "The schedule setting no longer offers 'Hourly'");
 
 // 4. Report recipient: per-site address, else ADMIN_EMAIL.
 putenv('ADMIN_EMAIL=fallback@example.com');

@@ -159,7 +159,6 @@ class Module implements ModuleInterface
                 'label' => 'Automated Audit Schedule',
                 'options' => [
                     Scheduler::OFF => 'Off',
-                    'hourly' => 'Hourly',
                     'daily' => 'Daily',
                     'weekly' => 'Weekly',
                 ],
@@ -179,7 +178,13 @@ class Module implements ModuleInterface
             Scheduler::register(
                 SecurityAuditJob::class,
                 [],
-                static fn(Site $site): string => (string)$site->getModuleSetting('security', 'audit_schedule', Env::get('SECURITY_AUDIT_SCHEDULE', 'daily'))
+                static function (Site $site): string {
+                    $schedule = (string)$site->getModuleSetting('security', 'audit_schedule', Env::get('SECURITY_AUDIT_SCHEDULE', 'daily'));
+
+                    // Hourly is no longer offered: each run is a paid AI request and the audit
+                    // rarely changes hour to hour. Sites (or env defaults) still set to it run daily.
+                    return $schedule === 'hourly' ? 'daily' : $schedule;
+                }
             );
         }
     }
