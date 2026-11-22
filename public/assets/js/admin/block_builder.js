@@ -624,8 +624,8 @@ document.addEventListener('DOMContentLoaded', function() {
                             <img class="gallery-image-preview" src="${escapeHtmlAttr(file.path)}">
                         </div>
                         <div class="gallery-image-filename">${escapeHtmlAttr(file.filename)}</div>
-                        <button type="button" class="btn-move-gallery-image-up" title="Move Up" aria-label="Move image up">&uarr;</button>
-                        <button type="button" class="btn-move-gallery-image-down" title="Move Down" aria-label="Move image down">&darr;</button>
+                        <button type="button" class="btn-move-gallery-image-up" title="Move Up" aria-label="Move image up"><span class="icon-svg icon-svg-14">${SVG_ARROW_UP}</span></button>
+                        <button type="button" class="btn-move-gallery-image-down" title="Move Down" aria-label="Move image down"><span class="icon-svg icon-svg-14">${SVG_ARROW_DOWN}</span></button>
                         <button type="button" class="btn-delete-gallery-image">Remove</button>
                     `;
                     listContainer.appendChild(row);
