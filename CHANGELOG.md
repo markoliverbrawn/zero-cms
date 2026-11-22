@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.5.3 (2026-11-22)
+
+### Bug Fixes
+- **security:** sanitizeHtml works with libxml2 2.14+ HTML parser (c52ec74)
+- **tests:** TestRequest child processes use the parent's test database (0814472)
+
+
 ## v1.5.2 (2026-10-27)
 
 ### Bug Fixes
