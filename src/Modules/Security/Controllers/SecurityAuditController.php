@@ -210,17 +210,28 @@ class SecurityAuditController implements Controller
             $telemetry['total_tenant_sites'] = 0;
         }
 
-        // 7. Security audit warnings logged (scoped strictly to the active tenant)
+        // 7. Failed authentication events in the last 7 days (scoped strictly to the active tenant).
+        // Counting every audit_logs row would include routine content edits, which are not alerts.
         try {
-            $warningsCount = DB::query(
-                "SELECT COUNT(*) FROM audit_logs 
-                 WHERE site_id = ? 
+            $failedActions = [
+                'login_failed',
+                'frontend_login_failed',
+                'password_reset_failed',
+                'password_reset_request_failed',
+                'registration_failed',
+            ];
+            $placeholders = \implode(', ', \array_fill(0, \count($failedActions), '?'));
+            $failedCount = DB::query(
+                "SELECT COUNT(*) FROM audit_logs
+                 WHERE site_id = ?
+                   AND action IN ($placeholders)
+                   AND created_at >= (NOW() - INTERVAL 7 DAY)
                    AND deleted_at IS NULL",
-                [App::getCurrentSiteId()]
+                \array_merge([App::getCurrentSiteId()], $failedActions)
             )->fetchColumn();
-            $telemetry['audit_warnings_logged'] = \intval($warningsCount);
+            $telemetry['failed_auth_events_7d'] = \intval($failedCount);
         } catch (\Exception $e) {
-            $telemetry['audit_warnings_logged'] = 0;
+            $telemetry['failed_auth_events_7d'] = 0;
         }
 
         // 8. Capture active runtime environment (defaults strictly to 'production' if not defined)
