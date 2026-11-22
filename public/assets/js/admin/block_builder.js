@@ -615,23 +615,25 @@ document.addEventListener('DOMContentLoaded', function() {
         } else if (btn.classList.contains('btn-add-gallery-image')) {
             var listContainer = blockItem.querySelector('.gallery-images-list');
             if (listContainer) {
-                window.openImagePicker(function(file){
-                    var row = document.createElement('div');
-                    row.className = 'gallery-image-row';
-                    row.innerHTML = `
-                        <input type="hidden" class="gallery-media_id-input" value="${escapeHtmlAttr(file.id)}">
-                        <div class="gallery-image-preview-wrapper">
-                            <img class="gallery-image-preview" src="${escapeHtmlAttr(file.path)}">
-                        </div>
-                        <div class="gallery-image-filename">${escapeHtmlAttr(file.filename)}</div>
-                        <button type="button" class="btn-move-gallery-image-up" title="Move Up" aria-label="Move image up"><span class="icon-svg icon-svg-14">${SVG_ARROW_UP}</span></button>
-                        <button type="button" class="btn-move-gallery-image-down" title="Move Down" aria-label="Move image down"><span class="icon-svg icon-svg-14">${SVG_ARROW_DOWN}</span></button>
-                        <button type="button" class="btn-delete-gallery-image">Remove</button>
-                    `;
-                    listContainer.appendChild(row);
+                window.openImagePicker(function(files){
+                    files.forEach(function(file){
+                        var row = document.createElement('div');
+                        row.className = 'gallery-image-row';
+                        row.innerHTML = `
+                            <input type="hidden" class="gallery-media_id-input" value="${escapeHtmlAttr(file.id)}">
+                            <div class="gallery-image-preview-wrapper">
+                                <img class="gallery-image-preview" src="${escapeHtmlAttr(file.path)}">
+                            </div>
+                            <div class="gallery-image-filename">${escapeHtmlAttr(file.filename)}</div>
+                            <button type="button" class="btn-move-gallery-image-up" title="Move Up" aria-label="Move image up"><span class="icon-svg icon-svg-14">${SVG_ARROW_UP}</span></button>
+                            <button type="button" class="btn-move-gallery-image-down" title="Move Down" aria-label="Move image down"><span class="icon-svg icon-svg-14">${SVG_ARROW_DOWN}</span></button>
+                            <button type="button" class="btn-delete-gallery-image">Remove</button>
+                        `;
+                        listContainer.appendChild(row);
+                    });
                     updateBlockExcerpts();
                     refreshLivePreview(blockItem);
-                });
+                }, {multiple: true});
             }
         } else if (btn.classList.contains('btn-move-gallery-image-up') || btn.classList.contains('btn-move-gallery-image-down')) {
             var row = btn.closest('.gallery-image-row');
