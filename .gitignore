@@ -12,3 +12,7 @@ _archive
 /deployments
 .aider*
 /.deploy/*.secrets.env
+
+# Composer (library package: installed deps and lock file are not committed)
+/vendor/
+/composer.lock
