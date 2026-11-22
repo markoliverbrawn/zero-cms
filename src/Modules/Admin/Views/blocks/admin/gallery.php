@@ -1,6 +1,7 @@
 <?php
 // src/Modules/Admin/Views/blocks/admin/gallery.php
 
+use Zero\Core\App;
 use Zero\Models\Media;
 use Zero\Support\Str;
 
@@ -34,8 +35,8 @@ $mediaIds = $block['media_ids'] ?? [];
                     </div>
                 <?php endif; ?>
                 <div class="gallery-image-filename"><?php echo Str::escape($filename); ?></div>
-                <button type="button" class="btn-move-gallery-image-up" title="Move Up" aria-label="Move image up">&uarr;</button>
-                <button type="button" class="btn-move-gallery-image-down" title="Move Down" aria-label="Move image down">&darr;</button>
+                <button type="button" class="btn-move-gallery-image-up" title="Move Up" aria-label="Move image up"><span class="icon-svg icon-svg-14"><?php echo App::svg('arrow-up'); ?></span></button>
+                <button type="button" class="btn-move-gallery-image-down" title="Move Down" aria-label="Move image down"><span class="icon-svg icon-svg-14"><?php echo App::svg('arrow-down'); ?></span></button>
                 <button type="button" class="btn-delete-gallery-image">Remove</button>
             </div>
         <?php endforeach; ?>
