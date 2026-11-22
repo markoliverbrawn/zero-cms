@@ -138,6 +138,65 @@ class FileManagerService
     }
 
     /**
+     * Convert a $_FILES entry into a list of single-file arrays. PHP groups a `name[]` field as
+     * name/type/tmp_name/error/size sub-arrays; this flattens that shape, passes a plain single-file
+     * entry through unchanged, and drops empty slots (UPLOAD_ERR_NO_FILE).
+     *
+     * @param array $files A single $_FILES[...] entry.
+     * @return array<int, array{name: string, type: string, tmp_name: string, error: int, size: int}>
+     */
+    public static function normaliseFilesArray(array $files): array
+    {
+        if (!isset($files['name'])) {
+            return [];
+        }
+
+        if (!\is_array($files['name'])) {
+            return (($files['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) ? [] : [$files];
+        }
+
+        $list = [];
+        foreach (\array_keys($files['name']) as $key) {
+            $error = (int)($files['error'][$key] ?? UPLOAD_ERR_NO_FILE);
+            if ($error === UPLOAD_ERR_NO_FILE) {
+                continue;
+            }
+            $list[] = [
+                'name' => (string)($files['name'][$key] ?? ''),
+                'type' => (string)($files['type'][$key] ?? ''),
+                'tmp_name' => (string)($files['tmp_name'][$key] ?? ''),
+                'error' => $error,
+                'size' => (int)($files['size'][$key] ?? 0),
+            ];
+        }
+        return $list;
+    }
+
+    /**
+     * Upload every file in a (single or grouped) $_FILES entry via uploadFile(), each succeeding
+     * or failing independently.
+     *
+     * @param string $siteId Active tenant ID.
+     * @param array $files A single $_FILES[...] entry.
+     * @param string $folder Target folder.
+     * @return array{uploaded: int, errors: string[]} Success count and filename-prefixed errors.
+     */
+    public static function uploadFiles(string $siteId, array $files, string $folder): array
+    {
+        $uploaded = 0;
+        $errors = [];
+        foreach (self::normaliseFilesArray($files) as $file) {
+            $result = self::uploadFile($siteId, $file, $folder);
+            if ($result['success']) {
+                $uploaded++;
+            } else {
+                $errors[] = \basename($file['name']) . ': ' . $result['error'];
+            }
+        }
+        return ['uploaded' => $uploaded, 'errors' => $errors];
+    }
+
+    /**
      * Upload a new file into the media library. `$file` is a single element from $_FILES.
      *
      * @return array{success: bool, error?: string, statusHint: int, file?: array}

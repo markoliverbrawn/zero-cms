@@ -53,7 +53,7 @@ $currentFolder = $folder ?? '';
   </form>
 
   <!-- Drag and drop modern upload area -->
-  <form method="post" enctype="multipart/form-data" id="media-upload-form" style="margin-bottom: 30px; display: block;">
+  <form method="post" enctype="multipart/form-data" id="media-upload-form" class="media-upload-form">
     <input type="hidden" name="csrf" value="<?php echo Str::escape($csrf ?? ''); ?>">
     <input type="hidden" name="folder" value="<?php echo Str::escape($currentFolder); ?>">
     
@@ -61,20 +61,23 @@ $currentFolder = $folder ?? '';
       <span class="icon-svg media-upload-icon">
         <?php echo App::svg('upload'); ?>
       </span>
-      <strong style="display: block; margin-bottom: 5px;">Click to select or drag files here to upload</strong>
-      <span style="font-size: 0.85rem; color: color-mix(in srgb, var(--text-color) 60%, transparent);">Uploading into active folder: <strong><?php echo !empty($currentFolder) ? Str::escape($currentFolder) : 'Root'; ?></strong></span>
-      <?php echo App::makeFormField('file', 'file', [
+      <strong class="media-upload-title">Click to select or drag files here to upload</strong>
+      <span class="media-upload-folder">Uploading into active folder: <strong><?php echo !empty($currentFolder) ? Str::escape($currentFolder) : 'Root'; ?></strong></span>
+      <?php echo App::makeFormField('file', 'file[]', [
           'required' => true,
-          'attributes' => ['id' => 'media-file-input', 'style' => 'display: none;'],
+          'multiple' => true,
+          'attributes' => ['id' => 'media-file-input', 'class' => 'is-hidden'],
           'showLabel' => false,
           'guessHelperTextKey' => false,
       ])->render(); ?>
     </div>
-    <div id="media-upload-actions" style="display: none; margin-top: 15px; align-items: center; gap: 15px;">
-      <span id="selected-file-name" style="font-weight: bold; font-size: 0.9rem;"></span>
-      <button type="submit" style="padding: 8px 16px; font-weight: bold; cursor: pointer;">Upload Selected File</button>
-      <button type="button" id="cancel-upload-btn" style="background: none; border: 1px solid var(--bg-color-inverse); color: var(--text-color); padding: 8px 16px; cursor: pointer;">Cancel</button>
+    <div id="media-upload-actions" class="media-upload-actions is-hidden">
+      <span id="selected-file-name" class="media-upload-selected"></span>
+      <button type="submit" class="media-upload-submit">Upload</button>
+      <button type="button" id="cancel-upload-btn" class="media-upload-cancel">Cancel</button>
     </div>
+    <div id="media-upload-progress" class="upload-progress is-hidden"></div>
+    <ul id="media-upload-results" class="upload-results is-hidden"></ul>
   </form>
 
   <?php if (empty($files) && empty($currentFolder)): ?>

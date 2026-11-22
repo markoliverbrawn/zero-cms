@@ -145,59 +145,133 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Modern file upload area interactions
+    // Modern file upload area interactions (multi-file, one XHR per file via adminUploadQueue)
+    var uploadForm = document.getElementById('media-upload-form');
     var zone = document.getElementById('media-drag-drop-zone');
     var fileInput = document.getElementById('media-file-input');
     var uploadActions = document.getElementById('media-upload-actions');
     var selectedFileName = document.getElementById('selected-file-name');
     var cancelBtn = document.getElementById('cancel-upload-btn');
+    var uploadProgress = document.getElementById('media-upload-progress');
+    var uploadResults = document.getElementById('media-upload-results');
+    var droppedFiles = null;
+    var isUploading = false;
+
+    function selectedFiles() {
+        var files = droppedFiles || (fileInput && fileInput.files) || [];
+        return Array.prototype.slice.call(files);
+    }
 
     if (zone && fileInput) {
         zone.addEventListener('click', function() {
-            fileInput.click();
+            if (!isUploading) fileInput.click();
         });
 
         zone.addEventListener('dragover', function(e) {
             e.preventDefault();
-            zone.style.backgroundColor = 'color-mix(in srgb, var(--bg-color-inverse) 6%, var(--bg-color) 94%)';
-            zone.style.borderColor = 'var(--text-color)';
+            zone.classList.add('is-dragover');
         });
 
         zone.addEventListener('dragleave', function(e) {
             e.preventDefault();
-            zone.style.backgroundColor = '';
-            zone.style.borderColor = '';
+            zone.classList.remove('is-dragover');
         });
 
         zone.addEventListener('drop', function(e) {
             e.preventDefault();
-            zone.style.backgroundColor = '';
-            zone.style.borderColor = '';
+            zone.classList.remove('is-dragover');
+            if (isUploading) return;
             if (e.dataTransfer.files && e.dataTransfer.files.length) {
-                fileInput.files = e.dataTransfer.files;
+                // Assigning to input.files isn't supported everywhere; keep our own reference.
+                droppedFiles = e.dataTransfer.files;
+                try { fileInput.files = e.dataTransfer.files; } catch (err) { /* ignore */ }
                 updateSelectedFile();
             }
         });
 
-        fileInput.addEventListener('change', updateSelectedFile);
+        fileInput.addEventListener('change', function() {
+            droppedFiles = null;
+            updateSelectedFile();
+        });
 
         if (cancelBtn) {
             cancelBtn.addEventListener('click', function() {
+                droppedFiles = null;
                 fileInput.value = '';
                 updateSelectedFile();
             });
         }
     }
 
+    if (uploadForm && fileInput && typeof window.adminUploadQueue === 'function') {
+        // Dropped files may not be assignable to the hidden input, so skip native `required`
+        // validation (it would block submit); the queue itself ignores an empty selection.
+        uploadForm.noValidate = true;
+        uploadForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            var files = selectedFiles();
+            if (!files.length || isUploading) return;
+
+            isUploading = true;
+            var folder = (uploadForm.querySelector('input[name="folder"]') || {}).value || '';
+            var csrf = (uploadForm.querySelector('input[name="csrf"]') || {}).value || '';
+
+            uploadActions.classList.add('is-hidden');
+            uploadResults.innerHTML = '';
+            uploadResults.classList.add('is-hidden');
+            uploadProgress.classList.remove('is-hidden');
+
+            window.adminUploadQueue(files, folder, function(state) {
+                uploadProgress.textContent = window.adminUploadProgressText(state);
+            }, { csrf: csrf }).then(function(results) {
+                var failures = results.filter(function(r) { return !r.ok; });
+                var okCount = results.length - failures.length;
+
+                if (!failures.length) {
+                    uploadProgress.textContent = 'Uploaded ' + okCount + ' file(s). Refreshing...';
+                    location.reload();
+                    return;
+                }
+
+                isUploading = false;
+                droppedFiles = null;
+                fileInput.value = '';
+                updateSelectedFile();
+                uploadProgress.textContent = okCount + ' of ' + results.length + ' file(s) uploaded.';
+                results.forEach(function(r) {
+                    var li = document.createElement('li');
+                    li.className = r.ok ? 'is-ok' : 'is-error';
+                    li.textContent = r.file.name + ': ' + (r.ok ? 'uploaded' : r.error);
+                    uploadResults.appendChild(li);
+                });
+                uploadResults.classList.remove('is-hidden');
+
+                if (okCount > 0) {
+                    var reload = document.createElement('li');
+                    var link = document.createElement('a');
+                    link.href = location.href;
+                    link.textContent = 'Refresh to see the uploaded files';
+                    reload.appendChild(link);
+                    uploadResults.appendChild(reload);
+                }
+            });
+        });
+    }
+
     function updateSelectedFile() {
-        if (fileInput.files && fileInput.files.length) {
-            selectedFileName.textContent = 'Selected: ' + fileInput.files[0].name;
-            uploadActions.style.display = 'flex';
-            zone.style.opacity = '0.5';
+        var files = selectedFiles();
+        if (files.length) {
+            var names = files.slice(0, 5).map(function(f) { return f.name; }).join(', ');
+            if (files.length > 5) names += ', \u2026';
+            selectedFileName.textContent = files.length === 1
+                ? 'Selected: ' + names
+                : files.length + ' files selected: ' + names;
+            uploadActions.classList.remove('is-hidden');
+            zone.classList.add('is-pending');
         } else {
             selectedFileName.textContent = '';
-            uploadActions.style.display = 'none';
-            zone.style.opacity = '1';
+            uploadActions.classList.add('is-hidden');
+            zone.classList.remove('is-pending');
         }
     }
 

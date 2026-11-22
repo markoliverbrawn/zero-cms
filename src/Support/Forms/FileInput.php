@@ -19,7 +19,7 @@ use Zero\Core\Template;
 /**
  * Class FileInput
  *
- * Renders a plain <input type="file">. castSubmittedValue() is a formality here -- real upload
+ * Renders a plain <input type="file"> (with `multiple` when config['multiple'] is truthy). castSubmittedValue() is a formality here -- real upload
  * data lives in $_FILES[$name], which callers must read directly, not through this method.
  */
 class FileInput extends AbstractFormField
@@ -54,6 +54,7 @@ class FileInput extends AbstractFormField
             'helperText' => $this->helperText,
             'attributesHtml' => $this->renderAttributes(),
             'showLabel' => $this->showLabel,
+            'multiple' => !empty($this->config['multiple']),
         ]);
     }
 }
