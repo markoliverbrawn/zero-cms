@@ -1,5 +1,7 @@
 # Changelog
 
+> **Frozen.** Releases after v1.6.0 are documented on [GitHub Releases](https://github.com/markoliverbrawn/zero-cms/releases); this file is kept as an archive of earlier releases.
+
 ## v1.6.0 (2026-11-22)
 
 ### Features

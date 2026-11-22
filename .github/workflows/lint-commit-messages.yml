@@ -5,7 +5,7 @@ name: Lint Commit Messages
 # here would otherwise only surface later as a silent "nothing to release" after merge.
 on:
   pull_request:
-    branches: ["main", "dev"]
+    branches: ["main"]
 
 jobs:
   lint-commits:
