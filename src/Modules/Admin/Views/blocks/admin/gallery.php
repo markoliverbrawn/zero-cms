@@ -34,6 +34,8 @@ $mediaIds = $block['media_ids'] ?? [];
                     </div>
                 <?php endif; ?>
                 <div class="gallery-image-filename"><?php echo Str::escape($filename); ?></div>
+                <button type="button" class="btn-move-gallery-image-up" title="Move Up" aria-label="Move image up">&uarr;</button>
+                <button type="button" class="btn-move-gallery-image-down" title="Move Down" aria-label="Move image down">&darr;</button>
                 <button type="button" class="btn-delete-gallery-image">Remove</button>
             </div>
         <?php endforeach; ?>
