@@ -108,9 +108,12 @@ class FilesController implements Controller
             }
 
             $currentFolder = FileManagerService::sanitizeFolderPath($_POST['folder'] ?? '');
-            $result = FileManagerService::uploadFile($siteId, $_FILES['file'], $currentFolder);
-            if (!$result['success']) {
-                $_SESSION['error'] = $result['error'];
+            $result = FileManagerService::uploadFiles($siteId, $_FILES['file'], $currentFolder);
+            if ($result['uploaded'] === 0 && empty($result['errors'])) {
+                $_SESSION['error'] = 'File upload failed or no file selected.';
+            } elseif (!empty($result['errors'])) {
+                $_SESSION['error'] = ($result['uploaded'] > 0 ? $result['uploaded'] . ' file(s) uploaded. ' : '')
+                    . \implode(' ', $result['errors']);
             }
 
             \header('Location: /admin/list/files' . (!empty($currentFolder) ? '?folder=' . \urlencode($currentFolder) : ''));

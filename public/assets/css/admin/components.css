@@ -2466,8 +2466,9 @@ button:disabled,
             margin-bottom: 1.5rem;
 
             .admin-modal-message {
-                margin-top: 0;
                 margin-bottom: 1rem;
+                margin-top: 0;
+                white-space: pre-line;
             }
 
             .admin-modal-details {

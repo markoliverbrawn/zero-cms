@@ -140,10 +140,10 @@ window.openImagePicker = function(onSelect) {
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-color); margin-bottom: 5px;">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"></path>
             </svg>
-            <strong>Click or drag file here to upload</strong>
+            <strong>Click or drag files here to upload</strong>
             <span id="picker-active-folder-label" style="font-size: 0.75rem; color: #777;">Uploading to: Root</span>
-            <input type="file" id="picker-file-input" style="display: none;" accept="image/*,video/*,application/pdf">
-            <div id="picker-upload-progress" style="display: none; margin-top: 5px; font-weight: bold; font-size: 0.8rem; color: #3498db;">Uploading...</div>
+            <input type="file" id="picker-file-input" class="picker-file-input" accept="image/*,video/*,application/pdf" multiple>
+            <div id="picker-upload-progress" class="upload-progress is-hidden">Uploading...</div>
           </div>
         </div>
         <div class="picker-grid-container">
@@ -427,7 +427,7 @@ function setupPickerLogic(fileModal) {
 
   // Trigger file selection on click
   dropzone.onclick = function(e) {
-    if (e.target !== fileInput && progress.style.display === 'none') {
+    if (e.target !== fileInput && progress.classList.contains('is-hidden')) {
       fileInput.click();
     }
   };
@@ -448,31 +448,50 @@ function setupPickerLogic(fileModal) {
     e.preventDefault();
     dropzone.classList.remove('dragover');
     if (e.dataTransfer.files && e.dataTransfer.files.length) {
-      handleFileUpload(e.dataTransfer.files[0]);
+      uploadFiles(e.dataTransfer.files);
     }
   };
 
   // Handle standard file input change
   fileInput.onchange = function() {
     if (fileInput.files && fileInput.files.length) {
-      handleFileUpload(fileInput.files[0]);
+      uploadFiles(fileInput.files);
     }
   };
 
-  function handleFileUpload(file) {
-    if (!file) return;
+  function uploadFiles(files) {
+    var list = Array.prototype.slice.call(files || []);
+    if (!list.length) return;
 
-    // Show uploading status
-    progress.style.display = 'block';
-    progress.textContent = 'Uploading: 0%';
+    progress.classList.remove('is-hidden');
+    window.adminUploadQueue(list, window.pickerActiveFolder, function(state) {
+      progress.textContent = window.adminUploadProgressText(state);
+    }).then(function(results) {
+      progress.classList.add('is-hidden');
+      fileInput.value = '';
+      searchInput.value = '';
+      window.loadAndRenderPickerFiles('');
 
+      var failures = results.filter(function(r) { return !r.ok; });
+      if (failures.length) {
+        window.adminAlert(
+          'Upload Failed',
+          failures.map(function(r) { return r.file.name + ': ' + r.error; }).join('\n')
+        );
+      }
+    });
+  }
+}
+
+/**
+ * Upload one file to /admin/files/upload. Always resolves (never rejects) with
+ * {file, ok, error, data} so a batch can report each file independently.
+ */
+window.adminUploadFile = function(file, folder, csrfToken, onProgress) {
+  return new Promise(function(resolve) {
     var fd = new FormData();
     fd.append('file', file);
-    fd.append('folder', window.pickerActiveFolder); // Upload directly to active picker directory!
-    
-    // Get csrf token from page
-    var csrfInput = document.querySelector('input[name="csrf"]');
-    var csrfToken = csrfInput ? csrfInput.value : '';
+    fd.append('folder', folder || '');
     if (csrfToken) {
       fd.append('csrf', csrfToken);
     }
@@ -480,43 +499,90 @@ function setupPickerLogic(fileModal) {
     var xhr = new XMLHttpRequest();
     xhr.open('POST', '/admin/files/upload', true);
     xhr.withCredentials = true;
+    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
 
-    // Progress updates!
     xhr.upload.onprogress = function(e) {
-      if (e.lengthComputable) {
-        var percent = Math.round((e.loaded / e.total) * 100);
-        progress.textContent = 'Uploading: ' + percent + '%';
+      if (e.lengthComputable && onProgress) {
+        onProgress(e.loaded / e.total);
       }
     };
 
     xhr.onload = function() {
-      progress.style.display = 'none';
-      if (xhr.status === 200) {
-        try {
-          var res = JSON.parse(xhr.responseText);
-          if (res.success) {
-            // Success! Refresh the list by re-fetching and clear search
-            searchInput.value = ''; // Clear search
-            window.loadAndRenderPickerFiles('');
-          } else {
-            window.adminAlert('Upload Failed', res.error || 'Unknown error');
-          }
-        } catch(e) {
-          window.adminAlert('Upload Error', 'Invalid server response');
-        }
+      var res = null;
+      try { res = JSON.parse(xhr.responseText); } catch (err) { res = null; }
+      if (res && res.success) {
+        resolve({ file: file, ok: true, error: null, data: res.file });
+      } else if (res && res.error) {
+        resolve({ file: file, ok: false, error: res.error, data: null });
       } else {
-        window.adminAlert('Upload Error', 'Upload failed with status ' + xhr.status);
+        resolve({ file: file, ok: false, error: 'Upload failed with status ' + xhr.status, data: null });
       }
     };
 
     xhr.onerror = function() {
-      progress.style.display = 'none';
-      window.adminAlert('Upload Error', 'Network error occurred during upload.');
+      resolve({ file: file, ok: false, error: 'Network error occurred during upload.', data: null });
     };
 
     xhr.send(fd);
+  });
+};
+
+/**
+ * Upload a list of files one request per file, at most `concurrency` (default 2) in flight, so a
+ * batch is never bound by PHP's max_file_uploads/post_max_size. onProgress receives
+ * {done, total, current, percent}. Resolves with results in the original file order.
+ */
+window.adminUploadQueue = function(files, folder, onProgress, options) {
+  var list = Array.prototype.slice.call(files || []);
+  var opts = options || {};
+  var concurrency = Math.max(1, opts.concurrency || 2);
+  var csrfToken = opts.csrf
+    || (document.querySelector('input[name="csrf"]') || {}).value
+    || document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+    || '';
+  var results = new Array(list.length);
+  var fractions = list.map(function() { return 0; });
+  var next = 0;
+  var done = 0;
+
+  function report() {
+    if (!onProgress) return;
+    var sum = fractions.reduce(function(a, b) { return a + b; }, 0);
+    onProgress({
+      done: done,
+      total: list.length,
+      current: Math.min(done + 1, list.length),
+      percent: list.length ? Math.round((sum / list.length) * 100) : 100
+    });
   }
-}
+
+  function worker() {
+    if (next >= list.length) return Promise.resolve();
+    var index = next++;
+    return window.adminUploadFile(list[index], folder, csrfToken, function(fraction) {
+      fractions[index] = fraction;
+      report();
+    }).then(function(result) {
+      results[index] = result;
+      fractions[index] = 1;
+      done++;
+      report();
+      return worker();
+    });
+  }
+
+  report();
+  var workers = [];
+  for (var i = 0; i < Math.min(concurrency, list.length); i++) {
+    workers.push(worker());
+  }
+  return Promise.all(workers).then(function() { return results; });
+};
+
+/** Human-readable progress line for adminUploadQueue state, e.g. "Uploading 3 of 7 (42%)". */
+window.adminUploadProgressText = function(state) {
+  return 'Uploading ' + state.current + ' of ' + state.total + ' (' + state.percent + '%)';
+};
 
 // WYSIWYG editor: toolbar and file manager integration on load
 document.addEventListener('DOMContentLoaded', function(){

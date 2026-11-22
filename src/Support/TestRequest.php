@@ -72,6 +72,14 @@ final class TestRequest
     private array $body;
 
     /**
+     * $_FILES payload for the request. Entries point at real files on disk; they are not
+     * is_uploaded_file() temp files, so storage drivers fall back to copy().
+     *
+     * @var array<string, array>
+     */
+    private array $files = [];
+
+    /**
      * Whether to issue a valid CSRF token for this request.
      *
      * @var bool
@@ -266,6 +274,7 @@ final class TestRequest
 
         $_GET = $specification['query'];
         $_POST = $specification['body'];
+        $_FILES = $specification['files'];
         $_SERVER = \array_merge($_SERVER, $specification['server']);
 
         if ($specification['csrf'] !== null) {
@@ -332,6 +341,20 @@ final class TestRequest
             'stderr' => $stderr === false ? '' : $stderr,
             'exit_code' => \proc_close($process),
         ];
+    }
+
+    /**
+     * Attach a $_FILES payload, in the exact shape PHP would build it (including the grouped
+     * name[]/type[]/tmp_name[]/error[]/size[] shape for array-named fields).
+     *
+     * @param array<string, array> $files $_FILES payload keyed by field name.
+     * @return self
+     */
+    public function withFiles(array $files): self
+    {
+        $this->files = $files;
+
+        return $this;
     }
 
     /**
@@ -623,6 +646,7 @@ final class TestRequest
             'server' => $server,
             'query' => $this->query,
             'body' => $this->body,
+            'files' => $this->files,
             'site' => $site,
             'media' => $this->media,
             'pages' => $this->pages,
