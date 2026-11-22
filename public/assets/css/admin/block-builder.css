@@ -648,6 +648,7 @@
         background-color: var(--bg-color, #f8fafc);
         border: 1px solid var(--border-color, #cbd5e1);
         border-radius: 4px;
+        color: var(--text-color, #0f172a);
         cursor: pointer;
         font-size: 0.75rem;
         padding: 4px 8px;
