@@ -9,6 +9,7 @@ use Zero\Support\Str;
     name="<?= Str::escape($name) ?>"
     <?= $required ? 'required' : '' ?>
     <?= $disabled ? 'disabled' : '' ?>
+    <?= !empty($multiple) ? 'multiple' : '' ?>
     <?= $attributesHtml ?>
 />
 <?php if (!empty($helperText)): ?>

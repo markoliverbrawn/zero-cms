@@ -152,6 +152,11 @@ $file = new FileInput('upload', ['label' => 'Upload']);
 $fileHtml = $file->render();
 assert_test(\strpos($fileHtml, 'type="file"') !== false, "FileInput renders type=\"file\"");
 assert_test($file->castSubmittedValue(['upload' => 'anything']) === 'anything', "FileInput::castSubmittedValue() is a pass-through formality (real data lives in \$_FILES)");
+assert_test(\preg_match('/\bmultiple\b/', $fileHtml) === 0, "FileInput omits the multiple attribute by default");
+$multiFile = new FileInput('file[]', ['label' => 'Files', 'multiple' => true]);
+$multiFileHtml = $multiFile->render();
+assert_test(\preg_match('/\bmultiple\b/', $multiFileHtml) === 1, "FileInput renders the multiple attribute when 'multiple' => true");
+assert_test(\strpos($multiFileHtml, 'name="file[]"') !== false, "FileInput keeps an array-style name verbatim");
 
 // 11. Select -- arbitrary attribute passthrough (id/class/style), merged with the fixed multiselect class
 echo "Testing Select attribute passthrough...\n";
