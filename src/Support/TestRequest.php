@@ -306,6 +306,11 @@ final class TestRequest
             2 => ['pipe', 'w'],
         ];
 
+        // The child shares this process's test database and truncates its fixture tables on
+        // connect. Initialise (and truncate) here first, so a lazy connection made after the child
+        // returns can't wipe what the child just wrote before the test asserts on it.
+        DB::getPDO();
+
         $pipes = [];
         $process = \proc_open('php', $descriptors, $pipes, APPLICATION_ROOT, $_ENV);
 

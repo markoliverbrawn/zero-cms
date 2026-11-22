@@ -31,11 +31,20 @@ try {
     // exports DB_NAME (CI does) must be read here too -- otherwise the per-worker suffix below is
     // computed from the .env name while every worker actually connects to the exported one, and
     // the parallel workers all share a single database instead of an isolated one each.
-    $originalDbName = \getenv('DB_NAME') ?: ($data['DB_NAME'] ?? 'cms');
-    $testDbName = $originalDbName . '_test';
+    //
+    // A subprocess spawned by a test (e.g. Zero\Support\TestRequest) inherits the already-isolated
+    // DB_NAME and re-runs this bootstrap; ZERO_TEST_DB_NAME marks that, so the child reuses the
+    // parent's database instead of suffixing again (cms_test_1 -> cms_test_1_test_1) and writing
+    // to a different database than the test asserting on it. The child still truncates the
+    // fixture tables when it connects, so each spawned request starts from a clean slate.
+    $testDbName = \getenv('ZERO_TEST_DB_NAME') ?: '';
+    if ($testDbName === '') {
+        $originalDbName = \getenv('DB_NAME') ?: ($data['DB_NAME'] ?? 'cms');
+        $testDbName = $originalDbName . '_test';
 
-    if ($workerToken = getenv('TEST_TOKEN')) {
-        $testDbName .= '_' . $workerToken;
+        if ($workerToken = getenv('TEST_TOKEN')) {
+            $testDbName .= '_' . $workerToken;
+        }
     }
 
     $data['DB_NAME'] = $testDbName;
@@ -48,6 +57,8 @@ try {
     // environment too, which also carries it into any subprocess a test spawns.
     \putenv('DB_NAME=' . $testDbName);
     $_ENV['DB_NAME'] = $testDbName;
+    \putenv('ZERO_TEST_DB_NAME=' . $testDbName);
+    $_ENV['ZERO_TEST_DB_NAME'] = $testDbName;
     \putenv('GCS_PREDEFINED_ACL=');
     $_ENV['GCS_PREDEFINED_ACL'] = '';
     \putenv('STORAGE_DRIVER=local');
