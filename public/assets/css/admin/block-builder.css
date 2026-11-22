@@ -642,6 +642,22 @@
         cursor: pointer;
         font-size: 0.75rem;
     }
+
+    .btn-move-gallery-image-down,
+    .btn-move-gallery-image-up {
+        background-color: var(--bg-color, #f8fafc);
+        border: 1px solid var(--border-color, #cbd5e1);
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.75rem;
+        padding: 4px 8px;
+    }
+
+    &:first-child .btn-move-gallery-image-up,
+    &:last-child .btn-move-gallery-image-down {
+        cursor: default;
+        opacity: 0.4;
+    }
 }
 
 .block-child-fields-col {

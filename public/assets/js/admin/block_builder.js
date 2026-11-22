@@ -624,12 +624,25 @@ document.addEventListener('DOMContentLoaded', function() {
                             <img class="gallery-image-preview" src="${escapeHtmlAttr(file.path)}">
                         </div>
                         <div class="gallery-image-filename">${escapeHtmlAttr(file.filename)}</div>
+                        <button type="button" class="btn-move-gallery-image-up" title="Move Up" aria-label="Move image up">&uarr;</button>
+                        <button type="button" class="btn-move-gallery-image-down" title="Move Down" aria-label="Move image down">&darr;</button>
                         <button type="button" class="btn-delete-gallery-image">Remove</button>
                     `;
                     listContainer.appendChild(row);
                     updateBlockExcerpts();
                     refreshLivePreview(blockItem);
                 });
+            }
+        } else if (btn.classList.contains('btn-move-gallery-image-up') || btn.classList.contains('btn-move-gallery-image-down')) {
+            var row = btn.closest('.gallery-image-row');
+            if (row) {
+                var moveUp = btn.classList.contains('btn-move-gallery-image-up');
+                var sibling = moveUp ? row.previousElementSibling : row.nextElementSibling;
+                if (sibling) {
+                    row.parentNode.insertBefore(row, moveUp ? sibling : sibling.nextSibling);
+                    updateBlockExcerpts();
+                    refreshLivePreview(blockItem);
+                }
             }
         } else if (btn.classList.contains('btn-delete-gallery-image')) {
             var row = btn.closest('.gallery-image-row');
