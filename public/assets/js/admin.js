@@ -473,7 +473,12 @@ function setupPickerLogic(fileModal) {
       window.loadAndRenderPickerFiles('');
 
       var failures = results.filter(function(r) { return !r.ok; });
-      if (failures.length) {
+      if (failures.some(function(r) { return r.sessionExpired; })) {
+        window.adminAlert(
+          'Session Expired',
+          'Your session expired, so ' + failures.length + ' file(s) were not uploaded. Reload the page and try again.'
+        );
+      } else if (failures.length) {
         window.adminAlert(
           'Upload Failed',
           failures.map(function(r) { return r.file.name + ': ' + r.error; }).join('\n')
@@ -512,6 +517,8 @@ window.adminUploadFile = function(file, folder, csrfToken, onProgress) {
       try { res = JSON.parse(xhr.responseText); } catch (err) { res = null; }
       if (res && res.success) {
         resolve({ file: file, ok: true, error: null, data: res.file });
+      } else if (res && res.error_code === 'csrf_invalid') {
+        resolve({ file: file, ok: false, error: res.error, data: null, sessionExpired: true });
       } else if (res && res.error) {
         resolve({ file: file, ok: false, error: res.error, data: null });
       } else {
@@ -544,6 +551,8 @@ window.adminUploadQueue = function(files, folder, onProgress, options) {
   var fractions = list.map(function() { return 0; });
   var next = 0;
   var done = 0;
+  var sessionExpired = false;
+  var skippedMessage = 'Not uploaded: your session expired. Reload the page and try again.';
 
   function report() {
     if (!onProgress) return;
@@ -559,10 +568,19 @@ window.adminUploadQueue = function(files, folder, onProgress, options) {
   function worker() {
     if (next >= list.length) return Promise.resolve();
     var index = next++;
+    if (sessionExpired) {
+      // The token is dead for every remaining file; don't send requests that are bound to fail.
+      results[index] = { file: list[index], ok: false, error: skippedMessage, data: null, sessionExpired: true };
+      fractions[index] = 1;
+      done++;
+      report();
+      return worker();
+    }
     return window.adminUploadFile(list[index], folder, csrfToken, function(fraction) {
       fractions[index] = fraction;
       report();
     }).then(function(result) {
+      if (result.sessionExpired) sessionExpired = true;
       results[index] = result;
       fractions[index] = 1;
       done++;

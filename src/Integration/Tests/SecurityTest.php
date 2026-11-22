@@ -29,6 +29,18 @@ assert_test(Security::csrfVerify($token1) === true, "Verify returns true for exa
 assert_test(Security::csrfVerify('incorrect') === false, "Verify returns false for incorrect token");
 assert_test(Security::csrfVerify('') === false, "Verify returns false for empty token");
 
+// A page rendered after a long GET-only stretch must embed a token its first POST will accept.
+$_SESSION['_csrf_token_time'] = \time() - 300;
+$renderedToken = Security::csrfToken();
+assert_test($renderedToken === $token1, "Rendering a still-valid token keeps the same token");
+assert_test($_SESSION['_csrf_token_time'] >= \time() - 1, "Rendering the token refreshes its inactivity window");
+
+$_SESSION['_csrf_token_time'] = \time() - 601;
+$freshToken = Security::csrfToken();
+assert_test($freshToken !== $token1, "Rendering after the inactivity window issues a fresh token");
+assert_test(Security::csrfVerify($freshToken) === true, "A freshly rendered token verifies on the next POST");
+assert_test(Security::csrfVerify($token1) === false, "The expired token is no longer accepted");
+
 // 2. Test Input Sanitizer (sanitizeInput)
 echo "Testing Input Sanitizer...\n";
 $dirtyInput = [

@@ -238,6 +238,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 fileInput.value = '';
                 updateSelectedFile();
                 uploadProgress.textContent = okCount + ' of ' + results.length + ' file(s) uploaded.';
+                if (failures.some(function(r) { return r.sessionExpired; })) {
+                    uploadProgress.textContent += ' Your session expired: reload the page and upload the rest again.';
+                }
                 results.forEach(function(r) {
                     var li = document.createElement('li');
                     li.className = r.ok ? 'is-ok' : 'is-error';
