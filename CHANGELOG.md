@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.6.0 (2026-11-22)
+
+### Features
+- **media:** multi-file uploads in the Files page and media picker (3668755)
+
+
 ## v1.5.3 (2026-11-22)
 
 ### Bug Fixes
