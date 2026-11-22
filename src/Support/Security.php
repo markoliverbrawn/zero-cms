@@ -241,8 +241,15 @@ class Security {
         $internalErrors = \libxml_use_internal_errors(true);
 
         $doc = new \DOMDocument();
-        // Load with UTF-8 encoding declaration to handle special characters correctly
-        $doc->loadHTML('<?xml encoding="utf-8" ?>' . $html, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+        // Parse a complete document (meta charset for UTF-8) with the fragment inside a known
+        // wrapper, then serialise only the wrapper's children. The older XML encoding-declaration prefix
+        // plus LIBXML_HTML_NOIMPLIED broke under libxml2 >= 2.14's rewritten HTML parser: the
+        // prefix survived as a comment and top-level text between tags was dropped.
+        $doc->loadHTML(
+            '<!DOCTYPE html><html><head><meta charset="utf-8"></head><body><div id="zero-sanitize-root">'
+            . $html
+            . '</div></body></html>'
+        );
 
         \libxml_clear_errors();
         \libxml_use_internal_errors($internalErrors);
@@ -286,10 +293,14 @@ class Security {
             }
         }
 
-        // Save and clean the output HTML
-        $cleaned = $doc->saveHTML();
-        // Remove the xml encoding header
-        $cleaned = \str_replace('<?xml encoding="utf-8" ?>', '', $cleaned);
+        // Serialise just the wrapper's children
+        $cleaned = '';
+        $root = $doc->getElementById('zero-sanitize-root');
+        if ($root !== null) {
+            foreach ($root->childNodes as $child) {
+                $cleaned .= $doc->saveHTML($child);
+            }
+        }
 
         $cleaned = \trim($cleaned);
 
