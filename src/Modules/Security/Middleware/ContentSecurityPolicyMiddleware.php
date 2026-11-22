@@ -100,6 +100,11 @@ class ContentSecurityPolicyMiddleware
             \header("X-Content-Type-Options: nosniff");
             \header("X-XSS-Protection: 1; mode=block");
             \header("Referrer-Policy: strict-origin-when-cross-origin");
+
+            // HSTS is only honoured over HTTPS; never send it on plain HTTP (e.g. local dev).
+            if ($isHttps) {
+                \header("Strict-Transport-Security: max-age=31536000; includeSubDomains");
+            }
         }
 
         return $next();

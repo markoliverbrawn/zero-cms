@@ -66,9 +66,9 @@ use Zero\Support\Str;
             <div class="metric-value"><?php echo intval($telemetry['total_tenant_sites'] ?? 0); ?></div>
         </div>
         <div class="audit-metric-card interactive-card" id="card-alerts">
-            <div class="metric-title">Logged Security Alerts</div>
-            <div class="metric-value <?php echo ($telemetry['audit_warnings_logged'] ?? 0) > 0 ? 'score-warn' : ''; ?>">
-                <?php echo intval($telemetry['audit_warnings_logged'] ?? 0); ?>
+            <div class="metric-title">Failed Auth Attempts (7 days)</div>
+            <div class="metric-value <?php echo ($telemetry['failed_auth_events_7d'] ?? 0) > 0 ? 'score-warn' : ''; ?>">
+                <?php echo intval($telemetry['failed_auth_events_7d'] ?? 0); ?>
             </div>
         </div>
     </div>
