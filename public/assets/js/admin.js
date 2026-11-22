@@ -116,13 +116,27 @@ window.initEditor = function(editorContainer) {
   }
 };
 
-// Unified Image Picker System
-window.openImagePicker = function(onSelect) {
+var PICKER_LAST_FOLDER_KEY = 'zeroPickerLastFolder';
+
+/**
+ * Unified Image Picker System.
+ *
+ * @param {Function} onSelect Single mode: called with one {path, filename, id}. Multiple mode:
+ *                            called once with an array of them, in the order they were picked.
+ * @param {Object}   [options]
+ * @param {boolean}  [options.multiple=false] Let the user tick several files and confirm them together.
+ */
+window.openImagePicker = function(onSelect, options) {
   var fileModal = document.getElementById('file-modal');
   if (!fileModal) return;
+  options = options || {};
 
-  // Track the active folder inside the picker modal
-  window.pickerActiveFolder = '';
+  // Reopen in the folder the user was last browsing (persisted across page loads)
+  try {
+    window.pickerActiveFolder = window.localStorage.getItem(PICKER_LAST_FOLDER_KEY) || '';
+  } catch (e) {
+    window.pickerActiveFolder = '';
+  }
 
   // Render our beautiful modal interior if we haven't already
   if (!fileModal.dataset.gorgeousPickerInitialized) {
@@ -154,6 +168,7 @@ window.openImagePicker = function(onSelect) {
         </div>
         <div class="picker-footer">
           <button type="button" class="btn" id="picker-close-btn">Close</button>
+          <button type="button" class="btn" id="picker-confirm-btn" disabled>Add Selected</button>
         </div>
       </div>
     `;
@@ -170,14 +185,15 @@ window.openImagePicker = function(onSelect) {
 
     // Set up search and upload logic once
     setupPickerLogic(fileModal);
-  } else {
-    // Reset path label to Root on subsequent opens
-    var folderLabel = fileModal.querySelector('#picker-active-folder-label');
-    if (folderLabel) folderLabel.innerHTML = 'Uploading to: <strong>Root</strong>';
   }
 
-  // Save the callback globally or locally on the modal
+  // Save the callback and selection mode on the modal; selections start fresh on every open
   fileModal._onSelectCallback = onSelect;
+  fileModal._multiple = !!options.multiple;
+  fileModal._selectedFiles = [];
+  fileModal.classList.toggle('picker-multiple', fileModal._multiple);
+  fileModal.querySelector('#picker-search').value = '';
+  if (fileModal._updateConfirmButton) fileModal._updateConfirmButton();
 
   // Open the modal
   fileModal.style.display = 'block';
@@ -198,6 +214,28 @@ function setupPickerLogic(fileModal) {
   var activeFolderLabel = fileModal.querySelector('#picker-active-folder-label');
   var loadMoreContainer = fileModal.querySelector('#picker-load-more-container');
   var loadMoreBtn = fileModal.querySelector('#picker-load-more-btn');
+  var confirmBtn = fileModal.querySelector('#picker-confirm-btn');
+
+  fileModal._updateConfirmButton = function() {
+    var count = fileModal._selectedFiles.length;
+    confirmBtn.disabled = count === 0;
+    confirmBtn.textContent = count ? 'Add ' + count + ' Selected' : 'Add Selected';
+  };
+
+  confirmBtn.onclick = function() {
+    if (!fileModal._selectedFiles.length) return;
+    if (fileModal._onSelectCallback) {
+      fileModal._onSelectCallback(fileModal._selectedFiles.slice());
+    }
+    fileModal.style.display = 'none';
+  };
+
+  function selectedIndex(id) {
+    for (var i = 0; i < fileModal._selectedFiles.length; i++) {
+      if (String(fileModal._selectedFiles[i].id) === String(id)) return i;
+    }
+    return -1;
+  }
 
   // Files loaded so far for the current folder/search, one server page at a time -- never the
   // whole library. currentQuery mirrors what's actually loaded (not just what's typed) so a
@@ -258,8 +296,10 @@ function setupPickerLogic(fileModal) {
       `;
     }
 
+    var isSelected = !isDir && fileModal._multiple && selectedIndex(f.id) !== -1;
+
     return `
-      <div class="picker-item ${isDir ? 'picker-dir-item' : 'picker-file-item'}" data-path="${f.path}" data-filename="${escapeHtml(f.filename)}" data-fid="${f.id}" data-mime="${f.mime}">
+      <div class="picker-item ${isDir ? 'picker-dir-item' : 'picker-file-item'}${isSelected ? ' is-selected' : ''}" data-path="${f.path}" data-filename="${escapeHtml(f.filename)}" data-fid="${f.id}" data-mime="${f.mime}">
         ${thumbnailHtml}
         <div class="picker-item-name" title="${escapeHtml(f.filename)}">${escapeHtml(f.filename)}</div>
       </div>
@@ -317,6 +357,16 @@ function setupPickerLogic(fileModal) {
           window.loadAndRenderPickerFiles('');
         } else if (item.classList.contains('picker-go-up')) {
           // Handled below
+        } else if (fileModal._multiple) {
+          // Toggle the file in the running selection (kept across folder changes)
+          var idx = selectedIndex(id);
+          if (idx === -1) {
+            fileModal._selectedFiles.push({path: path, filename: filename, id: id});
+          } else {
+            fileModal._selectedFiles.splice(idx, 1);
+          }
+          item.classList.toggle('is-selected', idx === -1);
+          fileModal._updateConfirmButton();
         } else {
           // Select the file!
           if (fileModal._onSelectCallback) {
@@ -338,6 +388,11 @@ function setupPickerLogic(fileModal) {
     var query = (searchQuery || '').toLowerCase().trim();
     currentQuery = query;
     currentPage = 1;
+    if (query === '') {
+      try {
+        window.localStorage.setItem(PICKER_LAST_FOLDER_KEY, window.pickerActiveFolder || '');
+      } catch (e) { /* storage unavailable (private mode etc.) -- just don't remember */ }
+    }
     grid.innerHTML = '<div style="grid-column: span 3; text-align: center; padding: 20px;">Loading media files...</div>';
     loadMoreContainer.style.display = 'none';
 
