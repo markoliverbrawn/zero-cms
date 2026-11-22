@@ -25,6 +25,12 @@ use Zero\Support\Str;
  */
 class Security {
     /**
+     * Seconds of inactivity (no page render issuing the token, no successful verification) after
+     * which a CSRF token expires.
+     */
+    private const CSRF_TOKEN_TTL = 600;
+
+    /**
      * True only when TRUSTED_PROXY_SECRET is configured and the request's X-Proxy-Secret header
      * matches it (constant-time). Deployments that sit behind a reverse proxy which originates its
      * own request to origin (e.g. a Cloudflare Worker's fetch()) can set this env var and have the
@@ -164,10 +170,16 @@ class Security {
     public static function csrfToken()
     {
         App::ensureSession();
-        if (empty($_SESSION['_csrf_token'])) {
+        $tokenTime = $_SESSION['_csrf_token_time'] ?? 0;
+        if (empty($_SESSION['_csrf_token']) || (\time() - $tokenTime) > self::CSRF_TOKEN_TTL) {
+            // Missing, or already past the inactivity window: issue a fresh token rather than
+            // re-serving one csrfVerify() would reject.
             $_SESSION['_csrf_token'] = \bin2hex(\random_bytes(16));
-            $_SESSION['_csrf_token_time'] = \time(); // Record creation time
         }
+        // Rendering the token into a page is activity too. Without this, a page loaded after 10
+        // minutes of GET-only browsing embedded a token that was already about to expire, so its
+        // very first POST (e.g. a media upload) failed with a session-token error.
+        $_SESSION['_csrf_token_time'] = \time();
         return $_SESSION['_csrf_token'];
     }
 
@@ -182,9 +194,9 @@ class Security {
         App::ensureSession();
         if (empty($token)) return false;
 
-        // Expiry check: 10 minutes (600 seconds) of inactivity
+        // Expiry check: 10 minutes (CSRF_TOKEN_TTL) of inactivity
         $tokenTime = $_SESSION['_csrf_token_time'] ?? 0;
-        if ((\time() - $tokenTime) > 600) {
+        if ((\time() - $tokenTime) > self::CSRF_TOKEN_TTL) {
             // Token has expired! Destroy it to prevent replay
             unset($_SESSION['_csrf_token']);
             unset($_SESSION['_csrf_token_time']);
