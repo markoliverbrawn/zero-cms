@@ -163,9 +163,25 @@ trait EnforcesAccessControl
             return;
         }
 
+        self::denyAccess($permission, self::getCurrentUserRole());
+    }
+
+    /**
+     * Hard-fail with a 403 access-denied page for a permission the caller has already decided is
+     * not held. Lets callers that authorize against a role other than the in-memory current user's
+     * (e.g. the role as stored in the database) still render the standard denial.
+     *
+     * @param string $permission Permission key that was required.
+     * @param string $role Role to report as the caller's.
+     * @return void
+     */
+    public static function denyAccess(string $permission, string $role): void
+    {
+        self::ensureSession();
+
         \http_response_code(403);
         self::render(self::$accessDeniedView, [
-            'currentRole' => self::getCurrentUserRole(),
+            'currentRole' => $role,
             'requiredPermission' => $permission
         ]);
         exit;
