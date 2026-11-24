@@ -154,6 +154,7 @@ class SeederRunner
                         if (\str_ends_with($file, 'Seeder.php') && $file !== 'Seeder.php') {
                             $className = "Zero\\Modules\\{$folder}\\Seeders\\" . \basename($file, '.php');
                             if (\class_exists($className)) {
+                                // security-scan-ignore: dynamic-class -- seeder classes are discovered from module Seeders/ directories on disk (CLI)
                                 $seederInstance = new $className();
                                 if ($seederInstance instanceof SeederInterface) {
                                     $classSeeders[] = $seederInstance;

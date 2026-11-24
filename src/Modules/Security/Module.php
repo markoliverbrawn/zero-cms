@@ -144,6 +144,7 @@ class Module implements ModuleInterface
 
         // Explicitly register our security controllers under 'admin' context to bypass DB enabled_modules constraints
         Router::register([
+            // security-scan-ignore: unauthenticated-route -- self-service: requires a session and changes only the signed-in user's own password
             '#^/admin/change-password$#' => ChangePasswordController::class,
             '#^/admin/list/security_audits$#' => SecurityAuditController::class,
             '#^/admin/security/audit$#' => SecurityAuditController::class,

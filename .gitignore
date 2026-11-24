@@ -8,6 +8,7 @@ _archive
 *.bak
 .vscode/
 /*.json
+!/security-scan-baseline.json
 !/composer.json
 /deployments
 .aider*

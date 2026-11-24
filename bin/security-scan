@@ -1,0 +1,103 @@
+#!/usr/bin/env php
+<?php
+// bin/security-scan - Static security scan for Zero CMS core and Zero CMS sub-projects (CI gate).
+//
+// Usage:
+//   bin/security-scan [options] [path ...]          Paths default to src/ under --root.
+//
+// Options:
+//   --root=DIR              Directory findings are reported relative to (default: current dir).
+//   --format=text|json      Output format (default: text).
+//   --baseline=FILE         Suppress findings whose fingerprints are listed in FILE.
+//   --write-baseline=FILE   Write every current finding's fingerprint to FILE and exit 0 -- for
+//                           adopting the scan on a codebase with existing debt. New code is still
+//                           checked; only the recorded findings are tolerated.
+//
+// Exit codes: 0 no findings, 1 findings, 2 usage error.
+//
+// A finding is silenced in code with a comment on the same line or the line above, which must say
+// why the code is safe:
+//   // security-scan-ignore: <rule>[, <rule>] -- <reason>
+//
+// Sub-projects run core's copy against their own code:
+//   vendor/markoliverbrawn/zero-cms-core/bin/security-scan src
+
+declare(strict_types=1);
+
+use Zero\Support\SecurityScan\Finding;
+use Zero\Support\SecurityScan\Scanner;
+
+if (!\defined('APPLICATION_ROOT')) {
+    \define('APPLICATION_ROOT', \dirname(__DIR__)); // this core checkout, wherever the scan root is
+}
+require_once APPLICATION_ROOT . '/src/Core/Autoloader.php';
+\Zero\Core\Autoloader::init();
+
+// Tokenising one large generated file (multi-MB seed data) needs over 100MB; don't fail on the
+// CLI's 128M default. The scanner holds one file's tokens at a time plus the class/route files.
+if (\ini_parse_quantity((string) \ini_get('memory_limit')) !== -1 && \ini_parse_quantity((string) \ini_get('memory_limit')) < 512 * 1024 * 1024) {
+    \ini_set('memory_limit', '512M');
+}
+
+$options = ['root' => \getcwd(), 'format' => 'text', 'baseline' => null, 'write-baseline' => null];
+$paths = [];
+foreach (\array_slice($argv, 1) as $arg) {
+    if (\preg_match('/^--(root|format|baseline|write-baseline)=(.+)$/', $arg, $m) === 1) {
+        $options[$m[1]] = $m[2];
+    } elseif ($arg === '--help' || $arg === '-h') {
+        echo \implode("\n", \array_map(static fn (string $l): string => \substr($l, 3), \array_slice(\file(__FILE__, FILE_IGNORE_NEW_LINES), 2, 20))) . "\n";
+        exit(0);
+    } elseif (\str_starts_with($arg, '--')) {
+        \fwrite(\STDERR, "Unknown option: {$arg}\n");
+        exit(2);
+    } else {
+        $paths[] = $arg;
+    }
+}
+if (!\in_array($options['format'], ['text', 'json'], true)) {
+    \fwrite(\STDERR, "--format must be text or json\n");
+    exit(2);
+}
+if ($paths === []) {
+    $paths = ['src'];
+}
+
+$baseline = [];
+if ($options['baseline'] !== null) {
+    if (!\is_file($options['baseline'])) {
+        \fwrite(\STDERR, "Baseline file not found: {$options['baseline']}\n");
+        exit(2);
+    }
+    $baseline = \json_decode((string) \file_get_contents($options['baseline']), true)['fingerprints'] ?? [];
+}
+
+$findings = (new Scanner())->scan((string) $options['root'], $paths, $baseline);
+
+if ($options['write-baseline'] !== null) {
+    $fingerprints = \array_values(\array_unique(\array_map(static fn (Finding $f): string => $f->fingerprint(), $findings)));
+    \sort($fingerprints);
+    \file_put_contents($options['write-baseline'], \json_encode(['fingerprints' => $fingerprints], JSON_PRETTY_PRINT) . "\n");
+    echo 'Wrote ' . \count($fingerprints) . " fingerprint(s) to {$options['write-baseline']}.\n";
+    exit(0);
+}
+
+if ($options['format'] === 'json') {
+    echo \json_encode(\array_map(static fn (Finding $f): array => $f->toArray(), $findings), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n";
+    exit($findings === [] ? 0 : 1);
+}
+
+if ($findings === []) {
+    echo "security-scan: no findings.\n";
+    exit(0);
+}
+
+$bySeverity = [Finding::HIGH => 0, Finding::MEDIUM => 0, Finding::LOW => 0];
+foreach ($findings as $finding) {
+    $bySeverity[$finding->severity]++;
+    echo \strtoupper($finding->severity) . "  {$finding->file}:{$finding->line}  [{$finding->rule}]\n";
+    echo "    {$finding->code}\n";
+    echo "    {$finding->message}\n\n";
+}
+echo \sprintf("security-scan: %d finding(s): %d high, %d medium, %d low.\n",
+    \count($findings), $bySeverity[Finding::HIGH], $bySeverity[Finding::MEDIUM], $bySeverity[Finding::LOW]);
+exit(1);

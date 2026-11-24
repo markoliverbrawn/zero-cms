@@ -1,0 +1,34 @@
+name: Security Scan
+
+# Static security scan (bin/security-scan) as a merge gate. Code-level security is checked here, at
+# merge time, rather than by the in-app audit at runtime: the code is the same on every install,
+# and a finding is only useful while it can still block the change that introduced it.
+#
+# A finding is resolved by fixing the code, or -- when the code is safe -- by a comment on the line
+# (or the line above) that says why:  // security-scan-ignore: <rule> -- <reason>
+# security-scan-baseline.json records pre-existing findings still awaiting review; new code is
+# always checked, and the baseline should only shrink.
+
+on:
+  pull_request:
+    branches: [ "main" ]
+  push:
+    branches: [ "main" ]
+
+jobs:
+  security-scan:
+    name: Static Security Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code Repository
+        uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: none
+
+      - name: Run bin/security-scan
+        run: bin/security-scan --baseline=security-scan-baseline.json src

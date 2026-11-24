@@ -74,6 +74,7 @@ class FrontendResetController implements Controller
                 $error = 'Password must be at least 6 characters.';
             } else {
                 // Update User password hash
+                // security-scan-ignore: unscoped-lookup -- $userId comes from a password_resets row already scoped to this site and to a member of it
                 $user = User::find($userId);
                 if ($user) {
                     $user->password_hash = \password_hash($password, PASSWORD_DEFAULT);

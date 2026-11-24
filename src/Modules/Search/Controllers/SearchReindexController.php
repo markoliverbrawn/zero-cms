@@ -146,6 +146,7 @@ class SearchReindexController implements Controller
 
         foreach (SearchService::getSearchables() as $modelClass => $config) {
             if (\class_exists($modelClass)) {
+                // security-scan-ignore: dynamic-class -- $modelClass comes from the SearchService::getSearchables() registry
                 $tableName = $modelClass::getTableName();
                 // Fetch all IDs for this model
                 $sql = "SELECT id FROM {$tableName} WHERE site_id = ? AND deleted_at IS NULL";

@@ -77,6 +77,7 @@ trait ManagesModules
 
                 $className = $namespacePrefix . $folder . '\\Module';
                 if (\class_exists($className)) {
+                    // security-scan-ignore: dynamic-class -- module classes are discovered from module directories on disk
                     $module = new $className();
                     if ($module instanceof ModuleInterface) {
                         self::$modules[$module->getId()] = $module;

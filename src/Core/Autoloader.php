@@ -60,6 +60,7 @@ class Autoloader
             }
 
             $relativeClass = \substr($class, $len);
+            // security-scan-ignore: dynamic-php-path -- class names come from PHP autoloading, not request input
             $file = $baseDir . '/' . \str_replace('\\', '/', $relativeClass) . '.php';
 
             if (\file_exists($file)) {

@@ -57,6 +57,7 @@ trait CascadesDeletes
                     $stmt = DB::query("SELECT id FROM {$tableName} WHERE {$foreignKey} = ? AND deleted_at IS NULL", [$this->id]);
                     $ids = $stmt->fetchAll(\PDO::FETCH_COLUMN);
                     foreach ($ids as $id) {
+                        // security-scan-ignore: dynamic-class -- $childClass comes from the model's code-defined cascadeDeletes map
                         $child = $childClass::find($id);
                         if ($child) {
                             $child->delete();
@@ -104,6 +105,7 @@ trait CascadesDeletes
                     $stmt = DB::query("SELECT id FROM {$tableName} WHERE {$foreignKey} = ?", [$this->id]);
                     $ids = $stmt->fetchAll(\PDO::FETCH_COLUMN);
                     foreach ($ids as $id) {
+                        // security-scan-ignore: dynamic-class -- $childClass comes from the model's code-defined cascadeDeletes map
                         $child = $childClass::findTrashed($id);
                         if ($child) {
                             $child->forceDelete();
