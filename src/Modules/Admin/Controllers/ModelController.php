@@ -89,7 +89,7 @@ class ModelController implements Controller
             App::applyCsrfMiddleware();
             
             if ($id) {
-                $record = $model::find($id);
+                $record = $model::findInCurrentSite($id);
                 if ($record) {
                     $record->delete();
                     Logger::log($_SESSION['user_id'] ?? null, 'delete', $modelName, $id, [
@@ -111,7 +111,7 @@ class ModelController implements Controller
 
             $success = false;
             if ($id) {
-                $record = $model::findTrashed($id);
+                $record = $model::findInCurrentSite($id, true);
                 if ($record) {
                     $record->restore();
                     Logger::log($_SESSION['user_id'] ?? null, 'restore', $modelName, $id, [
@@ -140,7 +140,7 @@ class ModelController implements Controller
             App::applyCsrfMiddleware();
 
             if ($id) {
-                $record = $model::findTrashed($id);
+                $record = $model::findInCurrentSite($id, true);
                 if ($record) {
                     $record->forceDelete();
                     Logger::log($_SESSION['user_id'] ?? null, 'force_delete', $modelName, $id, [
@@ -183,7 +183,7 @@ class ModelController implements Controller
             $targetId = ($action === 'edit') ? $id : $formId;
 
             if ($action === 'edit' && $id) {
-                $record = $model::find($id);
+                $record = $model::findInCurrentSite($id);
                 if ($record) {
                     foreach ($data as $key => $value) {
                         $record->$key = $value;
@@ -212,7 +212,7 @@ class ModelController implements Controller
 
         $record = null;
         if ($action === 'edit' && $id) {
-            $record = $model::find($id);
+            $record = $model::findInCurrentSite($id);
         }
 
         App::render('admin/model/edit', [

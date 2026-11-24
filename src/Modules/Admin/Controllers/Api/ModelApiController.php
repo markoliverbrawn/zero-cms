@@ -86,9 +86,9 @@ class ModelApiController extends AdminApiControllerBase
             $this->respond(['success' => false, 'error' => 'Invalid model Name'], 400);
         }
 
-        $record = $model::find($id);
+        $record = $model::findInCurrentSite($id);
         if (!$record && \method_exists($model, 'findTrashed')) {
-            $record = $model::findTrashed($id);
+            $record = $model::findInCurrentSite($id, true);
         }
         if (!$record) {
             $this->respond(['success' => false, 'error' => 'Record not found'], 404);
@@ -187,7 +187,7 @@ class ModelApiController extends AdminApiControllerBase
             App::requirePermission('content.destructive');
         }
 
-        $record = $isForce ? $model::findTrashed($id) : $model::find($id);
+        $record = $model::findInCurrentSite($id, $isForce);
         if ($record) {
             try {
                 if ($isForce) {
@@ -301,7 +301,7 @@ class ModelApiController extends AdminApiControllerBase
 
         if ($id && $id !== 'new') {
             // Edit existing record
-            $record = $model::find($id);
+            $record = $model::findInCurrentSite($id);
             if (!$record) {
                 $this->respond(['success' => false, 'error' => 'Record not found'], 404);
             }
