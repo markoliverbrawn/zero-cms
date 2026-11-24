@@ -31,6 +31,56 @@ class Security {
     private const CSRF_TOKEN_TTL = 600;
 
     /**
+     * Attributes sanitizeHtml() keeps on any allowed element (plus data-* and aria-*).
+     */
+    private const SANITIZE_GLOBAL_ATTRIBUTES = ['class', 'dir', 'id', 'lang', 'role', 'style', 'title'];
+
+    /**
+     * Elements sanitizeHtml() keeps, mapped to the element-specific attributes they may carry.
+     */
+    private const SANITIZE_ALLOWED_TAGS = [
+        'a' => ['href', 'hreflang', 'name', 'rel', 'target'],
+        'abbr' => [], 'article' => [], 'aside' => [],
+        'audio' => ['autoplay', 'controls', 'loop', 'muted', 'preload', 'src'], 'b' => [], 'blockquote' => ['cite'], 'br' => [],
+        'caption' => [], 'cite' => [], 'code' => [], 'col' => ['span', 'width'], 'colgroup' => ['span'],
+        'dd' => [], 'del' => ['cite', 'datetime'], 'details' => ['open'], 'div' => ['align'], 'dl' => [],
+        'dt' => [], 'em' => [], 'figcaption' => [], 'figure' => [], 'footer' => [], 'h1' => ['align'],
+        'h2' => ['align'], 'h3' => ['align'], 'h4' => ['align'], 'h5' => ['align'], 'h6' => ['align'],
+        'header' => [], 'hr' => [], 'i' => [],
+        'img' => ['alt', 'decoding', 'height', 'loading', 'sizes', 'src', 'srcset', 'width'],
+        'ins' => ['cite', 'datetime'], 'kbd' => [], 'li' => ['value'], 'mark' => [], 'nav' => [],
+        'ol' => ['reversed', 'start', 'type'], 'p' => ['align'], 'picture' => [], 'pre' => [],
+        'q' => ['cite'], 's' => [], 'samp' => [], 'section' => [], 'small' => [],
+        'source' => ['media', 'sizes', 'src', 'srcset', 'type'], 'span' => [], 'strike' => [],
+        'strong' => [], 'sub' => [], 'summary' => [], 'sup' => [],
+        'table' => ['border', 'cellpadding', 'cellspacing', 'summary', 'width'], 'tbody' => [],
+        'td' => ['align', 'colspan', 'headers', 'rowspan', 'valign', 'width'], 'tfoot' => [],
+        'th' => ['abbr', 'align', 'colspan', 'headers', 'rowspan', 'scope', 'valign', 'width'],
+        'thead' => [], 'time' => ['datetime'], 'tr' => ['align', 'valign'], 'u' => [], 'ul' => [],
+        'var' => [],
+        'video' => ['autoplay', 'controls', 'height', 'loop', 'muted', 'playsinline', 'poster', 'preload', 'src', 'width'],
+    ];
+
+    /**
+     * URL schemes allowed in URL-bearing attributes. Scheme-less (relative) URLs are always allowed.
+     */
+    private const SANITIZE_ALLOWED_SCHEMES = ['http', 'https', 'mailto', 'tel'];
+
+    /**
+     * Elements removed together with their contents rather than unwrapped.
+     */
+    private const SANITIZE_DROPPED_TAGS = [
+        'applet', 'base', 'button', 'canvas', 'embed', 'form', 'frame', 'frameset', 'iframe',
+        'input', 'link', 'math', 'meta', 'noembed', 'noframes', 'noscript', 'object', 'option',
+        'plaintext', 'script', 'select', 'style', 'svg', 'template', 'textarea', 'title', 'xmp',
+    ];
+
+    /**
+     * Attributes whose value is a single URL.
+     */
+    private const SANITIZE_URL_ATTRIBUTES = ['cite', 'href', 'poster', 'src'];
+
+    /**
      * True only when TRUSTED_PROXY_SECRET is configured and the request's X-Proxy-Secret header
      * matches it (constant-time). Deployments that sit behind a reverse proxy which originates its
      * own request to origin (e.g. a Cloudflare Worker's fetch()) can set this env var and have the
@@ -240,8 +290,13 @@ class Security {
     }
 
     /**
-     * Pure PHP, dependency-free HTML sanitizer using DOMDocument.
-     * Prevents XSS by stripping blacklisted tags, inline javascript, and dangerous protocols.
+     * Pure PHP, dependency-free HTML sanitiser using DOMDocument.
+     *
+     * Allow-list based: only SANITIZE_ALLOWED_TAGS survive. Unknown tags are unwrapped (their text
+     * is kept) except SANITIZE_DROPPED_TAGS, which are removed with their contents because they can
+     * execute script, change how the rest of the page resolves URLs, or parse differently in a
+     * browser than in libxml (mutation XSS). Attributes are allow-listed too, and URL-bearing
+     * attributes may only use SANITIZE_ALLOWED_SCHEMES or be relative.
      */
     public static function sanitizeHtml(string $html): string
     {
@@ -266,48 +321,13 @@ class Security {
         \libxml_clear_errors();
         \libxml_use_internal_errors($internalErrors);
 
-        // Recursive tag and attribute scrubber
-        $stripTags = ['script', 'iframe', 'object', 'embed', 'style', 'meta', 'link', 'form', 'input', 'button', 'textarea'];
-
-        $xpath = new \DOMXPath($doc);
-
-        // Remove blacklisted elements
-        foreach ($stripTags as $tag) {
-            $elements = $xpath->query("//" . $tag);
-            foreach ($elements as $el) {
-                $el->parentNode->removeChild($el);
-            }
-        }
-
-        // Remove dangerous attributes (on*, javascript: URIs)
-        $allElements = $xpath->query('//*');
-        foreach ($allElements as $el) {
-            $attrs = [];
-            foreach ($el->attributes as $attr) {
-                $attrs[] = $attr->name;
-            }
-
-            foreach ($attrs as $attrName) {
-                $lowerAttr = \strtolower($attrName);
-                // Strip event handlers starting with "on" (e.g. onclick, onload, onerror)
-                if (\strpos($lowerAttr, 'on') === 0) {
-                    $el->removeAttribute($attrName);
-                    continue;
-                }
-
-                // Strip attributes with "javascript:" or "data:" URI protocols
-                $attrValue = \strtolower(\trim($el->getAttribute($attrName)));
-                if ($lowerAttr === 'href' || $lowerAttr === 'src') {
-                    if (\strpos($attrValue, 'javascript:') === 0 || \strpos($attrValue, 'data:') === 0) {
-                        $el->removeAttribute($attrName);
-                    }
-                }
-            }
+        $root = $doc->getElementById('zero-sanitize-root');
+        if ($root !== null) {
+            self::scrubHtmlChildren($root);
         }
 
         // Serialise just the wrapper's children
         $cleaned = '';
-        $root = $doc->getElementById('zero-sanitize-root');
         if ($root !== null) {
             foreach ($root->childNodes as $child) {
                 $cleaned .= $doc->saveHTML($child);
@@ -318,6 +338,136 @@ class Security {
 
         // Automatically highlight any inline pre/code blocks!
         return Str::highlightHtml($cleaned);
+    }
+
+    /**
+     * Whether a URL attribute value is safe: relative, or using an allowed scheme. ASCII control
+     * characters and whitespace are ignored when finding the scheme, as browsers ignore them too
+     * (so "java\tscript:" is still treated as javascript:).
+     *
+     * @param string $url Attribute value as decoded by the parser.
+     * @return bool
+     */
+    private static function isSafeHtmlUrl(string $url): bool
+    {
+        $normalised = \strtolower((string) \preg_replace('/[\x00-\x20\x7F]+/', '', $url));
+        if (!\preg_match('/^([a-z][a-z0-9+.\-]*):/', $normalised, $match)) {
+            return true;
+        }
+
+        return \in_array($match[1], self::SANITIZE_ALLOWED_SCHEMES, true);
+    }
+
+    /**
+     * Strip every attribute from an allowed element that is not on its allow-list, or that carries
+     * an unsafe URL or style value. Links opening a new window also get rel="noopener noreferrer".
+     *
+     * @param \DOMElement $element Element whose attributes are scrubbed in place.
+     * @return void
+     */
+    private static function scrubHtmlAttributes(\DOMElement $element): void
+    {
+        $tag = \strtolower($element->nodeName);
+        $allowed = \array_merge(self::SANITIZE_GLOBAL_ATTRIBUTES, self::SANITIZE_ALLOWED_TAGS[$tag] ?? []);
+
+        $names = [];
+        foreach ($element->attributes as $attribute) {
+            $names[] = $attribute->nodeName;
+        }
+
+        foreach ($names as $name) {
+            $lower = \strtolower($name);
+            $value = $element->getAttribute($name);
+
+            $keep = \in_array($lower, $allowed, true)
+                || \preg_match('/^(aria|data)-[a-z0-9_.\-]+$/', $lower) === 1;
+
+            if ($keep && \in_array($lower, self::SANITIZE_URL_ATTRIBUTES, true)) {
+                $keep = self::isSafeHtmlUrl($value);
+            }
+
+            if ($keep && $lower === 'srcset') {
+                foreach (\explode(',', $value) as $candidate) {
+                    $candidateUrl = \preg_split('/\s+/', \trim($candidate))[0] ?? '';
+                    if (!self::isSafeHtmlUrl($candidateUrl)) {
+                        $keep = false;
+                        break;
+                    }
+                }
+            }
+
+            if ($keep && $lower === 'style') {
+                $keep = \preg_match('/expression\s*\(|url\s*\(|@import|behavior\s*:|javascript:|[<>\\\\]/i', $value) !== 1;
+            }
+
+            if (!$keep) {
+                $element->removeAttribute($name);
+            }
+        }
+
+        if ($tag === 'a' && \strtolower($element->getAttribute('target')) === '_blank') {
+            $element->setAttribute('rel', 'noopener noreferrer');
+        }
+    }
+
+    /**
+     * Recursively scrub a node's children: drop comments and dangerous elements with their
+     * contents, unwrap unknown elements (keeping their scrubbed children), and scrub the
+     * attributes of allowed elements.
+     *
+     * @param \DOMNode $node Parent whose children are scrubbed in place.
+     * @return void
+     */
+    private static function scrubHtmlChildren(\DOMNode $node): void
+    {
+        $child = $node->firstChild;
+        while ($child !== null) {
+            $next = $child->nextSibling;
+
+            if ($child instanceof \DOMElement) {
+                $tag = \strtolower($child->nodeName);
+
+                if (\in_array($tag, self::SANITIZE_DROPPED_TAGS, true)) {
+                    $node->removeChild($child);
+                } elseif (!isset(self::SANITIZE_ALLOWED_TAGS[$tag])) {
+                    self::scrubHtmlChildren($child);
+                    while ($child->firstChild !== null) {
+                        $node->insertBefore($child->firstChild, $child);
+                    }
+                    $node->removeChild($child);
+                } else {
+                    self::scrubHtmlAttributes($child);
+                    self::scrubHtmlChildren($child);
+                }
+            } elseif (!($child instanceof \DOMText) || $child instanceof \DOMCdataSection) {
+                // Comments, processing instructions, CDATA: never needed in content.
+                $node->removeChild($child);
+            }
+
+            $child = $next;
+        }
+    }
+
+    /**
+     * Verify a submitted password against a stored hash, refusing inputs that password_verify()
+     * would otherwise mishandle: non-strings (e.g. password[]= in a form post), empty passwords,
+     * passwords containing NUL (bcrypt truncates at the first NUL byte), and empty/absent hashes.
+     *
+     * @param mixed $password Submitted password, straight from the request.
+     * @param mixed $hash Stored password hash.
+     * @return bool
+     */
+    public static function verifyPassword($password, $hash): bool
+    {
+        if (!\is_string($password) || $password === '' || \str_contains($password, "\0")) {
+            return false;
+        }
+
+        if (!\is_string($hash) || $hash === '') {
+            return false;
+        }
+
+        return \password_verify($password, $hash);
     }
 
     /**

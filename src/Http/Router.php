@@ -96,7 +96,7 @@ class Router
                         }
                     }
                     
-                    if (\class_exists($controllerClass)) {
+                    if (Page::isDispatchableController($controllerClass)) {
                         $controller = new $controllerClass();
                         $controller->handle($pageRecord);
                         return true;
@@ -104,7 +104,7 @@ class Router
                 }
                 
                 // Fallback to custom view or default 'post' view rendering
-                $viewTemplate = !empty($pageRecord->view) ? $pageRecord->view : 'post';
+                $viewTemplate = (!empty($pageRecord->view) && Page::isSafeViewName($pageRecord->view)) ? $pageRecord->view : 'post';
                 App::render($viewTemplate, ['post' => $pageRecord]);
                 return true;
             }

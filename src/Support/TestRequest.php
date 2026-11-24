@@ -58,6 +58,13 @@ final class TestRequest
     private bool $authenticateUser = false;
 
     /**
+     * Additional, never-authenticated user accounts to create alongside the request's own user.
+     *
+     * @var array<int, array<string, mixed>>
+     */
+    private array $accounts = [];
+
+    /**
      * Attributes of the user to create, or null when no user is needed.
      *
      * @var array<string, mixed>|null
@@ -145,6 +152,23 @@ final class TestRequest
         $this->method = $method;
         $this->uri = $uri;
         $this->body = $body;
+    }
+
+    /**
+     * Declare an extra user account to create before the request runs, without signing it in --
+     * for requests that act on some other user (e.g. an admin editing a super_admin). Pass an 'id'
+     * attribute to know the row's primary key in advance.
+     *
+     * Recognised attributes: those of asUser(), plus id.
+     *
+     * @param array<string, mixed> $attributes Column overrides for the users row.
+     * @return self
+     */
+    public function withAccount(array $attributes): self
+    {
+        $this->accounts[] = $attributes;
+
+        return $this;
     }
 
     /**
@@ -261,6 +285,10 @@ final class TestRequest
             if ($page['homepage'] && $siteId !== null) {
                 DB::query('UPDATE sites SET homepage_id = ? WHERE id = ?', [$pageId, $siteId]);
             }
+        }
+
+        foreach ($specification['accounts'] as $accountAttributes) {
+            self::insertUser($accountAttributes, $siteId);
         }
 
         if ($specification['user'] !== null) {
@@ -577,7 +605,7 @@ final class TestRequest
      */
     private static function insertUser(array $attributes, ?string $siteId): string
     {
-        $id = Security::uuidv7();
+        $id = $attributes['id'] ?? Security::uuidv7();
         $now = \gmdate('Y-m-d H:i:s');
         $suffix = \substr($id, -12);
 
@@ -589,7 +617,7 @@ final class TestRequest
         // previous run left behind. Clearing conflicts first makes fixtures idempotent and the suite
         // re-runnable. The delete is hard rather than soft because a soft-deleted row still occupies
         // the unique key.
-        DB::query('DELETE FROM users WHERE username = ? OR email = ?', [$username, $email]);
+        DB::query('DELETE FROM users WHERE username = ? OR email = ? OR id = ?', [$username, $email, $id]);
 
         DB::query(
             'INSERT INTO users (id, site_id, username, email, password_hash, role, api_token, created_at, updated_at)
@@ -614,7 +642,7 @@ final class TestRequest
      * Freeze the fluent state into the plain data structure handed to the child process, resolving
      * the tenant domain and the Host header the request will be resolved against.
      *
-     * @return array{method: string, uri: string, server: array<string, string>, query: array<string, mixed>, body: array<string, mixed>, site: array<string, mixed>|null, media: array<int, array<string, mixed>>, pages: array<int, array{attributes: array<string, mixed>, homepage: bool}>, user: array<string, mixed>|null, authenticate: bool, csrf: string|null}
+     * @return array{method: string, uri: string, server: array<string, string>, query: array<string, mixed>, body: array<string, mixed>, site: array<string, mixed>|null, media: array<int, array<string, mixed>>, pages: array<int, array{attributes: array<string, mixed>, homepage: bool}>, user: array<string, mixed>|null, accounts: array<int, array<string, mixed>>, authenticate: bool, csrf: string|null}
      */
     private function specification(): array
     {
@@ -651,6 +679,7 @@ final class TestRequest
             'media' => $this->media,
             'pages' => $this->pages,
             'user' => $this->user,
+            'accounts' => $this->accounts,
             'authenticate' => $this->authenticateUser,
             'csrf' => $this->csrf ? \bin2hex(\random_bytes(16)) : null,
         ];

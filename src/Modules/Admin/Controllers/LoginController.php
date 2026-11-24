@@ -54,8 +54,10 @@ class LoginController implements Controller
         $method = $_SERVER['REQUEST_METHOD'];
         if ($method === 'POST') {
             App::applyCsrfMiddleware();
-            $user = $_POST['username'] ?? '';
-            $pass = $_POST['password'] ?? '';
+            // Non-string input (username[]= / password[]=) is treated as empty rather than reaching
+            // string functions or the hash check.
+            $user = \is_string($_POST['username'] ?? null) ? $_POST['username'] : '';
+            $pass = \is_string($_POST['password'] ?? null) ? $_POST['password'] : '';
 
             // Enforce centralized rate limiting and progressive lockout protection via Middleware
             AuthThrottlingMiddleware::handle('login', 'admin/login', [], function() {});
@@ -66,7 +68,7 @@ class LoginController implements Controller
             if (!$row) {
                 $failReason = 'user_not_found';
             } else {
-                if (!\password_verify($pass, $row['password_hash'])) {
+                if (!Security::verifyPassword($pass, $row['password_hash'] ?? null)) {
                     $failReason = 'password_mismatch';
                 } else {
                     $userRole = $row['role'] ?? 'editor';

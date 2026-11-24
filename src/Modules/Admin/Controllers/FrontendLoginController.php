@@ -38,14 +38,16 @@ class FrontendLoginController implements Controller
         $method = $_SERVER['REQUEST_METHOD'];
         if ($method === 'POST') {
             App::applyCsrfMiddleware();
-            $user = $_POST['username'] ?? '';
-            $pass = $_POST['password'] ?? '';
+            // Non-string input (username[]= / password[]=) is treated as empty rather than reaching
+            // string functions or the hash check.
+            $user = \is_string($_POST['username'] ?? null) ? $_POST['username'] : '';
+            $pass = \is_string($_POST['password'] ?? null) ? $_POST['password'] : '';
 
             // Enforce centralized rate limiting and progressive lockout protection via Middleware
             AuthThrottlingMiddleware::handle('login', 'login', [], function() {});
 
             $row = DB::query('SELECT * FROM users WHERE username = ? LIMIT 1', [$user])->fetch();
-            if ($row && \password_verify($pass, $row['password_hash'])) {
+            if ($row && Security::verifyPassword($pass, $row['password_hash'] ?? null)) {
                 // Multi-Tenant User Separation Constraint:
                 // Frontend users must belong to the active site/domain, unless they are super_admin!
                 $userRole = $row['role'] ?? 'editor';
