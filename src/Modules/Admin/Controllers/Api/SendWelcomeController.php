@@ -71,7 +71,7 @@ class SendWelcomeController implements Controller
         }
 
         // Find target user
-        $user = User::find($userId);
+        $user = User::findInCurrentSite($userId);
         if (!$user) {
             \http_response_code(404);
             echo \json_encode(['success' => false, 'message' => 'Target user not found.']);

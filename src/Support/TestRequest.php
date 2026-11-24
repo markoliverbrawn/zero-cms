@@ -386,8 +386,9 @@ final class TestRequest
     /**
      * Create a page for this request's tenant.
      *
-     * Recognised attributes: title, slug, content, summary, type, controller, view, status,
-     * precedence. Status defaults to 'published', since a draft is invisible to the router and a
+     * Recognised attributes: id, site_id, title, slug, content, summary, type, controller, view,
+     * status, precedence. site_id (even null) overrides the request's tenant, for planting a row
+     * another site owns. Status defaults to 'published', since a draft is invisible to the router and a
      * test asking for a page almost always means a reachable one.
      *
      * @param array<string, mixed> $attributes Column overrides for the pages row.
@@ -497,7 +498,7 @@ final class TestRequest
      */
     private static function insertPage(array $attributes, ?string $siteId): string
     {
-        $id = Security::uuidv7();
+        $id = $attributes['id'] ?? Security::uuidv7();
         $now = \gmdate('Y-m-d H:i:s');
 
         $title = $attributes['title'] ?? 'Test Page';
@@ -508,7 +509,8 @@ final class TestRequest
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
             [
                 $id,
-                $siteId,
+                // An explicit site_id lets a test plant a row owned by some other tenant.
+                \array_key_exists('site_id', $attributes) ? $attributes['site_id'] : $siteId,
                 $title,
                 $slug,
                 $attributes['content'] ?? '[]',

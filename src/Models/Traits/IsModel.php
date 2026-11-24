@@ -218,6 +218,54 @@ trait IsModel
     }
 
     /**
+     * Whether the row with this primary key belongs to the active tenant. Rows of tables without a
+     * site_id column (and the sites table itself, guarded by sites.manage) are not tenant-owned and
+     * always pass; a missing row passes so callers keep their own not-found handling. A NULL
+     * site_id marks a platform-global row, which only the users table legitimately has (global
+     * super_admins); elsewhere it is refused.
+     *
+     * @param mixed $id Primary key.
+     * @return bool
+     */
+    public static function belongsToCurrentSite($id): bool
+    {
+        $tableName = static::$tableName;
+        if ($tableName === 'sites' || !Security::isKnownSqlColumn($tableName, 'site_id')) {
+            return true;
+        }
+
+        $row = DB::query("SELECT site_id FROM {$tableName} WHERE id = ? LIMIT 1", [(string) $id])->fetch();
+        if (!$row) {
+            return true;
+        }
+
+        $siteId = $row['site_id'];
+        if ($siteId === null || $siteId === '') {
+            return $tableName === 'users';
+        }
+
+        return (string) $siteId === (string) App::getCurrentSiteId();
+    }
+
+    /**
+     * Tenant-scoped find for request-driven lookups: as find() (or findTrashed() when
+     * $includeTrashed), but returns null for a row owned by another tenant, so a guessed or leaked
+     * primary key cannot reach another site's records.
+     *
+     * @param mixed $id Primary key.
+     * @param bool $includeTrashed Also match soft-deleted rows.
+     * @return mixed The record, or null.
+     */
+    public static function findInCurrentSite($id, bool $includeTrashed = false)
+    {
+        if ($id === null || $id === '' || !static::belongsToCurrentSite($id)) {
+            return null;
+        }
+
+        return $includeTrashed ? static::findTrashed($id) : static::find($id);
+    }
+
+    /**
      * Find trashed processing implementation helper.
      *
      * @param mixed $id Argument descriptor.
