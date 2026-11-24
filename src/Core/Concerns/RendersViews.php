@@ -104,6 +104,7 @@ trait RendersViews
         foreach (self::$viewDirs as $prefix => $dirPath) {
             if (\strpos($view, $prefix . '/') === 0) {
                 $subView = \substr($view, \strlen($prefix) + 1);
+                // security-scan-ignore: dynamic-php-path -- view names are passed by code; prefixed admin/module views
                 $phpFile = $dirPath . '/' . $subView . '.php';
                 $layoutFile = $dirPath . '/layout.php';
                 break;
@@ -115,9 +116,12 @@ trait RendersViews
             $site = self::getCurrentSite();
             $theme = $site ? ($site->theme ?? 'default') : 'default';
             
+            // security-scan-ignore: dynamic-php-path -- view names are passed by code; a page's stored view is checked with Page::isSafeViewName() before it gets here; $theme is set by super_admin only
             $phpFile = self::resolveThemeFile($theme, $view . '.php')
+                // security-scan-ignore: dynamic-php-path -- view names are passed by code; a page's stored view is checked with Page::isSafeViewName() before it gets here; $theme is set by super_admin only
                 ?? (APPLICATION_ROOT . '/src/Views/themes/' . $theme . '/' . $view . '.php');
             $layoutFile = self::resolveThemeFile($theme, 'layout.php')
+                // security-scan-ignore: dynamic-php-path -- $theme comes from sites.theme, which only super_admin can set
                 ?? (APPLICATION_ROOT . '/src/Views/themes/' . $theme . '/layout.php');
         }
 

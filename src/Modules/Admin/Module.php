@@ -92,10 +92,15 @@ class Module implements ModuleInterface
     {
         return [
             // Admin authentication routes
+            // security-scan-ignore: unauthenticated-route -- public sign-in page
             '#^/admin/?$#' => Controllers\LoginController::class,
+            // security-scan-ignore: unauthenticated-route -- public sign-in page
             '#^/admin/login$#' => Controllers\LoginController::class,
+            // security-scan-ignore: unauthenticated-route -- sign-out only ends the caller's own session
             '#^/admin/logout$#' => Controllers\LogoutController::class,
+            // security-scan-ignore: unauthenticated-route -- public password-reset request (tenant-scoped, throttled)
             '#^/admin/forgot$#' => Controllers\ForgotController::class,
+            // security-scan-ignore: unauthenticated-route -- public password reset; tokens redeem only on the issuing tenant
             '#^/admin/reset$#' => Controllers\ResetController::class,
 
             // Admin back-office routes
@@ -108,6 +113,7 @@ class Module implements ModuleInterface
             '#^/admin/preferences$#' => Controllers\PreferencesController::class,
             '#^/admin/settings/([a-zA-Z0-9_-]+)$#' => Controllers\ModuleSettingsController::class,
             '#^/admin/theme-switcher$#' => Controllers\ThemeSwitcherController::class,
+            // security-scan-ignore: unauthenticated-route -- Google OAuth callback, authenticated by Google and the state token
             '#^/admin/google-callback$#' => Controllers\GoogleAuthController::class,
 
             // CRUD Model routes
@@ -134,6 +140,7 @@ class Module implements ModuleInterface
             '#^/api/v1/user/send-welcome$#' => Controllers\Api\SendWelcomeController::class,
 
             // Redirect route for backward compatibility / back links
+            // security-scan-ignore: unauthenticated-route -- only redirects to fixed admin list URLs
             '#^/admin/([a-zA-Z0-9_-]+)$#' => Controllers\RedirectController::class,
         ];
     }

@@ -93,6 +93,7 @@ class Module implements ModuleInterface
     public function getRoutes(): array
     {
         return [
+            // security-scan-ignore: unauthenticated-route -- public contact-form endpoint (rate limited)
             '#^/api/v1/contact/submit$#' => FormApiController::class
         ];
     }

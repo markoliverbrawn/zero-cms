@@ -27,14 +27,29 @@ App::registerModulePath(APP_ROOT . '/src/Modules', 'App\\Modules\\');
 
 ## Step 2 — static exploit scan
 
-Replicate `ExploitScanner`'s four checks (it tokenizes to dodge false positives from strings/comments — do the same sanity pass on any grep hit before flagging it):
+Run `bin/security-scan`, the CI gate. It tokenises the code and has rules for the bug classes that have actually hit this codebase:
 
-1. **Object injection** — `unserialize(` called as a bare function (not `->unserialize()`/`::unserialize()`/a method definition) on anything that isn't fully trusted local data.
-2. **SQL injection** — `DB::query("...")` whose first argument interpolates a raw `$variable` that isn't one of the pre-built-safe SQL fragment names (`$sql`, `$query`, `$whereSql`, `$params`, etc. — see `ExploitScanner::$safeVariables` for the full list). Bound placeholders (`?`) are the only acceptable way user input reaches a query.
-3. **Timing attack** — `==`/`===` comparing a variable named like `token`/`signature`/`csrf` against anything, in a file that never calls `hash_equals(`.
-4. **Path traversal** — `file_get_contents`/`file_put_contents`/`unlink` on a dynamic path with no `realpath()` confinement nearby (exceptions: reading `php://input`, and core's own low-level storage drivers).
+| Rule | Catches |
+|---|---|
+| `dynamic-php-path` | `.php` paths built from unvalidated variables (block-type / view include traversal) |
+| `dynamic-class` | `new $class` / `$class::` on a class name that wasn't validated (stored controller names) |
+| `unescaped-output` | view `echo`/`<?=` not wrapped in an escaper/sanitiser (stored XSS) |
+| `host-header-link` | request-host reads in files that send email (reset-link poisoning) |
+| `unscoped-lookup` | `::find($id)` in controllers instead of `findInCurrentSite()` (cross-tenant IDOR) |
+| `unauthenticated-route` | `/admin` and `/api` routes whose controller chain never checks access |
+| `sql-interpolation` | variables in `DB::query()` SQL text |
+| `timing-compare` | secrets compared with `==`/`===` instead of `hash_equals()` |
+| `object-injection` | `unserialize()` without `allowed_classes` |
 
-`grep -rn` for a fast first pass across the relevant tree (core paths: `src/Core/ src/Http/ src/Models/ src/Support/ src/Modules/`; sub-project: `src/Controllers/ src/Models/ src/Modules/ src/Support/ src/Views/`), then read each hit in context.
+- Core: `bin/security-scan --baseline=security-scan-baseline.json src`
+- Sub-project: `vendor/bin/security-scan src` (core ships it as a Composer bin). Adopt with `--write-baseline=security-scan-baseline.json` once, then run with `--baseline=...` in CI.
+
+Then go beyond it: the rules are heuristics. **Read the code** for what they can't see:
+- authorisation logic (who can grant what, e.g. role escalation)
+- sanitiser and parser correctness (try known bypass payloads)
+- business-logic flaws and protocol handling (SMTP, OAuth)
+
+Report any baselined findings that turn out to be real.
 
 ## Step 3 — framework CVE comparative audit
 

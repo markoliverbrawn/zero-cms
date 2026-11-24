@@ -127,7 +127,9 @@ trait ManagesFormFields
     public static function resolveListView(string $listView): ?string
     {
         $path = (\strpos($listView, '/') === 0)
+            // security-scan-ignore: dynamic-php-path -- $listView comes from a model's code-defined field config
             ? $listView . '.php'
+            // security-scan-ignore: dynamic-php-path -- $listView comes from a model's code-defined field config
             : APPLICATION_ROOT . '/src/Modules/Admin/Views/' . $listView . '.php';
 
         return \file_exists($path) ? $path : null;

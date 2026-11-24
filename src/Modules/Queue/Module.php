@@ -95,7 +95,9 @@ class Module implements ModuleInterface
     public function getRoutes(): array
     {
         return [
+            // security-scan-ignore: unauthenticated-route -- cron trigger authenticated by QUEUE_TRIGGER_TOKEN (hash_equals)
             '#^/api/v1/queue/process$#' => QueueApiController::class,
+            // security-scan-ignore: unauthenticated-route -- cron trigger authenticated by SCHEDULER_TRIGGER_TOKEN (hash_equals)
             '#^/api/v1/queue/schedule$#' => SchedulerApiController::class
         ];
     }
