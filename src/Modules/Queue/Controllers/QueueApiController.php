@@ -51,7 +51,7 @@ class QueueApiController implements Controller
             exit;
         }
 
-        if ($requestToken !== $envToken) {
+        if (!\is_string($requestToken) || !\hash_equals((string) $envToken, $requestToken)) {
             \http_response_code(403);
             echo \json_encode(['error' => 'Forbidden - Invalid or missing queue trigger token']);
             exit;

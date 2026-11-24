@@ -210,6 +210,11 @@ class QueueManager
             if (!\class_exists($jobClass)) {
                 throw new Exception("Job class '{$jobClass}' not found on disk");
             }
+            // Check the class before constructing it, so a class name stored in a queue row can
+            // never run an arbitrary constructor.
+            if (!\is_subclass_of($jobClass, JobInterface::class)) {
+                throw new Exception("Job class '{$jobClass}' must implement \\Zero\\Interfaces\\Job interface");
+            }
 
             $jobInstance = new $jobClass();
             if (!($jobInstance instanceof JobInterface)) {
