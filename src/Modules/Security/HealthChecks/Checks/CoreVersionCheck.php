@@ -15,6 +15,7 @@ use Zero\Models\Site;
 use Zero\Modules\Security\HealthChecks\CheckResult;
 use Zero\Modules\Security\HealthChecks\HealthCheck;
 use Zero\Modules\Security\HealthChecks\HttpProbe;
+use Zero\Modules\Security\HealthChecks\ProjectRoot;
 
 /**
  * Class CoreVersionCheck
@@ -72,10 +73,10 @@ class CoreVersionCheck implements HealthCheck
      */
     public static function installedVersion(): ?string
     {
-        if (!\defined('SUBPROJECT_ROOT')) {
+        if (!ProjectRoot::isSubProject()) {
             return null;
         }
-        $path = SUBPROJECT_ROOT . '/vendor/composer/installed.json';
+        $path = ProjectRoot::get() . '/vendor/composer/installed.json';
         if (!\is_file($path)) {
             return null;
         }

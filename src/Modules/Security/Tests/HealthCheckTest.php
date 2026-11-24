@@ -18,6 +18,7 @@ use Zero\Modules\Security\HealthChecks\Checks\InstallFileCheck;
 use Zero\Modules\Security\HealthChecks\Checks\PhpVersionCheck;
 use Zero\Modules\Security\HealthChecks\Checks\ProxySecretCheck;
 use Zero\Modules\Security\HealthChecks\Checks\SecurityHeadersCheck;
+use Zero\Modules\Security\HealthChecks\ProjectRoot;
 use Zero\Modules\Security\Models\SecurityAudit;
 use Zero\Modules\Security\Module;
 use Zero\Modules\Security\Services\HealthCheckRunner;
@@ -78,6 +79,11 @@ assert_test($status(CoreVersionCheck::evaluate('v2.1.2', ['nightly'])) === 'warn
 echo "Testing the failed sign-in check...\n";
 assert_test($status(FailedLoginCheck::evaluate(20, 20)) === 'pass', "A count at the threshold passes");
 assert_test($status(FailedLoginCheck::evaluate(21, 20)) === 'warn', "A count above the threshold warns");
+
+echo "Testing installation root resolution...\n";
+assert_test(ProjectRoot::resolve('/srv/site/vendor/markoliverbrawn/zero-cms-core', '/srv/site') === '/srv/site', "SUBPROJECT_ROOT wins when defined");
+assert_test(ProjectRoot::resolve('/srv/site/vendor/markoliverbrawn/zero-cms-core', null) === '/srv/site', "Core's CLI run from vendor/ finds the sub-project root");
+assert_test(ProjectRoot::resolve('/srv/zero-cms/', null) === '/srv/zero-cms', "A core checkout is its own root");
 
 echo "Testing run comparison and notification...\n";
 assert_test(CheckResult::worst(['pass', 'warn', 'pass']) === 'warn' && CheckResult::worst(['warn', 'fail']) === 'fail' && CheckResult::worst([]) === 'pass', "The overall status is the worst check status");
