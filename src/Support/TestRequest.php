@@ -13,6 +13,7 @@ namespace Zero\Support;
 
 use Zero\Core\App;
 use Zero\Database\DB;
+use Zero\Http\Router;
 
 /**
  * Class TestRequest
@@ -50,6 +51,11 @@ use Zero\Database\DB;
  */
 final class TestRequest
 {
+    /**
+     * Separates captured-email JSON from ordinary stderr output in a child process's stream.
+     */
+    private const EMAIL_MARKER = "\n__ZERO_TEST_EMAILS__";
+
     /**
      * Whether the created user should also be signed in for the request.
      *
@@ -92,6 +98,28 @@ final class TestRequest
      * @var bool
      */
     private bool $csrf = false;
+
+    /**
+     * Whether the child should capture outbound email instead of sending it.
+     *
+     * @var bool
+     */
+    private bool $captureEmails = false;
+
+    /**
+     * password_resets rows to create in the child (which truncates that table on connect).
+     *
+     * @var array<int, array<string, mixed>>
+     */
+    private array $passwordResets = [];
+
+    /**
+     * Extra routes (pattern => controller class) to register in the child, for controllers core
+     * ships but leaves to a sub-project module to route (e.g. the frontend /login, /forgot, /reset).
+     *
+     * @var array<string, string>
+     */
+    private array $routes = [];
 
     /**
      * HTTP method placed into $_SERVER['REQUEST_METHOD'].
@@ -159,7 +187,8 @@ final class TestRequest
      * for requests that act on some other user (e.g. an admin editing a super_admin). Pass an 'id'
      * attribute to know the row's primary key in advance.
      *
-     * Recognised attributes: those of asUser(), plus id.
+     * Recognised attributes: those of asUser(), plus id and site_id (an explicit value, even
+     * null, overrides the request's tenant).
      *
      * @param array<string, mixed> $attributes Column overrides for the users row.
      * @return self
@@ -192,6 +221,48 @@ final class TestRequest
     {
         $this->user = $attributes;
         $this->authenticateUser = true;
+
+        return $this;
+    }
+
+    /**
+     * Declare a password_resets row to create before the request runs. Recognised attributes:
+     * token, user_id (required), site_id (defaults to the request's tenant; an explicit value,
+     * even null, overrides it), expires_at (defaults to an hour from now).
+     *
+     * @param array<string, mixed> $attributes Column values for the row.
+     * @return self
+     */
+    public function withPasswordReset(array $attributes): self
+    {
+        $this->passwordResets[] = $attributes;
+
+        return $this;
+    }
+
+    /**
+     * Register an extra route for this request only.
+     *
+     * @param string $pattern Router regex, e.g. '#^/reset$#'.
+     * @param string $controllerClass Controller to dispatch.
+     * @return self
+     */
+    public function withRoute(string $pattern, string $controllerClass): self
+    {
+        $this->routes[$pattern] = $controllerClass;
+
+        return $this;
+    }
+
+    /**
+     * Capture every email the request sends (Emailer test mode) and return them from send() under
+     * 'emails', each as {to, subject, html_body, text_body}. Nothing reaches an SMTP server.
+     *
+     * @return self
+     */
+    public function captureEmails(): self
+    {
+        $this->captureEmails = true;
 
         return $this;
     }
@@ -291,6 +362,19 @@ final class TestRequest
             self::insertUser($accountAttributes, $siteId);
         }
 
+        foreach ($specification['password_resets'] as $reset) {
+            DB::query(
+                'INSERT INTO password_resets (id, site_id, user_id, token, expires_at) VALUES (?, ?, ?, ?, ?)',
+                [
+                    Security::uuidv7(),
+                    \array_key_exists('site_id', $reset) ? $reset['site_id'] : $siteId,
+                    $reset['user_id'],
+                    $reset['token'],
+                    $reset['expires_at'] ?? \gmdate('Y-m-d H:i:s', \time() + 3600),
+                ]
+            );
+        }
+
         if ($specification['user'] !== null) {
             $userId = self::insertUser($specification['user'], $siteId);
 
@@ -305,6 +389,15 @@ final class TestRequest
         $_FILES = $specification['files'];
         $_SERVER = \array_merge($_SERVER, $specification['server']);
 
+        if ($specification['capture_emails']) {
+            // Controllers exit() rather than return, so report captured mail from a shutdown
+            // handler, on stderr behind a marker send() strips back out.
+            Emailer::enableTestMode();
+            \register_shutdown_function(static function (): void {
+                \fwrite(\STDERR, self::EMAIL_MARKER . \json_encode(Emailer::getTestModeSentEmails()));
+            });
+        }
+
         if ($specification['csrf'] !== null) {
             // Seeded exactly the way Security::csrfToken() would have during a real form render, so
             // CsrfMiddleware performs its genuine hash_equals check rather than being bypassed.
@@ -316,6 +409,10 @@ final class TestRequest
 
         // Ordering is load-bearing: bootstrap() resolves the active tenant from HTTP_HOST, so every
         // superglobal has to be in place before it runs.
+        if ($specification['routes'] !== []) {
+            Router::register($specification['routes']);
+        }
+
         App::bootstrap();
         App::handleRequest(APPLICATION_ROOT . '/public');
     }
@@ -329,7 +426,7 @@ final class TestRequest
      * precisely the blind spot that made ApiController.php read as 3% covered when it was fully
      * exercised.
      *
-     * @return array{stdout: string, stderr: string, exit_code: int}
+     * @return array{stdout: string, stderr: string, exit_code: int, emails: array<int, array<string, string>>}
      * @throws \RuntimeException If the child process cannot be spawned.
      */
     public function send(): array
@@ -364,10 +461,19 @@ final class TestRequest
         $stderr = \stream_get_contents($pipes[2]);
         \fclose($pipes[2]);
 
+        $stderr = $stderr === false ? '' : $stderr;
+        $emails = [];
+        $markerAt = \strrpos($stderr, self::EMAIL_MARKER);
+        if ($markerAt !== false) {
+            $emails = \json_decode(\substr($stderr, $markerAt + \strlen(self::EMAIL_MARKER)), true) ?: [];
+            $stderr = \substr($stderr, 0, $markerAt);
+        }
+
         return [
             'stdout' => $stdout === false ? '' : $stdout,
-            'stderr' => $stderr === false ? '' : $stderr,
+            'stderr' => $stderr,
             'exit_code' => \proc_close($process),
+            'emails' => $emails,
         ];
     }
 
@@ -626,7 +732,7 @@ final class TestRequest
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
             [
                 $id,
-                $siteId,
+                \array_key_exists('site_id', $attributes) ? $attributes['site_id'] : $siteId,
                 $username,
                 $email,
                 \password_hash($attributes['password'] ?? 'Secret123', PASSWORD_BCRYPT),
@@ -644,7 +750,7 @@ final class TestRequest
      * Freeze the fluent state into the plain data structure handed to the child process, resolving
      * the tenant domain and the Host header the request will be resolved against.
      *
-     * @return array{method: string, uri: string, server: array<string, string>, query: array<string, mixed>, body: array<string, mixed>, site: array<string, mixed>|null, media: array<int, array<string, mixed>>, pages: array<int, array{attributes: array<string, mixed>, homepage: bool}>, user: array<string, mixed>|null, accounts: array<int, array<string, mixed>>, authenticate: bool, csrf: string|null}
+     * @return array{method: string, uri: string, server: array<string, string>, query: array<string, mixed>, body: array<string, mixed>, site: array<string, mixed>|null, media: array<int, array<string, mixed>>, pages: array<int, array{attributes: array<string, mixed>, homepage: bool}>, user: array<string, mixed>|null, accounts: array<int, array<string, mixed>>, authenticate: bool, csrf: string|null, capture_emails: bool, password_resets: array<int, array<string, mixed>>, routes: array<string, string>}
      */
     private function specification(): array
     {
@@ -684,6 +790,9 @@ final class TestRequest
             'accounts' => $this->accounts,
             'authenticate' => $this->authenticateUser,
             'csrf' => $this->csrf ? \bin2hex(\random_bytes(16)) : null,
+            'capture_emails' => $this->captureEmails,
+            'password_resets' => $this->passwordResets,
+            'routes' => $this->routes,
         ];
     }
 }

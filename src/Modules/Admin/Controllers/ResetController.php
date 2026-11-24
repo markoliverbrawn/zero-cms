@@ -54,7 +54,10 @@ class ResetController implements Controller
                 exit;
             }
 
-            $row = DB::query('SELECT * FROM password_resets WHERE token = ? LIMIT 1', [$token])->fetch();
+            // A token only redeems on the tenant that issued it.
+            $row = \is_string($token) && $token !== ''
+                ? DB::query('SELECT * FROM password_resets WHERE token = ? AND site_id = ? LIMIT 1', [$token, App::getCurrentSiteId()])->fetch()
+                : false;
             if (!$row || \strtotime($row['expires_at']) < \time()) {
                 // Log failed attempt to increment rate limit counter
                 Logger::log(null, 'password_reset_failed', 'user', null, [
