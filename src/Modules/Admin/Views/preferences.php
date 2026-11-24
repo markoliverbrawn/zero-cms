@@ -157,7 +157,7 @@ use Zero\Support\Str;
             
             // Security Module Widgets (Only if enabled!)
             if ($site && $site->isModuleEnabled('security')) {
-                $widgets['security_state'] = ['title' => 'Platform Security State', 'desc' => 'Shows the latest security score and parameters matrix'];
+                $widgets['security_state'] = ['title' => 'Health Check', 'desc' => 'Shows the latest deployment health check results'];
                 $widgets['security_logs'] = ['title' => 'Recent Security Events', 'desc' => 'Displays the latest administrative audit trail logs'];
             }
 

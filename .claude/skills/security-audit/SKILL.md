@@ -1,11 +1,11 @@
 ---
 name: security-audit
-description: Runs a security audit of Zero CMS — the core repo and, critically, any "Zero CMS sub-project" host checkout (e.g. zero-mobsites, zero-d6sites) that requires markoliverbrawn/zero-cms-core via Composer. Replicates the in-app Security module's static exploit scan (src/Modules/Security/Services/ExploitScanner.php) and OSV CVE comparative audit against Laravel/Symfony/WordPress (src/Modules/Security/Services/CveFetcherService.php), and extends both to sub-project-owned code the in-app tool can't reach. Use when asked to run/perform a security audit, check for CVEs, or review the codebase for vulnerabilities.
+description: Runs a security audit of Zero CMS — the core repo and, critically, any "Zero CMS sub-project" host checkout (e.g. zero-mobsites, zero-d6sites) that requires markoliverbrawn/zero-cms-core via Composer. Runs bin/security-scan over each layer, reads the code for what the scanner can't see, compares framework CVE mechanisms against Zero's code paths, and checks the deployed core version. Use when asked to run/perform a security audit, check for CVEs, or review the codebase for vulnerabilities.
 ---
 
 # Security Audit — Core & Sub-Projects
 
-Zero CMS already ships an in-app audit (`bin/security-audit` → `SecurityAuditController` → `ExploitScanner` + `CveFetcherService`, with results rendered by an AI prompt and archived to `security_audits`). This skill is how *you* perform the equivalent audit directly — by running that tooling where it applies, and by hand where it structurally can't reach, most importantly inside sub-projects.
+Code-level security is gated at merge time by `bin/security-scan` (CI, in core and in sub-project pipelines). The in-app Security module no longer audits code: it runs deployment health checks (`bin/health-check`, the Health Check admin page) for configuration — proxy secret, PHP patch level, served headers, default passwords, installer file, core version, failed sign-ins. This skill is the deeper, periodic review neither of those can do: it runs the scanner, then reads the code for what pattern rules miss.
 
 ## The blind spot: sub-projects
 
@@ -16,14 +16,14 @@ define('APPLICATION_ROOT', SUBPROJECT_ROOT . '/vendor/markoliverbrawn/zero-cms-c
 App::registerModulePath(APP_ROOT . '/src/Modules', 'App\\Modules\\');
 ```
 
-`ExploitScanner::SCAN_PATHS` is resolved relative to `APPLICATION_ROOT`. In a sub-project that constant points at the **vendored core copy**, not the sub-project's own code — so running `bin/security-audit` from inside a sub-project only ever rescans core. It never sees the sub-project's own `App\` code under `SUBPROJECT_ROOT/src/{Controllers,Models,Modules,Support,Views}`, which is the actively-edited, most-likely-to-be-vulnerable layer. This skill exists specifically to cover that gap — always audit it by hand per Step 2 below.
+The sub-project's own `App\` code under `SUBPROJECT_ROOT/src/` is the actively-edited, most-likely-to-be-vulnerable layer, and it can reintroduce bug classes core has fixed. Scan it from the sub-project root (`vendor/bin/security-scan src`), and read it by hand per Step 2.
 
 ## Step 1 — identify scope
 
-- **Core repo** (this repo, or any checkout of `markoliverbrawn/zero-cms-core` itself): audit the whole tree; `bin/security-audit` covers it natively if you can boot the app (DB configured). Otherwise replicate Step 2/3 by hand.
+- **Core repo** (this repo, or any checkout of `markoliverbrawn/zero-cms-core` itself): audit the whole tree with Steps 2 and 3.
 - **Sub-project**: audit two layers separately:
   1. `SUBPROJECT_ROOT/src/**` (the `App\` namespace) — always audit by hand with Step 2's checks; this is real, sub-project-authored code no existing tool covers.
-  2. `vendor/markoliverbrawn/zero-cms-core` — don't re-audit line by line. Instead check what commit/ref it's pinned to (`composer.lock`) and diff that against core's own `CHANGELOG.md`/`git log` for `fix(security)`-tagged entries landed since (e.g. commits like "Security remediations", "Implement security audit job, CVE fetcher, and exploit scanner"). Flag if the vendored copy is behind a known security fix.
+  2. `vendor/markoliverbrawn/zero-cms-core` — don't re-audit line by line. Instead check what commit/ref it's pinned to (`composer.lock`) and diff that against core's own `CHANGELOG.md`/`git log` for `fix(security)`-tagged entries landed since (e.g. `fix(security): ...` commits). Flag if the vendored copy is behind a known security fix.
 
 ## Step 2 — static exploit scan
 
@@ -41,32 +41,32 @@ Run `bin/security-scan`, the CI gate. It tokenises the code and has rules for th
 | `timing-compare` | secrets compared with `==`/`===` instead of `hash_equals()` |
 | `object-injection` | `unserialize()` without `allowed_classes` |
 
-- Core: `bin/security-scan --baseline=security-scan-baseline.json src`
-- Sub-project: `vendor/bin/security-scan src` (core ships it as a Composer bin). Adopt with `--write-baseline=security-scan-baseline.json` once, then run with `--baseline=...` in CI.
+- Core: `bin/security-scan src`
+- Sub-project: `vendor/bin/security-scan src` (core ships it as a Composer bin). A sub-project adopting the scan for the first time can park existing findings with `--write-baseline=security-scan-baseline.json` and run with `--baseline=...` until they're reviewed.
 
 Then go beyond it: the rules are heuristics. **Read the code** for what they can't see:
 - authorisation logic (who can grant what, e.g. role escalation)
 - sanitiser and parser correctness (try known bypass payloads)
 - business-logic flaws and protocol handling (SMTP, OAuth)
 
-Report any baselined findings that turn out to be real.
+Check the `security-scan-ignore` comments too: report any whose stated reason doesn't hold, and any baselined findings that turn out to be real.
 
 ## Step 3 — framework CVE comparative audit
 
-Compare against the same three reference packages `CveFetcherService` benchmarks against — `laravel/framework`, `symfony/security-core`, `wordpress/core` — extending the list only if the user names another framework. Fetch advisories the same way the app does, via OSV:
+Compare against three reference packages — `laravel/framework`, `symfony/security-core`, `wordpress/core` — extending the list only if the user names another framework. Fetch advisories via OSV:
 
 ```
 curl -s -X POST https://api.osv.dev/v1/query -H 'Content-Type: application/json' \
   -d '{"package":{"name":"laravel/framework","ecosystem":"Packagist"}}'
 ```
 
-`wordpress/core` isn't a real Packagist package, so OSV will likely return an empty `vulns` list for it (matches the app's own behavior) — fall back to `WebSearch` for recent WordPress CVEs instead of treating the empty result as "no known WordPress vulnerabilities."
+`wordpress/core` isn't a real Packagist package, so OSV will likely return an empty `vulns` list for it — fall back to `WebSearch` for recent WordPress CVEs instead of treating the empty result as "no known WordPress vulnerabilities."
 
 For each advisory returned, don't just assert immunity — trace the actual vulnerable *mechanism* (mass assignment, deserialization, auth bypass, path traversal, timing side-channel, dependency-chain compromise, …) to the concrete Zero/sub-project code path playing the analogous role, and check it directly. Known structural mitigations already established in this codebase (verify they still hold, don't cite from memory) — no `unserialize()` usage, `DB::query()` bound-parameter discipline, `hash_equals()` for token/signature comparisons, no vendor supply chain since core has zero runtime dependencies. A sub-project layer can reintroduce any of these even though core is hardened.
 
 ## Step 4 — report
 
-Mirror the sections `SecurityAuditController`'s prompt asks for, but write them directly yourself:
+Write the report with these sections:
 
 1. Executive Summary
 2. Discovered Vulnerabilities & Warnings — severity-classified, exact `file:line`, concrete remediation
@@ -74,8 +74,8 @@ Mirror the sections `SecurityAuditController`'s prompt asks for, but write them 
 4. Architecture Strengths
 5. Strategic Roadmap
 
-Don't fabricate the 0–100 `calculated_score` — that's a specific formula in `SecurityAuditController::calculateScore()` tied to live telemetry (install-file lock state, default admin password, storage-dir protection, finding count, …) that a manual code read can't reproduce. Only cite a real score if you actually ran `bin/security-audit` and it computed one; otherwise report severity qualitatively (Critical/High/Medium/Low/Info per finding).
+Don't give an overall numeric score. Report severity per finding (Critical/High/Medium/Low/Info). For configuration of a live deployment, point to that site's Health Check results rather than guessing.
 
 ## Notes
 
-- No automatic persistence: the in-app AJAX flow auto-archives to `security_audits`; a manual audit run through this skill does not persist anywhere unless the user explicitly asks for a file to be written.
+- No automatic persistence: an audit run through this skill is not saved anywhere unless the user asks for a file to be written.

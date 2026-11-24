@@ -6,8 +6,6 @@ name: Security Scan
 #
 # A finding is resolved by fixing the code, or -- when the code is safe -- by a comment on the line
 # (or the line above) that says why:  // security-scan-ignore: <rule> -- <reason>
-# security-scan-baseline.json records pre-existing findings still awaiting review; new code is
-# always checked, and the baseline should only shrink.
 
 on:
   pull_request:
@@ -31,4 +29,4 @@ jobs:
           coverage: none
 
       - name: Run bin/security-scan
-        run: bin/security-scan --baseline=security-scan-baseline.json src
+        run: bin/security-scan src

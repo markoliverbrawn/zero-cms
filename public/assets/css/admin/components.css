@@ -2192,208 +2192,64 @@ button:disabled,
     text-decoration: none;
 }
 
-/* Security Audit Dashboard & Report Layouts */
-.security-audit-container {
-    width: 100%;
-    max-width: none;
-    margin: 0;
-
-    .audit-metrics-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-        gap: 1.5rem;
-        margin-bottom: 2rem;
-    }
-
-    .audit-metric-card {
-        background-color: var(--card-bg);
-        border: 1px solid var(--border-color);
-        border-radius: var(--border-radius);
-        padding: 1.5rem;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-        transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
-
-        &.interactive-card {
-            cursor: pointer;
-
-            &:hover {
-                border-color: var(--accent-color, #2563eb);
-                transform: translateY(-2px);
-                box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
-            }
-        }
-
-        .metric-title {
-            font-size: 0.85rem;
-            color: var(--text-muted, #64748b);
-            text-transform: uppercase;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-        }
-
-        .metric-value {
-            font-size: 2rem;
-            font-weight: 800;
-            color: var(--text-color);
-
-            &.score-safe { color: #10b981; }
-            &.score-warn { color: #f59e0b; }
-            &.score-danger { color: #ef4444; }
-        }
-    }
-
-    .audit-run-box {
-        background-color: var(--card-bg);
-        border: 1px solid var(--border-color);
-        border-radius: var(--border-radius);
-        padding: 3rem 2rem;
-        text-align: center;
-        margin-bottom: 2rem;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-
-        p {
-            color: var(--text-muted, #64748b);
-            margin-bottom: 1.5rem;
-            font-size: 1rem;
-        }
-    }
-
-    .btn-run-audit {
-        background-color: #10b981;
-        border: 1px solid #10b981;
-        color: #ffffff;
-        font-weight: 700;
-        padding: 0.75rem 2rem;
-        font-size: 1.1rem;
-        border-radius: var(--border-radius);
-        cursor: pointer;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-        box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
-
-        &:hover {
-            background-color: #0d9668;
-            border-color: #0d9668;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
-        }
-
-        &:active {
-            transform: translateY(0);
-        }
-    }
-
-    .audit-loader {
-        display: none;
-        flex-direction: column;
+/* Deployment Health Check page */
+.health-check-page {
+    .health-check-header {
         align-items: center;
-        justify-content: center;
-        padding: 4rem 2rem;
-
-        .loader-spinner {
-            width: 50px;
-            height: 50px;
-            border: 4px solid var(--border-color);
-            border-top: 4px solid #10b981;
-            border-radius: 50%;
-            animation: auditSpinner 1s linear infinite;
-            margin-bottom: 1.5rem;
-        }
-
-        p {
-            font-weight: 600;
-            color: var(--text-color);
-            animation: auditPulse 1.5s ease-in-out infinite;
-        }
+        display: flex;
+        gap: 1rem;
+        justify-content: space-between;
     }
 
-    .audit-report-container {
-        display: none;
-        background-color: var(--card-bg);
-        border: 1px solid var(--border-color);
+    .health-check-legacy-report {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--border-color, #cbd5e1);
         border-radius: var(--border-radius);
-        padding: 2.5rem;
-        color: var(--text-color);
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-        font-family: var(--text-font, system-ui);
-        line-height: 1.6;
+        max-height: 30rem;
+        overflow: auto;
+        padding: 1rem;
+        white-space: pre-wrap;
+    }
 
-        h1 {
-            color: var(--accent-color, #2563eb);
-            border-bottom: 2px solid var(--border-color);
-            padding-bottom: 0.75rem;
-            margin-top: 0;
-            margin-bottom: 1.5rem;
-            font-size: 1.8rem;
-            font-weight: 800;
-        }
+    .health-check-run-title {
+        align-items: center;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+    }
 
-        h2 {
-            color: var(--accent-color, #10b981);
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 0.5rem;
-            margin-top: 2rem;
-            margin-bottom: 1rem;
-            font-size: 1.4rem;
-            font-weight: 700;
-        }
-
-        h3 {
-            color: var(--text-color);
-            margin-top: 1.5rem;
-            margin-bottom: 0.75rem;
-            font-size: 1.15rem;
-            font-weight: 700;
-        }
-
-        p {
-            margin-bottom: 1.25rem;
-        }
-
-        ul {
-            margin-bottom: 1.25rem;
-            padding-left: 1.5rem;
-
-            li {
-                margin-bottom: 0.5rem;
-            }
-        }
-
-        pre {
-            background-color: var(--hover-bg, #f1f5f9);
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            padding: 1rem;
-            overflow-x: auto;
-            margin-bottom: 1.5rem;
-
-            code {
-                font-family: monospace;
-                color: var(--text-color);
-                font-size: 0.9rem;
-            }
-        }
-
-        code {
-            background-color: var(--hover-bg, #f1f5f9);
-            border: 1px solid var(--border-color);
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-family: monospace;
-            color: var(--accent-color, #f59e0b);
-            font-size: 0.9rem;
-        }
+    .health-check-selected-row {
+        background: rgba(255, 255, 255, 0.04);
     }
 }
 
-@keyframes auditSpinner {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
+.health-check-status {
+    border-radius: 999px;
+    display: inline-block;
+    font-size: 0.8rem;
+    font-weight: 700;
+    padding: 0.15rem 0.6rem;
+    text-transform: uppercase;
 
-@keyframes auditPulse {
-    0% { opacity: 0.6; }
-    50% { opacity: 1; }
-    100% { opacity: 0.6; }
+    &.health-check-status-fail {
+        background: rgba(239, 68, 68, 0.15);
+        color: #ef4444;
+    }
+
+    &.health-check-status-legacy {
+        background: rgba(148, 163, 184, 0.15);
+        color: var(--text-muted, #64748b);
+    }
+
+    &.health-check-status-pass {
+        background: rgba(16, 185, 129, 0.15);
+        color: #10b981;
+    }
+
+    &.health-check-status-warn {
+        background: rgba(245, 158, 11, 0.15);
+        color: #f59e0b;
+    }
 }
 
 /* Modern Integrated Admin Confirmation Modal */
@@ -2585,14 +2441,14 @@ button:disabled,
             font-weight: 800;
             line-height: 1.1;
             
-            &.score-safe {
+            &.health-check-status-text-fail {
+                color: #ef4444;
+            }
+            &.health-check-status-text-pass {
                 color: #10b981;
             }
-            &.score-warn {
+            &.health-check-status-text-warn {
                 color: #f59e0b;
-            }
-            &.score-danger {
-                color: #ef4444;
             }
         }
         
@@ -2615,36 +2471,6 @@ button:disabled,
         }
     }
 
-    .security-widget-progress-container {
-        margin-bottom: 1.5rem;
-        border-bottom: 1px solid var(--border-color, #cbd5e1);
-        padding-bottom: 1.2rem;
-
-        .security-widget-progress-svg {
-            display: block;
-            width: 100%;
-            height: 8px;
-            
-            .progress-track {
-                fill: rgba(255, 255, 255, 0.05);
-            }
-            
-            .progress-fill {
-                transition: width 0.5s ease;
-                
-                &.fill-safe {
-                    fill: #10b981;
-                }
-                &.fill-warn {
-                    fill: #f59e0b;
-                }
-                &.fill-danger {
-                    fill: #ef4444;
-                }
-            }
-        }
-    }
-    
     .security-widget-details {
         margin-bottom: 1rem;
         

@@ -17,7 +17,8 @@ use Zero\Models\Traits\IsModel;
 /**
  * Class SecurityAudit
  *
- * Active Record model for a stored security audit run and its findings.
+ * Active Record model for one deployment health check run: its overall status and per-check
+ * results. Rows from the retired security audit are kept with status 'legacy' and their report.
  */
 class SecurityAudit implements ModelInterface
 {
@@ -25,14 +26,14 @@ class SecurityAudit implements ModelInterface
 
     protected static $tableName = 'security_audits';
     protected static $modelType = null;
-    protected static $fillable = ['user_id', 'score', 'environment', 'telemetry', 'report'];
+    protected static $fillable = ['user_id', 'status', 'environment', 'results', 'report'];
 
     public $id;
     public $site_id;
     public $user_id;
-    public $score;
+    public $status;
     public $environment;
-    public $telemetry;
+    public $results;
     public $report;
     public $created_at;
     public $updated_at;
@@ -50,14 +51,14 @@ class SecurityAudit implements ModelInterface
             'created_at' => ['type' => 'datetime', 'label' => 'Timestamp', 'editable' => false, 'listDisplay' => true],
             'user_id' => [
                 'type' => 'readonly',
-                'label' => 'Auditor',
+                'label' => 'Run by',
                 'editable' => false,
                 'listDisplay' => true
             ],
-            'score' => ['type' => 'number', 'label' => 'Audit Score', 'editable' => false, 'listDisplay' => true],
+            'status' => ['type' => 'text', 'label' => 'Status', 'editable' => false, 'listDisplay' => true],
             'environment' => ['type' => 'text', 'label' => 'Environment', 'editable' => false, 'listDisplay' => true],
-            'telemetry' => ['type' => 'textarea', 'label' => 'Telemetry details', 'editable' => false, 'listDisplay' => false],
-            'report' => ['type' => 'textarea', 'label' => 'Markdown report', 'editable' => false, 'listDisplay' => false]
+            'results' => ['type' => 'textarea', 'label' => 'Check results', 'editable' => false, 'listDisplay' => false],
+            'report' => ['type' => 'textarea', 'label' => 'Legacy audit report', 'editable' => false, 'listDisplay' => false]
         ];
     }
 

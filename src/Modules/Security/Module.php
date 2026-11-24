@@ -18,8 +18,9 @@ use Zero\Interfaces\Module as ModuleInterface;
 use Zero\Models\Site;
 use Zero\Modules\Queue\Support\Scheduler;
 use Zero\Modules\Security\Controllers\ChangePasswordController;
-use Zero\Modules\Security\Controllers\SecurityAuditController;
-use Zero\Modules\Security\Jobs\SecurityAuditJob;
+use Zero\Modules\Security\Controllers\HealthCheckController;
+use Zero\Modules\Security\HealthChecks\Checks\FailedLoginCheck;
+use Zero\Modules\Security\Jobs\HealthCheckJob;
 use Zero\Modules\Security\Models\AuditLog;
 use Zero\Modules\Security\Models\SecurityAudit;
 
@@ -79,7 +80,7 @@ class Module implements ModuleInterface
      */
     public function getDescription(): string
     {
-        return 'Hardening & AI threat auditing';
+        return 'Hardening, security logs and deployment health checks';
     }
 
     /**
@@ -135,8 +136,8 @@ class Module implements ModuleInterface
         ]);
 
         App::registerAdminSidebarLink('security', [
-            'title' => 'Security Audits',
-            'url' => '/admin/list/security_audits',
+            'title' => 'Health Check',
+            'url' => '/admin/security/audit',
             'icon' => 'clipboard',
             'permission' => 'security.audit',
             'precedence' => 30
@@ -146,44 +147,49 @@ class Module implements ModuleInterface
         Router::register([
             // security-scan-ignore: unauthenticated-route -- self-service: requires a session and changes only the signed-in user's own password
             '#^/admin/change-password$#' => ChangePasswordController::class,
-            '#^/admin/list/security_audits$#' => SecurityAuditController::class,
-            '#^/admin/security/audit$#' => SecurityAuditController::class,
+            '#^/admin/list/security_audits$#' => HealthCheckController::class,
+            '#^/admin/security/audit$#' => HealthCheckController::class,
         ], null, 'admin');
 
-        // Per-site audit schedule and report recipient. The audit inspects the shared codebase and
-        // server rather than anything tenant-specific, so a multi-site install will usually leave
-        // it on for one site and switch the rest off. SECURITY_AUDIT_SCHEDULE / ADMIN_EMAIL remain
-        // the defaults for sites that have never saved these settings.
+        // Per-site health check schedule, report recipient and failed sign-in threshold. Most
+        // checks inspect the shared installation, so a multi-site install can leave the schedule on
+        // for one site and switch the rest off. The setting keys keep their audit-era names so
+        // saved values carry over; SECURITY_AUDIT_SCHEDULE / ADMIN_EMAIL remain the defaults.
         App::registerModuleSettings('security', [
             'audit_schedule' => [
                 'type' => 'select',
-                'label' => 'Automated Audit Schedule',
+                'label' => 'Health Check Schedule',
                 'options' => [
                     Scheduler::OFF => 'Off',
                     'daily' => 'Daily',
                     'weekly' => 'Weekly',
                 ],
                 'default' => Env::get('SECURITY_AUDIT_SCHEDULE', 'daily'),
-                'helper_text' => 'How often the security audit runs for this site and emails its report. The audit checks the whole installation, so on a multi-site install it only needs to run on one site.'
+                'helper_text' => 'How often the deployment health checks run for this site. An email is sent only when a check fails or a result changes.'
             ],
             'report_email' => [
                 'type' => 'email',
-                'label' => 'Audit Report Recipient',
+                'label' => 'Health Check Email Recipient',
                 'default' => '',
-                'helper_text' => 'Where audit reports are emailed. Leave blank to use the installation\'s ADMIN_EMAIL.'
+                'helper_text' => 'Where health check emails are sent. Leave blank to use the installation\'s ADMIN_EMAIL.'
+            ],
+            'failed_login_threshold' => [
+                'type' => 'number',
+                'label' => 'Failed Sign-in Threshold',
+                'default' => FailedLoginCheck::DEFAULT_THRESHOLD,
+                'helper_text' => 'The health check warns when failed sign-in attempts in the last 24 hours exceed this number.'
             ]
         ]);
 
-        // Register dynamic automated security audit job if backend Scheduler is present
+        // Schedule the health checks when the Queue module's Scheduler is present
         if (\class_exists(Scheduler::class)) {
             Scheduler::register(
-                SecurityAuditJob::class,
+                HealthCheckJob::class,
                 [],
                 static function (Site $site): string {
                     $schedule = (string)$site->getModuleSetting('security', 'audit_schedule', Env::get('SECURITY_AUDIT_SCHEDULE', 'daily'));
 
-                    // Hourly is no longer offered: each run is a paid AI request and the audit
-                    // rarely changes hour to hour. Sites (or env defaults) still set to it run daily.
+                    // 'hourly' is no longer offered; sites (or env defaults) still set to it run daily.
                     return $schedule === 'hourly' ? 'daily' : $schedule;
                 }
             );
