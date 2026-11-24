@@ -379,6 +379,29 @@ class Security {
     }
 
     /**
+     * A redirect target that stays on this site: the target itself when it is a plain local path,
+     * otherwise $fallback. Rejects scheme-relative URLs ("//evil.example"), backslashes (browsers
+     * read "/\evil.example" as "//evil.example"), absolute URLs and control characters, so a
+     * stored post-login destination can never send the user to another host.
+     *
+     * @param mixed $target Candidate path, e.g. a stored redirect_to value.
+     * @param string $fallback Local path to use instead.
+     * @return string
+     */
+    public static function localRedirectTarget($target, string $fallback): string
+    {
+        if (!\is_string($target) || $target === '' || $target[0] !== '/'
+            || \strlen($target) > 2048
+            || \str_starts_with($target, '//')
+            || \str_contains($target, '\\')
+            || \preg_match('/[\x00-\x1F\x7F]/', $target) === 1) {
+            return $fallback;
+        }
+
+        return $target;
+    }
+
+    /**
      * Whether a URL attribute value is safe: relative, or using an allowed scheme. ASCII control
      * characters and whitespace are ignored when finding the scheme, as browsers ignore them too
      * (so "java\tscript:" is still treated as javascript:).

@@ -62,7 +62,7 @@ class LoginController implements Controller
             // Enforce centralized rate limiting and progressive lockout protection via Middleware
             AuthThrottlingMiddleware::handle('login', 'admin/login', [], function() {});
 
-            $row = DB::query('SELECT * FROM users WHERE username = ? LIMIT 1', [$user])->fetch();
+            $row = DB::query('SELECT * FROM users WHERE username = ? AND deleted_at IS NULL LIMIT 1', [$user])->fetch();
             
             $failReason = 'unknown';
             if (!$row) {
@@ -95,7 +95,7 @@ class LoginController implements Controller
                 ]);
                 
                 // Forward to original requested page if present, otherwise fallback to dashboard
-                $redirectTo = $_SESSION['redirect_to'] ?? '/admin/dashboard';
+                $redirectTo = Security::localRedirectTarget($_SESSION['redirect_to'] ?? null, '/admin/dashboard');
                 unset($_SESSION['redirect_to']); // Clean up session!
                 \header('Location: ' . $redirectTo);
                 exit;

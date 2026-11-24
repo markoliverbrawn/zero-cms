@@ -46,7 +46,7 @@ class FrontendLoginController implements Controller
             // Enforce centralized rate limiting and progressive lockout protection via Middleware
             AuthThrottlingMiddleware::handle('login', 'login', [], function() {});
 
-            $row = DB::query('SELECT * FROM users WHERE username = ? LIMIT 1', [$user])->fetch();
+            $row = DB::query('SELECT * FROM users WHERE username = ? AND deleted_at IS NULL LIMIT 1', [$user])->fetch();
             if ($row && Security::verifyPassword($pass, $row['password_hash'] ?? null)) {
                 // Multi-Tenant User Separation Constraint:
                 // Frontend users must belong to the active site/domain, unless they are super_admin!
@@ -59,7 +59,7 @@ class FrontendLoginController implements Controller
                     Logger::log($row['id'], 'frontend_login_success', 'user', $row['id'], ['username' => $user, 'ip_address' => Security::getClientIp()]);
                     
                     // Forward to original requested page if present, otherwise fallback to home
-                    $redirectTo = $_SESSION['redirect_to'] ?? '/';
+                    $redirectTo = Security::localRedirectTarget($_SESSION['redirect_to'] ?? null, '/');
                     unset($_SESSION['redirect_to']); // Clean up session!
                     \header('Location: ' . $redirectTo);
                     exit;

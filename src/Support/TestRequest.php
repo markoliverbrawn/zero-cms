@@ -218,7 +218,7 @@ final class TestRequest
      * testing sign-in itself, for example, where an authenticated session makes LoginController
      * redirect to the dashboard before it ever evaluates the submitted credentials.
      *
-     * Recognised attributes: username, email, password, role, api_token. Anything omitted is
+     * Recognised attributes: username, email, password, role, api_token, deleted_at. Anything omitted is
      * defaulted; role defaults to 'super_admin' so a test opts in to weaker roles deliberately
      * rather than tripping over an authorisation failure it did not mean to exercise.
      *
@@ -762,8 +762,8 @@ final class TestRequest
         DB::query('DELETE FROM users WHERE username = ? OR email = ? OR id = ?', [$username, $email, $id]);
 
         DB::query(
-            'INSERT INTO users (id, site_id, username, email, password_hash, role, api_token, created_at, updated_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            'INSERT INTO users (id, site_id, username, email, password_hash, role, api_token, created_at, updated_at, deleted_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
             [
                 $id,
                 \array_key_exists('site_id', $attributes) ? $attributes['site_id'] : $siteId,
@@ -774,6 +774,7 @@ final class TestRequest
                 $attributes['api_token'] ?? null,
                 $now,
                 $now,
+                $attributes['deleted_at'] ?? null,
             ]
         );
 

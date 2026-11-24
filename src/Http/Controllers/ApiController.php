@@ -66,7 +66,7 @@ abstract class ApiController
 
         // 4. Query user from database securely using hashed representation
         $hashedToken = \hash('sha256', $token);
-        $row = DB::query("SELECT * FROM users WHERE api_token = ? LIMIT 1", [$hashedToken])->fetch();
+        $row = DB::query("SELECT * FROM users WHERE api_token = ? AND deleted_at IS NULL LIMIT 1", [$hashedToken])->fetch();
         if (!$row) {
             $this->respond([
                 'success' => false,
