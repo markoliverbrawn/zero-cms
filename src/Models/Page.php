@@ -15,6 +15,7 @@ namespace Zero\Models;
 
 use Zero\Core\App;
 use Zero\Database\DB;
+use Zero\Interfaces\Controller;
 use Zero\Interfaces\Model;
 use Zero\Models\Traits\HasSlug;
 use Zero\Models\Traits\IsModel;
@@ -251,6 +252,76 @@ class Page implements Model
     }
 
     /**
+     * RBAC permission required to set or change a page's custom controller class. Only
+     * super_admin holds it (via '*'): the value names a PHP class the router instantiates on a
+     * public URL, so content editors must not be able to choose it.
+     */
+    public const CONTROLLER_PERMISSION = 'pages.assign_controller';
+
+    /**
+     * Whether a class name may be dispatched as a page controller: it must exist and implement
+     * the Controller contract.
+     *
+     * @param string $class Fully qualified class name.
+     * @return bool
+     */
+    public static function isDispatchableController(string $class): bool
+    {
+        return \class_exists($class) && \is_subclass_of($class, Controller::class);
+    }
+
+    /**
+     * Whether a custom view name is a safe theme-relative template name: letters, digits, '_',
+     * '-' and '/'-separated segments, with no '.' so it can never climb out of the theme folder.
+     *
+     * @param string $view View name as stored on the page.
+     * @return bool
+     */
+    public static function isSafeViewName(string $view): bool
+    {
+        return (bool) \preg_match('#^[A-Za-z0-9_-]+(/[A-Za-z0-9_-]+)*$#', $view);
+    }
+
+    /**
+     * Validate the controller and view fields before a write. A changed, non-empty controller must
+     * be dispatchable and requires CONTROLLER_PERMISSION on any HTTP request (seeders and CLI are
+     * not gated); a non-empty view must be a safe theme-relative name.
+     *
+     * @return void
+     * @throws \InvalidArgumentException When either value is not acceptable.
+     */
+    private function guardControllerAndView(): void
+    {
+        $view = (string) ($this->view ?? '');
+        if ($view !== '' && !self::isSafeViewName($view)) {
+            throw new \InvalidArgumentException('Invalid custom view name.');
+        }
+
+        $controller = \trim((string) ($this->controller ?? ''));
+        $this->controller = $controller === '' ? null : $controller;
+
+        $storedController = null;
+        if (!empty($this->id)) {
+            $row = DB::query('SELECT controller FROM pages WHERE id = ? LIMIT 1', [$this->id])->fetch();
+            $storedController = ($row['controller'] ?? '') === '' ? null : $row['controller'];
+        }
+
+        if ($this->controller === $storedController || $this->controller === null) {
+            return;
+        }
+
+        if (!self::isDispatchableController($this->controller)) {
+            throw new \InvalidArgumentException('Controller class must exist and implement ' . Controller::class . '.');
+        }
+
+        // Gate every HTTP request, signed-in or token-authenticated alike; only non-HTTP contexts
+        // (bin/seed, migrations) may set controllers freely.
+        if (isset($_SERVER['REQUEST_METHOD'])) {
+            App::requirePermission(self::CONTROLLER_PERMISSION);
+        }
+    }
+
+    /**
      * Custom save implementation override.
      * 1. Combines virtual parent_path and slug_part compound fields into the unified, slash-sanitized URL slug.
      * 2. Automatically enforces tenant-scoped unique slugs, appending sequential suffixes (e.g. -2, -3) inside the terminal path segment.
@@ -262,6 +333,8 @@ class Page implements Model
     {
         $tableName = static::$tableName;
         $siteId = App::getCurrentSiteId();
+
+        $this->guardControllerAndView();
 
         // 1. Synchronize: If 'slug' has been manually updated from the outside, re-parse it first
         if ($tableName === 'pages' && !empty($this->slug)) {

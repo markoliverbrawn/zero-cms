@@ -311,6 +311,8 @@ class ModelApiController extends AdminApiControllerBase
 
             try {
                 $record->save();
+            } catch (\InvalidArgumentException $e) {
+                $this->respond(['success' => false, 'error' => $e->getMessage()], 422);
             } catch (\PDOException $e) {
                 $this->respondToSaveConflict($e, $model);
             }
@@ -329,6 +331,8 @@ class ModelApiController extends AdminApiControllerBase
 
             try {
                 $newId = $record->save();
+            } catch (\InvalidArgumentException $e) {
+                $this->respond(['success' => false, 'error' => $e->getMessage()], 422);
             } catch (\PDOException $e) {
                 $this->respondToSaveConflict($e, $model);
             }

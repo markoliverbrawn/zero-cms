@@ -17,6 +17,7 @@ use Zero\Database\DB;
 use Zero\Http\Controllers\CssBundleController;
 use Zero\Http\Controllers\MediaVariantController;
 use Zero\Http\Router;
+use Zero\Models\Page;
 
 /**
  * Trait HandlesRequests
@@ -69,7 +70,7 @@ trait HandlesRequests
                         exit;
                     }
 
-                    if (\class_exists($controllerClass)) {
+                    if (Page::isDispatchableController($controllerClass)) {
                         $controller = new $controllerClass();
                         $controller->handle($pageRecord);
                         exit;
@@ -77,7 +78,7 @@ trait HandlesRequests
                 }
 
                 // Otherwise, render the page's custom view or the fallback 'post' template
-                $viewTemplate = !empty($pageRecord->view) ? $pageRecord->view : 'post';
+                $viewTemplate = (!empty($pageRecord->view) && Page::isSafeViewName($pageRecord->view)) ? $pageRecord->view : 'post';
                 self::render($viewTemplate, ['post' => $pageRecord]);
                 exit;
             }
