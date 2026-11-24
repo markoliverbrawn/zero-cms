@@ -15,6 +15,7 @@ use Zero\Core\App;
 use Zero\Database\DB;
 use Zero\Interfaces\Controller;
 use Zero\Support\Logger;
+use Zero\Support\Security;
 
 /**
  * Class ChangePasswordController
@@ -47,23 +48,30 @@ class ChangePasswordController implements Controller
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             App::applyCsrfMiddleware();
 
-            $password = $_POST['password'] ?? '';
-            $confirm = $_POST['confirm_password'] ?? '';
+            $current = (string) ($_POST['current_password'] ?? '');
+            $password = (string) ($_POST['password'] ?? '');
+            $confirm = (string) ($_POST['confirm_password'] ?? '');
+            $policyError = Security::passwordPolicyError($password);
 
-            // Strict Strength Validation Rules
-            if (empty($password)) {
-                $error = 'Password cannot be empty.';
-            } elseif (\strlen($password) < 8) {
-                $error = 'For enhanced security, password must be at least 8 characters long.';
+            // The current password is required even on a forced change: a session alone (stolen,
+            // or left open) must not be enough to take the account over.
+            if (!Security::verifyPassword($current, $user->password_hash ?? null)) {
+                $error = 'Your current password is incorrect.';
+                Logger::log($userId, 'password_change_failed', 'user', $userId, [
+                    'username' => $user->username,
+                    'ip_address' => Security::getClientIp()
+                ]);
             } elseif ($password !== $confirm) {
                 $error = 'Passwords do not match. Please re-type and try again.';
-            } elseif (\strtolower($password) === 'change_me') {
-                $error = 'Please select a unique, strong password. "change_me" is blocked.';
+            } elseif ($policyError !== null) {
+                $error = $policyError;
             } else {
                 // Securely Hash and Update Password
                 $newHash = \password_hash($password, PASSWORD_DEFAULT);
                 
-                DB::query("UPDATE users SET password_hash = ? WHERE id = ?", [$newHash, $userId]);
+                // password_changed_at signs out the account's other sessions (see
+                // bootstrapFetchSiteAndUser()); this one is signed out just below.
+                DB::query("UPDATE users SET password_hash = ?, password_changed_at = ? WHERE id = ?", [$newHash, \gmdate('Y-m-d H:i:s'), $userId]);
                 
                 // Log security audit trail
                 Logger::log($userId, 'force_change_password', 'user', $userId, [

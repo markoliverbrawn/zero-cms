@@ -49,7 +49,7 @@ class FrontendResetController implements Controller
             "SELECT r.* FROM password_resets r JOIN users u ON u.id = r.user_id
              WHERE r.token = ? AND r.site_id = ? AND u.site_id = r.site_id AND u.deleted_at IS NULL
                AND u.role NOT IN ('super_admin', 'admin', 'editor') LIMIT 1",
-            [$token, App::getCurrentSiteId()]
+            [\hash('sha256', $token), App::getCurrentSiteId()]
         )->fetch();
         
         if (!$reset || \strtotime($reset['expires_at']) < \time()) {
@@ -79,9 +79,11 @@ class FrontendResetController implements Controller
                 if ($user) {
                     $user->password_hash = \password_hash($password, PASSWORD_DEFAULT);
                     $user->save();
-                    
-                    // Clear the used reset token from database
-                    DB::query("DELETE FROM password_resets WHERE token = ?", [$token]);
+                    // Ends the member's other sessions (see bootstrapFetchSiteAndUser()).
+                    DB::query("UPDATE users SET password_changed_at = ? WHERE id = ?", [\gmdate('Y-m-d H:i:s'), $userId]);
+
+                    // Clear every pending reset token for this member, not just the one used
+                    DB::query("DELETE FROM password_resets WHERE user_id = ?", [$userId]);
                     
                     Logger::log($userId, 'frontend_password_reset_success', 'user', $userId, ['ip_address' => Security::getClientIp()]);
                     

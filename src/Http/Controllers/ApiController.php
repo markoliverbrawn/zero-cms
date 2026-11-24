@@ -46,10 +46,8 @@ abstract class ApiController
             $token = $headers['X-API-Key'] ?? $headers['x-api-key'] ?? $_SERVER['HTTP_X_API_KEY'] ?? '';
         }
 
-        // 3. Fallback to query string parameter (for easy testing/lookups!)
-        if (empty($token)) {
-            $token = $_GET['api_key'] ?? '';
-        }
+        // Keys are accepted from headers only. A key in the query string ends up in access logs,
+        // proxy logs and Referer headers.
 
         if (empty($token)) {
             $this->respond([
@@ -58,11 +56,10 @@ abstract class ApiController
             ], 401);
         }
 
-        // 3.5 Apply API Throttling via Centralized Middleware Engine to prevent brute-forcing and API abuse
-        $ip = Security::getClientIp();
-        $rateLimitKey = 'api_' . \md5($ip . '_' . $token);
-        
-        App::applyRateLimitMiddleware($rateLimitKey, 1); // Limit to max 1 request per second
+        // Throttle per client IP (Security::rateLimit buckets by IP and site). Keying on the
+        // submitted token as well gave every guessed token a fresh bucket, so guessing was never
+        // throttled.
+        App::applyRateLimitMiddleware('api', 1); // at most 1 request per second per IP
 
         // 4. Query user from database securely using hashed representation
         $hashedToken = \hash('sha256', $token);
@@ -76,7 +73,9 @@ abstract class ApiController
 
         // 5. Verify tenant-level scoping boundaries
         $siteId = App::getCurrentSiteId();
-        if ($row['role'] !== 'super_admin' && !empty($row['site_id']) && $row['site_id'] !== $siteId) {
+        // Same rule as a session (BootstrapsApp): only super_admin may act across sites; a global
+        // (site_id NULL) key belonging to any other role is not valid on any site.
+        if (!($row['role'] === 'super_admin' || ($row['site_id'] !== null && $row['site_id'] === $siteId))) {
             $this->respond([
                 'success' => false,
                 'error' => 'Forbidden: API Key does not match active site tenant'

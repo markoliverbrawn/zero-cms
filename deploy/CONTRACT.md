@@ -97,7 +97,7 @@ on itself.
 | `TRUSTED_PROXY_SECRET`    | SHOULD   | See §4.1. When unset, `X-Forwarded-Host` is trusted from anyone (`Security::resolveTrustedHost()`) |
 | `BENCHMARKING`            | MAY      | `true` turns on render timing; set it to `false` in production |
 | `ADMIN_EMAIL`             | SHOULD   | Recipient for security audit reports; also applied to the admin account at seed time |
-| `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM_EMAIL`, `SMTP_FROM_NAME` | SHOULD | Without these, no mail is sent (password resets, audit reports) |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM_EMAIL`, `SMTP_FROM_NAME` | SHOULD | Without these, no mail is sent (password resets, health check reports). `SMTP_SECURE` is `tls` (STARTTLS) or `ssl` (implicit TLS, port 465); with `SMTP_USER` set, credentials are never sent to a remote server without TLS |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI` | MAY | Google SSO |
 | `AI_PROVIDER`, `GEMINI_API_KEY`, `GEMINI_MODEL`, `GEMINI_IMAGE_MODEL` | MAY | AI features. `AI_PROVIDER` defaults to `gemini`; models default to `gemini-3.8-flash` / `gemini-3.1-flash-image` |
 | `SEARCH_DRIVER`           | MAY      | Default `database`                                           |
@@ -115,8 +115,8 @@ There is no long-running worker. The scheduler calls into the web workload over 
 
 | Trigger   | Request                                          | Auth                                                                 | Cadence     |
 |-----------|--------------------------------------------------|----------------------------------------------------------------------|-------------|
-| Queue     | `POST /api/v1/queue/process`                     | `?token=` or `X-Queue-Token` header matching `QUEUE_TRIGGER_TOKEN`         | every 5 min |
-| Scheduler | `POST /api/v1/queue/schedule`                    | `?token=` or `X-Scheduler-Token` header matching `SCHEDULER_TRIGGER_TOKEN` | every 5 min |
+| Queue     | `POST /api/v1/queue/process`                     | `X-Queue-Token` header matching `QUEUE_TRIGGER_TOKEN` (`?token=` deprecated) | every 5 min |
+| Scheduler | `POST /api/v1/queue/schedule`                    | `X-Scheduler-Token` header matching `SCHEDULER_TRIGGER_TOKEN` (`?token=` deprecated) | every 5 min |
 
 Sources: `src/Modules/Queue/Controllers/QueueApiController.php` and `SchedulerApiController.php`.
 Both return `405` for anything other than `POST`, `403` for a bad token, `500` if the token isn't

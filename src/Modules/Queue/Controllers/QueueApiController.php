@@ -43,7 +43,14 @@ class QueueApiController implements Controller
 
         // 2. Token-Gate Authorization to prevent anonymous DoS/attacks
         $envToken = Env::get('QUEUE_TRIGGER_TOKEN');
-        $requestToken = $_GET['token'] ?? $_SERVER['HTTP_X_QUEUE_TOKEN'] ?? null;
+        // The header is the supported form. ?token= is still accepted for one release so
+        // already-provisioned Cloud Scheduler jobs keep working until scheduler.sh is re-run;
+        // it leaks the token into request logs, so it is logged as deprecated.
+        $requestToken = $_SERVER['HTTP_X_QUEUE_TOKEN'] ?? null;
+        if ($requestToken === null && isset($_GET['token'])) {
+            \error_log('Deprecated: trigger token sent as ?token=; re-run deploy/gcp/scheduler.sh to send it as a header.');
+            $requestToken = $_GET['token'];
+        }
 
         if (empty($envToken)) {
             \http_response_code(500);

@@ -68,7 +68,7 @@ class FrontendForgotController implements Controller
                     $resetId,
                     $siteId,
                     $user['id'],
-                    $token,
+                    \hash('sha256', $token), // only the hash is stored; the raw token is only in the emailed link
                     $expires
                 ]);
                 

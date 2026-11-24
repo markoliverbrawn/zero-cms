@@ -88,6 +88,9 @@ trait ManagesCurrentContext
         }
         $_SESSION['is_admin'] = true;
         $_SESSION['user_id'] = $userId;
+        // When this session signed in: a password changed after this moment invalidates it
+        // (see bootstrapFetchSiteAndUser()).
+        $_SESSION['_auth_at'] = \time();
         
         // Re-bootstrap App instantly on login to ensure newly authenticated user maps to static fields
         self::bootstrap();

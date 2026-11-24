@@ -55,7 +55,7 @@ if ($googleEnabled) {
         'redirect_uri'  => $googleRedirectUri,
         'response_type' => 'code',
         'scope'         => 'openid email profile',
-        'state'         => Security::csrfToken()
+        'state'         => Security::oauthState()
     ]);
 }
 ?>
