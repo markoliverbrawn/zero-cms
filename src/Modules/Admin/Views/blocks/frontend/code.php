@@ -18,5 +18,5 @@ $highlightedCode = Str::highlightCode($code, $language);
             <span class="block-code-lang-label"><?php echo Str::escape($language); ?></span>
         </div>
     <?php endif; ?>
-    <pre class="block-code-pre"><code class="language-<?php echo Str::escape($language); ?>"><?php echo $highlightedCode; ?></code></pre>
+    <pre class="block-code-pre"><code class="language-<?php echo Str::escape($language); ?>"><?php echo $highlightedCode; ?></code></pre><?php // security-scan-ignore: unescaped-output -- Str::highlightCode() escapes the code with htmlspecialchars() before highlighting ?>
 </div>

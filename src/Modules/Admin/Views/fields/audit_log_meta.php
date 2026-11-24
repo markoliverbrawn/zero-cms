@@ -42,6 +42,6 @@ if (empty($pills)): ?>
     <span class="text-muted-italic">No metadata details</span>
 <?php else: ?>
     <div class="audit-log-meta-pills">
-        <?php echo implode(' ', $pills); ?>
+        <?php echo implode(' ', $pills); ?><?php // security-scan-ignore: unescaped-output -- each pill escapes its values where built above ?>
     </div>
 <?php endif; ?>

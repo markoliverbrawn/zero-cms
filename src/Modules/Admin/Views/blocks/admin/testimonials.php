@@ -1,4 +1,5 @@
 <?php
+use Zero\Support\Security;
 use Zero\Support\Str;
 // src/Modules/Admin/Views/blocks/admin/testimonials.php
 $items = $block['items'] ?? [];
@@ -13,7 +14,7 @@ $duration = $block['duration'] ?? 5000;
             <button type="button" data-cmd="insertSmall">Small</button>
             <button type="button" data-cmd="removeFormat">Clear</button>
         </div>
-        <div class="editor-area block-editor-area block-title-rich-editor block-title-input" contenteditable="true"><?php echo $blockTitle; ?></div>
+        <div class="editor-area block-editor-area block-title-rich-editor block-title-input" contenteditable="true"><?php echo $blockTitle; ?></div><?php // security-scan-ignore: unescaped-output -- block_builder.php passes $blockTitle through Security::sanitizeTitleHtml() ?>
     </div>
 </div>
 <div class="field-group">
@@ -43,7 +44,7 @@ $duration = $block['duration'] ?? 5000;
                                 <button type="button" data-cmd="createLink">A</button>
                                 <button type="button" data-cmd="removeFormat">Clear</button>
                             </div>
-                            <div class="editor-area block-editor-area testimonial-item-content-input" contenteditable="true" style="min-height: 100px;"><?php echo $itemContent; ?></div>
+                            <div class="editor-area block-editor-area testimonial-item-content-input" contenteditable="true" style="min-height: 100px;"><?php echo Security::sanitizeHtml((string) $itemContent, false); ?></div>
                         </div>
                     </div>
                     <div class="field-group block-child-field-group-0">

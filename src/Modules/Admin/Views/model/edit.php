@@ -182,7 +182,7 @@ $renderField = function ($field, $fieldConfig) use ($record, $modelName, $csrf, 
     ?>
     <h2>View Security Log Entry</h2>
     
-    <div class="audit-log-detail-container <?php echo $severityClass; ?>">
+    <div class="audit-log-detail-container <?php echo Str::escape($severityClass); ?>">
       <div class="audit-log-header">
         <div class="audit-log-title-wrapper">
           <span class="icon-svg"><?php echo App::svg('shield'); ?></span>
@@ -261,21 +261,21 @@ $renderField = function ($field, $fieldConfig) use ($record, $modelName, $csrf, 
           <?php if ($hasSidebar): ?>
               <div class="form-main-column">
                   <?php foreach ($generalMainFields as $field => $fieldConfig): ?>
-                      <div class="form-field-wrapper <?php echo 'field-width-' . ($fieldConfig['width'] ?? 'full'); ?>">
+                      <div class="form-field-wrapper <?php echo 'field-width-' . Str::escape($fieldConfig['width'] ?? 'full'); ?>">
                           <?php $renderField($field, $fieldConfig); ?>
                       </div>
                   <?php endforeach; ?>
               </div>
               <div class="form-sidebar-column">
                   <?php foreach ($generalSideFields as $field => $fieldConfig): ?>
-                      <div class="form-field-wrapper <?php echo 'field-width-' . ($fieldConfig['width'] ?? 'full'); ?>">
+                      <div class="form-field-wrapper <?php echo 'field-width-' . Str::escape($fieldConfig['width'] ?? 'full'); ?>">
                           <?php $renderField($field, $fieldConfig); ?>
                       </div>
                   <?php endforeach; ?>
               </div>
           <?php else: ?>
               <?php foreach ($generalMainFields as $field => $fieldConfig): ?>
-                  <div class="form-field-wrapper <?php echo 'field-width-' . ($fieldConfig['width'] ?? 'full'); ?>">
+                  <div class="form-field-wrapper <?php echo 'field-width-' . Str::escape($fieldConfig['width'] ?? 'full'); ?>">
                       <?php $renderField($field, $fieldConfig); ?>
                   </div>
               <?php endforeach; ?>
@@ -286,7 +286,7 @@ $renderField = function ($field, $fieldConfig) use ($record, $modelName, $csrf, 
       <?php if ($hasAdvanced): ?>
           <div id="tab-content-advanced" class="form-tab-content">
               <?php foreach ($advancedFields as $field => $fieldConfig): ?>
-                  <div class="form-field-wrapper <?php echo 'field-width-' . ($fieldConfig['width'] ?? 'full'); ?>">
+                  <div class="form-field-wrapper <?php echo 'field-width-' . Str::escape($fieldConfig['width'] ?? 'full'); ?>">
                       <?php $renderField($field, $fieldConfig); ?>
                   </div>
               <?php endforeach; ?>

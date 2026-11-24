@@ -72,11 +72,11 @@ $getModuleMeta = function (string $module) use ($moduleObjects): array {
             ?>
             <span class="module-pill module-<?php echo Str::escape($moduleLower); ?>" 
                   style="--module-accent: <?php echo Str::escape($meta['accent']); ?>;" 
-                  title="<?php echo $meta['label']; ?>">
+                  title="<?php echo Str::escape($meta['label']); ?>">
                 <span class="icon-svg">
                     <?php echo App::svg($meta['icon']); ?>
                 </span>
-                <span class="module-label"><?php echo $meta['label']; ?></span>
+                <span class="module-label"><?php echo Str::escape($meta['label']); ?></span>
             </span>
         <?php endforeach; ?>
 
@@ -88,17 +88,17 @@ $getModuleMeta = function (string $module) use ($moduleObjects): array {
             <span class="module-pill module-<?php echo Str::escape($moduleLower); ?> is-hidden" 
                   style="--module-accent: <?php echo Str::escape($meta['accent']); ?>;" 
                   data-hidden="true" 
-                  title="<?php echo $meta['label']; ?>">
+                  title="<?php echo Str::escape($meta['label']); ?>">
                 <span class="icon-svg">
                     <?php echo App::svg($meta['icon']); ?>
                 </span>
-                <span class="module-label"><?php echo $meta['label']; ?></span>
+                <span class="module-label"><?php echo Str::escape($meta['label']); ?></span>
             </span>
         <?php endforeach; ?>
 
         <?php if ($remainingCount > 0): ?>
-            <span class="module-pill module-more" data-count="<?php echo $remainingCount; ?>" title="Click to view all <?php echo $totalActive; ?> modules">
-                <span class="module-label">+<?php echo $remainingCount; ?> more</span>
+            <span class="module-pill module-more" data-count="<?php echo (int) $remainingCount; ?>" title="Click to view all <?php echo (int) $totalActive; ?> modules">
+                <span class="module-label">+<?php echo (int) $remainingCount; ?> more</span>
             </span>
         <?php endif; ?>
     <?php endif; ?>

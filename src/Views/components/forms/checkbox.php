@@ -10,7 +10,7 @@ use Zero\Support\Str;
         value="1"
         <?= $checked ? 'checked' : '' ?>
         <?= $disabled ? 'disabled' : '' ?>
-        <?= $attributesHtml ?>
+        <?= $attributesHtml ?><?php // security-scan-ignore: unescaped-output -- renderAttributes() escapes every attribute name and value ?>
     />
     <?= Str::escape($label) ?>
 </label>

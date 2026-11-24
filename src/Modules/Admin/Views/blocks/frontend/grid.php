@@ -54,7 +54,7 @@ $cardWidth = 800;
         $styleAttr = ' style="--col-span-desktop: ' . Str::escape($iColSpanDesktop) . '; --col-span-tablet: ' . Str::escape($iColSpanTablet) . ';"';
         $wrapperAttrs = $hasLink ? ' href="' . Str::escape($iLinkUrl) . '" class="' . $cardClasses . '"' . $styleAttr : ' class="' . $cardClasses . '"' . $styleAttr;
         ?>
-        <<?php echo $wrapperTag; ?><?php echo $wrapperAttrs; ?>>
+        <<?php echo $wrapperTag; ?><?php echo $wrapperAttrs; ?>><?php // security-scan-ignore: unescaped-output -- tag is 'a' or 'div'; attributes are escaped where built above ?>
             <?php if (!empty($iMediaId)): ?>
                 <div class="grid-card-image-wrapper<?php echo $isSvg ? ' is-svg' : ($isVideo ? ' is-video' : ''); ?>">
                     <?php if ($isVideo): ?>
@@ -78,6 +78,6 @@ $cardWidth = 800;
                     <p class="grid-card-desc"><?php echo Str::escape($iDesc); ?></p>
                 <?php endif; ?>
             </div>
-        </<?php echo $wrapperTag; ?>>
+        </<?php echo $wrapperTag; ?>><?php // security-scan-ignore: unescaped-output -- tag is 'a' or 'div'; attributes are escaped where built above ?>
     <?php endforeach; ?>
 </div>

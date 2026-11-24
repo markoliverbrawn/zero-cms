@@ -13,7 +13,7 @@ use Zero\Support\Str;
     <?= $max !== null ? 'max="' . Str::escape((string)$max) . '"' : '' ?>
     <?= $required ? 'required' : '' ?>
     <?= $disabled ? 'disabled' : '' ?>
-    <?= $attributesHtml ?>
+    <?= $attributesHtml ?><?php // security-scan-ignore: unescaped-output -- renderAttributes() escapes every attribute name and value ?>
 />
 <?php if (!empty($helperText)): ?>
     <small class="field-help-text"><?= Str::escape($helperText) ?></small>

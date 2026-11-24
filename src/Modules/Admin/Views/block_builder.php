@@ -98,7 +98,7 @@ foreach (App::getRegisteredBlocks() as $type => $config) {
                         <span class="icon-svg block-toggle-indicator icon-svg-14">
                             <?php echo App::svg('chevron-right'); ?>
                         </span>
-                        <div class="block-header-icon-wrapper <?php echo $type; ?>-icon">
+                        <div class="block-header-icon-wrapper <?php echo Str::escape($type); ?>-icon">
                             <?php echo App::svg($icon); ?>
                         </div>
                         <div class="block-header-text-container">
@@ -232,7 +232,7 @@ foreach (App::getRegisteredBlocks() as $type => $config) {
                     continue;
                 }
                 ?>
-                <div class="block-select-card" data-type="<?php echo $type; ?>">
+                <div class="block-select-card" data-type="<?php echo Str::escape($type); ?>">
                     <div class="icon-wrapper-svg">
                         <?php echo App::svg($config['icon']); ?>
                     </div>

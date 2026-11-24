@@ -82,9 +82,9 @@ $currentFolder = $folder ?? '';
 
   <?php if (empty($files) && empty($currentFolder)): ?>
     <p id="no-files-message">No files or folders found.</p>
-    <ul id="files-grid" style="display: none;" data-has-more="<?php echo ($hasMore ?? false) ? 'true' : 'false'; ?>" data-current-page="<?php echo $currentPage ?? 1; ?>" data-folder="<?php echo Str::escape($currentFolder); ?>"></ul>
+    <ul id="files-grid" style="display: none;" data-has-more="<?php echo ($hasMore ?? false) ? 'true' : 'false'; ?>" data-current-page="<?php echo (int) ($currentPage ?? 1); ?>" data-folder="<?php echo Str::escape($currentFolder); ?>"></ul>
   <?php else: ?>
-    <ul id="files-grid" data-has-more="<?php echo ($hasMore ?? false) ? 'true' : 'false'; ?>" data-current-page="<?php echo $currentPage ?? 1; ?>" data-folder="<?php echo Str::escape($currentFolder); ?>">
+    <ul id="files-grid" data-has-more="<?php echo ($hasMore ?? false) ? 'true' : 'false'; ?>" data-current-page="<?php echo (int) ($currentPage ?? 1); ?>" data-folder="<?php echo Str::escape($currentFolder); ?>">
     
     <!-- Render go-up folder tile if we are in a subfolder -->
     <?php if (!empty($currentFolder)): ?>

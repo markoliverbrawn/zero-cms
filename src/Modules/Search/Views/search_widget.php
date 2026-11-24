@@ -37,7 +37,7 @@ if ($renderWidgetKey === 'site_search_summary' && in_array('site_search_summary'
       <div class="search-metrics-grid">
         <div class="search-stat-card">
           <div class="search-stat-value" id="search-widget-count">
-            <?php echo $totalIndexed; ?>
+            <?php echo (int) $totalIndexed; ?>
           </div>
           <div class="search-stat-label">Indexed Items</div>
         </div>

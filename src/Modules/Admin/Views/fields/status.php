@@ -16,7 +16,7 @@ if ($val === 'published' || $val === 'completed' || $val === 'shipped' || $val =
     $class = 'status-archived';
 }
 ?>
-<span class="status-badge <?php echo $class; ?>">
+<span class="status-badge <?php echo Str::escape($class); ?>">
     <span class="icon-svg" title="<?php echo Str::escape($val); ?>">
         <?php echo App::svg($icon); ?>
     </span>

@@ -171,9 +171,9 @@ use Zero\Support\Str;
               $isChecked = in_array($key, $layout);
               $checkedClass = $isChecked ? ' is-checked' : '';
           ?>
-            <label class="dashboard-widget-toggle<?php echo $checkedClass; ?>">
+            <label class="dashboard-widget-toggle<?php echo Str::escape($checkedClass); ?>">
               <div class="dashboard-widget-toggle-inner">
-                <input type="checkbox" name="dashboard_layout[]" value="<?php echo $key; ?>" <?php echo $isChecked ? 'checked' : ''; ?> class="dashboard-widget-toggle-checkbox">
+                <input type="checkbox" name="dashboard_layout[]" value="<?php echo Str::escape($key); ?>" <?php echo $isChecked ? 'checked' : ''; ?> class="dashboard-widget-toggle-checkbox">
                 <div>
                   <strong class="dashboard-widget-toggle-title"><?php echo Str::escape($meta['title']); ?></strong>
                   <span class="dashboard-widget-toggle-desc"><?php echo Str::escape($meta['desc']); ?></span>
