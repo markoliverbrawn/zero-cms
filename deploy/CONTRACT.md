@@ -37,7 +37,7 @@ Every step MUST be idempotent: re-running it against an existing deployment upda
 All providers run the same image, built from `deploy/image/`. No provider-specific code goes in
 the image. The image provides:
 
-- PHP 8.1+ (built on `php:8.3-apache`) with `pdo_mysql`, `gd` (with WebP, required by
+- PHP 8.3+ (built on `php:8.3-apache`) with `pdo_mysql`, `gd` (with WebP, required by
   `Assets::supportsWebp()` in `src/Support/Assets.php`), `exif` and `bcmath`.
 - The document root at `public/`, with `mod_rewrite` and `.htaccess` enabled.
 - Listening on `$PORT`.
