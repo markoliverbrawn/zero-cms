@@ -168,6 +168,14 @@ assert_test(\in_array('unauthenticated-route@src/Modules/Admin/Module.php:6', $v
 assert_test(!\in_array('unauthenticated-route@src/Modules/Admin/Module.php:7', $vulnerable, true), "A route whose controller applies the auth middleware is not reported");
 assert_test(!$has($scan($sources + ['src/Modules/Admin/Controllers/Api/AdminApiControllerBase.php' => $checkingBase]), 'unauthenticated-route'), "An access check inherited from the base class satisfies the rule");
 
+// Sub-projects' API controllers extend core's ApiController from vendor/, which is not scanned.
+$apiModule = "<?php\nnamespace App\\Modules\\Shop;\nclass Module {\n    public function getRoutes(): array {\n        return [\n            '#^/api/v1/products$#' => Controllers\\ProductsController::class,\n        ];\n    }\n}";
+$apiController = fn (string $base, string $body): string => "<?php\nnamespace App\\Modules\\Shop\\Controllers;\nuse Zero\\Http\\Controllers\\ApiController;\nclass ProductsController extends {$base} { public function handle(\$m) { {$body} } }";
+$apiScan = fn (string $controller): array => $scan(['src/Modules/Shop/Module.php' => $apiModule, 'src/Modules/Shop/Controllers/ProductsController.php' => $controller]);
+assert_test(!$has($apiScan($apiController('ApiController', '$user = $this->authenticate();')), 'unauthenticated-route'), "A core ApiController subclass that calls \$this->authenticate() is not reported");
+assert_test($has($apiScan($apiController('ApiController', 'return [];')), 'unauthenticated-route'), "A core ApiController subclass that never calls authenticate() is reported");
+assert_test($has($apiScan($apiController('SomeOtherBase', '$user = $this->authenticate();')), 'unauthenticated-route'), "authenticate() on a base other than core's ApiController is not trusted");
+
 // ---------------------------------------------------------------- ignores and baselines
 echo "Testing ignore comments and baselines...\n";
 $code = "<?php\n// security-scan-ignore: timing-compare -- both values are public build ids\nif (\$tokenA === \$tokenB) {}";
