@@ -20,8 +20,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Use the production php.ini configuration
 RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
 
-# Enable Apache mod_rewrite
-RUN a2enmod rewrite
+# Enable Apache mod_rewrite, and mod_headers so the security headers in public/.htaccess and
+# public/storage/.htaccess (nosniff, and the locked-down CSP on uploaded SVGs) actually apply.
+RUN a2enmod rewrite headers
 
 # Configure Apache DocumentRoot to point to /var/www/html/public -- Zero CMS is a front-controller
 # app served directly out of the project's own public/ (Core's, or a host project's).
