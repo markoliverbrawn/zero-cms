@@ -14,6 +14,7 @@ namespace Zero\Modules\Security\HealthChecks\Checks;
 use Zero\Models\Site;
 use Zero\Modules\Security\HealthChecks\CheckResult;
 use Zero\Modules\Security\HealthChecks\HealthCheck;
+use Zero\Modules\Security\HealthChecks\ProjectRoot;
 
 /**
  * Class InstallFileCheck
@@ -69,10 +70,9 @@ class InstallFileCheck implements HealthCheck
      */
     public function run(Site $site, bool $isProduction): CheckResult
     {
-        $roots = ['' => APPLICATION_ROOT];
-        if (\defined('SUBPROJECT_ROOT') && SUBPROJECT_ROOT !== APPLICATION_ROOT) {
-            $roots = ['' => SUBPROJECT_ROOT, 'core/' => APPLICATION_ROOT];
-        }
+        $roots = ProjectRoot::isSubProject()
+            ? ['' => ProjectRoot::get(), 'core/' => APPLICATION_ROOT]
+            : ['' => APPLICATION_ROOT];
 
         $files = [];
         foreach ($roots as $label => $root) {
