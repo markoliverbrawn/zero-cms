@@ -32,7 +32,7 @@ $shouldOmitTitle = !empty($post->omit_title) || $hasHeroBlock;
 
   <?php if (!empty($post->featured_image)): ?>
     <div class="post-featured-image-wrapper" style="margin-bottom: 2rem; border-radius: var(--border-radius, 8px); overflow: hidden; max-height: 400px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid var(--border-color, #e2e8f0);">
-      <img src="<?php echo Assets::url($post->featured_image, width: 1600); ?>" srcset="<?php echo Str::escape(Assets::srcset($post->featured_image, [640, 960, 1280, 1600])); ?>" sizes="100vw" alt="" style="width: 100%; height: 100%; object-fit: cover; display: block;" />
+      <img src="<?php echo Str::escape(Assets::url($post->featured_image, width: 1600)); ?>" srcset="<?php echo Str::escape(Assets::srcset($post->featured_image, [640, 960, 1280, 1600])); ?>" sizes="100vw" alt="" style="width: 100%; height: 100%; object-fit: cover; display: block;" />
     </div>
   <?php endif; ?>
 
@@ -71,13 +71,13 @@ $shouldOmitTitle = !empty($post->omit_title) || $hasHeroBlock;
         }
         if (file_exists($blockPath)) {
             $rowClass = BlockHelper::getRowClasses($block, $type, false);
-            echo '<div class="' . $rowClass . '">';
+            echo '<div class="' . Str::escape($rowClass) . '">';
             
             // If hide_title is not explicitly enabled, render the section title as a block-level H2 or H1
             $hideTitle = $block['hide_title'] ?? '0';
             if ($hideTitle !== '1' && !empty($block['title']) && $type !== 'hero') {
                 $titleTag = $hideTitle === '2' ? 'h1' : 'h2';
-                echo '<' . $titleTag . ' class="block-section-title">' . Security::sanitizeTitleHtml($block['title']) . '</' . $titleTag . '>';
+                echo '<' . $titleTag . ' class="block-section-title">' . Security::sanitizeTitleHtml($block['title']) . '</' . $titleTag . '>'; // security-scan-ignore: unescaped-output -- $titleTag is 'h1' or 'h2'
             }
 
             echo Template::renderFile($blockPath, [

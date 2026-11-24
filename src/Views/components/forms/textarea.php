@@ -8,7 +8,7 @@ use Zero\Support\Str;
     name="<?= Str::escape($name) ?>"
     <?= $required ? 'required' : '' ?>
     <?= $disabled ? 'disabled' : '' ?>
-    <?= $attributesHtml ?>
+    <?= $attributesHtml ?><?php // security-scan-ignore: unescaped-output -- renderAttributes() escapes every attribute name and value ?>
 ><?= Str::escape((string)($value ?? '')) ?></textarea>
 <?php if (!empty($helperText)): ?>
     <small class="field-help-text"><?= Str::escape($helperText) ?></small>

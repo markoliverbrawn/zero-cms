@@ -64,7 +64,7 @@ $showSearch = count($subPages) > 6;
             <h3 class="sub-pages-card-title">
               <?php echo Str::escape($sp['title']); ?>
             </h3>
-            <p class="sub-pages-card-excerpt"><?php echo $preview; ?></p>
+            <p class="sub-pages-card-excerpt"><?php echo $preview; ?></p><?php // security-scan-ignore: unescaped-output -- $preview is Str::escape()d or a fixed string where assigned ?>
             <div class="sub-pages-card-btn-container">
               <span class="sub-pages-card-link">View Documentation ➔</span>
             </div>

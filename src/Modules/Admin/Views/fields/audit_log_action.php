@@ -29,6 +29,6 @@ if (
     $class = 'badge-warning'; // yellow / amber
 }
 ?>
-<span class="security-action-badge <?php echo $class; ?>">
+<span class="security-action-badge <?php echo Str::escape($class); ?>">
     <?php echo Str::escape($value ?? ''); ?>
 </span>

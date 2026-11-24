@@ -13,7 +13,7 @@ $fullWidth = !empty($block['full_width']) && $block['full_width'] === '1';
             <button type="button" data-cmd="insertSmall">Small</button>
             <button type="button" data-cmd="removeFormat">Clear</button>
         </div>
-        <div class="editor-area block-editor-area block-title-rich-editor block-title-input" contenteditable="true"><?php echo $blockTitle; ?></div>
+        <div class="editor-area block-editor-area block-title-rich-editor block-title-input" contenteditable="true"><?php echo $blockTitle; ?></div><?php // security-scan-ignore: unescaped-output -- block_builder.php passes $blockTitle through Security::sanitizeTitleHtml() ?>
     </div>
 </div>
 <div class="field-group">
@@ -28,7 +28,7 @@ $fullWidth = !empty($block['full_width']) && $block['full_width'] === '1';
             <button type="button" data-cmd="createLink">A</button>
             <button type="button" data-cmd="removeFormat">Clear</button>
         </div>
-        <div class="editor-area block-editor-area block-editor-area-120" contenteditable="true"><?php echo $blockContent; ?></div>
+        <div class="editor-area block-editor-area block-editor-area-120" contenteditable="true"><?php echo $blockContent; ?></div><?php // security-scan-ignore: unescaped-output -- block_builder.php passes $blockContent through Security::sanitizeHtml() ?>
     </div>
 </div>
 <div class="block-flex-row">

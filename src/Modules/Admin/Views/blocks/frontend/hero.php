@@ -41,7 +41,7 @@ if (!empty($minHeight) && $minHeight !== 'default') {
 
 $styleAttr = empty($styleVars) ? '' : ' style="' . Str::escape(implode('; ', $styleVars) . ';') . '"';
 ?>
-<div class="block-hero <?php echo $fullWidth ? 'full-width-hero' : ''; ?> <?php echo $isVideo ? 'has-video-bg' : ''; ?>"<?php echo $styleAttr; ?>>
+<div class="block-hero <?php echo $fullWidth ? 'full-width-hero' : ''; ?> <?php echo $isVideo ? 'has-video-bg' : ''; ?>"<?php echo $styleAttr; ?>><?php // security-scan-ignore: unescaped-output -- $styleAttr is built with Str::escape() above ?>
     <?php if ($isVideo && !empty($resolvedUrl)): ?>
         <!-- Continually looping background video -->
         <video class="hero-video-bg" loop muted playsinline preload="none">

@@ -10,7 +10,7 @@ use Zero\Support\Str;
     <?= $required ? 'required' : '' ?>
     <?= $disabled ? 'disabled' : '' ?>
     <?= !empty($multiple) ? 'multiple' : '' ?>
-    <?= $attributesHtml ?>
+    <?= $attributesHtml ?><?php // security-scan-ignore: unescaped-output -- renderAttributes() escapes every attribute name and value ?>
 />
 <?php if (!empty($helperText)): ?>
     <small class="field-help-text"><?= Str::escape($helperText) ?></small>

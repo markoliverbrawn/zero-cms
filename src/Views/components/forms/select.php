@@ -12,7 +12,7 @@ $isSequential = (\array_keys($options) === \range(0, \count($options) - 1));
     <?= $isMultiple ? 'multiple' : '' ?>
     <?= $required ? 'required' : '' ?>
     <?= $disabled ? 'disabled' : '' ?>
-    <?= $attributesHtml ?>
+    <?= $attributesHtml ?><?php // security-scan-ignore: unescaped-output -- renderAttributes() escapes every attribute name and value ?>
 >
     <?php foreach ($options as $key => $optionLabel): ?>
         <?php $optionVal = $isSequential ? $optionLabel : $key; ?>

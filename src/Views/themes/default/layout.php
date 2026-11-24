@@ -69,7 +69,7 @@ $sidebarPages = DB::query("SELECT title, slug FROM pages WHERE status = 'publish
         
         <!-- Main Content Column -->
         <main>
-            <?php echo $content; ?>
+            <?php echo $content; ?><?php // security-scan-ignore: unescaped-output -- $content is the rendered page view ?>
         </main>
 
         <!-- Sidebar Widgets Column -->

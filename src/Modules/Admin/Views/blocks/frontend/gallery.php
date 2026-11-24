@@ -53,7 +53,7 @@ $isMasonry = $layout === 'masonry';
 $thumbnailCropHeight = $isMasonry ? null : $thumbnailHeight;
 $thumbnailAspect = $isMasonry ? null : 4 / 3;
 ?>
-<div class="<?php echo $wrapperClass; ?>" data-gallery<?php if ($styleAttr !== ''): ?> style="<?php echo trim($styleAttr); ?>"<?php endif; ?>>
+<div class="<?php echo $wrapperClass; ?>" data-gallery<?php if ($styleAttr !== ''): ?> style="<?php echo trim($styleAttr); ?>"<?php endif; ?>><?php // security-scan-ignore: unescaped-output -- layout, columns and gap are allow-listed above ?>
   <div class="gallery-grid">
     <?php if (!empty($mediaIds)): ?>
       <?php foreach ($mediaIds as $img):
@@ -68,7 +68,7 @@ $thumbnailAspect = $isMasonry ? null : 4 / 3;
           <img src="<?php echo Str::escape(Assets::url($mediaUrl, width: $thumbnailWidth, height: $thumbnailCropHeight)); ?>"
                srcset="<?php echo Str::escape(Assets::srcset($mediaUrl, [400, 600, 900], $thumbnailAspect)); ?>"
                sizes="(max-width: 600px) 100vw, 300px"
-               <?php if ($thumbnailSize !== null): ?>width="<?php echo $thumbnailSize['width']; ?>" height="<?php echo $thumbnailSize['height']; ?>"<?php endif; ?>
+               <?php if ($thumbnailSize !== null): ?>width="<?php echo (int) $thumbnailSize['width']; ?>" height="<?php echo (int) $thumbnailSize['height']; ?>"<?php endif; ?>
                class="gallery-img gallery-lightbox-trigger"
                data-src="<?php echo Str::escape(Assets::url($mediaUrl, width: $lightboxWidth, fit: Assets::FIT_CONTAIN)); ?>"
                data-title="<?php echo Str::escape($titleText); ?>"

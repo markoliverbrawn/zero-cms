@@ -49,8 +49,8 @@ if ($renderWidgetKey === 'queue_summary' && in_array('queue_summary', $enabledWi
       </span>
       <span>Job Queue Status</span>
       <div class="queue-status-indicator header-indicator">
-        <span class="status-pulse <?php echo $workerStatusClass; ?>"></span>
-        <span class="status-label">Runner: <?php echo $workerStatus; ?></span>
+        <span class="status-pulse <?php echo Str::escape($workerStatusClass); ?>"></span>
+        <span class="status-label">Runner: <?php echo Str::escape($workerStatus); ?></span>
       </div>
     </h3>
 
@@ -60,14 +60,14 @@ if ($renderWidgetKey === 'queue_summary' && in_array('queue_summary', $enabledWi
       <div class="queue-metrics-grid">
         <div class="queue-stat-card">
           <div class="queue-stat-value state-pending">
-            <?php echo $counts['pending']; ?>
+            <?php echo (int) $counts['pending']; ?>
           </div>
           <div class="queue-stat-label">Pending Tasks</div>
         </div>
 
         <div class="queue-stat-card">
           <div class="queue-stat-value state-failed <?php echo ($counts['failed'] > 0 ? 'has-errors' : ''); ?>">
-            <?php echo $counts['failed']; ?>
+            <?php echo (int) $counts['failed']; ?>
           </div>
           <div class="queue-stat-label">Failed Tasks</div>
         </div>
@@ -78,13 +78,13 @@ if ($renderWidgetKey === 'queue_summary' && in_array('queue_summary', $enabledWi
         <div class="queue-telemetry-row">
           <span class="telemetry-label">Active Processing</span>
           <span class="telemetry-value" style="color: var(--warning-color, #eab308);">
-            <?php echo $counts['reserved']; ?>
+            <?php echo (int) $counts['reserved']; ?>
           </span>
         </div>
         <div class="queue-telemetry-row">
           <span class="telemetry-label">Completed Tasks</span>
           <span class="telemetry-value" style="color: var(--success-color, #22c55e);">
-            <?php echo $counts['completed']; ?>
+            <?php echo (int) $counts['completed']; ?>
           </span>
         </div>
       </div>
@@ -127,8 +127,8 @@ if ($renderWidgetKey === 'scheduler_summary' && in_array('scheduler_summary', $e
       </span>
       <span>Task Scheduler</span>
       <div class="queue-status-indicator header-indicator">
-        <span class="status-pulse <?php echo $schedulerStatusClass; ?>"></span>
-        <span class="status-label">Scheduler: <?php echo $schedulerStatus; ?></span>
+        <span class="status-pulse <?php echo Str::escape($schedulerStatusClass); ?>"></span>
+        <span class="status-label">Scheduler: <?php echo Str::escape($schedulerStatus); ?></span>
       </div>
     </h3>
 
@@ -151,7 +151,7 @@ if ($renderWidgetKey === 'scheduler_summary' && in_array('scheduler_summary', $e
               </span>
               <span class="telemetry-value">
                 <span class="status-badge <?php echo ($task['last_run_at'] ? 'badge-ok' : 'badge-info'); ?>">
-                  Last Run: <?php echo $lastRun; ?>
+                  Last Run: <?php echo Str::escape($lastRun); ?>
                 </span>
               </span>
             </div>

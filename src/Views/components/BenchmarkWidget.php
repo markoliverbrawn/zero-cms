@@ -21,7 +21,7 @@ use Zero\Support\Str;
             <span>SYSTEM BENCHMARK</span>
         </div>
         <div style="font-size: 0.76rem; color: #00ffcc; font-weight: bold;">
-            <strong><?php echo $queryCount; ?></strong> Qs in <strong><?php echo number_format($totalTime * 1000, 2); ?>ms</strong> | Page: <strong><?php echo number_format($totalPageTime * 1000, 2); ?>ms</strong>
+            <strong><?php echo (int) $queryCount; ?></strong> Qs in <strong><?php echo number_format($totalTime * 1000, 2); ?>ms</strong> | Page: <strong><?php echo number_format($totalPageTime * 1000, 2); ?>ms</strong>
         </div>
     </div>
     <!-- Body (Collapsible scroll drawer) -->
@@ -48,7 +48,7 @@ use Zero\Support\Str;
         </div>
     </div>
 </div>
-<script nonce="<?php echo $nonce; ?>">
+<script nonce="<?php echo Str::escape($nonce); ?>">
 document.addEventListener('DOMContentLoaded', () => {
     const widget = document.getElementById('db-benchmark-widget');
     const header = document.getElementById('db-benchmark-header');

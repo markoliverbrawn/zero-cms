@@ -1,7 +1,7 @@
 <div class="editor">
   <div class="toolbar">
     <?php foreach ($toolbarButtonsHtml ?? [] as $buttonHtml): ?>
-        <?php echo $buttonHtml; ?>
+        <?php echo $buttonHtml; ?><?php // security-scan-ignore: unescaped-output -- toolbar buttons are HTML built by core code ?>
     <?php endforeach; ?>
   </div>
   <div class="editor-area" contenteditable="true"><?php

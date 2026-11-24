@@ -115,7 +115,7 @@ Assets::prime($recentMedia);
               <?php foreach ($recentPages as $page): ?>
                 <li>
                   <div>
-                    <a href="/admin/pages/edit?id=<?php echo $page['id']; ?>" title="<?php echo Str::escape($page['title'] ?? ''); ?>">
+                    <a href="/admin/pages/edit?id=<?php echo Str::escape($page['id']); ?>" title="<?php echo Str::escape($page['title'] ?? ''); ?>">
                       <?php echo Str::escape($page['title'] ?? ''); ?>
                     </a>
                   </div>

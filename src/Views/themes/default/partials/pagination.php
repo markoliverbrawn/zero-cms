@@ -22,9 +22,9 @@ use Zero\Support\Str;
     <!-- Sliding Page Numbers -->
     <?php for ($i = $startPage; $i <= $endPage; $i++): ?>
         <?php if ($i === $currentPage): ?>
-            <span class="pagination-btn active"><?php echo $i; ?></span>
+            <span class="pagination-btn active"><?php echo (int) $i; ?></span>
         <?php else: ?>
-            <a href="<?php echo Str::escape($buildUrl($i)); ?>" class="pagination-btn"><?php echo $i; ?></a>
+            <a href="<?php echo Str::escape($buildUrl($i)); ?>" class="pagination-btn"><?php echo (int) $i; ?></a>
         <?php endif; ?>
     <?php endfor; ?>
 
@@ -33,7 +33,7 @@ use Zero\Support\Str;
         <?php if ($endPage < $totalPages - 1): ?>
             <span class="pagination-ellipsis">...</span>
         <?php endif; ?>
-        <a href="<?php echo Str::escape($buildUrl($totalPages)); ?>" class="pagination-btn"><?php echo $totalPages; ?></a>
+        <a href="<?php echo Str::escape($buildUrl($totalPages)); ?>" class="pagination-btn"><?php echo (int) $totalPages; ?></a>
     <?php endif; ?>
 
     <!-- Next Link -->
