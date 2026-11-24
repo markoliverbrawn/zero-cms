@@ -21,7 +21,7 @@ $imageWidth = 900;
   <div class="block-image-col">
     <?php if (!empty($mediaId)): ?>
       <?php $mediaUrl = $resolveMedia($mediaId); ?>
-      <img src="<?php echo Assets::url($mediaUrl, width: $imageWidth, fit: Assets::FIT_CONTAIN); ?>"
+      <img src="<?php echo Str::escape(Assets::url($mediaUrl, width: $imageWidth, fit: Assets::FIT_CONTAIN)); ?>"
            srcset="<?php echo Str::escape(Assets::srcset($mediaUrl, [450, 700, 900])); ?>"
            sizes="(max-width: 700px) 100vw, 50vw"
            alt="<?php echo Str::escape($block['title'] ?? ''); ?>"

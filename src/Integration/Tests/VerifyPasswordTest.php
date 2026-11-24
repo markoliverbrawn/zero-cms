@@ -6,6 +6,7 @@
 
 require_once dirname(dirname(__DIR__)) . '/Support/TestBootstrap.php';
 
+use Zero\Modules\Admin\Controllers\FrontendLoginController;
 use Zero\Support\Security;
 use Zero\Support\TestRequest;
 
@@ -26,7 +27,9 @@ assert_test(Security::verifyPassword('anything', null) === false, "A null stored
 
 echo "Testing the sign-in forms survive malformed password input...\n";
 foreach (['/admin/login', '/login'] as $uri) {
+    // Core leaves /login for a sub-project module to route; register it so the request reaches it.
     $arrayResponse = TestRequest::post($uri, ['username' => 'verify_pw_user', 'password' => ['x']])
+        ->withRoute('#^/login$#', FrontendLoginController::class)
         ->onSite(['enabled_modules' => ['security']])
         ->withUser(['username' => 'verify_pw_user', 'password' => 'CorrectHorse123', 'role' => 'super_admin'])
         ->withCsrf()
@@ -36,6 +39,7 @@ foreach (['/admin/login', '/login'] as $uri) {
     assert_test($arrayResponse['exit_code'] === 0, "POST {$uri} with password[] completes without a fatal error");
 
     $emptyResponse = TestRequest::post($uri, ['username' => 'verify_pw_user', 'password' => ''])
+        ->withRoute('#^/login$#', FrontendLoginController::class)
         ->onSite(['enabled_modules' => ['security']])
         ->withUser(['username' => 'verify_pw_user', 'password' => 'CorrectHorse123', 'role' => 'super_admin'])
         ->withCsrf()

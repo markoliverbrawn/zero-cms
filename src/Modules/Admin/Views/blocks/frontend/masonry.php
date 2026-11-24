@@ -17,11 +17,11 @@ $lightboxWidth = 1800;
         <div class="masonry-item">
           <?php if (!empty($item['media_id'])): ?>
             <?php $mediaUrl = $resolveMedia($item['media_id']); ?>
-            <img src="<?php echo Assets::url($mediaUrl, width: $tileWidth, fit: Assets::FIT_CONTAIN); ?>"
+            <img src="<?php echo Str::escape(Assets::url($mediaUrl, width: $tileWidth, fit: Assets::FIT_CONTAIN)); ?>"
                  srcset="<?php echo Str::escape(Assets::srcset($mediaUrl, [400, 600, 800])); ?>"
                  sizes="(max-width: 700px) 100vw, 33vw"
                  class="masonry-trigger-img"
-                 data-src="<?php echo Assets::url($mediaUrl, width: $lightboxWidth, fit: Assets::FIT_CONTAIN); ?>"
+                 data-src="<?php echo Str::escape(Assets::url($mediaUrl, width: $lightboxWidth, fit: Assets::FIT_CONTAIN)); ?>"
                  alt="<?php echo Str::escape($item['title'] ?? ''); ?>"
                  loading="lazy"
                  decoding="async" />

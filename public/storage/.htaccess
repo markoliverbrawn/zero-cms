@@ -7,3 +7,13 @@
 
 # Prevent directory index file listings
 Options -Indexes
+
+# Uploaded files are served from the CMS's own origin. Never let a browser sniff them into a more
+# dangerous type, and render any SVG as an inert image: no script, no plugins, no navigation, even
+# if one were opened directly as a document. (Needs mod_headers; see deploy/image/Dockerfile.)
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    <FilesMatch "\.svg$">
+        Header always set Content-Security-Policy "default-src 'none'; img-src 'self' data:; style-src 'unsafe-inline'; sandbox"
+    </FilesMatch>
+</IfModule>

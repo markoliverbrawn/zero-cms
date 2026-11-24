@@ -45,6 +45,13 @@ class SendWelcomeController implements Controller
             exit;
         }
 
+        // Emailing accounts is user management, not something any signed-in session may trigger.
+        if (!App::authorize('users.manage')) {
+            \http_response_code(403);
+            echo \json_encode(['success' => false, 'message' => 'Forbidden: user management permission required.']);
+            exit;
+        }
+
         // Validate the request is POST
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             \http_response_code(405);
@@ -89,13 +96,8 @@ class SendWelcomeController implements Controller
         $siteName = $site ? $site->name : 'Zero CMS Platform';
         $siteDomain = $site ? $site->domain : 'localhost';
 
-        // Construct primary login url. Security::resolveTrustedHost() only honors
-        // X-Forwarded-Host once a configured TRUSTED_PROXY_SECRET verifies it -- otherwise an
-        // unverified forged header could inject an attacker-controlled domain into this
-        // legitimate welcome email's link.
-        $host = Security::resolveTrustedHost($siteDomain);
-        $scheme = Security::resolveScheme();
-        $link = $scheme . '://' . $host . '/admin/login';
+        // Built on the site's stored domain, never the request's Host/X-Forwarded-Host.
+        $link = $site ? $site->absoluteUrl('/admin/login') : Security::resolveScheme() . '://' . $siteDomain . '/admin/login';
 
         // Render beautiful welcome email template using template view file
         $subject = "Welcome to " . $siteName . "!";

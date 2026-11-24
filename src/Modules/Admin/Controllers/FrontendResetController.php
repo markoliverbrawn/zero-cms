@@ -41,9 +41,16 @@ class FrontendResetController implements Controller
         }
 
         $token = $_GET['token'] ?? $_POST['token'] ?? '';
-        
-        // Locate token inside database
-        $reset = DB::query("SELECT * FROM password_resets WHERE token = ? LIMIT 1", [$token])->fetch();
+        $token = \is_string($token) ? $token : '';
+
+        // Locate the token, scoped to the tenant that issued it, and only for member accounts:
+        // this flow signs the user straight in, so back-office tokens must use /admin/reset.
+        $reset = $token === '' ? false : DB::query(
+            "SELECT r.* FROM password_resets r JOIN users u ON u.id = r.user_id
+             WHERE r.token = ? AND r.site_id = ? AND u.site_id = r.site_id AND u.deleted_at IS NULL
+               AND u.role NOT IN ('super_admin', 'admin', 'editor') LIMIT 1",
+            [$token, App::getCurrentSiteId()]
+        )->fetch();
         
         if (!$reset || \strtotime($reset['expires_at']) < \time()) {
             App::render('reset', ['error' => 'Your password recovery token is invalid or has expired. Please request a new recovery link.']);

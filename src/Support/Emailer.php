@@ -120,11 +120,46 @@ class Emailer
     }
 
     /**
+     * Whether an address is safe to write into the SMTP envelope and headers: no CR, LF, NUL or
+     * angle brackets (which would close the '<...>' it is wrapped in).
+     *
+     * @param string $address Email address.
+     * @return bool
+     */
+    public static function isSafeAddress(string $address): bool
+    {
+        return $address !== '' && \preg_match('/[\r\n\0<>]/', $address) !== 1;
+    }
+
+    /**
+     * Make a message safe to send after SMTP DATA (RFC 5321 4.5.2): normalise every bare CR or LF
+     * to CRLF, and dot-stuff any line beginning with '.', so no content -- e.g. a contact-form
+     * message containing CRLF.CRLF -- can end the DATA section early and smuggle further SMTP
+     * commands onto the authenticated session.
+     *
+     * @param string $message Headers and body.
+     * @return string
+     */
+    public static function prepareDataSection(string $message): string
+    {
+        $normalised = (string) \preg_replace('/\r\n|\r|\n/', "\r\n", $message);
+
+        return (string) \preg_replace('/^\./m', '..', $normalised);
+    }
+
+    /**
      * Send an email using a pure PHP zero-dependency SMTP Socket Client.
      * Connects directly to the Mailpit SMTP server configured in .env.
      */
     public static function send(string $to, string $subject, string $htmlBody, string $textBody = ''): bool
     {
+        // An address is written raw into the SMTP envelope (MAIL FROM / RCPT TO) and headers, so a
+        // CR/LF there would inject commands or headers. Refuse rather than repair.
+        if (!self::isSafeAddress($to)) {
+            \error_log('Emailer: refused to send to an address containing control characters or brackets');
+            return false;
+        }
+
         if (self::$testMode) {
             self::$testModeSentEmails[] = [
                 'to' => $to,
@@ -148,6 +183,10 @@ class Emailer
         $port = \intval(Env::get('SMTP_PORT', '1025'));
         $fromEmail = Env::get('SMTP_FROM_EMAIL', 'noreply@zero.shop');
         $fromName = Env::get('SMTP_FROM_NAME', 'Zero CMS');
+        if (!self::isSafeAddress($fromEmail) || \preg_match('/[\r\n\0]/', $fromName) === 1) {
+            \error_log('Emailer: SMTP_FROM_EMAIL / SMTP_FROM_NAME contain control characters');
+            return false;
+        }
         $secure = Env::get('SMTP_SECURE', '');   // 'tls' enables STARTTLS
         $user = Env::get('SMTP_USER', '');        // non-empty enables AUTH LOGIN
         $pass = Env::get('SMTP_PASS', '');
@@ -286,7 +325,7 @@ class Emailer
             $message .= $htmlBody . "\r\n\r\n";
             $message .= "--{$boundary}--\r\n";
 
-            fputs($socket, $message . "\r\n.\r\n");
+            fputs($socket, self::prepareDataSection($message) . "\r\n.\r\n");
             $response = $getResponse($socket);
             if (!$requireCode($response, ['250'], 'message body')) {
                 return false;

@@ -81,6 +81,30 @@ class Security {
     private const SANITIZE_URL_ATTRIBUTES = ['cite', 'href', 'poster', 'src'];
 
     /**
+     * SVG namespace URI.
+     */
+    private const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
+
+    /**
+     * SVG elements sanitizeSvg() keeps. Everything scriptable or able to retarget attributes
+     * (script, foreignObject, style, animate, set, animateMotion, animateTransform, iframe, ...) is
+     * absent and therefore removed.
+     */
+    private const SVG_ALLOWED_ELEMENTS = [
+        'circle', 'clipPath', 'defs', 'desc', 'ellipse', 'feBlend', 'feColorMatrix',
+        'feComponentTransfer', 'feComposite', 'feDisplacementMap', 'feDropShadow', 'feFlood',
+        'feFuncA', 'feFuncB', 'feFuncG', 'feFuncR', 'feGaussianBlur', 'feMerge', 'feMergeNode',
+        'feMorphology', 'feOffset', 'feTurbulence', 'filter', 'g', 'image', 'line', 'linearGradient',
+        'marker', 'mask', 'path', 'pattern', 'polygon', 'polyline', 'radialGradient', 'rect', 'stop',
+        'svg', 'symbol', 'text', 'textPath', 'title', 'tspan', 'use',
+    ];
+
+    /**
+     * SVG elements removed but whose children are kept (links and conditional wrappers).
+     */
+    private const SVG_UNWRAPPED_ELEMENTS = ['a', 'switch'];
+
+    /**
      * True only when TRUSTED_PROXY_SECRET is configured and the request's X-Proxy-Secret header
      * matches it (constant-time). Deployments that sit behind a reverse proxy which originates its
      * own request to origin (e.g. a Cloudflare Worker's fetch()) can set this env var and have the
@@ -290,7 +314,8 @@ class Security {
     }
 
     /**
-     * Pure PHP, dependency-free HTML sanitiser using DOMDocument.
+     * Pure PHP, dependency-free HTML sanitiser using DOMDocument. Pass $highlight = false when the
+     * result feeds an editor rather than a page.
      *
      * Allow-list based: only SANITIZE_ALLOWED_TAGS survive. Unknown tags are unwrapped (their text
      * is kept) except SANITIZE_DROPPED_TAGS, which are removed with their contents because they can
@@ -298,7 +323,7 @@ class Security {
      * browser than in libxml (mutation XSS). Attributes are allow-listed too, and URL-bearing
      * attributes may only use SANITIZE_ALLOWED_SCHEMES or be relative.
      */
-    public static function sanitizeHtml(string $html): string
+    public static function sanitizeHtml(string $html, bool $highlight = true): string
     {
         if (empty($html)) {
             return '';
@@ -336,8 +361,21 @@ class Security {
 
         $cleaned = \trim($cleaned);
 
-        // Automatically highlight any inline pre/code blocks!
-        return Str::highlightHtml($cleaned);
+        // Automatically highlight any inline pre/code blocks (skipped for editor round-trips, so
+        // the highlighter's wrapper markup is never saved back into content).
+        return $highlight ? Str::highlightHtml($cleaned) : $cleaned;
+    }
+
+    /**
+     * Whether a URL is safe to place in an href/src: relative, or using http, https, mailto or tel.
+     * Control characters and whitespace are ignored when finding the scheme, as browsers do.
+     *
+     * @param string $url Candidate URL.
+     * @return bool
+     */
+    public static function isSafeUrl(string $url): bool
+    {
+        return self::isSafeHtmlUrl($url);
     }
 
     /**
@@ -468,6 +506,85 @@ class Security {
         }
 
         return \password_verify($password, $hash);
+    }
+
+    /**
+     * Remove unsafe attributes from an SVG element: event handlers, style, and any href that is not
+     * a local '#fragment' (or, on <image>, a safe http(s)/relative URL). Any other attribute whose
+     * value names a non-http(s) scheme, once control characters and whitespace are ignored as
+     * browsers do, is removed too.
+     *
+     * @param \DOMElement $element Element scrubbed in place.
+     * @return void
+     */
+    private static function scrubSvgAttributes(\DOMElement $element): void
+    {
+        $attributes = [];
+        foreach ($element->attributes as $attribute) {
+            $attributes[] = $attribute;
+        }
+
+        foreach ($attributes as $attribute) {
+            $local = \strtolower($attribute->localName ?? $attribute->nodeName);
+            $value = (string) $attribute->nodeValue;
+            $normalised = \strtolower((string) \preg_replace('/[\x00-\x20\x7F]+/', '', $value));
+
+            $remove = \strpos($local, 'on') === 0 || $local === 'style';
+
+            if (!$remove && $local === 'href') {
+                $isFragment = \strpos($normalised, '#') === 0;
+                $isSafeImage = $element->localName === 'image' && self::isSafeHtmlUrl($value)
+                    && \strpos($normalised, 'mailto:') !== 0 && \strpos($normalised, 'tel:') !== 0;
+                $remove = !$isFragment && !$isSafeImage;
+            }
+
+            if (!$remove && \preg_match('/^([a-z][a-z0-9+.\-]*):/', $normalised, $match)
+                && !\in_array($match[1], ['http', 'https'], true)) {
+                $remove = true;
+            }
+
+            if ($remove) {
+                $element->removeAttributeNode($attribute);
+            }
+        }
+    }
+
+    /**
+     * Recursively scrub an SVG element's children: keep allow-listed SVG-namespace elements
+     * (scrubbing their attributes), unwrap <a>/<switch>, and drop everything else with its
+     * contents, along with comments and processing instructions.
+     *
+     * @param \DOMNode $node Parent scrubbed in place.
+     * @return void
+     */
+    private static function scrubSvgChildren(\DOMNode $node): void
+    {
+        $child = $node->firstChild;
+        while ($child !== null) {
+            $next = $child->nextSibling;
+
+            if ($child instanceof \DOMElement) {
+                $inSvgNamespace = \in_array($child->namespaceURI, [self::SVG_NAMESPACE, null, ''], true);
+                $name = $child->localName;
+
+                if ($inSvgNamespace && \in_array($name, self::SVG_ALLOWED_ELEMENTS, true)) {
+                    self::scrubSvgAttributes($child);
+                    self::scrubSvgChildren($child);
+                } elseif ($inSvgNamespace && \in_array($name, self::SVG_UNWRAPPED_ELEMENTS, true)) {
+                    self::scrubSvgChildren($child);
+                    while ($child->firstChild !== null) {
+                        $node->insertBefore($child->firstChild, $child);
+                    }
+                    $node->removeChild($child);
+                } else {
+                    $node->removeChild($child);
+                }
+            } elseif (!($child instanceof \DOMText) || $child instanceof \DOMCdataSection) {
+                $node->removeChild($child);
+            }
+
+            $child = $next;
+        }
     }
 
     /**
@@ -635,70 +752,16 @@ class Security {
             return false;
         }
 
-        // 1. Permanently remove all <script> tags
-        $scripts = $dom->getElementsByTagName('script');
-        while ($scripts->length > 0) {
-            $script = $scripts->item(0);
-            if ($script && $script->parentNode) {
-                $script->parentNode->removeChild($script);
-            }
+        // Allow-list: the root must be <svg>, and only known-inert SVG elements and attributes
+        // survive (see scrubSvgChildren / scrubSvgAttributes). Deny-listing proved bypassable
+        // (animate/set retargeting href to javascript:, whitespace-split schemes).
+        $root = $dom->documentElement;
+        if (!$root instanceof \DOMElement || $root->localName !== 'svg' || !\in_array($root->namespaceURI, [self::SVG_NAMESPACE, null, ''], true)) {
+            return false;
         }
 
-        // 2. Permanently remove all <foreignObject> tags (can house nested HTML elements / script bypasses)
-        $foreignObjects = $dom->getElementsByTagName('foreignObject');
-        while ($foreignObjects->length > 0) {
-            $fo = $foreignObjects->item(0);
-            if ($fo && $fo->parentNode) {
-                $fo->parentNode->removeChild($fo);
-            }
-        }
-
-        // 3. Permanently remove all <style> tags (prevents CSS/style injection and external fonts/import tracking)
-        $styles = $dom->getElementsByTagName('style');
-        while ($styles->length > 0) {
-            $style = $styles->item(0);
-            if ($style && $style->parentNode) {
-                $style->parentNode->removeChild($style);
-            }
-        }
-
-        // 4. Recursively traverse all nodes and strip style attributes, event handlers, and dangerous URI schemes
-        $xpath = new \DOMXPath($dom);
-        $allNodes = $xpath->query('//*');
-        if ($allNodes) {
-            foreach ($allNodes as $node) {
-                if ($node instanceof \DOMElement && $node->hasAttributes()) {
-                    $attrsToRemove = [];
-                    foreach ($node->attributes as $attr) {
-                        $attrName = \strtolower($attr->nodeName);
-
-                        // Strip inline event triggers (onload, onclick, etc.)
-                        if (\strpos($attrName, 'on') === 0) {
-                            $attrsToRemove[] = $attr->nodeName;
-                            continue;
-                        }
-
-                        // Strip style attributes completely to remove any CSS/style content
-                        if ($attrName === 'style') {
-                            $attrsToRemove[] = $attr->nodeName;
-                            continue;
-                        }
-
-                        // Strip all dangerous URI schemes (javascript:, data:, vbscript:, file:, etc.) in any attribute
-                        // Safe schemes are http, https, or relative paths/fragment IDs (no scheme separator ':')
-                        if (\preg_match('/^\s*([a-zA-Z0-9+.-]+):/i', $attr->nodeValue, $matches)) {
-                            $scheme = \strtolower($matches[1]);
-                            if ($scheme !== 'http' && $scheme !== 'https') {
-                                $attrsToRemove[] = $attr->nodeName;
-                            }
-                        }
-                    }
-                    foreach ($attrsToRemove as $attrName) {
-                        $node->removeAttribute($attrName);
-                    }
-                }
-            }
-        }
+        self::scrubSvgAttributes($root);
+        self::scrubSvgChildren($root);
 
         $sanitizedContent = $dom->saveXML();
         return \file_put_contents($filePath, $sanitizedContent) !== false;

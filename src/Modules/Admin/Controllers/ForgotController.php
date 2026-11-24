@@ -44,7 +44,12 @@ class ForgotController implements Controller
             // Enforce centralized rate limiting and progressive lockout protection via Middleware
             AuthThrottlingMiddleware::handle('password_reset', 'admin/forgot', [], function() {});
 
-            $user = DB::query('SELECT * FROM users WHERE username = ? LIMIT 1', [$username])->fetch();
+            // Only accounts that can sign in to this tenant's back office: its own users, plus global
+            // super_admins (whose reset link is still built on this site's own domain).
+            $user = DB::query(
+                "SELECT * FROM users WHERE username = ? AND deleted_at IS NULL AND (site_id = ? OR role = 'super_admin') LIMIT 1",
+                [$username, App::getCurrentSiteId()]
+            )->fetch();
             
             if ($user && !empty($user['email'])) {
                 $site = App::getCurrentSite();
@@ -65,13 +70,8 @@ class ForgotController implements Controller
                 
                 Logger::log($user['id'], 'password_reset_request', 'user', $user['id'], ['username' => $username, 'ip_address' => Security::getClientIp()]);
                 
-                // Construct recovery URL. Security::resolveTrustedHost() only honors
-                // X-Forwarded-Host once a configured TRUSTED_PROXY_SECRET verifies it -- otherwise
-                // an unverified forged header could inject an attacker-controlled domain into this
-                // legitimate password-reset email's link.
-                $host = Security::resolveTrustedHost();
-                $scheme = Security::resolveScheme();
-                $link = $scheme . '://' . $host . '/admin/reset?token=' . $token;
+                // Built on the site's stored domain, never the request's Host/X-Forwarded-Host.
+                $link = $site->absoluteUrl('/admin/reset?token=' . $token);
 
                 // Construct beautiful recovery email template
                 $subject = "Reset Your Password - Zero CMS";

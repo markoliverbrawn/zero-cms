@@ -20,6 +20,7 @@ use Zero\Interfaces\Model;
 use Zero\Models\Traits\CascadesDeletes;
 use Zero\Models\Traits\IsModel;
 use Zero\Support\I18n;
+use Zero\Support\Security;
 
 /**
  * Class Site
@@ -370,6 +371,19 @@ class Site implements Model
             return true;
         }
         return \in_array($module, $modules);
+    }
+
+    /**
+     * Absolute URL on this site's own stored domain, for links in outbound email. Built from the
+     * registered domain rather than the request's Host / X-Forwarded-Host, which an attacker can
+     * set to any value and so would otherwise steer a genuine password-reset link to their server.
+     *
+     * @param string $path Path beginning with '/', including any query string.
+     * @return string
+     */
+    public function absoluteUrl(string $path): string
+    {
+        return Security::resolveScheme() . '://' . $this->domain . $path;
     }
 
     /**

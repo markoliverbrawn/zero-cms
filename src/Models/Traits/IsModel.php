@@ -13,6 +13,7 @@ namespace Zero\Models\Traits;
 
 use Zero\Core\App;
 use Zero\Database\DB;
+use Zero\Support\BlockHelper;
 use Zero\Support\I18n;
 use Zero\Support\Security;
 
@@ -112,6 +113,8 @@ trait IsModel
      */
     protected function create()
     {
+        $this->assertSafeBlockContent();
+
         if (empty($this->id)) {
             $this->id = Security::uuidv7();
         }
@@ -266,6 +269,20 @@ trait IsModel
     }
 
     /**
+     * Reject block-builder content whose block types could name a file path. Runs on every
+     * create/update so no save override (e.g. Page::save) can skip it.
+     *
+     * @return void
+     * @throws \InvalidArgumentException When a block type is not a safe name.
+     */
+    protected function assertSafeBlockContent(): void
+    {
+        if (\method_exists(static::class, 'getBlockBuilderField')) {
+            BlockHelper::assertSafeBlockTypes($this->{static::getBlockBuilderField()} ?? null);
+        }
+    }
+
+    /**
      * Find trashed processing implementation helper.
      *
      * @param mixed $id Argument descriptor.
@@ -356,6 +373,8 @@ trait IsModel
      */
     protected function update()
     {
+        $this->assertSafeBlockContent();
+
         $set = [];
         $values = [];
 

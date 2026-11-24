@@ -22,6 +22,41 @@ use Zero\Support\Str;
 class BlockHelper
 {
     /**
+     * Throw if a block-builder JSON payload contains a block whose type could not safely name a
+     * template file. Called on every model save, since every theme resolves a block's template as
+     * '.../blocks/' . $type . '.php' and a type like '../../x' would include an arbitrary file.
+     *
+     * @param mixed $json Stored block-builder JSON (non-strings and non-arrays are ignored).
+     * @return void
+     * @throws \InvalidArgumentException When a block type is not a safe name.
+     */
+    public static function assertSafeBlockTypes($json): void
+    {
+        $blocks = \is_string($json) ? \json_decode($json, true) : null;
+        if (!\is_array($blocks)) {
+            return;
+        }
+
+        foreach ($blocks as $block) {
+            if (\is_array($block) && \array_key_exists('type', $block) && !self::isSafeBlockType($block['type'])) {
+                throw new \InvalidArgumentException('Invalid block type.');
+            }
+        }
+    }
+
+    /**
+     * Whether a block type is a plain template name: letters, digits, '_' and '-' only, so it
+     * can never contain a path separator or '..'.
+     *
+     * @param mixed $type Block type as stored.
+     * @return bool
+     */
+    public static function isSafeBlockType($type): bool
+    {
+        return \is_string($type) && \preg_match('/^[A-Za-z0-9_-]+$/', $type) === 1;
+    }
+
+    /**
      * Get combined row classes for a block.
      *
      * @param array $block
