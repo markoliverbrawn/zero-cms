@@ -19,6 +19,9 @@ if (empty($errorMsg) && !empty($_GET['error'])) {
         case 'google_oauth_unconfigured':
             $errorMsg = 'Login with Google is currently unconfigured.';
             break;
+        case 'google_email_unverified':
+            $errorMsg = 'Google has not verified this email address, so it cannot be used to sign in.';
+            break;
         case 'google_account_not_found':
             $errorMsg = 'No local account matches this Google email address.';
             break;

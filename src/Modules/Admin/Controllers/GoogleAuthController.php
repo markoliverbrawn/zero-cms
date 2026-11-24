@@ -127,6 +127,14 @@ class GoogleAuthController implements Controller
                 exit;
             }
 
+            // Only a Google-verified address proves the person controls that mailbox. A Google
+            // account can be created with any address, so an unverified one must never sign in as
+            // the local user who owns it.
+            if (!self::isVerifiedProfile(\is_array($googleUser) ? $googleUser : [])) {
+                \header('Location: /admin/login?error=google_email_unverified');
+                exit;
+            }
+
             // 5. Look up corresponding local CMS tenant/global user account
             $row = DB::query('SELECT * FROM users WHERE email = ? AND deleted_at IS NULL LIMIT 1', [$email])->fetch();
 
@@ -160,7 +168,7 @@ class GoogleAuthController implements Controller
             ]);
 
             // Forward to target page or dashboard
-            $redirectTo = $_SESSION['redirect_to'] ?? '/admin/dashboard';
+            $redirectTo = Security::localRedirectTarget($_SESSION['redirect_to'] ?? null, '/admin/dashboard');
             unset($_SESSION['redirect_to']);
             \header('Location: ' . $redirectTo);
             exit;
@@ -169,5 +177,20 @@ class GoogleAuthController implements Controller
             \header('Location: /admin/login?error=google_exception_triggered&details=' . \urlencode($e->getMessage()));
             exit;
         }
+    }
+
+    /**
+     * Whether a Google userinfo profile carries a verified email address. The OpenID Connect
+     * userinfo endpoint reports email_verified as a boolean; some Google responses use the string
+     * "true", which is accepted too. Anything else, including a missing claim, is unverified.
+     *
+     * @param array<string, mixed> $profile Decoded userinfo response.
+     * @return bool
+     */
+    public static function isVerifiedProfile(array $profile): bool
+    {
+        $verified = $profile['email_verified'] ?? false;
+
+        return $verified === true || $verified === 'true';
     }
 }

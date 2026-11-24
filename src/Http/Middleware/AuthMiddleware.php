@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Zero\Http\Middleware;
 
 use Zero\Core\App;
+use Zero\Support\Security;
 
 /**
  * Class AuthMiddleware
@@ -39,7 +40,7 @@ class AuthMiddleware
         // Check if user is logged in and actually exists inside our database!
         if (!isset($_SESSION['user_id']) || App::getCurrentUser() === null) {
             // Store the original requested URI so we can forward them back after successful login!
-            $_SESSION['redirect_to'] = $_SERVER['REQUEST_URI'] ?? self::$defaultRedirect;
+            $_SESSION['redirect_to'] = Security::localRedirectTarget($_SERVER['REQUEST_URI'] ?? '', self::$defaultRedirect);
 
             // Cleanly invalidate legacy session if they had an expired/invalid user_id
             if (isset($_SESSION['user_id'])) {

@@ -174,6 +174,14 @@ if (!str_contains($res4['stdout'], 'AUTH_SUCCESS: api_tester_user')) {
 
 assert_test(str_contains($res4['stdout'], 'AUTH_SUCCESS: api_tester_user'), "Successfully authenticates and loads user details via Authorization Bearer token header");
 
+// 4b. A deleted (soft-deleted) user's API key must stop working.
+echo "Testing authenticate() rejects a deleted user's token (401)...\n";
+$dbSetupDeletedUser = $dbSetupValidUser . '
+DB::query("UPDATE users SET deleted_at = NOW() WHERE username = \'api_tester_user\'");
+';
+$res4b = exec_api_test($server4, ['action' => 'auth'], $dbSetupDeletedUser);
+assert_test(str_contains($res4b['stdout'], 'Unauthorized: Invalid API Key'), "A deleted user's Bearer token is rejected as invalid");
+
 // 5. Test authenticate() successful authentication with X-API-Key Header
 echo "Testing authenticate() with valid X-API-Key Header (200)...\n";
 $server5 = [

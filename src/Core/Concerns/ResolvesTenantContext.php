@@ -47,7 +47,7 @@ trait ResolvesTenantContext
                     NULL AS homepage_id, NULL AS timezone, NULL AS default_language, NULL AS settings, NULL AS email_override,
                     email, password_hash, role, site_id, preferences,
                     created_at, updated_at
-                FROM users WHERE id = ?
+                FROM users WHERE id = ? AND deleted_at IS NULL
             ";
             $params = [$host, $userId];
         } else {
