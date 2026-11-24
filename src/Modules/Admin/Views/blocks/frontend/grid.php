@@ -2,6 +2,7 @@
 // src/Modules/Admin/Views/blocks/frontend/grid.php
 
 use Zero\Support\Assets;
+use Zero\Support\Security;
 use Zero\Support\Str;
 
 $gap = $block['gap'] ?? '16px';
@@ -20,7 +21,10 @@ $cardWidth = 800;
     <?php foreach ($items as $item): 
         $iTitle = $item['title'] ?? '';
         $iDesc = $item['desc'] ?? '';
-        $iLinkUrl = $item['link_url'] ?? '';
+        $iLinkUrl = (string) ($item['link_url'] ?? '');
+        if (!Security::isSafeUrl($iLinkUrl)) {
+            $iLinkUrl = ''; // e.g. javascript: -- render the card unlinked
+        }
         $iMediaId = $item['media_id'] ?? '';
         $iColSpanDesktop = $item['col_span_desktop'] ?? '1';
         $iColSpanTablet = $item['col_span_tablet'] ?? '1';
@@ -56,7 +60,7 @@ $cardWidth = 800;
                     <?php if ($isVideo): ?>
                         <video src="<?php echo Str::escape($iMediaUrl); ?>" autoplay loop muted playsinline class="grid-card-video"></video>
                     <?php else: ?>
-                        <img src="<?php echo Assets::url($iMediaUrl, width: $cardWidth, fit: Assets::FIT_CONTAIN); ?>"
+                        <img src="<?php echo Str::escape(Assets::url($iMediaUrl, width: $cardWidth, fit: Assets::FIT_CONTAIN)); ?>"
                              srcset="<?php echo Str::escape(Assets::srcset($iMediaUrl, [300, 600, 800])); ?>"
                              sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 25vw"
                              class="grid-card-image"

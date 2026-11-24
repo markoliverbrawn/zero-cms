@@ -290,7 +290,8 @@ class Security {
     }
 
     /**
-     * Pure PHP, dependency-free HTML sanitiser using DOMDocument.
+     * Pure PHP, dependency-free HTML sanitiser using DOMDocument. Pass $highlight = false when the
+     * result feeds an editor rather than a page.
      *
      * Allow-list based: only SANITIZE_ALLOWED_TAGS survive. Unknown tags are unwrapped (their text
      * is kept) except SANITIZE_DROPPED_TAGS, which are removed with their contents because they can
@@ -298,7 +299,7 @@ class Security {
      * browser than in libxml (mutation XSS). Attributes are allow-listed too, and URL-bearing
      * attributes may only use SANITIZE_ALLOWED_SCHEMES or be relative.
      */
-    public static function sanitizeHtml(string $html): string
+    public static function sanitizeHtml(string $html, bool $highlight = true): string
     {
         if (empty($html)) {
             return '';
@@ -336,8 +337,21 @@ class Security {
 
         $cleaned = \trim($cleaned);
 
-        // Automatically highlight any inline pre/code blocks!
-        return Str::highlightHtml($cleaned);
+        // Automatically highlight any inline pre/code blocks (skipped for editor round-trips, so
+        // the highlighter's wrapper markup is never saved back into content).
+        return $highlight ? Str::highlightHtml($cleaned) : $cleaned;
+    }
+
+    /**
+     * Whether a URL is safe to place in an href/src: relative, or using http, https, mailto or tel.
+     * Control characters and whitespace are ignored when finding the scheme, as browsers do.
+     *
+     * @param string $url Candidate URL.
+     * @return bool
+     */
+    public static function isSafeUrl(string $url): bool
+    {
+        return self::isSafeHtmlUrl($url);
     }
 
     /**

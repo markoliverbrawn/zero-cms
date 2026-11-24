@@ -29,7 +29,8 @@ if (!empty($resolvedUrl) && !$isVideo) {
 // Custom properties only. The gradient stack and layout live in assets/css/blocks/hero.css --
 // the template's job is to hand the stylesheet the two values it cannot know statically.
 $styleVars = [];
-if ($backgroundUrl !== '') {
+// A URL that could close the quoted url('...') or the style attribute is dropped, not rendered.
+if ($backgroundUrl !== '' && \preg_match('/[\'"()\\\\<>\s]/', $backgroundUrl) !== 1) {
     $styleVars[] = "--hero-bg-image: url('" . $backgroundUrl . "')";
 }
 
@@ -38,7 +39,7 @@ if (!empty($minHeight) && $minHeight !== 'default') {
     $styleVars[] = '--hero-min-height: ' . (int)$minHeight . 'vh';
 }
 
-$styleAttr = empty($styleVars) ? '' : ' style="' . implode('; ', $styleVars) . ';"';
+$styleAttr = empty($styleVars) ? '' : ' style="' . Str::escape(implode('; ', $styleVars) . ';') . '"';
 ?>
 <div class="block-hero <?php echo $fullWidth ? 'full-width-hero' : ''; ?> <?php echo $isVideo ? 'has-video-bg' : ''; ?>"<?php echo $styleAttr; ?>>
     <?php if ($isVideo && !empty($resolvedUrl)): ?>

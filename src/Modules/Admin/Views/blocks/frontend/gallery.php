@@ -65,12 +65,12 @@ $thumbnailAspect = $isMasonry ? null : 4 / 3;
         $thumbnailSize = Assets::size($mediaUrl, $thumbnailWidth, $thumbnailCropHeight);
         ?>
         <div class="gallery-item">
-          <img src="<?php echo Assets::url($mediaUrl, width: $thumbnailWidth, height: $thumbnailCropHeight); ?>"
+          <img src="<?php echo Str::escape(Assets::url($mediaUrl, width: $thumbnailWidth, height: $thumbnailCropHeight)); ?>"
                srcset="<?php echo Str::escape(Assets::srcset($mediaUrl, [400, 600, 900], $thumbnailAspect)); ?>"
                sizes="(max-width: 600px) 100vw, 300px"
                <?php if ($thumbnailSize !== null): ?>width="<?php echo $thumbnailSize['width']; ?>" height="<?php echo $thumbnailSize['height']; ?>"<?php endif; ?>
                class="gallery-img gallery-lightbox-trigger"
-               data-src="<?php echo Assets::url($mediaUrl, width: $lightboxWidth, fit: Assets::FIT_CONTAIN); ?>"
+               data-src="<?php echo Str::escape(Assets::url($mediaUrl, width: $lightboxWidth, fit: Assets::FIT_CONTAIN)); ?>"
                data-title="<?php echo Str::escape($titleText); ?>"
                alt="<?php echo Str::escape($titleText); ?>"
                loading="lazy"

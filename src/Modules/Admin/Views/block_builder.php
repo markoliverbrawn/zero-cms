@@ -4,6 +4,7 @@
 use Zero\Core\App;
 use Zero\Support\AssetVersion;
 use Zero\Support\BlockHelper;
+use Zero\Support\Security;
 use Zero\Support\Str;
 
 $blockField = $blockBuilderField ?? 'content';
@@ -186,8 +187,10 @@ foreach (App::getRegisteredBlocks() as $type => $config) {
                         
                         <?php
                         if (file_exists($adminView)) {
-                            $blockTitle = $block['title'] ?? '';
-                            $blockContent = $block['content'] ?? '';
+                            // These land inside contenteditable areas in every block's admin partial,
+                            // so sanitise once here rather than trusting each partial to.
+                            $blockTitle = Security::sanitizeTitleHtml((string) ($block['title'] ?? ''));
+                            $blockContent = Security::sanitizeHtml((string) ($block['content'] ?? ''), false);
                             $items = $block['items'] ?? [];
                             $duration = $block['duration'] ?? 5000;
                             include $adminView;
