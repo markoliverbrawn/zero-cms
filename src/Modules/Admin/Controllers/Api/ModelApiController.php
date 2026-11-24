@@ -179,10 +179,8 @@ class ModelApiController extends AdminApiControllerBase
 
         // Enforce Role-Based Access Control (RBAC) protection for sensitive tables or force-deletes
         $isForce = isset($_GET['force']) && $_GET['force'] === 'true';
-        $requiredPermission = App::permissionForModel($modelName);
-        if ($requiredPermission !== null) {
-            App::requirePermission($requiredPermission);
-        }
+        // Models without a dedicated permission are content: require content.edit.
+        App::requirePermission(App::permissionForModel($modelName) ?? 'content.edit');
         if ($isForce) {
             App::requirePermission('content.destructive');
         }
@@ -226,10 +224,8 @@ class ModelApiController extends AdminApiControllerBase
         }
 
         // Enforce Role-Based Access Control (RBAC) protection for sensitive tables
-        $requiredPermission = App::permissionForModel($modelName);
-        if ($requiredPermission !== null) {
-            App::requirePermission($requiredPermission);
-        }
+        // Models without a dedicated permission are content: require content.edit.
+        App::requirePermission(App::permissionForModel($modelName) ?? 'content.edit');
 
         // Check if model has IsOrderable trait or supports reordering
         $traits = \class_uses($model);
@@ -271,10 +267,8 @@ class ModelApiController extends AdminApiControllerBase
         }
 
         // Enforce Role-Based Access Control (RBAC) protection for sensitive tables
-        $requiredPermission = App::permissionForModel($modelName);
-        if ($requiredPermission !== null) {
-            App::requirePermission($requiredPermission);
-        }
+        // Models without a dedicated permission are content: require content.edit.
+        App::requirePermission(App::permissionForModel($modelName) ?? 'content.edit');
 
         $config = $model::getConfig();
         $data = [];

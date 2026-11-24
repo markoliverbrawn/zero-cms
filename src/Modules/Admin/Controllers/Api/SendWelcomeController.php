@@ -45,6 +45,13 @@ class SendWelcomeController implements Controller
             exit;
         }
 
+        // Emailing accounts is user management, not something any signed-in session may trigger.
+        if (!App::authorize('users.manage')) {
+            \http_response_code(403);
+            echo \json_encode(['success' => false, 'message' => 'Forbidden: user management permission required.']);
+            exit;
+        }
+
         // Validate the request is POST
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             \http_response_code(405);

@@ -14,6 +14,7 @@ namespace Zero\Modules\Admin\Controllers\Api;
 
 use Zero\Database\DB;
 use Zero\Http\Controllers\ApiController;
+use Zero\Support\Permissions;
 use Zero\Support\Security;
 
 /**
@@ -38,12 +39,21 @@ abstract class AdminApiControllerBase extends ApiController
             ], 401);
         }
 
-        $user = DB::query("SELECT * FROM users WHERE id = ? LIMIT 1", [$userId])->fetch();
+        $user = DB::query("SELECT * FROM users WHERE id = ? AND deleted_at IS NULL LIMIT 1", [$userId])->fetch();
         if (!$user) {
             $this->respond([
                 'success' => false,
                 'error' => 'Unauthorized: User not found'
             ], 401);
+        }
+
+        // Every back-office API is staff-only: a signed-in member (e.g. a self-registered shop
+        // customer) has a session too, but must not reach any of these endpoints.
+        if (!Permissions::roleHas((string) ($user['role'] ?? ''), 'backoffice.access')) {
+            $this->respond([
+                'success' => false,
+                'error' => 'Forbidden: Back-office access required'
+            ], 403);
         }
 
         // Apply CSRF validation for state-modifying requests (POST, PUT, PATCH, DELETE)
