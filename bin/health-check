@@ -1,0 +1,77 @@
+#!/usr/bin/env php
+<?php
+// bin/health-check - Run the deployment health checks from the command line.
+//
+// Usage:
+//   bin/health-check                 Check every site.
+//   bin/health-check --site=DOMAIN   Check one site (by domain or id).
+//
+// Each run is archived in the site's Health Check history like an admin "Run now"; no email is
+// sent. Exit codes: 0 nothing failing, 1 a check failed, 2 usage error.
+
+define('APPLICATION_ROOT', dirname(__DIR__));
+
+// Register global PSR-4 Autoloader for Zero namespace mapping
+spl_autoload_register(function ($class) {
+    $prefix = 'Zero\\';
+    $base_dir = APPLICATION_ROOT . '/src/';
+
+    $len = strlen($prefix);
+    if (strncmp($prefix, $class, $len) !== 0) {
+        return;
+    }
+
+    $relative_class = substr($class, $len);
+    $file = $base_dir . str_replace('\\', '/', $relative_class) . '.php';
+
+    if (file_exists($file)) {
+        require_once $file;
+    }
+});
+
+use Zero\Core\App;
+use Zero\Core\Env;
+use Zero\Database\DB;
+use Zero\Models\Site;
+use Zero\Modules\Security\HealthChecks\CheckResult;
+use Zero\Modules\Security\Services\HealthCheckRunner;
+
+Env::load(APPLICATION_ROOT);
+App::bootstrap();
+
+$siteFilter = null;
+foreach (array_slice($argv, 1) as $arg) {
+    if (preg_match('/^--site=(.+)$/', $arg, $m) === 1) {
+        $siteFilter = $m[1];
+    } else {
+        fwrite(STDERR, "Unknown argument: {$arg}\nUsage: bin/health-check [--site=DOMAIN]\n");
+        exit(2);
+    }
+}
+
+$rows = $siteFilter === null
+    ? DB::query("SELECT id FROM sites WHERE deleted_at IS NULL ORDER BY name ASC")->fetchAll()
+    : DB::query("SELECT id FROM sites WHERE (domain = ? OR id = ?) AND deleted_at IS NULL", [$siteFilter, $siteFilter])->fetchAll();
+if ($rows === []) {
+    fwrite(STDERR, "No matching site.\n");
+    exit(2);
+}
+
+$anyFailing = false;
+foreach ($rows as $row) {
+    $site = Site::find($row['id']);
+    if ($site === null) {
+        continue;
+    }
+    App::setCurrentSite($site);
+
+    echo "== {$site->name} ({$site->domain})\n";
+    $run = HealthCheckRunner::run($site);
+    foreach ($run['results'] as $result) {
+        printf("  %-5s %-26s %s\n", strtoupper($result['status']), $result['label'], $result['message']);
+    }
+    echo "\n";
+    $anyFailing = $anyFailing || $run['status'] === CheckResult::FAIL;
+}
+
+exit($anyFailing ? 1 : 0);

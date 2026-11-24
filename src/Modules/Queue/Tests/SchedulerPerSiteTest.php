@@ -11,7 +11,7 @@ use Zero\Database\DB;
 use Zero\Interfaces\Job as JobInterface;
 use Zero\Models\Site;
 use Zero\Modules\Queue\Support\Scheduler;
-use Zero\Modules\Security\Jobs\SecurityAuditJob;
+use Zero\Modules\Security\Jobs\HealthCheckJob;
 
 /**
  * Never executed -- the test only checks what the scheduler dispatches.
@@ -84,9 +84,9 @@ assert_test(!array_key_exists('hourly', $schema['audit_schedule']['options']), "
 
 // 4. Report recipient: per-site address, else ADMIN_EMAIL.
 putenv('ADMIN_EMAIL=fallback@example.com');
-assert_test(SecurityAuditJob::recipient($dailySite) === 'audits@example.com', "A site's own report_email receives its report");
-assert_test(SecurityAuditJob::recipient($unsetSite) === 'fallback@example.com', "A site without report_email falls back to ADMIN_EMAIL");
-assert_test(SecurityAuditJob::recipient($offSite) === 'fallback@example.com', "An invalid report_email falls back to ADMIN_EMAIL");
+assert_test(HealthCheckJob::recipient($dailySite) === 'audits@example.com', "A site's own report_email receives its report");
+assert_test(HealthCheckJob::recipient($unsetSite) === 'fallback@example.com', "A site without report_email falls back to ADMIN_EMAIL");
+assert_test(HealthCheckJob::recipient($offSite) === 'fallback@example.com', "An invalid report_email falls back to ADMIN_EMAIL");
 putenv('ADMIN_EMAIL');
 putenv('SECURITY_AUDIT_SCHEDULE');
 

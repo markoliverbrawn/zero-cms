@@ -3,35 +3,36 @@
 declare(strict_types=1);
 
 /**
- * File: src/Modules/Security/Jobs/SecurityAuditJob.php
- * Architectural Purpose: Modular backend controller, back-office views manager, or module bootstrapping registry hook.
+ * File: src/Modules/Security/Jobs/HealthCheckJob.php
+ * Architectural Purpose: Scheduled job running the deployment health checks for a site.
  * Package: Zero\Modules\Security\Jobs
- * Systemic Role: Standardized, zero-dependency engine component supporting secure platform execution.
+ * Systemic Role: Registered with the Queue module's Scheduler; emails only when something needs attention.
  */
 
 namespace Zero\Modules\Security\Jobs;
 
-use ReflectionClass;
 use Zero\Core\App;
 use Zero\Core\Env;
 use Zero\Core\Template;
 use Zero\Interfaces\Job;
-use Zero\Modules\Security\Controllers\SecurityAuditController;
-use Zero\Modules\Security\Models\SecurityAudit;
+use Zero\Models\Site;
+use Zero\Modules\Security\HealthChecks\CheckResult;
+use Zero\Modules\Security\Services\HealthCheckRunner;
 use Zero\Support\Emailer;
 
 /**
- * Class SecurityAuditJob
+ * Class HealthCheckJob
  *
- * Scheduled job that runs the security audit unattended and emails the resulting report to the
- * configured administrator.
+ * Runs every health check for the current site and archives the run. Emails the site's report
+ * recipient only when a check fails or any check's status changed since the previous run, so a
+ * healthy, unchanged site produces no mail.
  */
-class SecurityAuditJob implements Job
+class HealthCheckJob implements Job
 {
     /**
-     * Executes the background security audit, archives the report, and dispatches email notifications.
+     * Run the checks, archive the run, and notify when warranted.
      *
-     * @param array $payload
+     * @param array $payload Unused.
      * @return void
      */
     public function execute(array $payload): void
@@ -41,73 +42,58 @@ class SecurityAuditJob implements Job
             return;
         }
 
-        // 1. Core audit orchestration via reflection on SecurityAuditController
-        $controller = new SecurityAuditController();
-        $reflector = new ReflectionClass(SecurityAuditController::class);
-
-        $collectMethod = $reflector->getMethod('collectTelemetry');
-        $collectMethod->setAccessible(true);
-        $telemetry = $collectMethod->invoke($controller);
-
-        $runMethod = $reflector->getMethod('runAudit');
-        $runMethod->setAccessible(true);
-        $report = $runMethod->invoke($controller, $telemetry);
-
-        $score = $telemetry['calculated_score'] ?? 100;
-
-        // 2. Archive this security audit historically in the database
         try {
-            $audit = new SecurityAudit([
-                'user_id' => null, // Executed by system background daemon
-                'score' => $score,
-                'environment' => $telemetry['environment'] ?? 'production',
-                'telemetry' => \json_encode($telemetry),
-                'report' => $report
-            ]);
-            $audit->save();
+            $run = HealthCheckRunner::run($site);
         } catch (\Exception $e) {
-            \error_log('SecurityAuditJob: failed to archive audit report: ' . $e->getMessage());
+            \error_log('HealthCheckJob: health check run failed for site ' . $site->id . ': ' . $e->getMessage());
+            return;
         }
 
-        // 3. Email the report to this site's configured recipient, else ADMIN_EMAIL
-        $adminEmail = self::recipient($site);
-        if (!empty($adminEmail)) {
-            try {
-                $htmlBody = Template::renderFile(
-                    APPLICATION_ROOT . '/src/Modules/Security/Views/security_audit_report.php',
-                    [
-                        'report' => $report,
-                        'score' => $score,
-                        'siteName' => $site->name ?? '',
-                        'siteDomain' => $site->domain ?? ''
-                    ]
-                );
+        if (!HealthCheckRunner::shouldNotify($run)) {
+            return;
+        }
+        $recipient = self::recipient($site);
+        if ($recipient === '') {
+            return;
+        }
 
-                $subject = "Zero CMS Security Telemetry: Score {$score}/100 [Domain: " . ($site->domain ?? 'Unknown') . "]";
-                Emailer::send($adminEmail, $subject, $htmlBody);
-            } catch (\Exception $e) {
-                // Fail gracefully during background execution
-            }
+        $counts = \array_count_values(\array_column($run['results'], 'status'));
+        $failing = (int) ($counts[CheckResult::FAIL] ?? 0);
+        $warning = (int) ($counts[CheckResult::WARN] ?? 0);
+        $summary = $failing > 0 ? "{$failing} failing" : ($warning > 0 ? "{$warning} warning" . ($warning === 1 ? '' : 's') : 'all passing');
+
+        try {
+            $html = Template::renderFile(APPLICATION_ROOT . '/src/Modules/Security/Views/health_check_email.php', [
+                'results' => $run['results'],
+                'status' => $run['status'],
+                'changed' => $run['changed'],
+                'siteName' => (string) ($site->name ?? ''),
+                'siteDomain' => (string) ($site->domain ?? ''),
+                'reportUrl' => $site->absoluteUrl('/admin/security/audit?id=' . \rawurlencode((string) $run['audit']->id)),
+            ]);
+            Emailer::send($recipient, 'Health check: ' . $summary . ' [' . ($site->domain ?? 'unknown') . ']', $html);
+        } catch (\Exception $e) {
+            \error_log('HealthCheckJob: failed to email health check for site ' . $site->id . ': ' . $e->getMessage());
         }
     }
 
     /**
-     * Resolve who receives this site's audit report: its 'report_email' security setting when that
+     * Who receives this site's health check email: its 'report_email' security setting when that
      * is a valid address, otherwise the installation-wide ADMIN_EMAIL.
      *
-     * @param \Zero\Models\Site $site
+     * @param Site $site Site.
      * @return string The recipient, or '' if neither is configured.
      */
     public static function recipient($site): string
     {
-        $configured = \trim((string)$site->getModuleSetting('security', 'report_email', ''));
+        $configured = \trim((string) $site->getModuleSetting('security', 'report_email', ''));
         if ($configured !== '') {
             if (\filter_var($configured, FILTER_VALIDATE_EMAIL) !== false) {
                 return $configured;
             }
-            \error_log("SecurityAuditJob: ignoring invalid report_email for site {$site->id}; using ADMIN_EMAIL.");
+            \error_log("HealthCheckJob: ignoring invalid report_email for site {$site->id}; using ADMIN_EMAIL.");
         }
 
-        return \trim((string)Env::get('ADMIN_EMAIL', ''));
+        return \trim((string) Env::get('ADMIN_EMAIL', ''));
     }
 }
