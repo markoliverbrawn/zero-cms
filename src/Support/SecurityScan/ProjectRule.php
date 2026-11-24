@@ -17,6 +17,15 @@ namespace Zero\Support\SecurityScan;
 interface ProjectRule
 {
     /**
+     * Whether checkProject() needs this file. The scanner keeps only files some project rule
+     * needs, so large files no rule needs (generated seed data, say) are freed once checked.
+     *
+     * @param SourceFile $file Source.
+     * @return bool
+     */
+    public function needs(SourceFile $file): bool;
+
+    /**
      * Inspect all scanned files together and return findings.
      *
      * @param array<string, SourceFile> $files Files keyed by relative path.

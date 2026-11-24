@@ -33,6 +33,12 @@ if (!\defined('APPLICATION_ROOT')) {
 require_once APPLICATION_ROOT . '/src/Core/Autoloader.php';
 \Zero\Core\Autoloader::init();
 
+// Tokenising one large generated file (multi-MB seed data) needs over 100MB; don't fail on the
+// CLI's 128M default. The scanner holds one file's tokens at a time plus the class/route files.
+if (\ini_parse_quantity((string) \ini_get('memory_limit')) !== -1 && \ini_parse_quantity((string) \ini_get('memory_limit')) < 512 * 1024 * 1024) {
+    \ini_set('memory_limit', '512M');
+}
+
 $options = ['root' => \getcwd(), 'format' => 'text', 'baseline' => null, 'write-baseline' => null];
 $paths = [];
 foreach (\array_slice($argv, 1) as $arg) {

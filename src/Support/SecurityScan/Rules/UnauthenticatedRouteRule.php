@@ -37,6 +37,14 @@ final class UnauthenticatedRouteRule implements ProjectRule
     /**
      * {@inheritdoc}
      */
+    public function needs(SourceFile $file): bool
+    {
+        return $this->classesIn($file) !== [] || $this->routesIn($file) !== [];
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function checkProject(array $files): array
     {
         $classes = [];

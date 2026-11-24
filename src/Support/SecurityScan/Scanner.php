@@ -71,20 +71,27 @@ final class Scanner
     public function scan(string $root, array $paths, array $baseline = []): array
     {
         $root = \rtrim((string) \realpath($root), '/');
-        $files = [];
+        $findings = [];
+        $kept = [];
         foreach ($paths as $path) {
             $absolute = \str_starts_with($path, '/') ? $path : $root . '/' . $path;
             foreach ($this->phpFilesUnder($absolute) as $file) {
                 $relative = \ltrim(\substr($file, \strlen($root)), '/');
-                $files[$relative] = new SourceFile($relative, (string) \file_get_contents($file));
+                $source = new SourceFile($relative, (string) \file_get_contents($file));
+                \array_push($findings, ...$this->checkFile($source));
+                if ($this->neededByProjectRules($source)) {
+                    $kept[$relative] = $source;
+                }
+                unset($source); // free the tokens of files no project rule needs before the next file
             }
         }
+        \array_push($findings, ...$this->checkProject($kept));
 
-        return $this->scanSources($files, $baseline);
+        return $this->finalise($findings, $baseline);
     }
 
     /**
-     * Scan already-loaded sources (used by tests and by scan()).
+     * Scan already-loaded sources (used by tests).
      *
      * @param array<string, SourceFile> $files Files keyed by relative path.
      * @param array<int, string> $baseline Fingerprints to suppress.
@@ -92,29 +99,88 @@ final class Scanner
      */
     public function scanSources(array $files, array $baseline = []): array
     {
-        $raw = [];
+        $findings = [];
         foreach ($files as $file) {
-            foreach ($this->fileRules as $rule) {
-                \array_push($raw, ...$rule->check($file));
-            }
-            foreach ($file->invalidIgnoreLines() as $line) {
-                $raw[] = new Finding('invalid-ignore', Finding::MEDIUM, $file->path, $line,
-                    'security-scan-ignore needs a reason: "// security-scan-ignore: <rule> -- <why this is safe>".',
-                    $file->lineText($line));
-            }
+            \array_push($findings, ...$this->checkFile($file));
         }
-        foreach ($this->projectRules as $rule) {
-            \array_push($raw, ...$rule->checkProject($files));
+        \array_push($findings, ...$this->checkProject($files));
+
+        return $this->finalise($findings, $baseline);
+    }
+
+    /**
+     * Run the per-file rules on one file, dropping findings silenced in that file.
+     *
+     * @param SourceFile $file Source.
+     * @return array<int, Finding>
+     */
+    private function checkFile(SourceFile $file): array
+    {
+        $raw = [];
+        foreach ($this->fileRules as $rule) {
+            \array_push($raw, ...$rule->check($file));
+        }
+        $findings = \array_values(\array_filter($raw, static fn (Finding $f): bool => !$file->isIgnored($f->rule, $f->line)));
+        foreach ($file->invalidIgnoreLines() as $line) {
+            $findings[] = new Finding('invalid-ignore', Finding::MEDIUM, $file->path, $line,
+                'security-scan-ignore needs a reason: "// security-scan-ignore: <rule> -- <why this is safe>".',
+                $file->lineText($line));
         }
 
+        return $findings;
+    }
+
+    /**
+     * Run the cross-file rules, dropping findings silenced where they are reported.
+     *
+     * @param array<string, SourceFile> $files Files the project rules need, keyed by relative path.
+     * @return array<int, Finding>
+     */
+    private function checkProject(array $files): array
+    {
+        $findings = [];
+        foreach ($this->projectRules as $rule) {
+            foreach ($rule->checkProject($files) as $finding) {
+                $file = $files[$finding->file] ?? null;
+                if ($file === null || !$file->isIgnored($finding->rule, $finding->line)) {
+                    $findings[] = $finding;
+                }
+            }
+        }
+
+        return $findings;
+    }
+
+    /**
+     * Whether any project rule needs this file kept for checkProject().
+     *
+     * @param SourceFile $file Source.
+     * @return bool
+     */
+    private function neededByProjectRules(SourceFile $file): bool
+    {
+        foreach ($this->projectRules as $rule) {
+            if ($rule->needs($file)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Drop baselined and duplicate findings, then sort by file and line.
+     *
+     * @param array<int, Finding> $raw Findings with inline ignores already applied.
+     * @param array<int, string> $baseline Fingerprints to suppress.
+     * @return array<int, Finding>
+     */
+    private function finalise(array $raw, array $baseline): array
+    {
         $baselineSet = \array_flip($baseline);
         $findings = [];
         $seen = [];
         foreach ($raw as $finding) {
-            $file = $files[$finding->file] ?? null;
-            if ($file !== null && $finding->rule !== 'invalid-ignore' && $file->isIgnored($finding->rule, $finding->line)) {
-                continue;
-            }
             if (isset($baselineSet[$finding->fingerprint()])) {
                 continue;
             }
