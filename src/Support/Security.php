@@ -296,21 +296,38 @@ class Security {
     }
 
     /**
-     * Dynamic Session-Based Rate Limiter (IP/Session scope protection)
+     * Allow one action per $limitSeconds for the current client IP on the current site, tracked in
+     * the rate_limits table so it holds however many sessions or cookies a client uses (a
+     * session-held timestamp is reset just by not sending the cookie). One atomic upsert: the row's
+     * last_hit only moves forward once the window has passed, and the affected-row count says
+     * whether it did. Fails open, with a log entry, if the table is unavailable.
+     *
+     * @param string $key Action name, e.g. 'form_submission'.
+     * @param int $limitSeconds Minimum seconds between allowed actions.
+     * @return bool True when the action is allowed.
      */
     public static function rateLimit(string $key, int $limitSeconds): bool
     {
-        App::ensureSession();
+        $bucket = \hash('sha256', $key . '|' . self::getClientIp() . '|' . (string) App::getCurrentSiteId());
         $now = \time();
-        $sessionKey = '_rate_limit_' . $key;
-        $lastTime = $_SESSION[$sessionKey] ?? 0;
 
-        if (($now - $lastTime) < $limitSeconds) {
-            return false; // Rate limit exceeded!
+        try {
+            $affected = DB::query(
+                "INSERT INTO rate_limits (bucket, last_hit) VALUES (?, ?)
+                 ON DUPLICATE KEY UPDATE last_hit = IF(last_hit <= ?, ?, last_hit)",
+                [$bucket, $now, $now - $limitSeconds, $now]
+            )->rowCount();
+
+            // Occasionally clear buckets idle for a day, so the table stays small.
+            if (\random_int(1, 200) === 1) {
+                DB::query("DELETE FROM rate_limits WHERE last_hit < ?", [$now - 86400]);
+            }
+        } catch (\Exception $e) {
+            \error_log('Security::rateLimit: ' . $e->getMessage());
+            return true;
         }
 
-        $_SESSION[$sessionKey] = $now;
-        return true;
+        return $affected > 0;
     }
 
     /**
@@ -402,6 +419,58 @@ class Security {
     }
 
     /**
+     * Check and consume the Google OAuth state nonce issued by oauthState(). Single use: the nonce
+     * is cleared whether or not it matches, so a captured callback URL cannot be replayed.
+     *
+     * @param mixed $state The state value returned by the provider.
+     * @return bool
+     */
+    public static function consumeOAuthState($state): bool
+    {
+        App::ensureSession();
+        $expected = (string) ($_SESSION['_oauth_state'] ?? '');
+        unset($_SESSION['_oauth_state']);
+
+        return \is_string($state) && $expected !== '' && \hash_equals($expected, $state);
+    }
+
+    /**
+     * A one-time nonce for the OAuth state parameter, kept in the session until the callback
+     * consumes it. Separate from the CSRF token so that token never appears in provider URLs or
+     * logs. Reused across renders until consumed, so several open login tabs all work.
+     *
+     * @return string
+     */
+    public static function oauthState(): string
+    {
+        App::ensureSession();
+        if (empty($_SESSION['_oauth_state']) || !\is_string($_SESSION['_oauth_state'])) {
+            $_SESSION['_oauth_state'] = \bin2hex(\random_bytes(16));
+        }
+
+        return $_SESSION['_oauth_state'];
+    }
+
+    /**
+     * Why a new back-office password is unacceptable, or null when it meets the policy: at least
+     * 10 characters with upper case, lower case and a digit, and not the seeded "change_me".
+     *
+     * @param string $password Candidate password.
+     * @return string|null Error message for the user, or null if acceptable.
+     */
+    public static function passwordPolicyError(string $password): ?string
+    {
+        if (\strtolower($password) === 'change_me') {
+            return 'Please choose a unique, strong password. "change_me" is blocked.';
+        }
+        if (\strlen($password) < 10 || !\preg_match('/[A-Z]/', $password) || !\preg_match('/[a-z]/', $password) || !\preg_match('/[0-9]/', $password)) {
+            return 'Password is too weak. It must be at least 10 characters long and contain uppercase, lowercase, and numeric characters.';
+        }
+
+        return null;
+    }
+
+    /**
      * Whether a URL attribute value is safe: relative, or using an allowed scheme. ASCII control
      * characters and whitespace are ignored when finding the scheme, as browsers ignore them too
      * (so "java\tscript:" is still treated as javascript:).
@@ -458,7 +527,10 @@ class Security {
             }
 
             if ($keep && $lower === 'style') {
-                $keep = \preg_match('/expression\s*\(|url\s*\(|@import|behavior\s*:|javascript:|[<>\\\\]/i', $value) !== 1;
+                // Also refuse fixed positioning (full-page overlays for phishing), image-set() and
+                // -moz-binding (external fetches that url() matching misses), and CSS comments
+                // (used to split keywords like expre/**/ssion past these checks).
+                $keep = \preg_match('/expression\s*\(|url\s*\(|image-set\s*\(|@import|behavior\s*:|-moz-binding|javascript:|position\s*:\s*fixed|\/\*|[<>\\\\]/i', $value) !== 1;
             }
 
             if (!$keep) {
@@ -785,6 +857,14 @@ class Security {
 
         self::scrubSvgAttributes($root);
         self::scrubSvgChildren($root);
+
+        // Drop everything outside the root element: an xml-stylesheet processing instruction
+        // before <svg> would otherwise survive and load an external stylesheet.
+        foreach (\iterator_to_array($dom->childNodes) as $node) {
+            if ($node !== $root) {
+                $dom->removeChild($node);
+            }
+        }
 
         $sanitizedContent = $dom->saveXML();
         return \file_put_contents($filePath, $sanitizedContent) !== false;

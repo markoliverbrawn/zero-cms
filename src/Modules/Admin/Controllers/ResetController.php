@@ -45,30 +45,26 @@ class ResetController implements Controller
 
             $new = $_POST['password'] ?? '';
             
-            // Security Hardening: Enforce strong password complexity policy
-            if (\strlen($new) < 10 || !\preg_match('/[A-Z]/', $new) || !\preg_match('/[a-z]/', $new) || !\preg_match('/[0-9]/', $new)) {
-                App::render('admin/reset', [
-                    'token' => $token,
-                    'error' => 'Password is too weak. It must be at least 10 characters long and contain uppercase, lowercase, and numeric characters.'
-                ]);
+            $policyError = Security::passwordPolicyError((string) $new);
+            if ($policyError !== null) {
+                App::render('admin/reset', ['token' => $token, 'error' => $policyError]);
                 exit;
             }
 
             // A token only redeems on the tenant that issued it.
             $row = \is_string($token) && $token !== ''
-                ? DB::query('SELECT * FROM password_resets WHERE token = ? AND site_id = ? LIMIT 1', [$token, App::getCurrentSiteId()])->fetch()
+                ? DB::query('SELECT * FROM password_resets WHERE token = ? AND site_id = ? LIMIT 1', [\hash('sha256', $token), App::getCurrentSiteId()])->fetch()
                 : false;
             if (!$row || \strtotime($row['expires_at']) < \time()) {
                 // Log failed attempt to increment rate limit counter
                 Logger::log(null, 'password_reset_failed', 'user', null, [
-                    'ip_address' => $ip,
-                    'token' => $token
+                    'ip_address' => $ip
                 ]);
                 App::render('admin/reset', ['error' => 'Invalid or expired token']);
                 exit;
             }
             $hash = \password_hash($new, PASSWORD_DEFAULT);
-            DB::query('UPDATE users SET password_hash = ? WHERE id = ?', [$hash, $row['user_id']]);
+            DB::query('UPDATE users SET password_hash = ?, password_changed_at = ? WHERE id = ?', [$hash, \gmdate('Y-m-d H:i:s'), $row['user_id']]);
             
             // Security Hardening: Invalidate and rotate ALL pending password resets for this user upon success
             DB::query('DELETE FROM password_resets WHERE user_id = ?', [$row['user_id']]);

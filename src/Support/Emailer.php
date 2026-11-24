@@ -187,7 +187,7 @@ class Emailer
             \error_log('Emailer: SMTP_FROM_EMAIL / SMTP_FROM_NAME contain control characters');
             return false;
         }
-        $secure = Env::get('SMTP_SECURE', '');   // 'tls' enables STARTTLS
+        $secure = \strtolower((string) Env::get('SMTP_SECURE', ''));   // 'tls' = STARTTLS, 'ssl' = implicit TLS (port 465)
         $user = Env::get('SMTP_USER', '');        // non-empty enables AUTH LOGIN
         $pass = Env::get('SMTP_PASS', '');
 
@@ -196,7 +196,7 @@ class Emailer
         }
 
         // Open direct socket connection to the SMTP server
-        $socket = @fsockopen($host, $port, $errno, $errstr, 5);
+        $socket = @fsockopen(($secure === 'ssl' ? 'ssl://' : '') . $host, $port, $errno, $errstr, 5);
         if (!$socket) {
             // Safe fallback: log error or return false if SMTP is offline
             error_log("Emailer connection failed to {$host}:{$port} - Error: {$errstr} ({$errno})");
@@ -242,7 +242,18 @@ class Emailer
                 return false;
             }
 
-            if ($secure === 'tls') {
+            // Credentials must never cross the network in plaintext: when authenticating without
+            // implicit TLS, upgrade with STARTTLS whenever the server offers it (even if
+            // SMTP_SECURE was left unset), and refuse to authenticate to a non-local server that
+            // offers no TLS at all.
+            $tlsMode = self::tlsMode($secure, $user !== '', $host, \preg_match('/^250[ -]STARTTLS\b/mi', $response) === 1);
+            if ($tlsMode === 'refuse') {
+                error_log("Emailer refused to send SMTP credentials to {$host}:{$port} without TLS; set SMTP_SECURE=tls or ssl");
+                \fclose($socket);
+                return false;
+            }
+
+            if ($tlsMode === 'starttls') {
                 fputs($socket, "STARTTLS\r\n");
                 $response = $getResponse($socket);
                 if (!$requireCode($response, ['220'], 'STARTTLS')) {
@@ -377,5 +388,31 @@ class Emailer
             \fclose($socket);
             return false;
         }
+    }
+
+    /**
+     * How to secure an SMTP session after EHLO: 'starttls' to upgrade, 'none' to continue as is,
+     * or 'refuse' when credentials would otherwise cross the network in plaintext. Implicit TLS
+     * (SMTP_SECURE=ssl) is already encrypted. Authentication upgrades with STARTTLS whenever the
+     * server offers it, even if SMTP_SECURE was left unset, and is refused to a non-local server
+     * that offers no TLS. Unauthenticated local relays (mailpit) are unaffected.
+     *
+     * @param string $secure SMTP_SECURE value: 'tls', 'ssl' or ''.
+     * @param bool $authenticating Whether SMTP_USER is set.
+     * @param string $host SMTP host.
+     * @param bool $offersStartTls Whether the EHLO response advertised STARTTLS.
+     * @return string 'starttls', 'none' or 'refuse'.
+     */
+    public static function tlsMode(string $secure, bool $authenticating, string $host, bool $offersStartTls): string
+    {
+        if ($secure === 'ssl') {
+            return 'none';
+        }
+        if ($secure === 'tls' || ($authenticating && $offersStartTls)) {
+            return 'starttls';
+        }
+        $isLocalServer = \in_array(\strtolower($host), ['localhost', '127.0.0.1', '::1', 'mailpit'], true);
+
+        return $authenticating && !$isLocalServer ? 'refuse' : 'none';
     }
 }

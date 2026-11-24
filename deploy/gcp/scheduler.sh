@@ -38,19 +38,20 @@ log_success "Resolved Cloud Run Service endpoint: $SERVICE_URL"
 # `sites.domain`: the triggers then send it as X-Forwarded-Host with the matching X-Proxy-Secret,
 # which Security::resolveTrustedHost() trusts. The queue is global -- QueueManager processes every
 # tenant's pending jobs whichever site resolved -- so one domain unblocks all tenants.
-SCHEDULER_HEADER_ARGS_CREATE=()
-SCHEDULER_HEADER_ARGS_UPDATE=()
+# Each trigger authenticates with its token in a header (X-Queue-Token / X-Scheduler-Token), never
+# in the URL, so it stays out of request logs.
+PROXY_HEADERS=""
 if [ -n "$SCHEDULER_TARGET_DOMAIN" ]; then
-    SCHEDULER_HEADERS="X-Forwarded-Host=${SCHEDULER_TARGET_DOMAIN},X-Proxy-Secret=${TRUSTED_PROXY_SECRET}"
-    SCHEDULER_HEADER_ARGS_CREATE=(--headers="$SCHEDULER_HEADERS")
-    SCHEDULER_HEADER_ARGS_UPDATE=(--update-headers="$SCHEDULER_HEADERS")
+    PROXY_HEADERS=",X-Forwarded-Host=${SCHEDULER_TARGET_DOMAIN},X-Proxy-Secret=${TRUSTED_PROXY_SECRET}"
     log_info "Triggers will present X-Forwarded-Host: $SCHEDULER_TARGET_DOMAIN"
 fi
+QUEUE_HEADERS="X-Queue-Token=${QUEUE_TRIGGER_TOKEN}${PROXY_HEADERS}"
+TASK_HEADERS="X-Scheduler-Token=${SCHEDULER_TRIGGER_TOKEN}${PROXY_HEADERS}"
 
 # 3. Provision Cloud Scheduler Job
 SCHEDULER_JOB_NAME="$DEPLOYMENT_NAME-queue-scheduler"
 SCHEDULER_SCHEDULE="*/5 * * * *" # Every 5 minutes
-SCHEDULER_URI="${SERVICE_URL}/api/v1/queue/process?token=${QUEUE_TRIGGER_TOKEN}"
+SCHEDULER_URI="${SERVICE_URL}/api/v1/queue/process"
 # The queue endpoint drains pending jobs for up to 800s per call (QueueManager::runPendingJobs()).
 # Cloud Scheduler's default --attempt-deadline is 180s, and it cancels the request server-side when
 # the deadline passes -- cutting off the job in progress. Set it above the 800s budget (headroom for
@@ -65,7 +66,7 @@ if gcloud scheduler jobs describe "$SCHEDULER_JOB_NAME" --location="$GCP_REGION"
         --location="$GCP_REGION" \
         --schedule="$SCHEDULER_SCHEDULE" \
         --uri="$SCHEDULER_URI" \
-        "${SCHEDULER_HEADER_ARGS_UPDATE[@]}" \
+        --update-headers="$QUEUE_HEADERS" \
         --attempt-deadline="$SCHEDULER_ATTEMPT_DEADLINE" \
         --http-method="POST" \
         --time-zone="UTC" \
@@ -77,7 +78,7 @@ else
         --location="$GCP_REGION" \
         --schedule="$SCHEDULER_SCHEDULE" \
         --uri="$SCHEDULER_URI" \
-        "${SCHEDULER_HEADER_ARGS_CREATE[@]}" \
+        --headers="$QUEUE_HEADERS" \
         --attempt-deadline="$SCHEDULER_ATTEMPT_DEADLINE" \
         --http-method="POST" \
         --time-zone="UTC" \
@@ -92,7 +93,7 @@ fi
 # every_minute task is ever actually registered.
 SCHEDULER2_JOB_NAME="$DEPLOYMENT_NAME-task-scheduler"
 SCHEDULER2_SCHEDULE="*/5 * * * *" # Every 5 minutes
-SCHEDULER2_URI="${SERVICE_URL}/api/v1/queue/schedule?token=${SCHEDULER_TRIGGER_TOKEN}"
+SCHEDULER2_URI="${SERVICE_URL}/api/v1/queue/schedule"
 
 log_info "Checking if Cloud Scheduler Job ($SCHEDULER2_JOB_NAME) already exists..."
 if gcloud scheduler jobs describe "$SCHEDULER2_JOB_NAME" --location="$GCP_REGION" &>/dev/null; then
@@ -101,7 +102,7 @@ if gcloud scheduler jobs describe "$SCHEDULER2_JOB_NAME" --location="$GCP_REGION
         --location="$GCP_REGION" \
         --schedule="$SCHEDULER2_SCHEDULE" \
         --uri="$SCHEDULER2_URI" \
-        "${SCHEDULER_HEADER_ARGS_UPDATE[@]}" \
+        --update-headers="$TASK_HEADERS" \
         --http-method="POST" \
         --time-zone="UTC" \
         --quiet
@@ -112,7 +113,7 @@ else
         --location="$GCP_REGION" \
         --schedule="$SCHEDULER2_SCHEDULE" \
         --uri="$SCHEDULER2_URI" \
-        "${SCHEDULER_HEADER_ARGS_CREATE[@]}" \
+        --headers="$TASK_HEADERS" \
         --http-method="POST" \
         --time-zone="UTC" \
         --quiet

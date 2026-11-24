@@ -408,6 +408,14 @@ trait IsModel
      */
     public static function where(string $column, $value, string $options = ''): array
     {
+        // $column and $options are written into the SQL, so only identifiers and a plain
+        // ORDER BY / LIMIT tail are accepted -- never anything derived from input.
+        if (!Security::isSafeSqlIdentifier($column)) {
+            throw new \InvalidArgumentException('IsModel::where(): invalid column name.');
+        }
+        if ($options !== '' && \preg_match('/^(ORDER BY [A-Za-z0-9_]+( ASC| DESC)?(, [A-Za-z0-9_]+( ASC| DESC)?)*)?( ?LIMIT \d+( OFFSET \d+)?)?$/i', \trim($options)) !== 1) {
+            throw new \InvalidArgumentException('IsModel::where(): unsupported options.');
+        }
         $tableName = static::$tableName;
         $sql = "SELECT * FROM {$tableName} WHERE {$column} = ?";
         $params = [$value];

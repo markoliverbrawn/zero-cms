@@ -33,4 +33,11 @@ echo "Testing a contact-form smuggling payload yields a dot-stuffed message...\n
 $html = '<p><strong>Message:</strong> ' . \nl2br(\htmlspecialchars("hi\r\n.\r\nQUIT")) . '</p>';
 assert_test(\strpos(Emailer::prepareDataSection(\strip_tags($html)), "\r\n.\r\n") === false, "A form message's text part cannot end DATA");
 
+echo "Testing SMTP credentials are never sent in plaintext...\n";
+assert_test(Emailer::tlsMode('', true, 'smtp.example.test', true) === 'starttls', "Authentication upgrades with STARTTLS when offered, even without SMTP_SECURE");
+assert_test(Emailer::tlsMode('', true, 'smtp.example.test', false) === 'refuse', "Authentication to a remote server without TLS is refused");
+assert_test(Emailer::tlsMode('ssl', true, 'smtp.example.test', false) === 'none', "Implicit TLS (ssl) needs no upgrade");
+assert_test(Emailer::tlsMode('tls', false, 'mailpit', false) === 'starttls', "SMTP_SECURE=tls always upgrades");
+assert_test(Emailer::tlsMode('', true, 'mailpit', false) === 'none' && Emailer::tlsMode('', false, 'smtp.example.test', false) === 'none', "Local relays and unauthenticated sends are unchanged");
+
 echo "Emailer SMTP smuggling tests completed successfully!\n";

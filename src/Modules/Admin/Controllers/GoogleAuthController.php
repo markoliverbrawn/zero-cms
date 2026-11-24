@@ -56,7 +56,7 @@ class GoogleAuthController implements Controller
         }
 
         // 2. Validate OAuth CSRF State matching
-        if (!Security::csrfVerify($state)) {
+        if (!Security::consumeOAuthState($state)) {
             \header('Location: /admin/login?error=csrf_verification_failed');
             exit;
         }

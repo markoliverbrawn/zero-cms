@@ -182,6 +182,19 @@ DB::query("UPDATE users SET deleted_at = NOW() WHERE username = \'api_tester_use
 $res4b = exec_api_test($server4, ['action' => 'auth'], $dbSetupDeletedUser);
 assert_test(str_contains($res4b['stdout'], 'Unauthorized: Invalid API Key'), "A deleted user's Bearer token is rejected as invalid");
 
+// 4c. A global (site_id NULL) key only works across sites for super_admin, as sessions do.
+echo "Testing authenticate() rejects a global non-super_admin key (403)...\n";
+$dbSetupGlobalEditor = $dbSetupValidUser . '
+DB::query("UPDATE users SET site_id = NULL WHERE username = \'api_tester_user\'");
+';
+$res4c = exec_api_test($server4, ['action' => 'auth'], $dbSetupGlobalEditor);
+assert_test(str_contains($res4c['stdout'], 'Forbidden: API Key does not match active site tenant'), "A global editor's key is refused on a site");
+$dbSetupGlobalSuper = $dbSetupGlobalEditor . '
+DB::query("UPDATE users SET role = \'super_admin\' WHERE username = \'api_tester_user\'");
+';
+$res4d = exec_api_test($server4, ['action' => 'auth'], $dbSetupGlobalSuper);
+assert_test(str_contains($res4d['stdout'], 'AUTH_SUCCESS: api_tester_user'), "A global super_admin's key still works on any site");
+
 // 5. Test authenticate() successful authentication with X-API-Key Header
 echo "Testing authenticate() with valid X-API-Key Header (200)...\n";
 $server5 = [
@@ -193,15 +206,15 @@ $server5 = [
 $res5 = exec_api_test($server5, ['action' => 'auth'], $dbSetupValidUser);
 assert_test(str_contains($res5['stdout'], 'AUTH_SUCCESS: api_tester_user'), "Successfully authenticates and loads user details via HTTP_X_API_KEY header");
 
-// 6. Test authenticate() successful authentication with Query String parameter
-echo "Testing authenticate() with valid api_key Query Parameter (200)...\n";
+// 6. A key in the query string is no longer accepted (it would leak into logs and Referer headers)
+echo "Testing authenticate() refuses an api_key query parameter (401)...\n";
 $server6 = [
     'REQUEST_METHOD' => 'GET',
     'HTTP_HOST' => 'api-test.zero',
     'REMOTE_ADDR' => '127.0.0.1'
 ];
 $res6 = exec_api_test($server6, ['action' => 'auth', 'api_key' => $rawToken], $dbSetupValidUser);
-assert_test(str_contains($res6['stdout'], 'AUTH_SUCCESS: api_tester_user'), "Successfully authenticates and loads user details via api_key query string parameters");
+assert_test(str_contains($res6['stdout'], 'Unauthorized: Missing API Key'), "A valid key sent as ?api_key= is refused as missing");
 
 // 7. Test authenticate() multi-tenant boundary checks (403 Forbidden)
 echo "Testing authenticate() multi-tenant scoping boundary rejection (403)...\n";

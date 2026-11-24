@@ -218,7 +218,8 @@ final class TestRequest
      * testing sign-in itself, for example, where an authenticated session makes LoginController
      * redirect to the dashboard before it ever evaluates the submitted credentials.
      *
-     * Recognised attributes: username, email, password, role, api_token, deleted_at. Anything omitted is
+     * Recognised attributes: username, email, password, role, api_token, deleted_at,
+     * password_changed_at. Anything omitted is
      * defaulted; role defaults to 'super_admin' so a test opts in to weaker roles deliberately
      * rather than tripping over an authorisation failure it did not mean to exercise.
      *
@@ -235,7 +236,7 @@ final class TestRequest
 
     /**
      * Declare a password_resets row to create before the request runs. Recognised attributes:
-     * token, user_id (required), site_id (defaults to the request's tenant; an explicit value,
+     * token (the raw token; its SHA-256 hash is stored, as the app does), user_id (required), site_id (defaults to the request's tenant; an explicit value,
      * even null, overrides it), expires_at (defaults to an hour from now).
      *
      * @param array<string, mixed> $attributes Column values for the row.
@@ -402,7 +403,7 @@ final class TestRequest
                     Security::uuidv7(),
                     \array_key_exists('site_id', $reset) ? $reset['site_id'] : $siteId,
                     $reset['user_id'],
-                    $reset['token'],
+                    \hash('sha256', (string) $reset['token']), // stored hashed, as the forgot-password controllers do
                     $reset['expires_at'] ?? \gmdate('Y-m-d H:i:s', \time() + 3600),
                 ]
             );
@@ -762,14 +763,15 @@ final class TestRequest
         DB::query('DELETE FROM users WHERE username = ? OR email = ? OR id = ?', [$username, $email, $id]);
 
         DB::query(
-            'INSERT INTO users (id, site_id, username, email, password_hash, role, api_token, created_at, updated_at, deleted_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            'INSERT INTO users (id, site_id, username, email, password_hash, password_changed_at, role, api_token, created_at, updated_at, deleted_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
             [
                 $id,
                 \array_key_exists('site_id', $attributes) ? $attributes['site_id'] : $siteId,
                 $username,
                 $email,
                 \password_hash($attributes['password'] ?? 'Secret123', PASSWORD_BCRYPT),
+                $attributes['password_changed_at'] ?? null,
                 $attributes['role'] ?? 'super_admin',
                 $attributes['api_token'] ?? null,
                 $now,

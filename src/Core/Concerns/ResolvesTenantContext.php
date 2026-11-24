@@ -38,14 +38,14 @@ trait ResolvesTenantContext
                 SELECT
                     'site' AS record_type, id, name, domain, theme, enabled_modules,
                     homepage_id, timezone, default_language, settings, email_override,
-                    NULL AS email, NULL AS password_hash, NULL AS role, NULL AS site_id, NULL AS preferences,
+                    NULL AS email, NULL AS password_hash, NULL AS password_changed_at, NULL AS role, NULL AS site_id, NULL AS preferences,
                     created_at, updated_at
                 FROM sites WHERE domain = ?
                 UNION ALL
                 SELECT
                     'user' AS record_type, id, username AS name, NULL AS domain, NULL AS theme, NULL AS enabled_modules,
                     NULL AS homepage_id, NULL AS timezone, NULL AS default_language, NULL AS settings, NULL AS email_override,
-                    email, password_hash, role, site_id, preferences,
+                    email, password_hash, password_changed_at, role, site_id, preferences,
                     created_at, updated_at
                 FROM users WHERE id = ? AND deleted_at IS NULL
             ";
@@ -89,6 +89,12 @@ trait ResolvesTenantContext
                     self::$currentSite = new Site($siteData);
                     DB::setIdentity('sites', $row['id'], self::$currentSite);
                 } elseif ($row['record_type'] === 'user') {
+                    // A session that signed in before the password last changed is no longer
+                    // valid: changing or resetting a password signs out every other session.
+                    $changedAt = $row['password_changed_at'] ?? null;
+                    if ($changedAt !== null && (int) ($_SESSION['_auth_at'] ?? 0) < (int) \strtotime($changedAt . ' UTC')) {
+                        continue;
+                    }
                     $userFound = true;
                     $userData = [
                         'id' => $row['id'],

@@ -87,7 +87,8 @@ class Str
             }, $html);
 
             // Numbers
-            $html = \preg_replace_callback('/\b(\d+)\b/', function($m) {
+            // Not inside an HTML entity such as &#039; produced by the escaping above.
+            $html = \preg_replace_callback('/(?<![#\w])(\d+)(?![\w;])/', function($m) {
                 return '<span class="tok-num">' . $m[1] . '</span>';
             }, $html);
 
