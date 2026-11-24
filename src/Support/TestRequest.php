@@ -57,6 +57,14 @@ final class TestRequest
     private const EMAIL_MARKER = "\n__ZERO_TEST_EMAILS__";
 
     /**
+     * Bootstrap file each child process loads before running its request, or null for core's own
+     * src/Support/TestBootstrap.php. See useBootstrap().
+     *
+     * @var string|null
+     */
+    private static ?string $bootstrapFile = null;
+
+    /**
      * Whether the created user should also be signed in for the request.
      *
      * @var bool
@@ -268,6 +276,31 @@ final class TestRequest
     }
 
     /**
+     * Boot every child request with a host project's own test bootstrap instead of core's.
+     *
+     * A sub-project registers its modules, namespaces and storage root in its tests/bootstrap.php;
+     * core's TestBootstrap knows none of that, so without this the child would 404 every route
+     * the sub-project owns. Call it once from that bootstrap:
+     *
+     *     TestRequest::useBootstrap(__FILE__);
+     *
+     * The file must be safe to require in a fresh process (it is, if it already serves as the
+     * project's test bootstrap). Pass null to restore core's default.
+     *
+     * @param string|null $path Absolute path to the bootstrap file.
+     * @return void
+     * @throws \InvalidArgumentException If the file does not exist.
+     */
+    public static function useBootstrap(?string $path): void
+    {
+        if ($path !== null && !\is_file($path)) {
+            throw new \InvalidArgumentException('TestRequest::useBootstrap(): no such file: ' . $path);
+        }
+
+        self::$bootstrapFile = $path;
+    }
+
+    /**
      * Begin a GET request.
      *
      * @param string $uri Request URI.
@@ -431,7 +464,8 @@ final class TestRequest
      */
     public function send(): array
     {
-        $script = '<?php require_once ' . \var_export(APPLICATION_ROOT . '/src/Support/TestBootstrap.php', true) . ';'
+        $bootstrap = self::$bootstrapFile ?? APPLICATION_ROOT . '/src/Support/TestBootstrap.php';
+        $script = '<?php require_once ' . \var_export($bootstrap, true) . ';'
             . ' \Zero\Support\TestRequest::runChildRequest(' . \var_export($this->specification(), true) . ');';
 
         $descriptors = [

@@ -50,7 +50,7 @@ $response = TestRequest::get('/admin/login')
 assert_test(str_contains($response['stdout'], '<form'), "Sign-in form renders");
 ```
 
-`send()` returns `['stdout', 'stderr', 'exit_code']`. Available builders:
+`send()` returns `['stdout', 'stderr', 'exit_code', 'emails']`. Available builders:
 
 * `onSite([...])` — create the tenant and target the request at it. Invents a unique domain (and matching `Host`) unless you pass `domain`, so parallel worker slots sharing a database cannot collide.
 * `withPage([...])` / `withHomepage([...])` — create a page owned by that tenant; the latter also sets `sites.homepage_id`.
@@ -58,6 +58,12 @@ assert_test(str_contains($response['stdout'], '<form'), "Sign-in form renders");
 * `withUser([...])` — create the user but leave the request anonymous. This is what a sign-in test wants: an authenticated session makes `LoginController` redirect to the dashboard before it ever evaluates the submitted credentials.
 * `withCsrf()` — issue a valid CSRF token into both session and body, so a `POST` behind `CsrfMiddleware` is reachable. Omit it deliberately to assert the rejection branch.
 * `withQuery([...])` / `withServer([...])` — `$_GET` entries and `$_SERVER` headers (e.g. `HTTP_AUTHORIZATION`, `HTTP_X_API_KEY`).
+* `withAccount([...])` — create an extra, never-signed-in user (e.g. the super_admin an admin tries to edit). Accepts `id` and `site_id` overrides; `site_id` (even `null`) plants the row on another tenant. `withPage()` accepts the same `id`/`site_id` overrides.
+* `withPasswordReset([...])` — insert a `password_resets` row (`token`, `user_id`, optional `site_id`/`expires_at`) inside the child, which truncates that table on connect.
+* `withRoute($pattern, $controller)` — register an extra route for this request only, for controllers core ships but leaves a sub-project to route (the frontend `/login`, `/forgot`, `/reset`).
+* `captureEmails()` — switch the child's `Emailer` into test mode and return what it sent under `emails` (`to`, `subject`, `html_body`, `text_body`); nothing reaches SMTP.
+
+**Sub-projects:** the child boots core's `src/Support/TestBootstrap.php` by default, which knows none of a host project's modules, namespaces or `.env`. Call `TestRequest::useBootstrap(__FILE__);` once from the host's `tests/bootstrap.php` so every child loads that file instead and the project's own routes are reachable.
 
 Two things worth knowing. The request runs in a subprocess because the pipeline reads superglobals, resolves the tenant from `HTTP_HOST` during bootstrap, and ends in output plus an `exit` — but `$_ENV` is forwarded, so coverage still sees it. And user fixtures hard-delete any row sharing the username or email first, because `users.username`/`users.email` are globally unique (not per-tenant), which would otherwise make any sign-in test fail on its second run.
 
