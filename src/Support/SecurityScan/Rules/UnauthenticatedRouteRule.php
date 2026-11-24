@@ -20,7 +20,8 @@ use Zero\Support\SecurityScan\SourceFile;
  *
  * Reads route tables ('#^/admin...#' => Controller::class, and Router::register(pattern, class)),
  * resolves each controller class among the scanned files, and walks it and its parents for an
- * access check: applyAuthMiddleware, requirePermission, authorize, roleHas or denyAccess. Routes
+ * access check: applyAuthMiddleware, requirePermission, authorize, roleHas or denyAccess, or
+ * $this->authenticate() in a subclass of core's token-checking ApiController. Routes
  * whose controller (and ancestors) have none are reported at the route declaration. Deliberately
  * public routes (sign-in, password reset, token-authenticated webhooks) need an ignore comment
  * saying so. Controllers outside the scanned files are skipped.
@@ -33,6 +34,13 @@ final class UnauthenticatedRouteRule implements ProjectRule
      * Calls that perform an authentication or permission check.
      */
     private const ACCESS_CHECKS = ['applyauthmiddleware', 'requirepermission', 'authorize', 'rolehas', 'denyaccess'];
+
+    /**
+     * Core's token-authenticated API base. Its authenticate() checks a bearer token, so a
+     * subclass calling $this->authenticate() is access-checked. Sub-projects extend it from
+     * vendor/, which is never scanned, so the base is recognised by name.
+     */
+    private const API_BASE = 'zero\\http\\controllers\\apicontroller';
 
     /**
      * {@inheritdoc}
@@ -71,7 +79,9 @@ final class UnauthenticatedRouteRule implements ProjectRule
     }
 
     /**
-     * Whether a class or any scanned ancestor performs an access check.
+     * Whether a class or any scanned ancestor performs an access check. A $this->authenticate()
+     * call counts only when the class descends from core's ApiController, whose authenticate()
+     * checks a token; other bases' authenticate() methods may check no more than a session.
      *
      * @param array{file: SourceFile, from: int, to: int, parent: ?string} $info Class info.
      * @param array<string, array{file: SourceFile, from: int, to: int, parent: ?string}> $classes All classes.
@@ -79,14 +89,32 @@ final class UnauthenticatedRouteRule implements ProjectRule
      */
     private function checksAccess(array $info, array $classes): bool
     {
-        $seen = 0;
-        while ($info !== null && $seen++ < 20) {
-            for ($k = $info['from']; $k <= $info['to']; $k++) {
-                if ($info['file']->isName($k, ...self::ACCESS_CHECKS) && ($info['file']->tokens[$k + 1][0] ?? null) === '(') {
+        $chain = [];
+        $isApi = false;
+        while ($info !== null && \count($chain) < 20) {
+            $chain[] = $info;
+            $parent = $info['parent'] !== null ? \strtolower($info['parent']) : null;
+            if ($parent === self::API_BASE) {
+                $isApi = true;
+                break;
+            }
+            $info = $parent !== null ? ($classes[$parent] ?? null) : null;
+        }
+
+        foreach ($chain as $class) {
+            $file = $class['file'];
+            for ($k = $class['from']; $k <= $class['to']; $k++) {
+                if (($file->tokens[$k + 1][0] ?? null) !== '(') {
+                    continue;
+                }
+                if ($file->isName($k, ...self::ACCESS_CHECKS)) {
+                    return true;
+                }
+                if ($isApi && $file->isName($k, 'authenticate')
+                    && \in_array($file->tokens[$k - 1][0] ?? null, [T_OBJECT_OPERATOR, T_NULLSAFE_OBJECT_OPERATOR], true)) {
                     return true;
                 }
             }
-            $info = $info['parent'] !== null ? ($classes[\strtolower($info['parent'])] ?? null) : null;
         }
 
         return false;
