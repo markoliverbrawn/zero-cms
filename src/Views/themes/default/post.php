@@ -50,6 +50,9 @@ $shouldOmitTitle = !empty($post->omit_title) || $hasHeroBlock;
       <?php foreach ($decodedBlocks as $block): ?>
         <?php 
         $type = $block['type'] ?? '';
+        if (!BlockHelper::isSafeBlockType($type)) {
+            continue;
+        }
         $theme = App::getCurrentSite()->theme ?? 'default';
         
         // Dynamic Cascading Block View Resolution:

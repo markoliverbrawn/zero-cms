@@ -3,6 +3,7 @@
 
 use Zero\Core\App;
 use Zero\Support\AssetVersion;
+use Zero\Support\BlockHelper;
 use Zero\Support\Str;
 
 $blockField = $blockBuilderField ?? 'content';
@@ -73,6 +74,10 @@ foreach (App::getRegisteredBlocks() as $type => $config) {
         <?php foreach ($blocks as $index => $block): ?>
             <?php
             $type = $block['type'] ?? 'text';
+            // Stored types name template files below; never let one carry a path.
+            if (!BlockHelper::isSafeBlockType($type)) {
+                continue;
+            }
             // Skip rendering if block is not in the model's allowed list
             if ($allowedBlocks !== null && !in_array($type, $allowedBlocks)) {
                 continue;
@@ -86,7 +91,7 @@ foreach (App::getRegisteredBlocks() as $type => $config) {
             // Get unique block ID or generate a random one
             $randomId = $block['block_id'] ?? 'blk_' . substr(md5(uniqid(rand(), true)), 0, 16);
             ?>
-            <div class="block-item collapsed" data-type="<?php echo $type; ?>">
+            <div class="block-item collapsed" data-type="<?php echo Str::escape($type); ?>">
                 <div class="block-header">
                     <div class="block-header-title-area">
                         <span class="icon-svg block-toggle-indicator icon-svg-14">

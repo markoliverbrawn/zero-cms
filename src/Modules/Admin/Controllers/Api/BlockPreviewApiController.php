@@ -51,6 +51,9 @@ class BlockPreviewApiController extends AdminApiControllerBase
     {
         $block = $body['block'] ?? [];
         $type = $block['type'] ?? 'text';
+        if (!BlockHelper::isSafeBlockType($type)) {
+            $this->respond(['success' => false, 'error' => 'Invalid block type'], 422);
+        }
         $site = App::getCurrentSite();
         $theme = $site ? ($site->theme ?? 'default') : 'default';
 
