@@ -427,7 +427,9 @@ final class TestRequest
             // handler, on stderr behind a marker send() strips back out.
             Emailer::enableTestMode();
             \register_shutdown_function(static function (): void {
-                \fwrite(\STDERR, self::EMAIL_MARKER . \json_encode(Emailer::getTestModeSentEmails()));
+                // php://stderr, not the STDERR constant: PHP < 8.3 leaves STDERR undefined when the
+                // script arrives on stdin, as this child's does.
+                \file_put_contents('php://stderr', self::EMAIL_MARKER . \json_encode(Emailer::getTestModeSentEmails()));
             });
         }
 
