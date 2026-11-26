@@ -152,6 +152,11 @@ trait ManagesThemes
      */
     public static function resolveThemeDir(string $themeName): ?string
     {
+        // The name becomes part of a filesystem path, so only plain identifiers are accepted.
+        if (!\preg_match('/^[A-Za-z0-9_-]+$/', $themeName)) {
+            return null;
+        }
+
         if (isset(self::$themePaths[$themeName])) {
             return self::$themePaths[$themeName];
         }

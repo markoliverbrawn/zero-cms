@@ -74,6 +74,8 @@ try {
     App::setCurrentUser($memberUser);
     $_SESSION['user_id'] = 'mock-member-session-id';
     assert_test(Page::findBySlug($draftSlug) === null, "A signed-in member (no back-office access) cannot retrieve draft pages by slug");
+    $memberListed = array_map(fn($p) => $p->slug, Page::paginate(1, 500, [])['data']);
+    assert_test(!in_array($draftSlug, $memberListed, true), "A signed-in member does not see draft pages in Page::paginate()");
     App::setCurrentUser($backofficeUser);
     $_SESSION['user_id'] = 'mock-admin-session-id';
 

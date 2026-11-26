@@ -20,6 +20,7 @@ use Zero\Core\Env;
 use Zero\Core\Validator;
 use Zero\Database\DB;
 use Zero\Database\MigrationManager;
+use Zero\Models\Site;
 use Zero\Support\Security;
 
 /**
@@ -139,11 +140,39 @@ class SetupWizardController
             throw new Exception("Database error: Sites schema table is missing after migration execution.");
         }
 
+        // The wizard page can be shown by a transient DB error on a live install, so re-check that
+        // the install really is empty, under a lock so two concurrent submissions can't both pass.
+        if ((int) DB::query("SELECT GET_LOCK('zero_setup_wizard', 10)")->fetchColumn() !== 1) {
+            throw new Exception("Setup is already in progress. Please try again.");
+        }
+        try {
+            $siteCount = (int) DB::query("SELECT COUNT(*) FROM sites")->fetchColumn();
+            $userCount = (int) DB::query("SELECT COUNT(*) FROM users")->fetchColumn();
+            if ($siteCount !== 0 || $userCount !== 0) {
+                throw new Exception("Zero CMS is already installed.");
+            }
+            $this->createInitialRecords($inputs);
+        } finally {
+            DB::query("SELECT RELEASE_LOCK('zero_setup_wizard')");
+        }
+    }
+
+    /**
+     * Insert the first site, its super_admin and a home page, then sign the new admin in.
+     * Called by runSetup() only once it has confirmed, under a lock, that the install is empty.
+     *
+     * @param array $inputs Validated wizard inputs.
+     * @return void
+     */
+    private function createInitialRecords(array $inputs): void
+    {
+
         // 3. Insert default multi-tenant Site
         $siteId = Security::uuidv7();
         $siteDomain = $inputs['site_domain'];
         $siteName = $inputs['site_name'];
-        $siteTheme = $inputs['site_theme'];
+        // Only a theme the picker actually offers; anything else falls back to the default.
+        $siteTheme = \array_key_exists($inputs['site_theme'], Site::getThemeOptions()) ? $inputs['site_theme'] : 'default';
         $siteTimezone = $inputs['site_timezone'];
         $siteLanguage = $inputs['site_language'];
 
@@ -198,10 +227,13 @@ class SetupWizardController
         DB::query("UPDATE sites SET homepage_id = ? WHERE id = ?", [$pageId, $siteId]);
 
         // 6. Log the newly registered admin in and redirect to dashboard
-        if (\session_status() === PHP_SESSION_NONE) {
-            \session_start();
+        // Hardened cookie options and a fresh session ID, as at every other sign-in.
+        App::ensureSession();
+        if (!\headers_sent()) {
+            \session_regenerate_id(true);
         }
         $_SESSION['user_id'] = $userId;
+        $_SESSION['_auth_at'] = \time();
         $_SESSION['username'] = $inputs['username'];
         $_SESSION['role'] = 'super_admin';
 
