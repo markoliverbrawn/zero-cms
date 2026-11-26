@@ -3,6 +3,7 @@
 // Regression tests for the remaining 2026-11-25 security review fixes: server-side rate limiting,
 // the shared password policy, current-password and session revocation on password change, the
 // OAuth state nonce, SVG/CSS sanitiser tightening, where() validation and the JSON highlighter.
+// Also covers client IP resolution behind proxies (TRUSTED_PROXY_HOPS), from the 2026-11-26 review.
 
 require_once dirname(dirname(__DIR__)) . '/Support/TestBootstrap.php';
 
@@ -107,5 +108,49 @@ $staleSession = TestRequest::get('/admin/dashboard')
     ->asUser(['username' => 'stale_session_admin', 'role' => 'super_admin', 'password_changed_at' => gmdate('Y-m-d H:i:s', time() + 60)])
     ->send();
 assert_test(stripos($staleSession['stdout'], 'dashboard-card') === false, "A session that signed in before the password changed no longer reaches the dashboard");
+
+echo "Testing client IP resolution behind proxies...\n";
+$savedServer = $_SERVER;
+putenv('TRUSTED_PROXY_SECRET=hardening-proxy-secret');
+$_SERVER['REMOTE_ADDR'] = '169.254.1.1'; // a proxy's address, shared by every visitor
+unset($_SERVER['HTTP_X_PROXY_SECRET'], $_SERVER['HTTP_CF_CONNECTING_IP']);
+$_SERVER['HTTP_X_FORWARDED_FOR'] = '198.51.100.7';
+
+putenv('TRUSTED_PROXY_HOPS=0');
+assert_test(Security::getClientIp() === '169.254.1.1', "With TRUSTED_PROXY_HOPS=0, X-Forwarded-For is ignored");
+
+putenv('TRUSTED_PROXY_HOPS=1');
+assert_test(Security::getClientIp() === '198.51.100.7', "With one trusted hop, the proxy-appended X-Forwarded-For entry is the client IP");
+$_SERVER['HTTP_X_FORWARDED_FOR'] = '1.2.3.4, 198.51.100.7';
+assert_test(Security::getClientIp() === '198.51.100.7', "A client-supplied X-Forwarded-For entry can't override the proxy-appended one");
+$_SERVER['HTTP_X_FORWARDED_FOR'] = 'not-an-ip';
+assert_test(Security::getClientIp() === '169.254.1.1', "A malformed X-Forwarded-For entry falls back to REMOTE_ADDR");
+
+putenv('TRUSTED_PROXY_HOPS=2');
+$_SERVER['HTTP_X_FORWARDED_FOR'] = '1.2.3.4, 198.51.100.7, 172.70.0.1';
+assert_test(Security::getClientIp() === '198.51.100.7', "With two trusted hops, the entry two from the right is the client IP");
+$_SERVER['HTTP_X_FORWARDED_FOR'] = '198.51.100.7';
+assert_test(Security::getClientIp() === '169.254.1.1', "A chain shorter than the trusted hops falls back to REMOTE_ADDR");
+
+$_SERVER['HTTP_CF_CONNECTING_IP'] = '192.0.2.44';
+assert_test(Security::getClientIp() === '169.254.1.1', "CF-Connecting-IP is ignored without the proxy secret");
+$_SERVER['HTTP_X_PROXY_SECRET'] = 'hardening-proxy-secret';
+assert_test(Security::getClientIp() === '192.0.2.44', "CF-Connecting-IP from a verified proxy takes precedence");
+$_SERVER['HTTP_CF_CONNECTING_IP'] = 'garbage';
+$_SERVER['HTTP_X_FORWARDED_FOR'] = '1.2.3.4, 198.51.100.7, 172.70.0.1';
+assert_test(Security::getClientIp() === '198.51.100.7', "A malformed CF-Connecting-IP falls through to X-Forwarded-For");
+
+echo "Testing that two visitors behind the same proxy get separate rate-limit windows...\n";
+putenv('TRUSTED_PROXY_HOPS=1');
+unset($_SERVER['HTTP_X_PROXY_SECRET'], $_SERVER['HTTP_CF_CONNECTING_IP']);
+DB::query("DELETE FROM rate_limits");
+$_SERVER['HTTP_X_FORWARDED_FOR'] = '198.51.100.20';
+assert_test(Security::rateLimit('proxy_bucket_test', 60), "The first visitor's action is allowed");
+$_SERVER['HTTP_X_FORWARDED_FOR'] = '198.51.100.21';
+assert_test(Security::rateLimit('proxy_bucket_test', 60), "A second visitor behind the same proxy is not blocked by the first");
+
+putenv('TRUSTED_PROXY_HOPS');
+putenv('TRUSTED_PROXY_SECRET');
+$_SERVER = $savedServer;
 
 echo "Security hardening tests completed successfully!\n";
