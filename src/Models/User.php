@@ -140,6 +140,19 @@ class User implements Model
     }
 
     /**
+     * Invalidate every session that signed in to the account before now. Sessions aren't stored
+     * per user, so this works through password_changed_at, which bootstrapFetchSiteAndUser()
+     * compares with each session's sign-in time.
+     *
+     * @param string $userId Account whose sessions are revoked.
+     * @return void
+     */
+    public static function revokeSessions(string $userId): void
+    {
+        DB::query("UPDATE users SET password_changed_at = ? WHERE id = ?", [\gmdate('Y-m-d H:i:s'), $userId]);
+    }
+
+    /**
      * Save processing implementation helper.
      *
      * @return string Response output.
@@ -154,8 +167,22 @@ class User implements Model
             $tempPassword = \bin2hex(\random_bytes(10));
             $this->password_hash = \password_hash($tempPassword, PASSWORD_BCRYPT);
         }
-        
-        return $this->traitSave();
+
+        // Read before saving: the identity-mapped instance may already carry the new hash.
+        $storedHash = empty($this->id) ? null : DB::query(
+            "SELECT password_hash FROM users WHERE id = ?",
+            [$this->id]
+        )->fetchColumn();
+
+        $result = $this->traitSave();
+
+        // A password set through any path (e.g. the admin model API) signs out the account's
+        // existing sessions, the same as the change-password and reset flows.
+        if (\is_string($storedHash) && $this->password_hash !== null && !\hash_equals($storedHash, (string) $this->password_hash)) {
+            self::revokeSessions((string) $this->id);
+        }
+
+        return $result;
     }
 
     /**
@@ -167,7 +194,13 @@ class User implements Model
     {
         $this->guardSuperAdminChange(false);
 
-        return $this->traitDelete();
+        $result = $this->traitDelete();
+
+        // Sign out every existing session now, so restoring the account later can't bring old
+        // (possibly stolen) sessions back to life.
+        self::revokeSessions((string) $this->id);
+
+        return $result;
     }
 
     /**

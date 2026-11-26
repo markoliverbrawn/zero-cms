@@ -39,7 +39,7 @@ class Security {
      * Elements sanitizeHtml() keeps, mapped to the element-specific attributes they may carry.
      */
     private const SANITIZE_ALLOWED_TAGS = [
-        'a' => ['href', 'hreflang', 'name', 'rel', 'target'],
+        'a' => ['href', 'hreflang', 'rel', 'target'],
         'abbr' => [], 'article' => [], 'aside' => [],
         'audio' => ['autoplay', 'controls', 'loop', 'muted', 'preload', 'src'], 'b' => [], 'blockquote' => ['cite'], 'br' => [],
         'caption' => [], 'cite' => [], 'code' => [], 'col' => ['span', 'width'], 'colgroup' => ['span'],
@@ -79,6 +79,30 @@ class Security {
      * Attributes whose value is a single URL.
      */
     private const SANITIZE_URL_ATTRIBUTES = ['cite', 'href', 'poster', 'src'];
+
+    /**
+     * id values sanitizeHtml() refuses, because an element with that id shadows a global a script
+     * reads (DOM clobbering): this app's own window globals, and the document, window and form
+     * properties such attacks usually target. Anything starting "__" is refused too.
+     */
+    private const SANITIZE_RESERVED_IDS = [
+        // This app's window globals (assets/js, admin views).
+        'ADMIN_CSRF_TOKEN', 'ADMIN_MODEL_NAME', 'REGISTERED_BLOCK_SETTINGS_TEMPLATES', 'REGISTERED_BLOCK_TEMPLATES',
+        'SVG_ARROW_DOWN', 'SVG_ARROW_UP', 'SVG_CHEVRON_RIGHT', 'SVG_SETTINGS', 'SVG_TRASH_2',
+        'adminAlert', 'adminConfirm', 'adminUploadFile', 'adminUploadProgressText', 'adminUploadQueue',
+        'initEditor', 'loadAndRenderPickerFiles', 'openImagePicker', 'pickerActiveFolder',
+        // document / window / form properties.
+        'action', 'activeElement', 'addEventListener', 'alert', 'attributes', 'body', 'children', 'close',
+        'console', 'constructor', 'cookie', 'createElement', 'currentScript', 'defaultView', 'document',
+        'documentElement', 'domain', 'elements', 'embeds', 'eval', 'fetch', 'firstChild', 'forms', 'frames',
+        'getElementById', 'getElementsByClassName', 'getElementsByName', 'getElementsByTagName',
+        'getSelection', 'hasOwnProperty', 'head', 'history', 'images', 'implementation', 'innerHTML',
+        'lastChild', 'length', 'links', 'localStorage', 'location', 'method', 'name', 'navigator', 'nodeName',
+        'nodeType', 'onload', 'open', 'opener', 'origin', 'outerHTML', 'ownerDocument', 'parent', 'parentNode',
+        'prototype', 'querySelector', 'querySelectorAll', 'referrer', 'reset', 'scripts', 'self',
+        'sessionStorage', 'setInterval', 'setTimeout', 'status', 'submit', 'textContent', 'title', 'top',
+        'toString', 'URL', 'valueOf', 'window', 'write', 'writeln',
+    ];
 
     /**
      * SVG namespace URI.
@@ -552,10 +576,16 @@ class Security {
             }
 
             if ($keep && $lower === 'style') {
-                // Also refuse fixed positioning (full-page overlays for phishing), image-set() and
-                // -moz-binding (external fetches that url() matching misses), and CSS comments
-                // (used to split keywords like expre/**/ssion past these checks).
-                $keep = \preg_match('/expression\s*\(|url\s*\(|image-set\s*\(|@import|behavior\s*:|-moz-binding|javascript:|position\s*:\s*fixed|\/\*|[<>\\\\]/i', $value) !== 1;
+                // Also refuse fixed, absolute and sticky positioning (content laid over the page,
+                // e.g. a full-page phishing overlay), image-set() and -moz-binding (external
+                // fetches that url() matching misses), and CSS comments (used to split keywords
+                // like expre/**/ssion past these checks).
+                $keep = \preg_match('/expression\s*\(|url\s*\(|image-set\s*\(|@import|behavior\s*:|-moz-binding|javascript:|position\s*:\s*(fixed|absolute|sticky)|\/\*|[<>\\\\]/i', $value) !== 1;
+            }
+
+            if ($keep && $lower === 'id') {
+                // DOM clobbering: an id that shadows a global a script reads.
+                $keep = !\in_array($value, self::SANITIZE_RESERVED_IDS, true) && \strncmp($value, '__', 2) !== 0;
             }
 
             if (!$keep) {

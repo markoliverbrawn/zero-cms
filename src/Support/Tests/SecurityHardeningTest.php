@@ -3,12 +3,15 @@
 // Regression tests for the remaining 2026-11-25 security review fixes: server-side rate limiting,
 // the shared password policy, current-password and session revocation on password change, the
 // OAuth state nonce, SVG/CSS sanitiser tightening, where() validation and the JSON highlighter.
-// Also covers client IP resolution behind proxies (TRUSTED_PROXY_HOPS), from the 2026-11-26 review.
+// Also covers, from the 2026-11-26 review: client IP resolution behind proxies (TRUSTED_PROXY_HOPS),
+// overlay positioning and DOM clobbering in sanitizeHtml(), and session revocation on user delete
+// and on a password set through the model.
 
 require_once dirname(dirname(__DIR__)) . '/Support/TestBootstrap.php';
 
 use Zero\Database\DB;
 use Zero\Models\Page;
+use Zero\Models\User;
 use Zero\Support\Security;
 use Zero\Support\Str;
 use Zero\Support\TestRequest;
@@ -62,6 +65,16 @@ assert_test(strpos(Security::sanitizeHtml('<div style="position: fixed; top: 0">
 assert_test(strpos(Security::sanitizeHtml('<div style="background: image-set(\'https://evil.example/a.png\' 1x)">x</div>'), 'style=') === false, "image-set() fetches are stripped");
 assert_test(strpos(Security::sanitizeHtml('<div style="width: expre/**/ssion(alert(1))">x</div>'), 'style=') === false, "CSS comments are stripped");
 assert_test(strpos(Security::sanitizeHtml('<p style="text-align: center; color: #333">x</p>'), 'style="text-align: center; color: #333"') !== false, "Ordinary styling is kept");
+assert_test(strpos(Security::sanitizeHtml('<div style="position:absolute;inset:0;width:100vw;height:100vh;z-index:99999">x</div>'), 'style=') === false, "position:absolute overlays are stripped");
+assert_test(strpos(Security::sanitizeHtml('<div style="POSITION: Sticky; top: 0">x</div>'), 'style=') === false, "position:sticky is stripped, in any case");
+assert_test(strpos(Security::sanitizeHtml('<div style="position: relative; left: 2px">x</div>'), 'style="position: relative; left: 2px"') !== false, "position:relative is kept");
+
+echo "Testing DOM clobbering ids and names...\n";
+assert_test(strpos(Security::sanitizeHtml('<a id="getElementById" href="#x">x</a>'), 'id=') === false, "An id that shadows a document method is stripped");
+assert_test(strpos(Security::sanitizeHtml('<div id="ADMIN_CSRF_TOKEN">x</div>'), 'id=') === false, "An id that shadows an app global is stripped");
+assert_test(strpos(Security::sanitizeHtml('<div id="__proto__">x</div>'), 'id=') === false, "An id starting with __ is stripped");
+assert_test(strpos(Security::sanitizeHtml('<a name="cookie" href="#x">x</a>'), 'name=') === false, "The name attribute is no longer kept on links");
+assert_test(strpos(Security::sanitizeHtml('<h2 id="installation">Installation</h2>'), 'id="installation"') !== false, "Ordinary ids (in-page anchors) are kept");
 
 echo "Testing IsModel::where() validation...\n";
 $threw = static function (callable $call): bool {
@@ -108,6 +121,36 @@ $staleSession = TestRequest::get('/admin/dashboard')
     ->asUser(['username' => 'stale_session_admin', 'role' => 'super_admin', 'password_changed_at' => gmdate('Y-m-d H:i:s', time() + 60)])
     ->send();
 assert_test(stripos($staleSession['stdout'], 'dashboard-card') === false, "A session that signed in before the password changed no longer reaches the dashboard");
+
+echo "Testing deleting a user or setting a password through the model revokes sessions...\n";
+$revokeUser = new User([
+    'username' => 'revoke_sessions_user',
+    'email' => 'revoke-sessions@test.zero',
+    'role' => 'editor',
+    'site_id' => null,
+]);
+$revokeUser->save();
+$revokeId = DB::query("SELECT id FROM users WHERE username = 'revoke_sessions_user'")->fetchColumn();
+$changedAt = static fn () => DB::query("SELECT password_changed_at FROM users WHERE id = ?", [$revokeId])->fetchColumn();
+assert_test($changedAt() === null, "Creating a user doesn't record a password change");
+
+DB::clearIdentityMap();
+$loaded = User::find($revokeId);
+$loaded->email = 'revoke-sessions-2@test.zero';
+$loaded->save();
+assert_test($changedAt() === null, "Saving without changing the password leaves existing sessions alone");
+
+DB::clearIdentityMap();
+$loaded = User::find($revokeId);
+$loaded->password_hash = password_hash('ModelApiPass123', PASSWORD_DEFAULT);
+$loaded->save();
+assert_test($changedAt() !== null, "Setting password_hash through the model signs out existing sessions");
+
+DB::query("UPDATE users SET password_changed_at = NULL WHERE id = ?", [$revokeId]);
+DB::clearIdentityMap();
+User::find($revokeId)->delete();
+assert_test($changedAt() !== null, "Deleting a user signs out existing sessions, so a later restore can't revive them");
+DB::query("DELETE FROM users WHERE id = ?", [$revokeId]);
 
 echo "Testing client IP resolution behind proxies...\n";
 $savedServer = $_SERVER;
