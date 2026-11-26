@@ -117,15 +117,19 @@ class LocalStorageDriver implements StorageDriver
     }
 
     /**
-     * Generates a secure, temporary signed URL for public file downloads.
+     * Local storage can't produce signed URLs: there is no signing service in front of the disk,
+     * and returning the plain URL under this name would let a caller believe it had a
+     * time-limited, tamper-proof link when it didn't. Private local files are streamed by an
+     * authenticated controller instead (e.g. SecureDownloadController), which never calls this.
      *
-     * @param string $path Argument descriptor.
-     * @param int $expires Argument descriptor.
-     * @return string Response output.
+     * @param string $path Storage path.
+     * @param int $expires Requested lifetime in seconds.
+     * @return string Never returns.
+     * @throws \LogicException Always.
      */
     public function getSignedUrl(string $path, int $expires = 3600): string
     {
-        return $this->getUrl($path);
+        throw new \LogicException('The local storage driver cannot sign URLs; stream private files through an authenticated controller instead.');
     }
 
     /**
