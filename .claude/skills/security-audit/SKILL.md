@@ -1,6 +1,6 @@
 ---
 name: security-audit
-description: Runs a security audit of Zero CMS — the core repo and, critically, any "Zero CMS sub-project" host checkout (e.g. zero-mobsites, zero-d6sites) that requires markoliverbrawn/zero-cms-core via Composer. Runs bin/security-scan over each layer, reads the code for what the scanner can't see, compares framework CVE mechanisms against Zero's code paths, checks the deployed core version, then fixes every finding in two batches (one core PR, then one sub-project PR with the core bump). Use when asked to run/perform a security audit, check for CVEs, review the codebase for vulnerabilities, or fix audit findings.
+description: Runs a security audit of Zero CMS — the core repo and, critically, any "Zero CMS sub-project" host checkout (e.g. zero-mobsites, zero-d6sites) that requires markoliverbrawn/zero-cms-core via Composer. Runs bin/security-scan over each layer, reads the code for what the scanner can't see, compares framework CVE mechanisms against Zero's code paths, and checks the deployed core version. Use when asked to run/perform a security audit, check for CVEs, or review the codebase for vulnerabilities.
 ---
 
 # Security Audit — Core & Sub-Projects
@@ -75,34 +75,6 @@ Write the report with these sections:
 5. Strategic Roadmap
 
 Don't give an overall numeric score. Report severity per finding (Critical/High/Medium/Low/Info). For configuration of a live deployment, point to that site's Health Check results rather than guessing.
-
-## Step 5 — fix
-
-Fix the findings in two batches, not one PR per finding: one core PR, then one PR per sub-project. Piecemeal PRs multiply review, merge, tag and deploy rounds, and a PR that merges before a related fix lands can break `main` for every branch made from it.
-
-**What goes in:** every finding, Low and Info included. Don't leave findings listed as "optional" or "a decision for later". Where a fix needs a product choice, take the secure default, fix it, and state the choice in the PR description so it can be reversed. Each fix needs a regression test, and that test must fail against the old code.
-
-**Before starting, check production prerequisites.** A fix that removes something a live deployment still uses breaks it on deploy. For example, rejecting a request format that the deployment's Cloud Scheduler jobs still send stops the queue. Check the live deployment first (Cloud Scheduler job config, logs for deprecation warnings), and sequence the work:
-1. compatible change;
-2. infrastructure update (e.g. re-run `deploy/gcp/scheduler.sh`);
-3. removal.
-
-If the infrastructure step hasn't run yet, leave the removal out of this batch and say so.
-
-**Batch 1 — core.**
-1. One branch from core `main` with every core fix.
-2. Before opening the PR, both must pass: `bin/test --ci` (every test process runs as CI does: `variables_order=GPCS`, `ENVIRONMENT=testing`, a throwaway `APP_KEY`) and `bin/security-scan src`.
-3. Open one PR and stop. The user merges it and tags the release.
-
-**Batch 2 — each sub-project**, once the core tag exists.
-1. One branch from the sub-project's `main` with:
-   - `markoliverbrawn/zero-cms-core` bumped to the new tag (`composer update markoliverbrawn/zero-cms-core`);
-   - every sub-project fix;
-   - any doc or config the core changes need.
-2. Before opening the PR, both must pass: `bin/test --ci` and `vendor/bin/security-scan src`.
-3. Open one PR. Merging it may deploy straight to production (check the sub-project's pipeline), so the PR description must list deploy notes: migrations, settings that must exist first, behaviour that changes for users.
-
-**Never merge or tag yourself.** After a deploy, verify the live result where you can, e.g. the queue triggers still return 200, or a changed page renders as expected.
 
 ## Notes
 

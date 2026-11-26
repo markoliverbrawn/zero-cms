@@ -56,8 +56,8 @@ class TestRunner
      * report. See Zero\Support\CoverageRecorder for why instrumentation spans the whole process tree
      * rather than just this one.
      *
-     * With $ciMode, every test process runs the way Bitbucket/GitHub CI runs it (see
-     * ciEnvironment()), so a suite that only passes thanks to local PHP settings fails here first.
+     * With $ciMode, every test process runs under stricter, CI-style conditions (see
+     * ciEnvironment()), so a suite that only passes thanks to local PHP settings fails locally too.
      *
      * @param string $root Absolute path to scan recursively for *Test.php files.
      * @param bool $collectCoverage Whether to record and report line coverage for the run.
@@ -244,14 +244,15 @@ class TestRunner
     }
 
     /**
-     * Environment additions that make every test process run the way CI runs it:
+     * Environment additions that run every test process under stricter, CI-style conditions:
      * - variables_order=GPCS (Debian's php-cli and PHP's production php.ini default), via a scratch
      *   ini file appended to PHP_INI_SCAN_DIR, which every subprocess inherits. Under GPCS $_ENV is
      *   empty, so anything that forwards $_ENV instead of the full environment breaks here.
-     * - ENVIRONMENT=testing and a throwaway APP_KEY, as the CI pipelines set them.
+     * - ENVIRONMENT=testing and a throwaway APP_KEY, so nothing depends on the values in a local
+     *   .env (a pipeline without a .env typically sets these itself).
      *
-     * One difference remains: CI has no .env file, while locally Env still reads it. A suite that
-     * needs a variable only .env provides can still pass here and fail in CI.
+     * Env still reads a local .env file, so a suite that needs another variable only .env provides
+     * can pass here and still fail on a CI runner without one.
      *
      * @param string $dir Scratch directory for the ini file (created here, removed by run()).
      * @param array<string, string> $env Environment additions so far (e.g. coverage's).
