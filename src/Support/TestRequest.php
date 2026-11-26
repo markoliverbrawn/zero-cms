@@ -481,7 +481,7 @@ final class TestRequest
         DB::getPDO();
 
         $pipes = [];
-        $process = \proc_open('php', $descriptors, $pipes, APPLICATION_ROOT, $_ENV);
+        $process = \proc_open('php', $descriptors, $pipes, APPLICATION_ROOT, TestRunner::subprocessEnvironment());
 
         if (!\is_resource($process)) {
             throw new \RuntimeException('TestRequest: could not spawn a PHP subprocess for the request.');

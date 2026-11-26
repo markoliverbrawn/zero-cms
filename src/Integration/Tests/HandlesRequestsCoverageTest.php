@@ -8,6 +8,7 @@ use Zero\Core\App;
 use Zero\Database\DB;
 use Zero\Models\Site;
 use Zero\Support\Security;
+use Zero\Support\TestRunner;
 
 echo "=== HandlesRequests Subprocess Coverage Tests ===\n";
 
@@ -44,7 +45,7 @@ function exec_mock_request(string $method, string $uri, string $host, string $db
         2 => ["pipe", "w"]  // stderr
     ];
 
-    $process = proc_open("php", $descriptorspec, $pipes, APPLICATION_ROOT, $_ENV);
+    $process = proc_open("php", $descriptorspec, $pipes, APPLICATION_ROOT, TestRunner::subprocessEnvironment());
 
     if (is_resource($process)) {
         fwrite($pipes[0], $code);

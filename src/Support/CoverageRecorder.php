@@ -27,8 +27,8 @@ namespace Zero\Support;
  * writes a scratch php.ini fragment that sets auto_prepend_file to src/Support/CoveragePrepend.php
  * and forces xdebug.mode=coverage; childEnvironment() exposes it via PHP_INI_SCAN_DIR (with a
  * leading ":" so the default conf.d still loads and Xdebug itself stays enabled). Because that
- * variable is inherited through the environment -- and this build runs variables_order=EGPCS, so
- * $_ENV is populated and forwarded by tests that pass $_ENV to proc_open() -- every descendant PHP
+ * variable is inherited through the environment -- and every test subprocess is started with
+ * TestRunner::subprocessEnvironment(), which forwards the full environment -- every descendant PHP
  * process auto-loads the prepend, calls record(), and dumps its own hit map on shutdown. aggregate()
  * then merges every dump into one map, so nested work is credited to the files it actually executed.
  *
