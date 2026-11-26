@@ -32,6 +32,10 @@ trait Paginates
      */
     public static function paginate($page = 1, $perPage = 10, $filters = [], $orderBy = 'created_at DESC')
     {
+        // Interpolated into LIMIT/OFFSET below, so force them to positive integers.
+        $page = \max(1, (int) $page);
+        $perPage = \max(1, (int) $perPage);
+
         // Defensive whitelisting and sanitization of the ORDER BY clause
         $orderByParts = \explode(' ', \trim($orderBy));
         $cleanOrderBy = 'created_at DESC'; // Fallback default
@@ -74,8 +78,9 @@ trait Paginates
             $where[] = "deleted_at IS NULL";
         }
 
-        // Restrict guests to view 'published' elements only for pages and posts
-        $isAdmin = isset($_SESSION['user_id']);
+        // Restrict guests to view 'published' elements only for pages and posts. Only back-office
+        // users see drafts: a signed-in shop member is still a guest here (same as HasSlug).
+        $isAdmin = isset($_SESSION['user_id']) && App::authorize('backoffice.access');
         if (($tableName === 'pages' || $tableName === 'posts') && !$isAdmin) {
             $where[] = "status = 'published'";
         }
