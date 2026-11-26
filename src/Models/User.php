@@ -221,7 +221,9 @@ class User implements Model
     /**
      * Halt with a 403 when an HTTP request without SUPER_ADMIN_PERMISSION would grant super_admin
      * (to anyone, including the caller), or when a signed-in user without it modifies or deletes an
-     * account that is currently super_admin. Guest flows that legitimately save a super_admin's own
+     * account that is currently super_admin, or another account that is currently admin (a site
+     * admin can change their own account, but not a fellow admin's email, role or password, which
+     * would let them take that account over). Guest flows that legitimately save a super_admin's own
      * row (password reset) are not role changes and stay allowed. The stored role is read straight
      * from the database because the identity-mapped instance may already carry submitted values.
      *
@@ -258,8 +260,9 @@ class User implements Model
 
         $escalates = $grantsSuperAdmin && $storedRole !== 'super_admin';
         $touchesSuperAdmin = $storedRole === 'super_admin' && $actor !== null;
+        $touchesOtherAdmin = $storedRole === 'admin' && $actor !== null && (string) $actor->id !== (string) $this->id;
 
-        if ($escalates || $touchesSuperAdmin) {
+        if ($escalates || $touchesSuperAdmin || $touchesOtherAdmin) {
             App::denyAccess(self::SUPER_ADMIN_PERMISSION, $actorRole);
         }
     }

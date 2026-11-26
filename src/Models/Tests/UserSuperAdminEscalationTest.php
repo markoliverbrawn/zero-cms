@@ -2,7 +2,7 @@
 // src/Models/Tests/UserSuperAdminEscalationTest.php
 // Routed requests proving a site 'admin' (who holds users.manage) cannot reach platform-wide
 // super_admin rights: not by creating a super_admin, not by promoting themselves, and not by
-// editing or deleting an existing super_admin -- the ZeroCMS analogue of Silverstripe
+// editing or deleting an existing super_admin or a fellow admin -- the ZeroCMS analogue of Silverstripe
 // CVE-2026-91112 (delegated Security Admin escalating to full ADMIN). A super_admin keeps the
 // ability to do all of these.
 
@@ -146,6 +146,84 @@ assert_test(
     $roleOf('id', $superDeleteId) === 'super_admin',
     "The super_admin row is not soft-deleted by an admin"
 );
+
+// 5b. Fellow admins: a site admin can't edit or delete another admin (swapping in their own email
+//     and resetting the password would take the account over), but can still manage editors and
+//     their own account. A super_admin can manage admins.
+echo "Testing an admin cannot edit or delete another admin...\n";
+
+$otherAdminId = Security::uuidv7();
+$response = TestRequest::post('/admin/edit/users/' . $otherAdminId, [
+        'username' => 'escalation_other_admin',
+        'email' => 'attacker@example.test',
+        'role' => 'admin',
+    ])
+    ->onSite(['enabled_modules' => $adminModules])
+    ->withAccount(['id' => $otherAdminId, 'username' => 'escalation_other_admin', 'email' => 'escalation_other_admin@example.test', 'role' => 'admin'])
+    ->asUser(['username' => 'escalation_admin_6', 'role' => 'admin'])
+    ->withCsrf()
+    ->send();
+$otherRow = DB::query('SELECT role, email FROM users WHERE id = ?', [$otherAdminId])->fetch();
+assert_test(
+    strpos($response['stdout'], User::SUPER_ADMIN_PERMISSION) !== false,
+    "Editing another admin as an admin renders the access-denied page"
+);
+assert_test(
+    $otherRow && $otherRow['email'] === 'escalation_other_admin@example.test',
+    "The other admin's email is unchanged"
+);
+
+$otherDeleteId = Security::uuidv7();
+TestRequest::post('/admin/delete/users', ['id' => $otherDeleteId])
+    ->onSite(['enabled_modules' => $adminModules])
+    ->withAccount(['id' => $otherDeleteId, 'username' => 'escalation_delete_admin', 'role' => 'admin'])
+    ->asUser(['username' => 'escalation_admin_7', 'role' => 'admin'])
+    ->withCsrf()
+    ->send();
+assert_test($roleOf('id', $otherDeleteId) === 'admin', "Another admin is not soft-deleted by an admin");
+
+echo "Testing an admin can still edit editors and their own account...\n";
+
+$editorId = Security::uuidv7();
+TestRequest::post('/admin/edit/users/' . $editorId, [
+        'username' => 'escalation_editor',
+        'email' => 'escalation_editor_new@example.test',
+        'role' => 'editor',
+    ])
+    ->onSite(['enabled_modules' => $adminModules])
+    ->withAccount(['id' => $editorId, 'username' => 'escalation_editor', 'email' => 'escalation_editor@example.test', 'role' => 'editor'])
+    ->asUser(['username' => 'escalation_admin_8', 'role' => 'admin'])
+    ->withCsrf()
+    ->send();
+$editorRow = DB::query('SELECT email FROM users WHERE id = ?', [$editorId])->fetch();
+assert_test($editorRow && $editorRow['email'] === 'escalation_editor_new@example.test', "An admin can still edit an editor");
+
+$selfEditId = Security::uuidv7();
+TestRequest::post('/api/v1/admin/models/users/' . $selfEditId, [
+        'username' => 'escalation_admin_selfedit',
+        'email' => 'escalation_admin_selfedit_new@example.test',
+        'role' => 'admin',
+    ])
+    ->onSite(['enabled_modules' => $adminModules])
+    ->asUser(['id' => $selfEditId, 'username' => 'escalation_admin_selfedit', 'email' => 'escalation_admin_selfedit@example.test', 'role' => 'admin'])
+    ->withCsrf()
+    ->send();
+$selfRow = DB::query('SELECT email FROM users WHERE id = ?', [$selfEditId])->fetch();
+assert_test($selfRow && $selfRow['email'] === 'escalation_admin_selfedit_new@example.test', "An admin can still edit their own account");
+
+$superEditsAdminId = Security::uuidv7();
+TestRequest::post('/admin/edit/users/' . $superEditsAdminId, [
+        'username' => 'escalation_admin_by_super',
+        'email' => 'escalation_admin_by_super_new@example.test',
+        'role' => 'admin',
+    ])
+    ->onSite(['enabled_modules' => $adminModules])
+    ->withAccount(['id' => $superEditsAdminId, 'username' => 'escalation_admin_by_super', 'email' => 'escalation_admin_by_super@example.test', 'role' => 'admin'])
+    ->asUser(['username' => 'escalation_root_3', 'role' => 'super_admin'])
+    ->withCsrf()
+    ->send();
+$superEditedRow = DB::query('SELECT email FROM users WHERE id = ?', [$superEditsAdminId])->fetch();
+assert_test($superEditedRow && $superEditedRow['email'] === 'escalation_admin_by_super_new@example.test', "A super_admin can still edit an admin");
 
 // 6. A super_admin can still create another super_admin.
 echo "Testing a super_admin can create a super_admin...\n";

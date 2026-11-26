@@ -4,6 +4,7 @@
 
 require_once dirname(dirname(__DIR__)) . '/Support/TestBootstrap.php';
 
+use Zero\Core\Storage\LocalStorageDriver;
 use Zero\Core\Storage\Storage;
 use Zero\Models\Media;
 
@@ -351,5 +352,14 @@ if ($driverName === 'local') {
 
 // Ensure currentSite is completely clean
 $propSite->setValue(null, null);
+
+echo "Testing the local driver refuses to sign URLs...\n";
+$refused = false;
+try {
+    (new LocalStorageDriver())->getSignedUrl('/storage/private/backups/site-1/b.json.gz', 60);
+} catch (\LogicException $e) {
+    $refused = true;
+}
+assert_test($refused, "LocalStorageDriver::getSignedUrl() refuses instead of returning an unsigned URL");
 
 echo "Storage driver component tests completed.\n\n";
