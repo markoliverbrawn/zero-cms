@@ -116,8 +116,8 @@ There is no long-running worker. The scheduler calls into the web workload over 
 
 | Trigger   | Request                                          | Auth                                                                 | Cadence     |
 |-----------|--------------------------------------------------|----------------------------------------------------------------------|-------------|
-| Queue     | `POST /api/v1/queue/process`                     | `X-Queue-Token` header matching `QUEUE_TRIGGER_TOKEN` (`?token=` deprecated) | every 5 min |
-| Scheduler | `POST /api/v1/queue/schedule`                    | `X-Scheduler-Token` header matching `SCHEDULER_TRIGGER_TOKEN` (`?token=` deprecated) | every 5 min |
+| Queue     | `POST /api/v1/queue/process`                     | `X-Queue-Token` header matching `QUEUE_TRIGGER_TOKEN` (`?token=` is not accepted) | every 5 min |
+| Scheduler | `POST /api/v1/queue/schedule`                    | `X-Scheduler-Token` header matching `SCHEDULER_TRIGGER_TOKEN` (`?token=` is not accepted) | every 5 min |
 
 Sources: `src/Modules/Queue/Controllers/QueueApiController.php` and `SchedulerApiController.php`.
 Both return `405` for anything other than `POST`, `403` for a bad token, `500` if the token isn't

@@ -25,9 +25,10 @@ steps are billable and one (`RUN_SEED`) is destructive.
   only created/run when explicitly requested).
 - **Two Cloud Scheduler HTTP jobs**, every 5 minutes, hitting the *already-deployed* Cloud Run
   service (not a separate always-on worker — this is what keeps the whole thing scale-to-zero):
-  `POST /api/v1/queue/process?token=...` (job queue) and `POST /api/v1/queue/schedule?token=...`
-  (recurring tasks, see `Zero\Modules\Queue\Support\Scheduler`). Both are token-gated by
-  `QUEUE_TRIGGER_TOKEN` / `SCHEDULER_TRIGGER_TOKEN`.
+  `POST /api/v1/queue/process` (job queue) and `POST /api/v1/queue/schedule` (recurring tasks,
+  see `Zero\Modules\Queue\Support\Scheduler`). Both are token-gated by `QUEUE_TRIGGER_TOKEN` /
+  `SCHEDULER_TRIGGER_TOKEN`, sent in the `X-Queue-Token` / `X-Scheduler-Token` header (a
+  `?token=` query string is not accepted).
 - **Custom domain mappings** (optional, off by default) — `gcloud beta run domain-mappings` entries
   binding one or more external domains to the Cloud Run service, so a client's own domain (CNAMEd or
   A/AAAA-recorded at Google) serves the same deployment as the default `*.run.app` URL.
