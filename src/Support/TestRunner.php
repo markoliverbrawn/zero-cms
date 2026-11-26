@@ -143,6 +143,23 @@ class TestRunner
     }
 
     /**
+     * The environment to hand a test subprocess: the whole process environment plus anything a
+     * bootstrap put in $_ENV, plus $extra.
+     *
+     * proc_open()'s $env argument replaces the child's environment outright, so it must carry
+     * everything. $_ENV alone is not enough: under variables_order=GPCS (Debian's and the PHP
+     * production php.ini default) it is empty, and the child would lose every exported variable
+     * (ENVIRONMENT, APP_KEY, DB_*), silently falling back to defaults.
+     *
+     * @param array<string, string> $extra Variables to add or override.
+     * @return array<string, string>
+     */
+    public static function subprocessEnvironment(array $extra = []): array
+    {
+        return \array_merge(\getenv(), $_ENV, $extra);
+    }
+
+    /**
      * Arrange for the current subprocess to exit non-zero once it finishes, and to print a recap of
      * every assertion that failed. Registered on the first failure only.
      *
@@ -291,7 +308,7 @@ class TestRunner
                 // Inject the isolated database worker token environment variable, plus any coverage
                 // instrumentation vars. These are passed explicitly rather than left to inheritance
                 // because proc_open()'s $env argument replaces the child's environment outright.
-                $env = \array_merge($_ENV, $extraEnv, ['TEST_TOKEN' => (string)$token]);
+                $env = self::subprocessEnvironment(\array_merge($extraEnv, ['TEST_TOKEN' => (string)$token]));
 
                 $process = \proc_open("php " . \escapeshellarg($file), $descriptors, $pipes, $cwd, $env);
 

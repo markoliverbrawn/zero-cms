@@ -9,6 +9,7 @@ use Zero\Database\DB;
 use Zero\Models\Site;
 use Zero\Models\User;
 use Zero\Support\Security;
+use Zero\Support\TestRunner;
 
 echo "=== ApiController Component Tests ===\n";
 
@@ -57,7 +58,7 @@ function exec_api_test(array $server, array $get = [], string $dbSetup = ''): ar
         2 => ["pipe", "w"]  // stderr
     ];
 
-    $process = proc_open("php", $descriptorspec, $pipes, APPLICATION_ROOT, $_ENV);
+    $process = proc_open("php", $descriptorspec, $pipes, APPLICATION_ROOT, TestRunner::subprocessEnvironment());
 
     if (is_resource($process)) {
         fwrite($pipes[0], $code);
