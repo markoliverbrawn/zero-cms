@@ -3,6 +3,7 @@
 // Regression test: test subprocesses must inherit exported variables even under
 // variables_order=GPCS (Debian's php-cli default), where $_ENV is empty. The runner and TestRequest
 // used to pass $_ENV to proc_open(), so CI's ENVIRONMENT/APP_KEY/DB_* never reached the tests.
+// Also checks that bin/test --ci really starts test processes under those CI-like conditions.
 
 require_once dirname(dirname(__DIR__)) . '/Support/TestBootstrap.php';
 
@@ -50,3 +51,22 @@ assert_test($viaEnvArray === '<missing>', "Passing \$_ENV from a GPCS process dr
 assert_test($viaHelper === 'from-getenv', "subprocessEnvironment() forwards exported variables from a GPCS process");
 
 \putenv('ZERO_SUBPROCESS_ENV_PROBE');
+
+echo "Testing bin/test --ci starts test processes under CI-like conditions...\n";
+$ciEnvironment = new ReflectionMethod(TestRunner::class, 'ciEnvironment');
+$ciEnvironment->setAccessible(true);
+$ciDir = \sys_get_temp_dir() . '/zero-test-ci-probe-' . \getmypid();
+$ciEnv = $ciEnvironment->invoke(null, $ciDir, []);
+$probe = \proc_open(
+    ['php', '-r', 'echo ini_get("variables_order"), "|", getenv("ENVIRONMENT"), "|", strlen((string) getenv("APP_KEY"));'],
+    [1 => ['pipe', 'w']],
+    $probePipes,
+    null,
+    TestRunner::subprocessEnvironment($ciEnv)
+);
+$probeOutput = (string)\stream_get_contents($probePipes[1]);
+\proc_close($probe);
+@\unlink($ciDir . '/zz-zero-test-ci.ini');
+@\rmdir($ciDir);
+assert_test($probeOutput === 'GPCS|testing|64', "A --ci test process runs with variables_order=GPCS, ENVIRONMENT=testing and an APP_KEY (got: {$probeOutput})");
+

@@ -7,6 +7,10 @@
 //   bin/test --coverage   Run the suite and additionally report Xdebug line coverage. Coverage is
 //                         recorded across the whole process tree, so work done inside subprocesses
 //                         a test spawns itself is credited correctly. Requires the Xdebug extension.
+//   bin/test --ci         Run every test process under stricter, CI-style conditions:
+//                         variables_order=GPCS (the production php.ini and Debian php-cli
+//                         default), ENVIRONMENT=testing and a throwaway APP_KEY. Useful for
+//                         reproducing CI-only failures locally. Combines with --coverage.
 
 use Zero\Support\TestRunner;
 
@@ -15,6 +19,8 @@ define('APPLICATION_ROOT', dirname(__DIR__));
 require_once APPLICATION_ROOT . '/src/Core/Autoloader.php';
 \Zero\Core\Autoloader::init();
 
-$collectCoverage = in_array('--coverage', array_slice($argv, 1), true);
+$args = array_slice($argv, 1);
+$collectCoverage = in_array('--coverage', $args, true);
+$ciMode = in_array('--ci', $args, true);
 
-exit(TestRunner::run(APPLICATION_ROOT . '/src', $collectCoverage));
+exit(TestRunner::run(APPLICATION_ROOT . '/src', $collectCoverage, $ciMode));
