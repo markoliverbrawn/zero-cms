@@ -121,17 +121,42 @@ class Security {
     }
 
     /**
-     * Resolve the real client IP. Only trusts the CF-Connecting-IP header from a verified trusted
-     * proxy (see isTrustedProxyRequest()) -- without that verification, REMOTE_ADDR is the only
-     * value that can't be forged by the client, even though it reports the proxy's own address
-     * (not the visitor's) whenever one sits in front of the origin.
+     * Resolve the real client IP, for rate limiting and audit logs. In order:
+     * 1. CF-Connecting-IP, from a verified trusted proxy (see isTrustedProxyRequest()).
+     * 2. X-Forwarded-For, when TRUSTED_PROXY_HOPS says how many proxies in front of the app append
+     *    to it: the entry that many places from the right is the one the outermost trusted proxy
+     *    saw. Entries further left are client-supplied and never used. On Cloud Run, Google's
+     *    front end appends the client IP, so TRUSTED_PROXY_HOPS=1.
+     * 3. REMOTE_ADDR, the only value a client can't forge -- but behind a proxy it is the proxy's
+     *    own address, so every visitor would share one rate-limit bucket.
      */
     public static function getClientIp(): string
     {
-        if (self::isTrustedProxyRequest() && !empty($_SERVER['HTTP_CF_CONNECTING_IP'])) {
+        if (self::isTrustedProxyRequest() && self::isValidIp($_SERVER['HTTP_CF_CONNECTING_IP'] ?? null)) {
             return $_SERVER['HTTP_CF_CONNECTING_IP'];
         }
+
+        $hops = (int) Env::get('TRUSTED_PROXY_HOPS', '0');
+        if ($hops > 0 && !empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+            $chain = \array_map('trim', \explode(',', (string) $_SERVER['HTTP_X_FORWARDED_FOR']));
+            // Fewer entries than trusted hops means the request didn't come through every proxy
+            // (or the setting is wrong), so the chain can't be trusted.
+            $candidate = \count($chain) >= $hops ? $chain[\count($chain) - $hops] : null;
+            if (self::isValidIp($candidate)) {
+                return $candidate;
+            }
+        }
+
         return $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+    }
+
+    /**
+     * @param mixed $value
+     * @return bool Whether $value is a well-formed IPv4 or IPv6 address.
+     */
+    private static function isValidIp($value): bool
+    {
+        return \is_string($value) && \filter_var($value, FILTER_VALIDATE_IP) !== false;
     }
 
     /**

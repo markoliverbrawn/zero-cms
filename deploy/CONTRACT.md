@@ -95,6 +95,7 @@ on itself.
 | `QUEUE_TRIGGER_TOKEN`     | MUST     | See §4                                                       |
 | `SCHEDULER_TRIGGER_TOKEN` | MUST     | See §4                                                       |
 | `TRUSTED_PROXY_SECRET`    | SHOULD   | See §4.1. When unset, `X-Forwarded-Host` is trusted from anyone (`Security::resolveTrustedHost()`) |
+| `TRUSTED_PROXY_HOPS`      | SHOULD   | Proxies in front of the app that append to `X-Forwarded-For` (Cloud Run: `1`). When `0`/unset, every visitor behind a proxy shares the proxy's IP for rate limiting (`Security::getClientIp()`) |
 | `BENCHMARKING`            | MAY      | `true` turns on render timing; set it to `false` in production |
 | `ADMIN_EMAIL`             | SHOULD   | Recipient for security audit reports; also applied to the admin account at seed time |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM_EMAIL`, `SMTP_FROM_NAME` | SHOULD | Without these, no mail is sent (password resets, health check reports). `SMTP_SECURE` is `tls` (STARTTLS) or `ssl` (implicit TLS, port 465); with `SMTP_USER` set, credentials are never sent to a remote server without TLS |
