@@ -720,8 +720,8 @@ final class TestRequest
         }
 
         DB::query(
-            'INSERT INTO sites (id, name, domain, theme, enabled_modules, timezone, default_language, settings, created_at, updated_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            'INSERT INTO sites (id, name, domain, theme, enabled_modules, timezone, default_language, settings, email_override, created_at, updated_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
             [
                 $id,
                 $attributes['name'] ?? 'Test Site',
@@ -731,6 +731,7 @@ final class TestRequest
                 $attributes['timezone'] ?? 'UTC',
                 $attributes['default_language'] ?? 'en',
                 $attributes['settings'] ?? null,
+                $attributes['email_override'] ?? null,
                 $now,
                 $now,
             ]

@@ -264,4 +264,24 @@ assert_test(
     "A super_admin's user form offers the super_admin role"
 );
 
+// MySQL compares role case- and trailing-space-insensitively, so a near-miss like "SUPER_ADMIN"
+// would match role = 'super_admin' in SQL lookups. Only canonical role identifiers are stored.
+echo "Testing non-canonical roles are rejected through the admin API...\n";
+
+foreach (['SUPER_ADMIN', 'super_admin '] as $i => $nearMiss) {
+    $nearMissId = Security::uuidv7();
+    TestRequest::post('/api/v1/admin/models/users/' . $nearMissId, [
+            'username' => 'escalation_nearmiss_' . $i,
+            'email' => 'escalation_nearmiss_' . $i . '@example.test',
+            'role' => $nearMiss,
+        ])
+        ->onSite(['enabled_modules' => $adminModules])
+        ->withAccount(['id' => $nearMissId, 'username' => 'escalation_nearmiss_' . $i, 'role' => 'editor'])
+        ->asUser(['username' => 'escalation_admin_nm' . $i, 'role' => 'admin'])
+        ->withCsrf()
+        ->send();
+    $storedRole = DB::query('SELECT BINARY role AS role FROM users WHERE id = ?', [$nearMissId])->fetchColumn();
+    assert_test($storedRole === 'editor', "Role " . json_encode($nearMiss) . " is rejected and the stored role stays 'editor'");
+}
+
 echo "User super_admin escalation guard tests completed successfully!\n";

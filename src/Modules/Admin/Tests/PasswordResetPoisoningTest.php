@@ -118,4 +118,41 @@ TestRequest::post('/reset', ['token' => $token, 'password' => 'NewPassword123', 
 
 assert_test(!$passwordUnchanged($memberUser), "A member's own-tenant token resets their password via /reset");
 
+// 6. A site's email_override must never receive a global super_admin's reset link.
+echo "Testing /admin/forgot skips super_admins on a site with email_override...\n";
+
+$response = TestRequest::post('/admin/forgot', ['username' => 'reset_override_root'])
+    ->onSite(['email_override' => 'shared-demo-inbox@example.test'])
+    ->withAccount(['username' => 'reset_override_root', 'email' => 'root@example.test', 'role' => 'super_admin', 'site_id' => null])
+    ->withCsrf()
+    ->captureEmails()
+    ->send();
+
+assert_test($response['emails'] === [], "No super_admin reset email is sent from a site with email_override");
+
+$response = TestRequest::post('/admin/forgot', ['username' => 'reset_override_admin'])
+    ->onSite(['email_override' => 'shared-demo-inbox@example.test'])
+    ->withUser(['username' => 'reset_override_admin', 'email' => 'reset_override_admin@example.test', 'role' => 'admin'])
+    ->withCsrf()
+    ->captureEmails()
+    ->send();
+
+assert_test(\count($response['emails']) === 1, "The site's own admin still gets a reset email on a site with email_override");
+
+// 7. Member reset applies the password policy.
+echo "Testing /reset rejects a weak password...\n";
+
+$weakUser = Security::uuidv7();
+$token = \bin2hex(\random_bytes(16));
+
+TestRequest::post('/reset', ['token' => $token, 'password' => 'abcdef', 'confirm_password' => 'abcdef'])
+    ->withRoute('#^/reset$#', FrontendResetController::class)
+    ->onSite()
+    ->withAccount(['id' => $weakUser, 'username' => 'reset_weak_target', 'role' => 'member'])
+    ->withPasswordReset(['token' => $token, 'user_id' => $weakUser])
+    ->withCsrf()
+    ->send();
+
+assert_test($passwordUnchanged($weakUser), "/reset does not accept a 6-character password");
+
 echo "Password reset poisoning tests completed successfully!\n";

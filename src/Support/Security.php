@@ -315,7 +315,7 @@ class Security {
     public static function csrfVerify($token)
     {
         App::ensureSession();
-        if (empty($token)) return false;
+        if (empty($token) || !\is_string($token)) return false;
 
         // Expiry check: 10 minutes (CSRF_TOKEN_TTL) of inactivity
         $tokenTime = $_SESSION['_csrf_token_time'] ?? 0;

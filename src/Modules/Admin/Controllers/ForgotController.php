@@ -51,8 +51,16 @@ class ForgotController implements Controller
                 [$username, App::getCurrentSiteId()]
             )->fetch();
             
+            $site = App::getCurrentSite();
+
+            // A site's email_override redirects all its mail to one inbox (demo/test sites). A global
+            // super_admin's reset link must never land there, or anyone with access to that inbox
+            // could take over platform-wide access. Silently skip, like an unknown username.
+            if ($user && $user['role'] === 'super_admin' && $site && \trim((string) $site->email_override) !== '') {
+                $user = false;
+            }
+
             if ($user && !empty($user['email'])) {
-                $site = App::getCurrentSite();
                 $expiryMinutes = $site ? (int)$site->getModuleSetting('admin', 'password_reset_expiry_minutes', 60) : 60;
 
                 $token = \bin2hex(\random_bytes(16));

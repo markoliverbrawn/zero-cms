@@ -41,8 +41,9 @@ trait HasSlug
             $params[] = App::getCurrentSiteId();
         }
 
-        // Restrict guests to 'published' items if the model specifies it
-        $isAdmin = isset($_SESSION['user_id']);
+        // Restrict guests to 'published' items if the model specifies it. Only back-office users see
+        // drafts: a signed-in shop member is still a guest for this purpose.
+        $isAdmin = isset($_SESSION['user_id']) && App::authorize('backoffice.access');
         $restrictGuests = static::$restrictGuests ?? false;
         if ($restrictGuests && !$isAdmin && DB::hasColumn(static::$tableName, 'status')) {
             $sql .= " AND status = 'published'";

@@ -70,8 +70,8 @@ class FrontendResetController implements Controller
                 $error = 'All fields are required.';
             } elseif ($password !== $confirm) {
                 $error = 'Passwords do not match.';
-            } elseif (\strlen($password) < 6) {
-                $error = 'Password must be at least 6 characters.';
+            } elseif (($policyError = Security::passwordPolicyError((string) $password)) !== null) {
+                $error = $policyError;
             } else {
                 // Update User password hash
                 // security-scan-ignore: unscoped-lookup -- $userId comes from a password_resets row already scoped to this site and to a member of it

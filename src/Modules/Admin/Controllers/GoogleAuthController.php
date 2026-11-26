@@ -136,7 +136,13 @@ class GoogleAuthController implements Controller
             }
 
             // 5. Look up corresponding local CMS tenant/global user account
-            $row = DB::query('SELECT * FROM users WHERE email = ? AND deleted_at IS NULL LIMIT 1', [$email])->fetch();
+            // Only rows that may sign in to this site: its own users and global super_admins. The
+            // site's own account wins if the same address also exists elsewhere.
+            $row = DB::query(
+                "SELECT * FROM users WHERE email = ? AND deleted_at IS NULL AND (site_id = ? OR role = 'super_admin') "
+                . "ORDER BY CASE WHEN site_id = ? THEN 0 ELSE 1 END LIMIT 1",
+                [$email, App::getCurrentSiteId(), App::getCurrentSiteId()]
+            )->fetch();
 
             if (!$row) {
                 \header('Location: /admin/login?error=google_account_not_found');
@@ -174,7 +180,9 @@ class GoogleAuthController implements Controller
             exit;
 
         } catch (\Exception $e) {
-            \header('Location: /admin/login?error=google_exception_triggered&details=' . \urlencode($e->getMessage()));
+            // Keep exception text out of the URL (and so out of access logs and Referer headers).
+            \error_log('Google OAuth callback failed: ' . $e->getMessage());
+            \header('Location: /admin/login?error=google_exception_triggered');
             exit;
         }
     }
