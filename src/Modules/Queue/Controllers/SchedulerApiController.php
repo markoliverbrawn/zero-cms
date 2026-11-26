@@ -44,14 +44,10 @@ class SchedulerApiController implements Controller
 
         // 2. Token-Gate Authorization to prevent anonymous DoS/attacks
         $envToken = Env::get('SCHEDULER_TRIGGER_TOKEN');
-        // The header is the supported form. ?token= is still accepted for one release so
-        // already-provisioned Cloud Scheduler jobs keep working until scheduler.sh is re-run;
-        // it leaks the token into request logs, so it is logged as deprecated.
+        // Header only. A token in the query string (?token=) is ignored: URLs end up in request
+        // logs, proxy logs and Referer headers. Cloud Scheduler jobs send the header once
+        // deploy/gcp/scheduler.sh has been run.
         $requestToken = $_SERVER['HTTP_X_SCHEDULER_TOKEN'] ?? null;
-        if ($requestToken === null && isset($_GET['token'])) {
-            \error_log('Deprecated: trigger token sent as ?token=; re-run deploy/gcp/scheduler.sh to send it as a header.');
-            $requestToken = $_GET['token'];
-        }
 
         if (empty($envToken)) {
             \http_response_code(500);
