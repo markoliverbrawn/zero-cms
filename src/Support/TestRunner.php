@@ -56,11 +56,15 @@ class TestRunner
      * report. See Zero\Support\CoverageRecorder for why instrumentation spans the whole process tree
      * rather than just this one.
      *
+     * With $ciMode, every test process runs the way Bitbucket/GitHub CI runs it (see
+     * ciEnvironment()), so a suite that only passes thanks to local PHP settings fails here first.
+     *
      * @param string $root Absolute path to scan recursively for *Test.php files.
      * @param bool $collectCoverage Whether to record and report line coverage for the run.
+     * @param bool $ciMode Whether to run every test process under CI-like conditions.
      * @return int
      */
-    public static function run(string $root, bool $collectCoverage = false): int
+    public static function run(string $root, bool $collectCoverage = false, bool $ciMode = false): int
     {
         $testFiles = self::discoverTestFiles($root);
 
@@ -88,11 +92,22 @@ class TestRunner
             echo "Collecting line coverage (whole process tree, including nested subprocesses).\n";
         }
 
+        $ciDir = null;
+        if ($ciMode) {
+            $ciDir = \sys_get_temp_dir() . '/zero-test-ci-' . \getmypid();
+            $coverageEnv = self::ciEnvironment($ciDir, $coverageEnv);
+            echo "CI mode: every test process runs with variables_order=GPCS, ENVIRONMENT=testing and a throwaway APP_KEY.\n";
+        }
+
         $maxConcurrency = self::detectConcurrency();
         echo "Running with concurrency limit: {$maxConcurrency} workers.\n\n";
 
         $startTime = microtime(true);
         $completedJobs = self::executeJobs($testFiles, $maxConcurrency, $root, $coverageEnv);
+        if ($ciDir !== null) {
+            @\unlink($ciDir . '/zz-zero-test-ci.ini');
+            @\rmdir($ciDir);
+        }
         $duration = microtime(true) - $startTime;
 
         $exitCode = self::printSummary($completedJobs, count($testFiles), $duration);
@@ -226,6 +241,36 @@ class TestRunner
         $files = self::findTestFiles($root);
         \sort($files);
         return $files;
+    }
+
+    /**
+     * Environment additions that make every test process run the way CI runs it:
+     * - variables_order=GPCS (Debian's php-cli and PHP's production php.ini default), via a scratch
+     *   ini file appended to PHP_INI_SCAN_DIR, which every subprocess inherits. Under GPCS $_ENV is
+     *   empty, so anything that forwards $_ENV instead of the full environment breaks here.
+     * - ENVIRONMENT=testing and a throwaway APP_KEY, as the CI pipelines set them.
+     *
+     * One difference remains: CI has no .env file, while locally Env still reads it. A suite that
+     * needs a variable only .env provides can still pass here and fail in CI.
+     *
+     * @param string $dir Scratch directory for the ini file (created here, removed by run()).
+     * @param array<string, string> $env Environment additions so far (e.g. coverage's).
+     * @return array<string, string>
+     */
+    private static function ciEnvironment(string $dir, array $env): array
+    {
+        if (!\is_dir($dir)) {
+            \mkdir($dir, 0700, true);
+        }
+        \file_put_contents($dir . '/zz-zero-test-ci.ini', "variables_order = \"GPCS\"\n");
+
+        // A leading ":" keeps PHP's default scan directory (and so every extension) loaded.
+        $scanDir = $env['PHP_INI_SCAN_DIR'] ?? (string) \getenv('PHP_INI_SCAN_DIR');
+        $env['PHP_INI_SCAN_DIR'] = ($scanDir === '' ? '' : $scanDir) . ':' . $dir;
+        $env['ENVIRONMENT'] = 'testing';
+        $env['APP_KEY'] = \bin2hex(\random_bytes(32));
+
+        return $env;
     }
 
     /**
