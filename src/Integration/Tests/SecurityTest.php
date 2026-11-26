@@ -28,6 +28,7 @@ assert_test(strpos($inputField, $token1) !== false, "csrfInput contains correct 
 assert_test(Security::csrfVerify($token1) === true, "Verify returns true for exact correct token");
 assert_test(Security::csrfVerify('incorrect') === false, "Verify returns false for incorrect token");
 assert_test(Security::csrfVerify('') === false, "Verify returns false for empty token");
+assert_test(Security::csrfVerify(['x']) === false, "Verify returns false (no TypeError) for an array token");
 
 // A page rendered after a long GET-only stretch must embed a token its first POST will accept.
 $_SESSION['_csrf_token_time'] = \time() - 300;

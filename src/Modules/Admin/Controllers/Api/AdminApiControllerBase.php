@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 namespace Zero\Modules\Admin\Controllers\Api;
 
+use Zero\Core\App;
 use Zero\Database\DB;
 use Zero\Http\Controllers\ApiController;
 use Zero\Support\Permissions;
@@ -27,9 +28,7 @@ abstract class AdminApiControllerBase extends ApiController
      */
     protected function authenticate(): array
     {
-        if (\session_status() === PHP_SESSION_NONE) {
-            \session_start();
-        }
+        App::ensureSession(); // hardened cookie options, same as every other request path
 
         $userId = $_SESSION['user_id'] ?? null;
         if (!$userId) {

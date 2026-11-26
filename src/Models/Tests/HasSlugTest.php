@@ -5,6 +5,7 @@
 require_once dirname(dirname(__DIR__)) . '/Support/TestBootstrap.php';
 
 use Zero\Models\Page;
+use Zero\Models\User;
 use Zero\Database\DB;
 use Zero\Core\App;
 
@@ -59,12 +60,22 @@ try {
     // 3. Test findBySlug as an Admin
     echo "Testing slug resolution for Admin session...\n";
     $_SESSION['user_id'] = 'mock-admin-session-id'; // Set admin session
-    
+    $backofficeUser = new User(['id' => 'mock-admin-session-id', 'role' => 'editor']);
+    App::setCurrentUser($backofficeUser);
+
     $foundPub = Page::findBySlug($publishedSlug);
     assert_test($foundPub instanceof Page && $foundPub->slug === $publishedSlug, "Admin can retrieve published page by slug");
 
     $foundDraft = Page::findBySlug($draftSlug);
     assert_test($foundDraft instanceof Page && $foundDraft->slug === $draftSlug, "Admin can retrieve draft page by slug");
+
+    // 3b. A signed-in shop member has a session but no back-office access: still a guest
+    $memberUser = new User(['id' => 'mock-member-session-id', 'role' => 'member']);
+    App::setCurrentUser($memberUser);
+    $_SESSION['user_id'] = 'mock-member-session-id';
+    assert_test(Page::findBySlug($draftSlug) === null, "A signed-in member (no back-office access) cannot retrieve draft pages by slug");
+    App::setCurrentUser($backofficeUser);
+    $_SESSION['user_id'] = 'mock-admin-session-id';
 
     // 4. Test findBySlug as a Guest (Public)
     echo "Testing slug resolution for Guest (Public) session...\n";
@@ -157,6 +168,7 @@ try {
     $pubPage->forceDelete();
     $draftPage->forceDelete();
     unset($_SESSION['user_id']);
+    App::setCurrentUser(null);
 }
 
 echo "HasSlug component tests completed.\n\n";

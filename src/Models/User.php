@@ -30,6 +30,8 @@ class User implements Model
     use IsModel, HasSlug {
         IsModel::save as traitSave;
         IsModel::delete as traitDelete;
+        IsModel::forceDelete as traitForceDelete;
+        IsModel::restore as traitRestore;
     }
 
     /**
@@ -159,6 +161,13 @@ class User implements Model
      */
     public function save(): string
     {
+        // Roles are compared exactly in PHP but case- and trailing-space-insensitively by MySQL, so a
+        // near-miss like "SUPER_ADMIN" or "super_admin " would match role = 'super_admin' in SQL
+        // lookups. Only canonical role identifiers may be stored.
+        if ($this->role !== null && $this->role !== '' && !\preg_match('/^[a-z][a-z0-9_]*$/', (string) $this->role)) {
+            throw new \InvalidArgumentException('Invalid role.');
+        }
+
         $this->guardSuperAdminChange($this->role === 'super_admin');
 
         // If this is a new user and no password_hash is set, generate a secure random password
@@ -201,6 +210,30 @@ class User implements Model
         self::revokeSessions((string) $this->id);
 
         return $result;
+    }
+
+    /**
+     * Permanently delete the account, with the same admin guard as delete().
+     *
+     * @return mixed Response output.
+     */
+    public function forceDelete()
+    {
+        $this->guardSuperAdminChange(false);
+
+        return $this->traitForceDelete();
+    }
+
+    /**
+     * Restore a soft-deleted account, with the same admin guard as delete().
+     *
+     * @return mixed Response output.
+     */
+    public function restore()
+    {
+        $this->guardSuperAdminChange(false);
+
+        return $this->traitRestore();
     }
 
     /**

@@ -52,8 +52,8 @@ class RegisterController implements Controller
                 $error = 'All fields are required.';
             } elseif ($password !== $confirm) {
                 $error = 'Passwords do not match.';
-            } elseif (\strlen($password) < 6) {
-                $error = 'Password must be at least 6 characters.';
+            } elseif (($policyError = Security::passwordPolicyError((string) $password)) !== null) {
+                $error = $policyError;
             } else {
                 // Check if username already exists globally or for this site
                 $existsUser = DB::query("SELECT id FROM users WHERE username = ? LIMIT 1", [$username])->fetch();

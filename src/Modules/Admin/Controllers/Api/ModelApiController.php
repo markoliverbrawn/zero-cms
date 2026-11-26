@@ -275,6 +275,10 @@ class ModelApiController extends AdminApiControllerBase
         foreach ($config as $field => $fieldConfig) {
             if ($fieldConfig['editable'] ?? false) {
                 $val = $body[$field] ?? '';
+                // Numbers get the same min/max clamping as the HTML form (ModelController).
+                if (\in_array($fieldConfig['type'] ?? 'text', ['number', 'int'], true)) {
+                    $val = App::makeFormField($fieldConfig['type'], $field, $fieldConfig)->castSubmittedValue($body) ?? '';
+                }
                 // Automatically json_encode array values (such as enabled_modules checkbox arrays!)
                 if (\is_array($val)) {
                     $val = \json_encode($val);
